@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Input, Badge } from "@/components/ui/Card";
 import { SUTRA_SERVICES } from "@/data/servicesData";
 import { Check, ArrowRight, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { RouteGuard } from "@/components/auth/RouteGuard";
 
 export default function OrdersPage() {
   const [step, setStep] = useState(1);
@@ -52,7 +53,8 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#F8F5EF] text-[#0F172A]">
+    <RouteGuard requiredRole="client">
+      <div className="min-h-screen flex bg-[#F8F5EF] text-[#0F172A]">
       <PortalSidebar />
 
       <main className="flex-1 p-6 sm:p-10 max-w-5xl pb-24 md:pb-10 space-y-10">
@@ -327,7 +329,8 @@ export default function OrdersPage() {
         </div>
       </main>
 
-      <MobileBottomNav />
-    </div>
+        <MobileBottomNav />
+      </div>
+    </RouteGuard>
   );
 }

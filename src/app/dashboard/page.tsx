@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { Plus, ArrowRight, Eye } from "lucide-react";
+import { RouteGuard } from "@/components/auth/RouteGuard";
 
 export default function ClientDashboardPage() {
   // Allows testing both zero-data empty state and active order state
@@ -44,7 +45,8 @@ export default function ClientDashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen flex bg-[#F8F5EF] text-[#0F172A]">
+    <RouteGuard requiredRole="client">
+      <div className="min-h-screen flex bg-[#F8F5EF] text-[#0F172A]">
       <PortalSidebar />
 
       <main className="flex-1 p-6 sm:p-10 max-w-6xl pb-24 md:pb-10">
@@ -175,7 +177,8 @@ export default function ClientDashboardPage() {
         </div>
       </main>
 
-      <MobileBottomNav />
-    </div>
+        <MobileBottomNav />
+      </div>
+    </RouteGuard>
   );
 }

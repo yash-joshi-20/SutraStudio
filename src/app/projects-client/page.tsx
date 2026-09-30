@@ -5,6 +5,7 @@ import { PortalSidebar } from "@/components/dashboard/PortalSidebar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { Badge } from "@/components/ui/Card";
 import { FolderGit2, Calendar, CheckCircle } from "lucide-react";
+import { RouteGuard } from "@/components/auth/RouteGuard";
 
 export default function ClientProjectsPage() {
   const activeProjects = [
@@ -31,7 +32,8 @@ export default function ClientProjectsPage() {
   ];
 
   return (
-    <div className="min-h-screen flex bg-[#F8F5EF] text-[#0F172A]">
+    <RouteGuard requiredRole="client">
+      <div className="min-h-screen flex bg-[#F8F5EF] text-[#0F172A]">
       <PortalSidebar />
 
       <main className="flex-1 p-6 sm:p-10 max-w-5xl pb-24 md:pb-10 space-y-8">
@@ -92,7 +94,8 @@ export default function ClientProjectsPage() {
         </div>
       </main>
 
-      <MobileBottomNav />
-    </div>
+        <MobileBottomNav />
+      </div>
+    </RouteGuard>
   );
 }

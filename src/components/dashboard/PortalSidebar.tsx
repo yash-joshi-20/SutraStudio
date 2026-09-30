@@ -16,6 +16,8 @@ import {
   LogOut,
 } from "lucide-react";
 
+import { useAuth } from "@/lib/auth/authContext";
+
 const SIDEBAR_ITEMS = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "My Orders", href: "/orders", icon: ShoppingBag },
@@ -29,13 +31,28 @@ const SIDEBAR_ITEMS = [
 
 export function PortalSidebar() {
   const pathname = usePathname();
+  const { user, role, loginAs, logout } = useAuth();
 
   return (
     <aside className="w-64 shrink-0 border-r border-[#EADFCB] bg-[#FFFDF9] min-h-screen p-6 flex flex-col justify-between hidden md:flex">
       <div>
         {/* Brand Header */}
-        <div className="pb-8 border-b border-[#EADFCB]/60">
+        <div className="pb-6 border-b border-[#EADFCB]/60 flex items-center justify-between">
           <SutraLogo variant="horizontal" size="sm" href="/" />
+        </div>
+
+        {/* Role Mode Banner */}
+        <div className="mt-4 p-2.5 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-between text-xs">
+          <div>
+            <span className="text-[10px] text-[#64748B] block uppercase tracking-wider font-semibold">Active Role</span>
+            <span className="font-bold text-[#5C3A1E] uppercase">{role}</span>
+          </div>
+          <button
+            onClick={() => loginAs(role === "admin" ? "client" : "admin")}
+            className="text-[10px] px-2 py-1 rounded bg-[#FFFDF9] border border-[#EADFCB] text-[#5C3A1E] font-medium hover:border-[#D4A35A] cursor-pointer"
+          >
+            Switch to {role === "admin" ? "Client" : "Admin"}
+          </button>
         </div>
 
         {/* Navigation Items */}
@@ -69,16 +86,20 @@ export function PortalSidebar() {
       <div className="pt-6 border-t border-[#EADFCB]/60 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-[#5C3A1E] text-white flex items-center justify-center text-xs font-semibold">
-            Y
+            {user?.displayName ? user.displayName[0] : "Y"}
           </div>
           <div className="text-xs">
-            <p className="font-semibold text-[#0F172A]">Yash Joshi</p>
-            <p className="text-[#64748B]">Client Workspace</p>
+            <p className="font-semibold text-[#0F172A]">{user?.displayName || "Studio Client"}</p>
+            <p className="text-[#64748B] capitalize">{role} Clearance</p>
           </div>
         </div>
-        <Link href="/login" className="text-[#64748B] hover:text-[#5C3A1E]">
+        <button
+          onClick={logout}
+          title="Sign Out"
+          className="text-[#64748B] hover:text-[#5C3A1E] p-1.5 rounded-lg hover:bg-[#F8F5EF] cursor-pointer"
+        >
           <LogOut className="w-4 h-4" />
-        </Link>
+        </button>
       </div>
     </aside>
   );

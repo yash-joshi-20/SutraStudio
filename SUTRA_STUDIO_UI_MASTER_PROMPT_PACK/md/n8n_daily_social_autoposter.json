@@ -1,0 +1,244 @@
+{
+  "name": "Synapse Kinetic — Daily Social Media Auto-Publisher (FB & IG)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      },
+      "name": "Daily 9AM Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [180, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "={{ $env.GEMINI_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": \"You are the Chief Creative Director at SYNAPSE KINETIC (AI Marketing Agency). Generate an engaging daily Instagram and Facebook post. Output JSON only: { \\\"caption\\\": \\\"High energy caption with bullet points, value hook, call to action to visit synapsekinetic.ai, and 10 trending hashtags\\\", \\\"imagePrompt\\\": \\\"photorealistic 8k cybernetic neural marketing visualization with neon purple and cyan lighting, commercial aesthetic\\\" }\"\n    }]\n  }],\n  \"generationConfig\": {\n    \"responseMimeType\": \"application/json\"\n  }\n}",
+        "options": {}
+      },
+      "name": "Gemini AI Post Generator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nlet parsed = {};\ntry {\n  const text = response.candidates[0].content.parts[0].text;\n  parsed = JSON.parse(text);\n} catch (e) {\n  parsed = {\n    caption: \"🚀 Autonomous AI Marketing that multiplies your ROAS. Visit synapsekinetic.ai to turn AI into your unfair advantage! #AIMarketing #SynapseKinetic #GrowthMarketing #DigitalArbitrage\",\n    imagePrompt: \"futuristic neural core floating in dark studio with purple and cyan particle streams, 8k cinematic commercial rendering\"\n  };\n}\n\n// Construct high-res Pollinations AI public image URL (1:1 Square Feed)\nconst encodedPrompt = encodeURIComponent(parsed.imagePrompt + ' ultra detailed, 8k, award winning advertising visual, vibrant studio lighting');\nconst imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1080&height=1080&nologo=true&seed=${Math.floor(Math.random()*100000)}`;\n\nreturn [{\n  json: {\n    caption: parsed.caption,\n    imagePrompt: parsed.imagePrompt,\n    imageUrl: imageUrl,\n    fbPageId: $env.FB_PAGE_ID || '61594200943169',\n    igUserId: $env.INSTAGRAM_ACCOUNT_ID || '',\n    pageAccessToken: $env.META_GRAPH_ACCESS_TOKEN || ''\n  }\n}];"
+      },
+      "name": "Prepare Media & URLs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [620, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v21.0/{{ $json.fbPageId }}/photos",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ $json.imageUrl }}"
+            },
+            {
+              "name": "caption",
+              "value": "={{ $json.caption }}"
+            },
+            {
+              "name": "access_token",
+              "value": "={{ $json.pageAccessToken }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Publish to Facebook Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [860, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v21.0/{{ $json.igUserId }}/media",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "image_url",
+              "value": "={{ $json.imageUrl }}"
+            },
+            {
+              "name": "caption",
+              "value": "={{ $json.caption }}"
+            },
+            {
+              "name": "access_token",
+              "value": "={{ $json.pageAccessToken }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Create Instagram Media Container",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [860, 420]
+    },
+    {
+      "parameters": {
+        "amount": 6,
+        "unit": "seconds"
+      },
+      "name": "Wait for Media Processing",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1080, 420]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v21.0/{{ $('Prepare Media & URLs').first().json.igUserId }}/media_publish",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "creation_id",
+              "value": "={{ $json.id }}"
+            },
+            {
+              "name": "access_token",
+              "value": "={{ $('Prepare Media & URLs').first().json.pageAccessToken }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Publish to Instagram Feed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1280, 420]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3000/api/n8n/workflows",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"action\": \"log_social_post\",\n  \"platform\": \"Instagram & Facebook\",\n  \"status\": \"Published\",\n  \"timestamp\": $now,\n  \"caption\": $('Prepare Media & URLs').first().json.caption,\n  \"imageUrl\": $('Prepare Media & URLs').first().json.imageUrl\n}",
+        "options": {}
+      },
+      "name": "Log to Agency Dashboard",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1500, 300]
+    }
+  ],
+  "connections": {
+    "Daily 9AM Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Gemini AI Post Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini AI Post Generator": {
+      "main": [
+        [
+          {
+            "node": "Prepare Media & URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Media & URLs": {
+      "main": [
+        [
+          {
+            "node": "Publish to Facebook Page",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create Instagram Media Container",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Instagram Media Container": {
+      "main": [
+        [
+          {
+            "node": "Wait for Media Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Media Processing": {
+      "main": [
+        [
+          {
+            "node": "Publish to Instagram Feed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish to Facebook Page": {
+      "main": [
+        [
+          {
+            "node": "Log to Agency Dashboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish to Instagram Feed": {
+      "main": [
+        [
+          {
+            "node": "Log to Agency Dashboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

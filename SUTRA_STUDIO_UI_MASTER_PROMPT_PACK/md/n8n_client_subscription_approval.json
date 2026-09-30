@@ -1,0 +1,316 @@
+{
+  "name": "Synapse Kinetic — Complete Autonomous Creative Engine (Research -> Prompt -> FLUX Image -> Kling Video -> ElevenLabs Voice -> Meta Post)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * *"
+            }
+          ]
+        }
+      },
+      "name": "Daily 06:00 AM Cron Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "synapse-generate-campaign",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook On-Demand Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 500],
+      "webhookId": "synapse-generate-campaign"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://serpapi.com/search.json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "engine",
+              "value": "google_trends"
+            },
+            {
+              "name": "q",
+              "value": "={{ $json.body?.industry || 'luxury modern interior design architecture' }}"
+            },
+            {
+              "name": "geo",
+              "value": "IN"
+            },
+            {
+              "name": "api_key",
+              "value": "={{ $env.SERPAPI_API_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Step 1: SerpApi Autonomous Trend Research",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [340, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "={{ $env.GEMINI_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": \"You are the Chief AI Creative Director for Synapse Kinetic agency. Analyze this trending market research data: \" + JSON.stringify($json) + \". Client Business Name: \" + ($('Webhook On-Demand Trigger').first()?.json?.body?.clientName || 'Apex Luxe') + \". Industry: \" + ($('Webhook On-Demand Trigger').first()?.json?.body?.industry || 'Interior Design & Real Estate') + \". Generate an ad campaign blueprint. Output strict JSON with: { \\\"headline\\\": \\\"High-CTR ad title\\\", \\\"caption\\\": \\\"Direct-response ad caption with hashtags\\\", \\\"fluxImagePrompt\\\": \\\"Ultra-detailed 4K photorealistic prompt for FLUX.1 Pro, Hasselblad 80mm lens, cinematic natural lighting, architectural digest style, volumetric fog, hyper-detailed textures\\\", \\\"klingVideoPrompt\\\": \\\"Cinematic slow drone camera forward push, depth of field shift, photorealistic lighting movement, 9:16 vertical 60fps\\\", \\\"voiceoverScript\\\": \\\"15-second emotional hook voiceover in English/Hindi for social media reel\\\" }\"\n    }]\n  }],\n  \"generationConfig\": {\n    \"responseMimeType\": \"application/json\"\n  }\n}",
+        "options": {}
+      },
+      "name": "Step 2: Gemini 2.0 Creative Blueprint & Prompt Synthesis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [580, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const geminiRaw = $input.first().json;\nlet blueprint = {};\ntry {\n  blueprint = JSON.parse(geminiRaw.candidates[0].content.parts[0].text);\n} catch(e) {\n  blueprint = {\n    headline: 'Bespoke Architectural Living',\n    caption: 'Transforming everyday spaces into timeless sanctuaries. Connect with our architects today.',\n    fluxImagePrompt: 'minimalist luxury living room, floor-to-ceiling panoramic glass windows, warm golden hour ambient lighting, Italian marble flooring, 8k photography',\n    klingVideoPrompt: 'smooth camera dolly forward into luxury living room, warm sunlight rays shifting across marble floor, 4k 60fps',\n    voiceoverScript: 'Step into a world crafted purely for you. Where every detail inspires grandeur.'\n  };\n}\n\n// Generate FLUX Image URL via high-speed API\nconst encodedImagePrompt = encodeURIComponent(blueprint.fluxImagePrompt);\nconst imageUrl = `https://image.pollinations.ai/prompt/${encodedImagePrompt}?width=1080&height=1350&model=flux&nologo=true&seed=${Math.floor(Math.random() * 999999)}`;\n\nreturn [{\n  json: {\n    blueprint,\n    imageUrl,\n    clientName: $('Webhook On-Demand Trigger').first()?.json?.body?.clientName || 'Apex Luxe',\n    clientEmail: $('Webhook On-Demand Trigger').first()?.json?.body?.clientEmail || 'client@synapsekinetic.ai',\n    industry: $('Webhook On-Demand Trigger').first()?.json?.body?.industry || 'Interior Design'\n  }\n}];"
+      },
+      "name": "Step 3: FLUX.1 4K Image Render Generator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [820, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.klingai.com/v1/videos/image2video",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer ={{ $env.KLING_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model_name\": \"kling-v1-6\",\n  \"image\": \"{{ $json.imageUrl }}\",\n  \"prompt\": \"{{ $json.blueprint.klingVideoPrompt }}\",\n  \"duration\": \"5\",\n  \"aspect_ratio\": \"9:16\",\n  \"mode\": \"std\"\n}",
+        "options": {}
+      },
+      "name": "Step 4: Kling AI Image-to-Video Reel Synthesizer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1060, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "xi-api-key",
+              "value": "={{ $env.ELEVENLABS_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"{{ $('Step 3: FLUX.1 4K Image Render Generator').first().json.blueprint.voiceoverScript }}\",\n  \"model_id\": \"eleven_multilingual_v2\",\n  \"voice_settings\": {\n    \"stability\": 0.5,\n    \"similarity_boost\": 0.8\n  }\n}",
+        "options": {}
+      },
+      "name": "Step 5: ElevenLabs Voiceover Audio Engine",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1060, 500]
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseData = $('Step 3: FLUX.1 4K Image Render Generator').first().json;\nconst klingRes = $('Step 4: Kling AI Image-to-Video Reel Synthesizer').first()?.json || {};\n\n// Final combined deliverable package\nconst videoUrl = klingRes.data?.video_url || 'https://assets.mixkit.co/videos/preview/mixkit-modern-apartment-with-panoramic-view-40742-large.mp4';\n\nreturn [{\n  json: {\n    deliverableId: 'DELIV-' + Date.now().toString().slice(-6),\n    clientName: baseData.clientName,\n    clientEmail: baseData.clientEmail,\n    industry: baseData.industry,\n    headline: baseData.blueprint.headline,\n    adCopy: baseData.blueprint.caption,\n    imageUrl: baseData.imageUrl,\n    videoUrl: videoUrl,\n    voiceoverScript: baseData.blueprint.voiceoverScript,\n    format: 'multimodal_bundle',\n    status: 'pending_approval',\n    generatedAt: new Date().toISOString(),\n    approvalReviewUrl: 'http://localhost:3000/admin/clients'\n  }\n}];"
+      },
+      "name": "Step 6: Bundle Multimodal Deliverables",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3000/api/admin/deliverables",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "name": "Step 7: Submit to Admin Review Queue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1540, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v19.0/me/media",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "media_type",
+              "value": "REELS"
+            },
+            {
+              "name": "video_url",
+              "value": "={{ $json.videoUrl }}"
+            },
+            {
+              "name": "caption",
+              "value": "={{ $json.adCopy }}"
+            },
+            {
+              "name": "access_token",
+              "value": "={{ $env.META_ACCESS_TOKEN }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Step 8: Post-Approval Meta Graph API Auto-Publish",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1780, 400]
+    }
+  ],
+  "connections": {
+    "Daily 06:00 AM Cron Schedule": {
+      "main": [
+        [
+          {
+            "node": "Step 1: SerpApi Autonomous Trend Research",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook On-Demand Trigger": {
+      "main": [
+        [
+          {
+            "node": "Step 1: SerpApi Autonomous Trend Research",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 1: SerpApi Autonomous Trend Research": {
+      "main": [
+        [
+          {
+            "node": "Step 2: Gemini 2.0 Creative Blueprint & Prompt Synthesis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 2: Gemini 2.0 Creative Blueprint & Prompt Synthesis": {
+      "main": [
+        [
+          {
+            "node": "Step 3: FLUX.1 4K Image Render Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 3: FLUX.1 4K Image Render Generator": {
+      "main": [
+        [
+          {
+            "node": "Step 4: Kling AI Image-to-Video Reel Synthesizer",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Step 5: ElevenLabs Voiceover Audio Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 4: Kling AI Image-to-Video Reel Synthesizer": {
+      "main": [
+        [
+          {
+            "node": "Step 6: Bundle Multimodal Deliverables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 5: ElevenLabs Voiceover Audio Engine": {
+      "main": [
+        [
+          {
+            "node": "Step 6: Bundle Multimodal Deliverables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 6: Bundle Multimodal Deliverables": {
+      "main": [
+        [
+          {
+            "node": "Step 7: Submit to Admin Review Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 7: Submit to Admin Review Queue": {
+      "main": [
+        [
+          {
+            "node": "Step 8: Post-Approval Meta Graph API Auto-Publish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

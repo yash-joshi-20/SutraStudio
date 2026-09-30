@@ -17,6 +17,7 @@ import {
   Activity,
   ArrowRight,
 } from "lucide-react";
+import { RouteGuard } from "@/components/auth/RouteGuard";
 
 export default function AdminHubPage() {
   const [activeTab, setActiveTab] = useState<
@@ -24,7 +25,8 @@ export default function AdminHubPage() {
   >("overview");
 
   return (
-    <div className="min-h-screen flex bg-[#F8F5EF] text-[#0F172A]">
+    <RouteGuard requiredRole="admin">
+      <div className="min-h-screen flex bg-[#F8F5EF] text-[#0F172A]">
       <PortalSidebar />
 
       <main className="flex-1 p-6 sm:p-10 max-w-6xl pb-24 md:pb-10 space-y-8">
@@ -243,7 +245,8 @@ export default function AdminHubPage() {
         )}
       </main>
 
-      <MobileBottomNav />
-    </div>
+        <MobileBottomNav />
+      </div>
+    </RouteGuard>
   );
 }

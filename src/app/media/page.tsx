@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { PortalSidebar } from "@/components/dashboard/PortalSidebar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { Download, HardDrive, Image as ImageIcon, Video, Box, FileText } from "lucide-react";
+import { RouteGuard } from "@/components/auth/RouteGuard";
 
 const ASSETS = [
   {
@@ -53,7 +54,8 @@ export default function MediaLibraryPage() {
       : ASSETS.filter((a) => a.type === activeFilter);
 
   return (
-    <div className="min-h-screen flex bg-[#F8F5EF] text-[#0F172A]">
+    <RouteGuard requiredRole="client">
+      <div className="min-h-screen flex bg-[#F8F5EF] text-[#0F172A]">
       <PortalSidebar />
 
       <main className="flex-1 p-6 sm:p-10 max-w-5xl pb-24 md:pb-10 space-y-8">
@@ -139,7 +141,8 @@ export default function MediaLibraryPage() {
         </div>
       </main>
 
-      <MobileBottomNav />
-    </div>
+        <MobileBottomNav />
+      </div>
+    </RouteGuard>
   );
 }

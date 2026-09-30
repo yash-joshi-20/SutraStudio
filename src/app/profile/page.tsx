@@ -6,6 +6,7 @@ import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Card";
 import { Save, Building, Mail, Phone, Upload } from "lucide-react";
+import { RouteGuard } from "@/components/auth/RouteGuard";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState({
@@ -25,7 +26,8 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#F8F5EF] text-[#0F172A]">
+    <RouteGuard requiredRole="client">
+      <div className="min-h-screen flex bg-[#F8F5EF] text-[#0F172A]">
       <PortalSidebar />
 
       <main className="flex-1 p-6 sm:p-10 max-w-4xl pb-24 md:pb-10 space-y-8">
@@ -123,7 +125,8 @@ export default function ProfilePage() {
         </form>
       </main>
 
-      <MobileBottomNav />
-    </div>
+        <MobileBottomNav />
+      </div>
+    </RouteGuard>
   );
 }

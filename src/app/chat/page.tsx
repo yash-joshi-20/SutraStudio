@@ -6,6 +6,7 @@ import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { LotusSymbol } from "@/components/brand/SutraLogo";
 import { Button } from "@/components/ui/Button";
 import { Send, Bot, UserCheck, Paperclip, Sparkles } from "lucide-react";
+import { RouteGuard } from "@/components/auth/RouteGuard";
 
 interface Message {
   id: string;
@@ -87,7 +88,8 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#F8F5EF] text-[#0F172A]">
+    <RouteGuard requiredRole="client">
+      <div className="min-h-screen flex bg-[#F8F5EF] text-[#0F172A]">
       <PortalSidebar />
 
       <main className="flex-1 p-4 sm:p-8 max-w-5xl flex flex-col h-[calc(100vh-2rem)] pb-24 md:pb-8">
@@ -238,7 +240,8 @@ export default function ChatPage() {
         </form>
       </main>
 
-      <MobileBottomNav />
-    </div>
+        <MobileBottomNav />
+      </div>
+    </RouteGuard>
   );
 }
