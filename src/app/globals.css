@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+:root {
+  --background: #F8F5EF;
+  --surface: #FFFDF9;
+  --surface-card: #FFFFFF;
+  --foreground: #0F172A;
+  --muted: #64748B;
+  --muted-light: #94A3B8;
+  --border: #EADFCB;
+  --border-light: #F4EFE6;
+  --saffron: #D4A35A;
+  --saffron-hover: #B98A3E;
+  --saffron-subtle: #FDF9F0;
+  --brown: #5C3A1E;
+  --brown-hover: #4A2E17;
+  --status-progress: #C2761A;
+  --status-completed: #2E7D4F;
+  --status-review: #3B6FB6;
+  --status-pending: #B45309;
+  --status-error: #B42318;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-card: var(--surface-card);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-light: var(--muted-light);
+  --color-border: var(--border);
+  --color-border-light: var(--border-light);
+  --color-saffron: var(--saffron);
+  --color-saffron-hover: var(--saffron-hover);
+  --color-saffron-subtle: var(--saffron-subtle);
+  --color-brown: var(--brown);
+  --color-brown-hover: var(--brown-hover);
+  --color-status-progress: var(--status-progress);
+  --color-status-completed: var(--status-completed);
+  --color-status-review: var(--status-review);
+  --color-status-pending: var(--status-pending);
+  --color-status-error: var(--status-error);
+  --font-serif: var(--font-playfair), Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Custom Typography Utilities */
+.font-display {
+  font-family: var(--font-playfair), Georgia, serif;
+}
+
+.text-gold-gradient {
+  background: linear-gradient(135deg, #E2B872 0%, #D4A35A 45%, #9B6834 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-dark-gold {
+  background: linear-gradient(135deg, #D4A35A 0%, #8A5A2B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bg-gold-gradient {
+  background: linear-gradient(135deg, #E2B872 0%, #D4A35A 45%, #9B6834 100%);
+}
+
+.bg-dark-band {
+  background: linear-gradient(135deg, #0F172A 0%, #1E1712 100%);
+}
+
+/* Subtle elevation shadow */
+.shadow-warm {
+  box-shadow: 0 8px 30px rgba(92, 58, 30, 0.07);
+}
+
+.shadow-warm-hover {
+  box-shadow: 0 16px 40px rgba(92, 58, 30, 0.12);
+}
+
+/* Reduced motion compliance */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
