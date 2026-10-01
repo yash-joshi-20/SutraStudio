@@ -9,6 +9,12 @@ export interface ServiceItem {
   startingPrice: string;
   deliverables: string[];
   icon: string;
+  thumbnail: string;
+  badge: "4K Image" | "Video" | "3D" | "360°" | "Interior" | "Elevations" | "Growth" | "Meta Ads" | "Next.js" | "Web App" | "Mobile" | "Automation";
+  mediaType: "image" | "video" | "3d" | "360" | "interactive" | "code";
+  mediaFormat: string;
+  turnaround: string;
+  pipelineEngine: string;
 }
 
 export const SUTRA_SERVICES: ServiceItem[] = [
@@ -24,6 +30,12 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     startingPrice: "$250",
     deliverables: ["4K High-Res Renders", "Commercial Usage Rights", "Multi-Angle Mockups"],
     icon: "Image",
+    thumbnail: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=800&q=80",
+    badge: "4K Image",
+    mediaType: "image",
+    mediaFormat: "PNG / TIFF (3840×2160)",
+    turnaround: "24–48 Hours",
+    pipelineEngine: "Midjourney v6.1 + Real-ESRGAN Upscale",
   },
   {
     id: "vid-creation",
@@ -37,6 +49,12 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     startingPrice: "$450",
     deliverables: ["10-30s Cinematic Ad", "Voiceover Audio", "Vertical & Horizontal Aspect Ratios"],
     icon: "Video",
+    thumbnail: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
+    badge: "Video",
+    mediaType: "video",
+    mediaFormat: "ProRes / 4K MP4 (24fps)",
+    turnaround: "48–72 Hours",
+    pipelineEngine: "Runway Gen-3 Alpha + ElevenLabs Audio",
   },
   {
     id: "3d-modeling",
@@ -50,6 +68,12 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     startingPrice: "$500",
     deliverables: ["glTF / USDZ Files", "PBR Textured Models", "Turntable Renders"],
     icon: "Box",
+    thumbnail: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=800&q=80",
+    badge: "3D",
+    mediaType: "3d",
+    mediaFormat: "GLTF / USDZ / OBJ (PBR Textures)",
+    turnaround: "48–72 Hours",
+    pipelineEngine: "Meshy v2 + Blender Geometry Nodes",
   },
   {
     id: "360-view",
@@ -63,6 +87,12 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     startingPrice: "$600",
     deliverables: ["Interactive Panorama Viewer", "Hotspot Annotations", "Embeddable Web Code"],
     icon: "Compass",
+    thumbnail: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80",
+    badge: "360°",
+    mediaType: "360",
+    mediaFormat: "Equirectangular HDR / WebXR Panoramas",
+    turnaround: "2–4 Days",
+    pipelineEngine: "Pannellum HDR Equirectangular Engine",
   },
   {
     id: "interior-design",
@@ -76,6 +106,12 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     startingPrice: "$650",
     deliverables: ["High-Res Renders", "Moodboard & Color Schemes", "Furniture Layout Specs"],
     icon: "Home",
+    thumbnail: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=800&q=80",
+    badge: "Interior",
+    mediaType: "image",
+    mediaFormat: "High-Res Render Suite (4K PNG)",
+    turnaround: "48–72 Hours",
+    pipelineEngine: "ControlNet SDXL Architecture + Depth Maps",
   },
   {
     id: "window-design",
@@ -89,6 +125,12 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     startingPrice: "$350",
     deliverables: ["Elevation Profiles", "Glass Material Studies", "Facade Renders"],
     icon: "Grid",
+    thumbnail: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80",
+    badge: "Elevations",
+    mediaType: "image",
+    mediaFormat: "CAD DWG / 4K Render Passes",
+    turnaround: "24–48 Hours",
+    pipelineEngine: "Parametric Facade Modeler + V-Ray",
   },
   {
     id: "digital-marketing",
@@ -102,6 +144,12 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     startingPrice: "$800",
     deliverables: ["Monthly Content Calendar", "Copywriting Decks", "Competitor Trend Analysis"],
     icon: "TrendingUp",
+    thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
+    badge: "Growth",
+    mediaType: "interactive",
+    mediaFormat: "PDF Strategy Deck / Notion Workspace",
+    turnaround: "3–5 Days",
+    pipelineEngine: "Sutra Growth Analytics Engine",
   },
   {
     id: "meta-ads",
@@ -115,6 +163,12 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     startingPrice: "$750",
     deliverables: ["Targeting Blueprint", "5 Creative Ad Variations", "Conversion Tracking Setup"],
     icon: "Share2",
+    thumbnail: "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80",
+    badge: "Meta Ads",
+    mediaType: "interactive",
+    mediaFormat: "Multi-Ratio Ad Pack (1:1, 9:16, 16:9)",
+    turnaround: "48 Hours",
+    pipelineEngine: "Automated Multi-Aspect Banner Pipeline",
   },
   {
     id: "web-dev",
@@ -128,6 +182,12 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     startingPrice: "$1,200",
     deliverables: ["Full Responsive Web Code", "SEO & Meta Optimization", "CMS Integration"],
     icon: "Globe",
+    thumbnail: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
+    badge: "Next.js",
+    mediaType: "code",
+    mediaFormat: "Next.js 16 / TypeScript / Tailwind CSS",
+    turnaround: "5–7 Days",
+    pipelineEngine: "Next.js 16 Turbopack CI/CD",
   },
   {
     id: "webapp-dev",
@@ -141,6 +201,12 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     startingPrice: "$2,400",
     deliverables: ["Auth & RBAC", "Firestore Real-time DB", "Production-Ready Code"],
     icon: "Layout",
+    thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80",
+    badge: "Web App",
+    mediaType: "interactive",
+    mediaFormat: "React / Firebase Cloud Firestore / Next.js",
+    turnaround: "7–14 Days",
+    pipelineEngine: "Full-Stack Portal Scaffolder",
   },
   {
     id: "mobile-setup",
@@ -154,6 +220,12 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     startingPrice: "$2,800",
     deliverables: ["Expo / React Native Codebase", "iOS & Android Builds", "Push Notification Setup"],
     icon: "Smartphone",
+    thumbnail: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=800&q=80",
+    badge: "Mobile",
+    mediaType: "interactive",
+    mediaFormat: "React Native Expo / iOS IPA / Android APK",
+    turnaround: "10–14 Days",
+    pipelineEngine: "React Native Mobile Engine",
   },
   {
     id: "ai-automation",
@@ -167,5 +239,11 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     startingPrice: "$950",
     deliverables: ["n8n Workflow Blueprints", "Webhook Security Verification", "Drive Automated Pipeline"],
     icon: "Cpu",
+    thumbnail: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80",
+    badge: "Automation",
+    mediaType: "code",
+    mediaFormat: "n8n JSON Blueprint + Cloud Webhooks",
+    turnaround: "48–72 Hours",
+    pipelineEngine: "n8n HMAC Webhook & Drive Router",
   },
 ];

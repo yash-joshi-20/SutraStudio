@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
@@ -33,6 +34,7 @@ import {
   Sparkles,
   Bot,
   Layers,
+  Play,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -197,8 +199,6 @@ export default function ServicesPage() {
             >
               <AnimatePresence>
                 {filteredServices.map((service) => {
-                  const icon = ICON_MAP[service.icon] || <Cpu className="w-5 h-5 text-[#5C3A1E]" />;
-
                   return (
                     <motion.div
                       key={service.id}
@@ -207,48 +207,107 @@ export default function ServicesPage() {
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.96 }}
                       transition={{ duration: 0.2 }}
-                      className="group flex flex-col justify-between rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 transition-all duration-300 hover:border-[#D4A35A] hover:shadow-warm-hover"
+                      className="group flex flex-col justify-between rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] overflow-hidden transition-all duration-300 hover:border-[#D4A35A] hover:shadow-warm-hover"
                     >
                       <div>
-                        {/* Top Meta Bar */}
-                        <div className="flex items-center justify-between mb-5">
-                          <div className="w-12 h-12 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB]/80 flex items-center justify-center transition-colors group-hover:bg-[#F4EFE6]">
-                            {icon}
+                        {/* Aspect Ratio Media Presentation Banner */}
+                        <div className="relative aspect-[16/10] w-full overflow-hidden bg-[#F4EFE6]">
+                          <Image
+                            src={service.thumbnail}
+                            alt={service.name}
+                            fill
+                            className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                          />
+
+                          {/* Media Presentation Badges Overlay */}
+                          <div className="absolute top-3.5 left-3.5 z-10 flex items-center gap-1.5 flex-wrap">
+                            <span className="rounded-full bg-[#171717]/85 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-semibold text-white border border-white/10 uppercase tracking-wider">
+                              {service.category}
+                            </span>
+
+                            {service.mediaType === "video" && (
+                              <span className="rounded-full bg-[#D4A35A] px-2 py-0.5 text-[10px] font-bold text-[#0F172A] flex items-center gap-1 shadow-sm">
+                                <Play className="w-2.5 h-2.5 fill-current" />
+                                Reel
+                              </span>
+                            )}
+
+                            {service.mediaType === "360" && (
+                              <span className="rounded-full bg-[#D4A35A] px-2 py-0.5 text-[10px] font-bold text-[#0F172A] flex items-center gap-1 shadow-sm">
+                                <Compass className="w-2.5 h-2.5" />
+                                360° VR
+                              </span>
+                            )}
+
+                            {service.mediaType === "3d" && (
+                              <span className="rounded-full bg-[#D4A35A] px-2 py-0.5 text-[10px] font-bold text-[#0F172A] flex items-center gap-1 shadow-sm">
+                                <Box className="w-2.5 h-2.5" />
+                                3D GLTF
+                              </span>
+                            )}
+
+                            {service.mediaType === "image" && (
+                              <span className="rounded-full bg-white/90 backdrop-blur-sm px-2 py-0.5 text-[10px] font-bold text-[#5C3A1E] flex items-center gap-1 shadow-xs border border-[#EADFCB]">
+                                <ImageIcon className="w-2.5 h-2.5 text-[#5C3A1E]" />
+                                4K Pass
+                              </span>
+                            )}
                           </div>
-                          <Badge variant="gold" size="sm" showDot={false}>
-                            {service.category}
-                          </Badge>
+
+                          {/* Turnaround Badge */}
+                          <div className="absolute top-3.5 right-3.5 z-10">
+                            <span className="rounded-full bg-white/90 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-mono font-medium text-[#5C3A1E] border border-[#EADFCB] shadow-xs flex items-center gap-1">
+                              <Clock className="w-2.5 h-2.5 text-[#A98B57]" />
+                              {service.turnaround.split(" ")[0]}
+                            </span>
+                          </div>
+
+                          {/* Scrim Overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/75 via-transparent to-transparent opacity-65 group-hover:opacity-40 transition-opacity" />
+
+                          {/* Bottom Banner Strip */}
+                          <div className="absolute bottom-2.5 left-3.5 right-3.5 flex items-center justify-between text-[11px] font-mono text-white/90 z-10">
+                            <span className="truncate max-w-[170px] drop-shadow-sm text-[10px] text-[#F8F5EF]/90">
+                              {service.pipelineEngine.split("+")[0].trim()}
+                            </span>
+                            <span className="text-[10px] text-[#D4A35A] font-semibold drop-shadow-sm">
+                              {service.badge}
+                            </span>
+                          </div>
                         </div>
 
-                        {/* Title & Tagline */}
-                        <h3 className="font-serif text-xl font-semibold text-[#0F172A] tracking-tight group-hover:text-[#5C3A1E] transition-colors">
-                          {service.name}
-                        </h3>
-                        <p className="text-xs font-semibold text-[#A98B57] mt-0.5 mb-3 tracking-wide">
-                          {service.tagline}
-                        </p>
-                        <p className="text-xs text-[#64748B] leading-relaxed line-clamp-3 mb-4">
-                          {service.description}
-                        </p>
+                        {/* Title, Tagline & Description */}
+                        <div className="p-5 pb-3">
+                          <h3 className="font-serif text-lg font-semibold text-[#0F172A] tracking-tight group-hover:text-[#5C3A1E] transition-colors leading-snug">
+                            {service.name}
+                          </h3>
+                          <p className="text-xs font-semibold text-[#A98B57] mt-0.5 mb-2.5 tracking-wide">
+                            {service.tagline}
+                          </p>
+                          <p className="text-xs text-[#64748B] leading-relaxed line-clamp-2 mb-3.5">
+                            {service.description}
+                          </p>
 
-                        {/* Deliverables Checklist */}
-                        <div className="space-y-1.5 pt-3 border-t border-[#EADFCB]/50">
-                          {service.deliverables.map((item, idx) => (
-                            <div
-                              key={idx}
-                              className="flex items-center gap-2 text-[11px] text-[#475569]"
-                            >
-                              <CheckCircle2 className="w-3.5 h-3.5 text-[#2E7D4F] shrink-0" />
-                              <span className="truncate">{item}</span>
-                            </div>
-                          ))}
+                          {/* Deliverables Checklist */}
+                          <div className="space-y-1.5 pt-3 border-t border-[#EADFCB]/50">
+                            {service.deliverables.map((item, idx) => (
+                              <div
+                                key={idx}
+                                className="flex items-center gap-2 text-[11px] text-[#475569]"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5 text-[#2E7D4F] shrink-0" />
+                                <span className="truncate">{item}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
 
                       {/* Card Footer: Starting Price & Quick Actions */}
-                      <div className="mt-6 pt-4 border-t border-[#EADFCB]/60 flex items-center justify-between">
+                      <div className="p-5 pt-3 border-t border-[#EADFCB]/60 flex items-center justify-between">
                         <div>
-                          <span className="text-[10px] text-[#94A3B8] uppercase block tracking-wider font-semibold">
+                          <span className="text-[10px] text-[#94A3B8] uppercase block tracking-wider font-mono">
                             Starting from
                           </span>
                           <span className="font-serif text-lg font-bold text-[#5C3A1E]">
@@ -258,14 +317,15 @@ export default function ServicesPage() {
 
                         <div className="flex items-center gap-2">
                           <button
+                            type="button"
                             onClick={() => setSelectedService(service)}
-                            title="Inspect Scope & Workflow"
-                            className="p-2 rounded-xl bg-[#F8F5EF] text-[#5C3A1E] border border-[#EADFCB] hover:border-[#D4A35A] transition-colors cursor-pointer text-xs"
+                            title="Inspect Scope & Media"
+                            className="px-2.5 py-1.5 rounded-xl bg-[#F8F5EF] text-[#5C3A1E] border border-[#EADFCB] hover:border-[#D4A35A] transition-colors cursor-pointer text-xs font-medium"
                           >
                             Details
                           </button>
                           <Link href={`/orders?service=${service.slug}`}>
-                            <div className="w-9 h-9 rounded-xl bg-[#5C3A1E] text-white flex items-center justify-center transition-transform hover:scale-105 shadow-xs cursor-pointer">
+                            <div className="w-8 h-8 rounded-xl bg-[#5C3A1E] text-white flex items-center justify-center transition-transform hover:scale-105 shadow-xs cursor-pointer">
                               <ArrowUpRight className="w-4 h-4" />
                             </div>
                           </Link>
@@ -383,28 +443,64 @@ export default function ServicesPage() {
       >
         {selectedService && (
           <div className="space-y-6">
-            <div className="p-4 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-between">
-              <div>
-                <span className="text-xs text-[#64748B]">Category</span>
-                <p className="font-bold text-[#0F172A]">{selectedService.category}</p>
+            {/* Visual Media Preview Banner */}
+            <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-[#F4EFE6] border border-[#EADFCB]">
+              <Image
+                src={selectedService.thumbnail}
+                alt={selectedService.name}
+                fill
+                className="object-cover"
+              />
+              <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
+                <span className="rounded-full bg-[#171717]/85 backdrop-blur-md px-3 py-1 text-xs font-semibold text-white border border-white/10 uppercase tracking-wider">
+                  {selectedService.category}
+                </span>
+                <span className="rounded-full bg-[#D4A35A] px-3 py-1 text-xs font-bold text-[#0F172A] shadow-sm">
+                  {selectedService.badge}
+                </span>
               </div>
-              <div className="text-right">
-                <span className="text-xs text-[#64748B]">Starting Investment</span>
-                <p className="font-serif text-xl font-bold text-[#5C3A1E]">
-                  {selectedService.startingPrice}
-                </p>
+              <div className="absolute top-4 right-4 z-10">
+                <span className="rounded-full bg-white/95 backdrop-blur-md px-3 py-1 text-xs font-mono font-medium text-[#5C3A1E] border border-[#EADFCB] shadow-xs flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-[#A98B57]" />
+                  {selectedService.turnaround}
+                </span>
               </div>
             </div>
 
+            {/* Service Metadata Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] text-xs">
+              <div>
+                <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">Starting Investment</span>
+                <span className="font-serif text-lg font-bold text-[#5C3A1E]">{selectedService.startingPrice}</span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">Turnaround</span>
+                <span className="font-medium text-[#0F172A]">{selectedService.turnaround}</span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">Master Format</span>
+                <span className="font-medium text-[#0F172A] truncate block" title={selectedService.mediaFormat}>
+                  {selectedService.mediaFormat.split("(")[0].trim()}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">Pipeline Engine</span>
+                <span className="font-medium text-[#5C3A1E] truncate block" title={selectedService.pipelineEngine}>
+                  {selectedService.pipelineEngine.split("+")[0].trim()}
+                </span>
+              </div>
+            </div>
+
+            {/* Deliverable Specifications */}
             <div>
-              <h4 className="text-xs font-bold uppercase tracking-wider text-[#A98B57] mb-2">
-                Deliverable Specifications
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#A98B57] mb-2.5">
+                Included Deliverable Specifications
               </h4>
               <ul className="space-y-2">
                 {selectedService.deliverables.map((item, idx) => (
                   <li
                     key={idx}
-                    className="flex items-center gap-2 text-sm text-[#0F172A]"
+                    className="flex items-center gap-2.5 text-sm text-[#0F172A] p-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB]/60"
                   >
                     <CheckCircle2 className="w-4 h-4 text-[#2E7D4F] shrink-0" />
                     <span>{item}</span>
@@ -413,17 +509,18 @@ export default function ServicesPage() {
               </ul>
             </div>
 
-            <div>
-              <h4 className="text-xs font-bold uppercase tracking-wider text-[#A98B57] mb-2">
-                Workflow & Pipeline
+            {/* Workflow & Google Drive Cloud Vault Storage */}
+            <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] space-y-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#A98B57]">
+                Production & Cloud Vault Routing
               </h4>
               <p className="text-xs text-[#64748B] leading-relaxed">
-                Executed through our {selectedService.workflow} generative pipeline.
-                Includes initial creative moodboarding, automated draft render,
-                art-director human pass, and cloud delivery to your Google Drive vault.
+                Executed via Sutra Studio isolated <strong className="text-[#0F172A]">{selectedService.pipelineEngine}</strong> pipeline.
+                High-resolution master files and source assets will be synchronized automatically into your private encrypted Google Drive project folder upon art-director review.
               </p>
             </div>
 
+            {/* Action Buttons */}
             <div className="pt-4 border-t border-[#EADFCB] flex items-center justify-between gap-4">
               <Button
                 variant="ghost"
