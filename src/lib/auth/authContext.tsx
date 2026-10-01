@@ -10,6 +10,7 @@ export interface AuthUser {
   displayName: string;
   role: UserRole;
   driveFolderId?: string;
+  company?: string;
 }
 
 interface AuthContextType {
