@@ -13,7 +13,15 @@ export const VALID_WORKFLOW_ENGINES = [
 
 export type ValidWorkflowEngine = (typeof VALID_WORKFLOW_ENGINES)[number];
 
-export async function GET() {
+export async function GET(req: Request) {
+  const userRole = req.headers.get("x-user-role");
+  if (userRole === "client") {
+    return NextResponse.json(
+      { error: "Forbidden: Client accounts are strictly prohibited from inspecting internal workflow infrastructure." },
+      { status: 403 }
+    );
+  }
+
   return NextResponse.json({
     studio: "Sutra Studio",
     architecture: "Isolated n8n Multi-Engine Router",
@@ -25,6 +33,14 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const userRole = req.headers.get("x-user-role");
+    if (userRole === "client") {
+      return NextResponse.json(
+        { error: "Forbidden: Administrative clearance required to trigger executive workflow execution." },
+        { status: 403 }
+      );
+    }
+
     const { orderId, workflowType, action } = await req.json();
 
     if (!workflowType || !VALID_WORKFLOW_ENGINES.includes(workflowType as ValidWorkflowEngine)) {

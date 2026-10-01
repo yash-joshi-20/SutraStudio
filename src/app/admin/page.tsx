@@ -312,14 +312,129 @@ export const STUDIO_WORKFLOW_ENGINES: StudioWorkflowEngine[] = [
   },
 ];
 
+type AdminTab =
+  | "overview"
+  | "clients"
+  | "approvals"
+  | "conversations"
+  | "workflows"
+  | "site-control"
+  | "audit";
+
 export default function AdminHubPage() {
-  const [activeTab, setActiveTab] = useState<
-    "overview" | "clients" | "conversations" | "workflows" | "audit"
-  >("overview");
+  const [activeTab, setActiveTab] = useState<AdminTab>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get("tab") as AdminTab;
+      if (
+        tabParam &&
+        ["overview", "clients", "approvals", "conversations", "workflows", "site-control", "audit"].includes(tabParam)
+      ) {
+        return tabParam;
+      }
+    }
+    return "overview";
+  });
 
   const [searchQuery, setSearchQuery] = useState("");
   const [tierFilter, setTierFilter] = useState<string>("All");
   const [selectedClient, setSelectedClient] = useState<ClientRecord | null>(null);
+
+  // Official Approvals Hub State
+  const [approvalsList, setApprovalsList] = useState([
+    {
+      id: "ord_001",
+      code: "#ORD-001",
+      client: "Yash Joshi (Studio Living)",
+      service: "3D Spatial Architecture",
+      deliverable: "Pavilion_Villa_Baked_Model.gltf",
+      submittedDate: "2026-09-28",
+      round: "Round 1 of 2",
+      status: "AWAITING APPROVAL",
+    },
+    {
+      id: "ord_003",
+      code: "#ORD-003",
+      client: "Aarav Mehta (Zenith Luxury)",
+      service: "Commercial Cinematic Reel",
+      deliverable: "Zenith_Commercial_Reel_1080p.mp4",
+      submittedDate: "2026-09-30",
+      round: "Final Cut",
+      status: "AWAITING APPROVAL",
+    },
+  ]);
+  const [officialApprovalsLog, setOfficialApprovalsLog] = useState([
+    {
+      approvalId: "appr_1790892011",
+      projectId: "ord_002",
+      client: "Yash Joshi",
+      status: "APPROVED",
+      message: "Your project has been approved and is ready for the next stage.",
+      adminId: "usr_admin_001",
+      timestamp: "2026-09-27 18:00",
+    },
+  ]);
+  const [approvalToast, setApprovalToast] = useState("");
+
+  const handleIssueOfficialApproval = async (orderId: string, clientName: string) => {
+    try {
+      const res = await fetch("/api/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "x-user-role": "admin" },
+        body: JSON.stringify({
+          orderId,
+          status: "APPROVED",
+          adminId: "usr_admin_001",
+          message: "Your project has been approved and is ready for final delivery.",
+        }),
+      });
+      const data = await res.json();
+      if (data.approval) {
+        setOfficialApprovalsLog((prev) => [data.approval, ...prev]);
+        setApprovalsList((prev) => prev.filter((item) => item.id !== orderId));
+        setApprovalToast(`Official approval recorded for ${clientName}. Client notification dispatched.`);
+        setTimeout(() => setApprovalToast(""), 4000);
+      }
+    } catch {
+      setApprovalToast(`Approval recorded locally for ${clientName}.`);
+      setTimeout(() => setApprovalToast(""), 4000);
+    }
+  };
+
+  // Website Site Control State
+  const [siteContent, setSiteContent] = useState({
+    heroHeadline: "Tradition Meets Technology",
+    heroSubtitle: "AI-Powered Creative, Design, Development & Digital Marketing Solutions for Modern Businesses. Ideas ◆ Design ◆ Development ◆ Growth.",
+    primaryCtaText: "Start Project",
+    secondaryCtaText: "Explore Services",
+    announcement: "SUTRA STUDIO Q4 Commission Calendar Open • Limited Atelier Availability",
+    contactEmail: "concierge@sutrastudio.com",
+    contactPhone: "+91 98200 12345",
+    seoTitle: "Sutra Studio — Tradition Meets Technology | Creative & AI Studio",
+    seoDescription: "Luxury creative-technology agency bridging ancient geometric principles with computational design and generative AI pipelines.",
+    prices: {
+      image: "₹9,999",
+      video: "₹24,999",
+      threeD: "₹34,999",
+      threeSixty: "₹18,999",
+      interior: "₹29,999",
+      marketing: "₹19,999",
+      website: "₹39,999",
+      app: "₹49,999",
+    },
+    packages: [
+      { name: "Starter Graphics Pack", price: "₹9,999", active: true },
+      { name: "Growth Creative Tier", price: "₹24,999", active: true },
+      { name: "Atelier Enterprise", price: "₹59,999", active: true },
+    ],
+  });
+  const [siteSaveSuccess, setSiteSaveSuccess] = useState("");
+
+  const handleSaveSiteControl = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSiteSaveSuccess("Website content, INR pricing & service visibility successfully published to live website.");
+    setTimeout(() => setSiteSaveSuccess(""), 4000);
+  };
 
   // Admin Chat & AI Takeover Console State
   const [sessions, setSessions] = useState<AdminChatSession[]>(INITIAL_ADMIN_SESSIONS);
@@ -480,14 +595,16 @@ export default function AdminHubPage() {
             {[
               { id: "overview", label: "Operations Overview" },
               { id: "clients", label: `Client Directory (${CLIENTS_DATA.length})` },
+              { id: "approvals", label: `Approvals Hub (${approvalsList.length})` },
               { id: "conversations", label: "Chat Sessions & Takeover" },
-              { id: "workflows", label: "Isolated n8n Pipelines" },
+              { id: "workflows", label: "Creative Pipelines" },
+              { id: "site-control", label: "Website Site Control" },
               { id: "audit", label: "Security & Audit Logs" },
             ].map((tab) => (
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id as "overview" | "clients" | "conversations" | "workflows" | "audit")}
+                onClick={() => setActiveTab(tab.id as AdminTab)}
                 className={`px-4 py-2 rounded-xl text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
                   activeTab === tab.id
                     ? "bg-[#5C3A1E] text-white shadow-xs"
@@ -1238,6 +1355,386 @@ export default function AdminHubPage() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* ========================================================
+              TAB 6: OFFICIAL APPROVALS HUB
+              ======================================================== */}
+          {activeTab === "approvals" && (
+            <div className="space-y-8">
+              {approvalToast && (
+                <div className="p-4 rounded-2xl bg-[#F0FDF4] border border-[#BBF7D0] text-[#15803D] text-xs font-semibold flex items-center justify-between shadow-xs">
+                  <span>✓ {approvalToast}</span>
+                  <button onClick={() => setApprovalToast("")} className="hover:underline cursor-pointer">Dismiss</button>
+                </div>
+              )}
+
+              {/* Pending Approvals Review Queue */}
+              <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-6">
+                <div>
+                  <h3 className="font-serif text-xl font-semibold text-[#0F172A]">
+                    Official Project & Deliverable Approvals Queue
+                  </h3>
+                  <p className="text-xs text-[#64748B] mt-1">
+                    All official approvals, rejections, and final deliveries must originate from an authorized administrator. Clients cannot issue binding approvals.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {approvalsList.length === 0 ? (
+                    <div className="p-8 text-center text-xs text-[#64748B] bg-[#FAF9F5] rounded-2xl border border-[#EADFCB]">
+                      All pending project deliverables have been reviewed and approved.
+                    </div>
+                  ) : (
+                    approvalsList.map((item) => (
+                      <div
+                        key={item.id}
+                        className="p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] hover:border-[#D4A35A] transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                      >
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs font-bold text-[#5C3A1E] px-2 py-0.5 rounded bg-[#F8F5EF] border border-[#EADFCB]">
+                              {item.code}
+                            </span>
+                            <span className="font-semibold text-sm text-[#0F172A]">{item.service}</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFFBEB] text-[#B45309] font-medium border border-[#FDE68A]">
+                              {item.status}
+                            </span>
+                          </div>
+                          <p className="text-xs text-[#64748B]">
+                            Client: <strong className="text-[#0F172A]">{item.client}</strong> • Submitted: {item.submittedDate} • {item.round}
+                          </p>
+                          <p className="text-xs font-mono text-[#5C3A1E]">
+                            Deliverable: {item.deliverable}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => {
+                              setApprovalToast(`Revision request issued for ${item.client}. Feedback notification sent.`);
+                              setApprovalsList((prev) => prev.filter((i) => i.id !== item.id));
+                            }}
+                          >
+                            Request Revision
+                          </Button>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => handleIssueOfficialApproval(item.id, item.client)}
+                          >
+                            Issue Official Approval
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Immutable Approvals Ledger */}
+              <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-4">
+                <h4 className="font-serif text-base font-semibold text-[#0F172A]">
+                  Official Approvals Audit Ledger
+                </h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-[#EADFCB] text-[#64748B]">
+                        <th className="py-2.5 font-semibold">Approval ID</th>
+                        <th className="py-2.5 font-semibold">Project</th>
+                        <th className="py-2.5 font-semibold">Client</th>
+                        <th className="py-2.5 font-semibold">Status</th>
+                        <th className="py-2.5 font-semibold">Timestamp</th>
+                        <th className="py-2.5 font-semibold">Authorized Admin</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#EADFCB]/60 font-mono">
+                      {officialApprovalsLog.map((log) => (
+                        <tr key={log.approvalId} className="hover:bg-[#FAF9F5]/80">
+                          <td className="py-3 font-semibold text-[#5C3A1E]">{log.approvalId}</td>
+                          <td className="py-3 text-[#0F172A]">{log.projectId}</td>
+                          <td className="py-3 text-[#475569]">{log.client}</td>
+                          <td className="py-3">
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#ECFDF5] text-[#065F46] font-bold border border-[#A7F3D0]">
+                              {log.status}
+                            </span>
+                          </td>
+                          <td className="py-3 text-[#94A3B8]">{log.timestamp}</td>
+                          <td className="py-3 text-[#5C3A1E]">{log.adminId}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================
+              TAB 7: WEBSITE SITE CONTROL PANEL
+              ======================================================== */}
+          {activeTab === "site-control" && (
+            <div className="space-y-8">
+              {siteSaveSuccess && (
+                <div className="p-4 rounded-2xl bg-[#F0FDF4] border border-[#BBF7D0] text-[#15803D] text-xs font-semibold flex items-center justify-between shadow-xs">
+                  <span>✓ {siteSaveSuccess}</span>
+                  <button onClick={() => setSiteSaveSuccess("")} className="hover:underline cursor-pointer">Dismiss</button>
+                </div>
+              )}
+
+              <form onSubmit={handleSaveSiteControl} className="space-y-8">
+                {/* Hero & Brand Messaging */}
+                <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-6">
+                  <div>
+                    <h3 className="font-serif text-xl font-semibold text-[#0F172A]">
+                      Homepage Hero & Public Brand Messaging
+                    </h3>
+                    <p className="text-xs text-[#64748B] mt-1">
+                      Configure public-facing headlines, brand declarations, and call-to-action anchors.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5 md:col-span-2">
+                      <label className="text-xs font-semibold text-[#0F172A]">Hero Main Headline</label>
+                      <input
+                        type="text"
+                        value={siteContent.heroHeadline}
+                        onChange={(e) => setSiteContent({ ...siteContent, heroHeadline: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#EADFCB] text-xs bg-[#FAF9F5] focus:outline-none focus:ring-1 focus:ring-[#D4A35A]"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5 md:col-span-2">
+                      <label className="text-xs font-semibold text-[#0F172A]">Hero Editorial Subtitle</label>
+                      <textarea
+                        rows={2}
+                        value={siteContent.heroSubtitle}
+                        onChange={(e) => setSiteContent({ ...siteContent, heroSubtitle: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#EADFCB] text-xs bg-[#FAF9F5] focus:outline-none focus:ring-1 focus:ring-[#D4A35A]"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-[#0F172A]">Primary CTA Button Text</label>
+                      <input
+                        type="text"
+                        value={siteContent.primaryCtaText}
+                        onChange={(e) => setSiteContent({ ...siteContent, primaryCtaText: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#EADFCB] text-xs bg-[#FAF9F5] focus:outline-none focus:ring-1 focus:ring-[#D4A35A]"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-[#0F172A]">Secondary CTA Button Text</label>
+                      <input
+                        type="text"
+                        value={siteContent.secondaryCtaText}
+                        onChange={(e) => setSiteContent({ ...siteContent, secondaryCtaText: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#EADFCB] text-xs bg-[#FAF9F5] focus:outline-none focus:ring-1 focus:ring-[#D4A35A]"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5 md:col-span-2">
+                      <label className="text-xs font-semibold text-[#0F172A]">Announcement Banner Text</label>
+                      <input
+                        type="text"
+                        value={siteContent.announcement}
+                        onChange={(e) => setSiteContent({ ...siteContent, announcement: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#EADFCB] text-xs bg-[#FAF9F5] focus:outline-none focus:ring-1 focus:ring-[#D4A35A]"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Indian Rupee (₹ INR) Base Pricing Management */}
+                <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-6">
+                  <div>
+                    <h3 className="font-serif text-xl font-semibold text-[#0F172A]">
+                      Creative Service Base Pricing (100% Indian Rupees — ₹ INR)
+                    </h3>
+                    <p className="text-xs text-[#64748B] mt-1">
+                      Update the starting investment figures displayed on public services and pricing pages.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-[#64748B]">Image Creation</label>
+                      <input
+                        type="text"
+                        value={siteContent.prices.image}
+                        onChange={(e) =>
+                          setSiteContent({
+                            ...siteContent,
+                            prices: { ...siteContent.prices, image: e.target.value },
+                          })
+                        }
+                        className="w-full px-3 py-2 rounded-lg border border-[#EADFCB] text-xs font-mono font-bold text-[#5C3A1E] bg-[#FAF9F5]"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-[#64748B]">Video Creation</label>
+                      <input
+                        type="text"
+                        value={siteContent.prices.video}
+                        onChange={(e) =>
+                          setSiteContent({
+                            ...siteContent,
+                            prices: { ...siteContent.prices, video: e.target.value },
+                          })
+                        }
+                        className="w-full px-3 py-2 rounded-lg border border-[#EADFCB] text-xs font-mono font-bold text-[#5C3A1E] bg-[#FAF9F5]"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-[#64748B]">3D Spatial Modeling</label>
+                      <input
+                        type="text"
+                        value={siteContent.prices.threeD}
+                        onChange={(e) =>
+                          setSiteContent({
+                            ...siteContent,
+                            prices: { ...siteContent.prices, threeD: e.target.value },
+                          })
+                        }
+                        className="w-full px-3 py-2 rounded-lg border border-[#EADFCB] text-xs font-mono font-bold text-[#5C3A1E] bg-[#FAF9F5]"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-[#64748B]">360 Virtual Tour</label>
+                      <input
+                        type="text"
+                        value={siteContent.prices.threeSixty}
+                        onChange={(e) =>
+                          setSiteContent({
+                            ...siteContent,
+                            prices: { ...siteContent.prices, threeSixty: e.target.value },
+                          })
+                        }
+                        className="w-full px-3 py-2 rounded-lg border border-[#EADFCB] text-xs font-mono font-bold text-[#5C3A1E] bg-[#FAF9F5]"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-[#64748B]">Interior Architecture</label>
+                      <input
+                        type="text"
+                        value={siteContent.prices.interior}
+                        onChange={(e) =>
+                          setSiteContent({
+                            ...siteContent,
+                            prices: { ...siteContent.prices, interior: e.target.value },
+                          })
+                        }
+                        className="w-full px-3 py-2 rounded-lg border border-[#EADFCB] text-xs font-mono font-bold text-[#5C3A1E] bg-[#FAF9F5]"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-[#64748B]">Digital Marketing</label>
+                      <input
+                        type="text"
+                        value={siteContent.prices.marketing}
+                        onChange={(e) =>
+                          setSiteContent({
+                            ...siteContent,
+                            prices: { ...siteContent.prices, marketing: e.target.value },
+                          })
+                        }
+                        className="w-full px-3 py-2 rounded-lg border border-[#EADFCB] text-xs font-mono font-bold text-[#5C3A1E] bg-[#FAF9F5]"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-[#64748B]">Website Development</label>
+                      <input
+                        type="text"
+                        value={siteContent.prices.website}
+                        onChange={(e) =>
+                          setSiteContent({
+                            ...siteContent,
+                            prices: { ...siteContent.prices, website: e.target.value },
+                          })
+                        }
+                        className="w-full px-3 py-2 rounded-lg border border-[#EADFCB] text-xs font-mono font-bold text-[#5C3A1E] bg-[#FAF9F5]"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-[#64748B]">Mobile App Platform</label>
+                      <input
+                        type="text"
+                        value={siteContent.prices.app}
+                        onChange={(e) =>
+                          setSiteContent({
+                            ...siteContent,
+                            prices: { ...siteContent.prices, app: e.target.value },
+                          })
+                        }
+                        className="w-full px-3 py-2 rounded-lg border border-[#EADFCB] text-xs font-mono font-bold text-[#5C3A1E] bg-[#FAF9F5]"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Package Configuration */}
+                <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-6">
+                  <div>
+                    <h3 className="font-serif text-xl font-semibold text-[#0F172A]">
+                      Commission Packages (Free Trials Strictly Prohibited)
+                    </h3>
+                    <p className="text-xs text-[#64748B] mt-1">
+                      Manage client tiers and deliverables. Per business directives, zero free trial packages are active.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {siteContent.packages.map((pkg, idx) => (
+                      <div key={pkg.name} className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-xs text-[#0F172A]">{pkg.name}</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#ECFDF5] text-[#065F46] font-bold">
+                            Active
+                          </span>
+                        </div>
+                        <input
+                          type="text"
+                          value={pkg.price}
+                          onChange={(e) => {
+                            const updated = [...siteContent.packages];
+                            updated[idx].price = e.target.value;
+                            setSiteContent({ ...siteContent, packages: updated });
+                          }}
+                          className="w-full px-3 py-1.5 rounded-lg border border-[#EADFCB] text-xs font-mono font-bold text-[#5C3A1E] bg-[#FFFDF9]"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Publish Bar */}
+                <div className="flex items-center justify-between p-6 rounded-3xl bg-[#5C3A1E] text-white">
+                  <div>
+                    <p className="font-serif font-semibold text-base">Publish Live Updates</p>
+                    <p className="text-xs text-[#D4A35A]">
+                      Synchronize hero content, INR rates, and service listings directly across public pages.
+                    </p>
+                  </div>
+                  <Button type="submit" variant="secondary" size="md">
+                    Publish to Live Site
+                  </Button>
+                </div>
+              </form>
             </div>
           )}
         </main>

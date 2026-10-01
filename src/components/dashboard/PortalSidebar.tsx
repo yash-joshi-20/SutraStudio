@@ -19,20 +19,31 @@ import {
 import { useAuth } from "@/lib/auth/authContext";
 import { Avatar } from "@/components/ui/Avatar";
 
-const SIDEBAR_ITEMS = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+const CLIENT_NAV_ITEMS = [
+  { name: "Workspace", href: "/dashboard", icon: LayoutDashboard },
   { name: "My Orders", href: "/orders", icon: ShoppingBag },
   { name: "My Projects", href: "/projects-client", icon: FolderGit2 },
-  { name: "Media Library", href: "/media", icon: FolderOpen },
-  { name: "AI Chat", href: "/chat", icon: Bot },
+  { name: "Media Vault", href: "/media", icon: FolderOpen },
+  { name: "Sutra AI", href: "/chat", icon: Bot },
   { name: "Invoices", href: "/invoices", icon: FileText },
   { name: "Profile", href: "/profile", icon: User },
-  { name: "Admin Hub", href: "/admin", icon: ShieldCheck },
+];
+
+const ADMIN_NAV_ITEMS = [
+  { name: "Operations Hub", href: "/admin", icon: ShieldCheck },
+  { name: "Client Directory", href: "/admin?tab=clients", icon: LayoutDashboard },
+  { name: "Approvals Hub", href: "/admin?tab=approvals", icon: ShoppingBag },
+  { name: "Chat & Takeover", href: "/admin?tab=conversations", icon: Bot },
+  { name: "Creative Pipelines", href: "/admin?tab=workflows", icon: FolderGit2 },
+  { name: "Website Site Control", href: "/admin?tab=site-control", icon: FileText },
+  { name: "Security Audit", href: "/admin?tab=audit", icon: User },
 ];
 
 export function PortalSidebar() {
   const pathname = usePathname();
-  const { user, role, loginAs, logout } = useAuth();
+  const { user, role, logout } = useAuth();
+  const isAdmin = role === "admin";
+  const navItems = isAdmin ? ADMIN_NAV_ITEMS : CLIENT_NAV_ITEMS;
 
   return (
     <aside className="w-64 shrink-0 border-r border-[#EADFCB] bg-[#FFFDF9] min-h-screen p-6 flex flex-col justify-between hidden md:flex">
@@ -42,25 +53,22 @@ export function PortalSidebar() {
           <SutraLogo variant="horizontal" size="sm" href="/" />
         </div>
 
-        {/* Role Mode Banner */}
-        <div className="mt-4 p-2.5 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-between text-xs">
-          <div>
-            <span className="text-[10px] text-[#64748B] block uppercase tracking-wider font-semibold">Active Role</span>
-            <span className="font-bold text-[#5C3A1E] uppercase">{role}</span>
+        {/* Portal Scope Indicator (Admin Only) */}
+        {isAdmin && (
+          <div className="mt-4 p-2.5 rounded-xl bg-[#5C3A1E] text-white flex items-center justify-between text-xs shadow-xs">
+            <div>
+              <span className="text-[10px] text-[#D4A35A] block uppercase tracking-wider font-semibold">Executive Terminal</span>
+              <span className="font-bold text-white uppercase">Supervisor Mode</span>
+            </div>
+            <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-pulse" />
           </div>
-          <button
-            onClick={() => loginAs(role === "admin" ? "client" : "admin")}
-            className="interactive-pill focus-ring text-[10px] px-2.5 py-1 rounded-lg bg-[#FFFDF9] border border-[#EADFCB] text-[#5C3A1E] font-medium hover:border-[#D4A35A] cursor-pointer"
-          >
-            Switch to {role === "admin" ? "Client" : "Admin"}
-          </button>
-        </div>
+        )}
 
         {/* Navigation Items */}
         <nav className="mt-6 space-y-1.5">
-          {SIDEBAR_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || (item.href.includes("?tab=") && pathname === "/admin");
             return (
               <Link
                 key={item.name}
@@ -87,13 +95,13 @@ export function PortalSidebar() {
       <div className="pt-6 border-t border-[#EADFCB]/60 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Avatar
-            name={user?.displayName || "Studio Client"}
+            name={user?.displayName || (isAdmin ? "Studio Producer" : "Studio Client")}
             size="sm"
             status="online"
           />
           <div className="text-xs">
-            <p className="font-semibold text-[#0F172A]">{user?.displayName || "Studio Client"}</p>
-            <p className="text-[#64748B] capitalize">{role} Clearance</p>
+            <p className="font-semibold text-[#0F172A]">{user?.displayName || (isAdmin ? "Studio Producer" : "Studio Client")}</p>
+            <p className="text-[#64748B]">{isAdmin ? "Executive Producer" : "Client Workspace"}</p>
           </div>
         </div>
         <button

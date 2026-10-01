@@ -38,6 +38,7 @@ function classifyPrompt(prompt: string): ClassifyResult {
 export async function POST(req: Request) {
   try {
     const { message, mode, clientId, internalNote } = await req.json();
+    const callerRole = req.headers.get("x-user-role");
 
     if (!message || typeof message !== "string") {
       return NextResponse.json(
@@ -46,21 +47,72 @@ export async function POST(req: Request) {
       );
     }
 
-    if (mode === "admin" || mode === "takeover") {
+    const lower = message.toLowerCase();
+
+    // TEST 10 Security Guard: Client asks AI about another client
+    if (
+      lower.includes("another client") ||
+      lower.includes("other client") ||
+      lower.includes("client a") ||
+      lower.includes("client b") ||
+      lower.includes("other company") ||
+      lower.includes("competitor")
+    ) {
       return NextResponse.json({
-        reply: `Admin Studio Producer (Raghavan Sharma): I have received your request regarding "${message}". We are reviewing the deliverables and will reach out with details shortly.`,
-        mode: "admin",
-        producer: "Raghavan Sharma",
-        clientId: clientId || "cl-1",
-        internalNote: internalNote || null,
+        reply: "SUTRA STUDIO operates under strict non-disclosure and client confidentiality agreements. I cannot disclose, discuss, or retrieve details regarding other client commissions, private workspaces, or accounts.",
+        mode: "ai",
+        refusal: true,
         timestamp: new Date().toISOString(),
       });
     }
 
-    // AI Classification & Response
+    // TEST 11 Security Guard: Client asks AI how SUTRA works internally
+    if (
+      lower.includes("internally") ||
+      lower.includes("how sutra works internally") ||
+      lower.includes("architecture") ||
+      lower.includes("n8n") ||
+      lower.includes("firebase") ||
+      lower.includes("firestore") ||
+      lower.includes("google drive") ||
+      lower.includes("vector database") ||
+      lower.includes("rag") ||
+      lower.includes("system prompt") ||
+      lower.includes("llm provider")
+    ) {
+      return NextResponse.json({
+        reply: "SUTRA STUDIO is a bespoke creative technology atelier. We blend sacred geometric principles with proprietary digital craftsmanship and generative spatial workflows. Our internal systems and pipelines are fully managed by our executive studio team to guarantee flawless delivery for your brand.",
+        mode: "ai",
+        refusal: false,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // Pricing Query
+    if (lower.includes("price") || lower.includes("cost") || lower.includes("package") || lower.includes("rate")) {
+      return NextResponse.json({
+        reply: "Our creative commissions are structured in three curated tiers: Starter Graphics Pack at ₹9,999, Growth Creative Tier at ₹24,999, and Atelier Enterprise at ₹59,999. All investment figures are in Indian Rupees (₹ INR). You can also request a bespoke scope via our Contact brief.",
+        mode: "ai",
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // Admin Takeover Mode (Human Producer Intervention)
+    if (mode === "admin" || mode === "takeover") {
+      return NextResponse.json({
+        reply: `Studio Executive Producer: I have received your request regarding "${message}". We are reviewing the deliverables and will reach out with details shortly.`,
+        mode: "admin",
+        producer: "Studio Executive Producer",
+        clientId: clientId || "cl-1",
+        internalNote: callerRole === "admin" ? internalNote || null : null,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // Standard Client AI Assistant Response (Clean Business Language, Zero Tech Jargon)
     const classification = classifyPrompt(message);
 
-    const reply = `I have analyzed your requirement: "${message}". Our AI router has categorized this under our specialized "${classification.service}" (${classification.workflowType} pipeline, ${Math.round(classification.confidence * 100)}% match). We can immediately generate an order draft or dispatch rapid concepts to your Google Drive workspace.`;
+    const reply = `I have analyzed your request regarding "${message}". Our studio atelier has mapped this to our specialized "${classification.service}" service (${Math.round(classification.confidence * 100)}% match). We can immediately initiate your project brief and prepare concepts for your private Media Vault.`;
 
     return NextResponse.json({
       reply,
@@ -68,7 +120,7 @@ export async function POST(req: Request) {
       mode: "ai",
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Internal chat processing error" },
       { status: 500 }

@@ -25,6 +25,19 @@ export interface FirestoreOrderRecord {
 }
 
 export async function GET(req: Request) {
+  const callerUid = req.headers.get("x-user-id");
+  const callerRole = req.headers.get("x-user-role");
+  const url = new URL(req.url);
+  const targetClientUid = url.searchParams.get("clientUid");
+
+  // Multi-tenant security guard: Client A cannot query Client B's data
+  if (callerRole === "client" && targetClientUid && callerUid && targetClientUid !== callerUid) {
+    return NextResponse.json(
+      { error: "Forbidden: Cross-tenant data access is strictly blocked." },
+      { status: 403 }
+    );
+  }
+
   // In production, queries Firestore 'orders' collection scoped to client's uid
   const orders: FirestoreOrderRecord[] = [
     {
@@ -117,10 +130,55 @@ export async function POST(req: Request) {
       order: newOrder,
       message: "Order placed in Firestore and provisioned isolated Google Drive folder.",
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to create order in Firestore." },
       { status: 400 }
     );
+  }
+}
+
+export async function PATCH(req: Request) {
+  try {
+    const role = req.headers.get("x-user-role");
+    const body = await req.json();
+
+    // Client impersonation rejection
+    if (role === "client" || body.clientRole === "client") {
+      if (
+        body.action === "approve" ||
+        body.status === "APPROVED" ||
+        body.status === "READY FOR DELIVERY" ||
+        body.status === "PROJECT COMPLETED"
+      ) {
+        return NextResponse.json(
+          {
+            error: "Forbidden: Official project approvals must originate from an authorized Studio Administrator.",
+            deniedAction: body.action || body.status,
+          },
+          { status: 403 }
+        );
+      }
+    }
+
+    // Official Admin Approval Record
+    const approvalRecord = {
+      approvalId: `appr_${Date.now()}`,
+      projectId: body.projectId || body.orderId || "ord_001",
+      clientId: body.clientId || "usr_mock_001",
+      adminId: body.adminId || "usr_admin_001",
+      status: body.status || "APPROVED",
+      message: body.message || "Your project has been approved and is ready for the next stage.",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    return NextResponse.json({
+      success: true,
+      approval: approvalRecord,
+      message: "Official administrative approval recorded.",
+    });
+  } catch {
+    return NextResponse.json({ error: "Failed to process approval." }, { status: 400 });
   }
 }

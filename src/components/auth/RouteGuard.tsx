@@ -41,7 +41,7 @@ export function RouteGuard({
             </h2>
             <p className="text-xs text-[#64748B] leading-relaxed">
               Authentication is required to view your orders, deliverables, and
-              private Google Drive media storage.
+              private studio media storage.
             </p>
           </div>
 
@@ -72,23 +72,22 @@ export function RouteGuard({
 
           <div className="space-y-2">
             <h2 className="font-serif text-2xl font-semibold text-[#0F172A]">
-              Admin Clearance Required
+              403 — Access Restricted
             </h2>
             <p className="text-xs text-[#64748B] leading-relaxed">
-              Your account is authenticated as <strong>Client</strong>. Only studio
-              producers and administrators can access operations and workflow monitoring.
+              You do not have authorization to view this internal resource. Please return to your private studio workspace.
             </p>
           </div>
 
           <div className="space-y-3 pt-2">
             <Link href="/dashboard" className="block w-full">
               <Button variant="primary" size="md" className="w-full">
-                Go to Client Dashboard
+                Return to Workspace
               </Button>
             </Link>
 
             <Link href="/" className="block text-xs text-[#64748B] hover:underline">
-              Back to Home
+              Return to Studio Home
             </Link>
           </div>
         </div>

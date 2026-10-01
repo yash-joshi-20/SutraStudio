@@ -18,8 +18,16 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const NAV_LINKS = [
-  { name: "Services", href: "/services", badge: "6 Pillars" },
+import { useAuth } from "@/lib/auth/authContext";
+
+interface NavLinkItem {
+  name: string;
+  href: string;
+  badge?: string;
+}
+
+const PUBLIC_NAV_LINKS: NavLinkItem[] = [
+  { name: "Services", href: "/services", badge: "8 Pillars" },
   { name: "Studio", href: "/studio" },
   { name: "Projects", href: "/projects" },
   { name: "Pricing", href: "/pricing" },
@@ -27,10 +35,37 @@ const NAV_LINKS = [
   { name: "Contact", href: "/contact" },
 ];
 
+const CLIENT_NAV_LINKS: NavLinkItem[] = [
+  { name: "Services", href: "/services" },
+  { name: "Pricing", href: "/pricing" },
+  { name: "My Portal", href: "/dashboard" },
+  { name: "Messages", href: "/chat" },
+  { name: "Profile", href: "/profile" },
+];
+
+const ADMIN_NAV_LINKS: NavLinkItem[] = [
+  { name: "Admin Portal", href: "/admin" },
+  { name: "Clients", href: "/admin?tab=clients" },
+  { name: "Approvals", href: "/admin?tab=approvals" },
+  { name: "Messages", href: "/admin?tab=conversations" },
+  { name: "Site Control", href: "/admin?tab=site-control" },
+];
+
 export function Navbar() {
   const pathname = usePathname();
+  const { user, role, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  const isAuthenticated = !!user;
+  const isAdmin = role === "admin";
+  const isClient = role === "client";
+
+  const navLinks = isAdmin
+    ? ADMIN_NAV_LINKS
+    : isClient
+    ? CLIENT_NAV_LINKS
+    : PUBLIC_NAV_LINKS;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -66,27 +101,48 @@ export function Navbar() {
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5 text-[#5C3A1E]">
               <span className="w-1.5 h-1.5 rounded-full bg-[#2E7D4F] animate-pulse" />
-              Studio Online • 24/7 AI Creative Router
+              Creative Studio Online • Tradition Meets Technology
             </span>
             <span className="text-[#EADFCB]">|</span>
             <span>Ideas ◆ Design ◆ Development ◆ Growth</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link
-              href="/chat"
-              className="hover:text-[#5C3A1E] transition-colors flex items-center gap-1"
-            >
-              <Sparkles className="w-3 h-3 text-[#D4A35A]" />
-              Sutra AI Assistant
-            </Link>
-            <span className="text-[#EADFCB]">|</span>
-            <Link
-              href="/dashboard"
-              className="hover:text-[#5C3A1E] transition-colors flex items-center gap-1"
-            >
-              <LayoutDashboard className="w-3 h-3 text-[#5C3A1E]" />
-              Client Workspace
-            </Link>
+            {!isAuthenticated ? (
+              <>
+                <Link
+                  href="/chat"
+                  className="hover:text-[#5C3A1E] transition-colors flex items-center gap-1"
+                >
+                  <Sparkles className="w-3 h-3 text-[#D4A35A]" />
+                  Sutra AI Assistant
+                </Link>
+                <span className="text-[#EADFCB]">|</span>
+                <span className="text-[#64748B]">concierge@sutrastudio.com</span>
+              </>
+            ) : isClient ? (
+              <>
+                <span className="text-[#0F172A] font-semibold">Hello, {user?.displayName || "Client"}</span>
+                <span className="text-[#EADFCB]">|</span>
+                <Link
+                  href="/dashboard"
+                  className="hover:text-[#5C3A1E] transition-colors flex items-center gap-1 text-[#5C3A1E] font-medium"
+                >
+                  <LayoutDashboard className="w-3 h-3 text-[#5C3A1E]" />
+                  My Workspace
+                </Link>
+              </>
+            ) : (
+              <>
+                <span className="text-[#5C3A1E] font-bold uppercase tracking-wider">Executive Terminal</span>
+                <span className="text-[#EADFCB]">|</span>
+                <Link
+                  href="/admin"
+                  className="hover:text-[#5C3A1E] transition-colors font-medium text-[#5C3A1E]"
+                >
+                  Supervisor Hub
+                </Link>
+              </>
+            )}
           </div>
         </div>
 
@@ -99,8 +155,8 @@ export function Navbar() {
 
           {/* Desktop Navigation Links */}
           <nav aria-label="Primary navigation" className="hidden lg:flex items-center gap-1 xl:gap-2">
-            {NAV_LINKS.map((link) => {
-              const isActive = pathname === link.href;
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href || (link.href.includes("?tab=") && pathname === "/admin");
               return (
                 <Link
                   key={link.name}
@@ -133,26 +189,70 @@ export function Navbar() {
 
           {/* Right Action CTAs */}
           <div className="hidden sm:flex items-center gap-3">
-            <Link href="/login">
-              <Button
-                variant="ghost"
-                size="sm"
-                leftIcon={<User className="w-3.5 h-3.5" />}
-                className="text-xs uppercase tracking-wider"
-              >
-                Sign In
-              </Button>
-            </Link>
-            <Link href="/orders">
-              <Button
-                variant="primary"
-                size="sm"
-                withArrow
-                className="text-xs uppercase tracking-wider"
-              >
-                Start Project
-              </Button>
-            </Link>
+            {!isAuthenticated ? (
+              <>
+                <Link href="/login">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    leftIcon={<User className="w-3.5 h-3.5" />}
+                    className="text-xs uppercase tracking-wider"
+                  >
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/contact">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    withArrow
+                    className="text-xs uppercase tracking-wider"
+                  >
+                    Start Project
+                  </Button>
+                </Link>
+              </>
+            ) : isClient ? (
+              <>
+                <Link href="/dashboard">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="text-xs uppercase tracking-wider"
+                  >
+                    Workspace
+                  </Button>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={logout}
+                  className="text-xs uppercase tracking-wider text-[#64748B]"
+                >
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link href="/admin">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="text-xs uppercase tracking-wider"
+                  >
+                    Executive Hub
+                  </Button>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={logout}
+                  className="text-xs uppercase tracking-wider text-[#64748B]"
+                >
+                  Sign Out
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile menu toggle */}
@@ -198,13 +298,13 @@ export function Navbar() {
                 <span className="text-[#64748B]">Tradition × Technology</span>
               </div>
 
-              {/* Public Navigation */}
+              {/* Mobile Role-Based Navigation */}
               <nav aria-label="Mobile navigation" className="space-y-1">
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#A98B57] block mb-2">
-                  Navigation
+                  {isAdmin ? "Admin Navigation" : isClient ? "Client Portal" : "Navigation"}
                 </span>
                 <div className="grid grid-cols-2 gap-2">
-                  {NAV_LINKS.map((link) => {
+                  {navLinks.map((link) => {
                     const isActive = pathname === link.href;
                     return (
                       <Link
@@ -229,59 +329,159 @@ export function Navbar() {
                 </div>
               </nav>
 
-              {/* Client & Portals Section */}
+              {/* Role-Specific Quick Hub Section */}
               <div className="space-y-2 pt-2 border-t border-[#EADFCB]/50">
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#A98B57] block mb-2">
-                  Client Portals
+                  {isAdmin ? "Supervisor Hub" : isClient ? "My Workspace" : "Studio Overview"}
                 </span>
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <Link
-                    href="/dashboard"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="p-2.5 rounded-xl border border-[#EADFCB] bg-[#FFFDF9] flex items-center gap-2 text-[#0F172A] hover:border-[#D4A35A]"
-                  >
-                    <LayoutDashboard className="w-3.5 h-3.5 text-[#5C3A1E]" />
-                    <span>Client Dashboard</span>
-                  </Link>
-                  <Link
-                    href="/chat"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="p-2.5 rounded-xl border border-[#EADFCB] bg-[#FFFDF9] flex items-center gap-2 text-[#0F172A] hover:border-[#D4A35A]"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
-                    <span>AI Assistant</span>
-                  </Link>
-                  <Link
-                    href="/media"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="p-2.5 rounded-xl border border-[#EADFCB] bg-[#FFFDF9] flex items-center gap-2 text-[#0F172A] hover:border-[#D4A35A]"
-                  >
-                    <Layers className="w-3.5 h-3.5 text-[#5C3A1E]" />
-                    <span>Media Drive</span>
-                  </Link>
-                  <Link
-                    href="/contact"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="p-2.5 rounded-xl border border-[#EADFCB] bg-[#FFFDF9] flex items-center gap-2 text-[#0F172A] hover:border-[#D4A35A]"
-                  >
-                    <PhoneCall className="w-3.5 h-3.5 text-[#5C3A1E]" />
-                    <span>Inquiry Desk</span>
-                  </Link>
+                  {!isAuthenticated ? (
+                    <>
+                      <Link
+                        href="/services"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="p-2.5 rounded-xl border border-[#EADFCB] bg-[#FFFDF9] flex items-center gap-2 text-[#0F172A] hover:border-[#D4A35A]"
+                      >
+                        <Layers className="w-3.5 h-3.5 text-[#5C3A1E]" />
+                        <span>Services</span>
+                      </Link>
+                      <Link
+                        href="/pricing"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="p-2.5 rounded-xl border border-[#EADFCB] bg-[#FFFDF9] flex items-center gap-2 text-[#0F172A] hover:border-[#D4A35A]"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
+                        <span>Pricing</span>
+                      </Link>
+                      <Link
+                        href="/projects"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="p-2.5 rounded-xl border border-[#EADFCB] bg-[#FFFDF9] flex items-center gap-2 text-[#0F172A] hover:border-[#D4A35A]"
+                      >
+                        <LayoutDashboard className="w-3.5 h-3.5 text-[#5C3A1E]" />
+                        <span>Projects</span>
+                      </Link>
+                      <Link
+                        href="/contact"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="p-2.5 rounded-xl border border-[#EADFCB] bg-[#FFFDF9] flex items-center gap-2 text-[#0F172A] hover:border-[#D4A35A]"
+                      >
+                        <PhoneCall className="w-3.5 h-3.5 text-[#5C3A1E]" />
+                        <span>Contact Brief</span>
+                      </Link>
+                    </>
+                  ) : isClient ? (
+                    <>
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="p-2.5 rounded-xl border border-[#EADFCB] bg-[#FFFDF9] flex items-center gap-2 text-[#0F172A] hover:border-[#D4A35A]"
+                      >
+                        <LayoutDashboard className="w-3.5 h-3.5 text-[#5C3A1E]" />
+                        <span>My Portal</span>
+                      </Link>
+                      <Link
+                        href="/orders"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="p-2.5 rounded-xl border border-[#EADFCB] bg-[#FFFDF9] flex items-center gap-2 text-[#0F172A] hover:border-[#D4A35A]"
+                      >
+                        <Layers className="w-3.5 h-3.5 text-[#5C3A1E]" />
+                        <span>My Orders</span>
+                      </Link>
+                      <Link
+                        href="/chat"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="p-2.5 rounded-xl border border-[#EADFCB] bg-[#FFFDF9] flex items-center gap-2 text-[#0F172A] hover:border-[#D4A35A]"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
+                        <span>Messages & AI</span>
+                      </Link>
+                      <Link
+                        href="/profile"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="p-2.5 rounded-xl border border-[#EADFCB] bg-[#FFFDF9] flex items-center gap-2 text-[#0F172A] hover:border-[#D4A35A]"
+                      >
+                        <User className="w-3.5 h-3.5 text-[#5C3A1E]" />
+                        <span>Profile</span>
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href="/admin"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="p-2.5 rounded-xl border border-[#EADFCB] bg-[#FFFDF9] flex items-center gap-2 text-[#0F172A] hover:border-[#D4A35A]"
+                      >
+                        <LayoutDashboard className="w-3.5 h-3.5 text-[#5C3A1E]" />
+                        <span>Admin Portal</span>
+                      </Link>
+                      <Link
+                        href="/admin?tab=approvals"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="p-2.5 rounded-xl border border-[#EADFCB] bg-[#FFFDF9] flex items-center gap-2 text-[#0F172A] hover:border-[#D4A35A]"
+                      >
+                        <Layers className="w-3.5 h-3.5 text-[#5C3A1E]" />
+                        <span>Approvals</span>
+                      </Link>
+                      <Link
+                        href="/admin?tab=conversations"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="p-2.5 rounded-xl border border-[#EADFCB] bg-[#FFFDF9] flex items-center gap-2 text-[#0F172A] hover:border-[#D4A35A]"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
+                        <span>Messages</span>
+                      </Link>
+                      <Link
+                        href="/admin?tab=site-control"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="p-2.5 rounded-xl border border-[#EADFCB] bg-[#FFFDF9] flex items-center gap-2 text-[#0F172A] hover:border-[#D4A35A]"
+                      >
+                        <PhoneCall className="w-3.5 h-3.5 text-[#5C3A1E]" />
+                        <span>Site Control</span>
+                      </Link>
+                    </>
+                  )}
                 </div>
               </div>
 
               {/* CTAs */}
               <div className="pt-2 flex flex-col gap-2.5">
-                <Link href="/orders" onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant="primary" size="md" withArrow className="w-full">
-                    Start a New Project
-                  </Button>
-                </Link>
-                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant="secondary" size="md" className="w-full">
-                    Sign In to Portal
-                  </Button>
-                </Link>
+                {!isAuthenticated ? (
+                  <>
+                    <Link href="/contact" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="primary" size="md" withArrow className="w-full">
+                        Start a New Project
+                      </Button>
+                    </Link>
+                    <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="secondary" size="md" className="w-full">
+                        Sign In
+                      </Button>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href={isAdmin ? "/admin" : "/dashboard"}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Button variant="primary" size="md" className="w-full">
+                        {isAdmin ? "Open Admin Portal" : "Open My Portal"}
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="md"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        logout();
+                      }}
+                      className="w-full text-[#64748B]"
+                    >
+                      Sign Out
+                    </Button>
+                  </>
+                )}
               </div>
             </motion.div>
           )}
