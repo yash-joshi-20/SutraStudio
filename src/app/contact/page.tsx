@@ -120,7 +120,7 @@ export default function ContactPage() {
     <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
       <Navbar />
 
-      <main className="flex-1 pb-20">
+      <main id="main-content" className="flex-1 pb-20">
         {/* Subtle Watermark Background */}
         <div className="absolute top-12 left-1/2 -translate-x-1/2 -z-10 opacity-[0.03] pointer-events-none">
           <LotusSymbol className="w-[850px] h-[850px]" color="gold" />

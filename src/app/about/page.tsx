@@ -67,7 +67,7 @@ export default function AboutPage() {
     <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
       <Navbar />
 
-      <main className="flex-1 pb-20">
+      <main id="main-content" className="flex-1 pb-20">
         {/* ===================================================
             1. HERO SECTION (Split Editorial)
             =================================================== */}

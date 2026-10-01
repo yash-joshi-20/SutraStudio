@@ -29,7 +29,7 @@ export default function ProjectsPage() {
     <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A]">
       <Navbar />
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
+      <main id="main-content" className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
         <div className="text-center max-w-3xl mx-auto mb-12">
           <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[#D4A35A]">
             PORTFOLIO SHOWCASE
@@ -49,10 +49,10 @@ export default function ProjectsPage() {
                 <button
                   key={cat}
                   onClick={() => setSelectedCat(cat)}
-                  className={`px-5 py-2 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                  className={`interactive-pill focus-ring px-5 py-2 rounded-full text-xs font-medium cursor-pointer ${
                     isActive
                       ? "bg-[#5C3A1E] text-white shadow-xs"
-                      : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A]"
+                      : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A] hover:text-[#0F172A]"
                   }`}
                 >
                   {cat}

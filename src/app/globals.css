@@ -113,7 +113,23 @@ body {
 
 .focus-ring:focus-visible {
   border-color: #D4A35A;
-  box-shadow: 0 0 0 3px rgba(212, 163, 90, 0.25);
+  box-shadow: 0 0 0 3px rgba(212, 163, 90, 0.35);
+}
+
+/* Universal Accessible Focus Visible */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #D4A35A !important;
+  outline-offset: 2px !important;
+}
+
+/* Accessible Minimum Touch Target */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
 }
 
 /* Reduced motion compliance: suppresses all heavy animations, spins and transforms */

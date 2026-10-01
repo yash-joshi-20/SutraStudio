@@ -54,6 +54,10 @@ export function Modal({
 
           {/* Modal Surface */}
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={title ? "modal-accessible-title" : undefined}
+            aria-describedby={description ? "modal-accessible-desc" : undefined}
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -64,17 +68,17 @@ export function Modal({
             <div className="flex items-start justify-between gap-4 pb-4 border-b border-[#EADFCB]/60">
               <div>
                 {title && (
-                  <h3 className="font-serif text-xl font-semibold text-[#0F172A]">
+                  <h3 id="modal-accessible-title" className="font-serif text-xl font-semibold text-[#0F172A]">
                     {title}
                   </h3>
                 )}
                 {description && (
-                  <p className="text-xs text-[#64748B] mt-1">{description}</p>
+                  <p id="modal-accessible-desc" className="text-xs text-[#64748B] mt-1">{description}</p>
                 )}
               </div>
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-full text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8F5EF] transition-colors focus:outline-none"
+                className="w-10 h-10 rounded-full text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8F5EF] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4A35A] flex items-center justify-center cursor-pointer"
                 aria-label="Close dialog"
               >
                 <X className="w-5 h-5" />

@@ -98,7 +98,7 @@ export function Navbar() {
           </div>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
+          <nav aria-label="Primary navigation" className="hidden lg:flex items-center gap-1 xl:gap-2">
             {NAV_LINKS.map((link) => {
               const isActive = pathname === link.href;
               return (
@@ -157,15 +157,17 @@ export function Navbar() {
 
           {/* Mobile menu toggle */}
           <div className="flex lg:hidden items-center gap-2">
-            <Link href="/login" className="sm:hidden">
-              <Button variant="ghost" size="sm" className="p-2">
+            <Link href="/login" className="sm:hidden" aria-label="Sign In">
+              <Button variant="ghost" size="sm" className="p-2 min-h-[44px] min-w-[44px]" aria-label="Sign In">
                 <User className="w-4 h-4 text-[#0F172A]" />
               </Button>
             </Link>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2.5 rounded-xl text-[#0F172A] hover:bg-[#EADFCB]/30 focus:outline-none focus:ring-2 focus:ring-[#D4A35A]"
-              aria-label="Toggle Menu"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-navigation-drawer"
+              className="p-2.5 rounded-xl text-[#0F172A] hover:bg-[#EADFCB]/30 focus:outline-none focus:ring-2 focus:ring-[#D4A35A] min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
+              aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
             >
               {mobileMenuOpen ? (
                 <X className="w-6 h-6" />
@@ -180,6 +182,7 @@ export function Navbar() {
         <AnimatePresence>
           {mobileMenuOpen && (
             <motion.div
+              id="mobile-navigation-drawer"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
@@ -196,7 +199,7 @@ export function Navbar() {
               </div>
 
               {/* Public Navigation */}
-              <div className="space-y-1">
+              <nav aria-label="Mobile navigation" className="space-y-1">
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#A98B57] block mb-2">
                   Navigation
                 </span>
@@ -224,7 +227,7 @@ export function Navbar() {
                     );
                   })}
                 </div>
-              </div>
+              </nav>
 
               {/* Client & Portals Section */}
               <div className="space-y-2 pt-2 border-t border-[#EADFCB]/50">

@@ -25,14 +25,16 @@ export function Tabs({
 }: TabsProps) {
   if (variant === "underline") {
     return (
-      <div className={`flex items-center gap-6 border-b border-[#EADFCB] ${className}`}>
+      <div role="tablist" className={`flex items-center gap-6 border-b border-[#EADFCB] ${className}`}>
         {tabs.map((tab) => {
           const isActive = tab.id === activeTab;
           return (
             <button
               key={tab.id}
+              role="tab"
+              aria-selected={isActive}
               onClick={() => onChange(tab.id)}
-              className={`pb-3 text-sm font-medium transition-all relative cursor-pointer ${
+              className={`focus-ring pb-3 text-sm font-medium transition-all relative cursor-pointer min-h-[44px] flex items-center ${
                 isActive
                   ? "text-[#5C3A1E] font-semibold"
                   : "text-[#64748B] hover:text-[#0F172A]"
@@ -56,6 +58,7 @@ export function Tabs({
 
   return (
     <div
+      role="tablist"
       className={`inline-flex items-center p-1 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] gap-1 ${className}`}
     >
       {tabs.map((tab) => {
@@ -63,8 +66,10 @@ export function Tabs({
         return (
           <button
             key={tab.id}
+            role="tab"
+            aria-selected={isActive}
             onClick={() => onChange(tab.id)}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+            className={`interactive-pill focus-ring px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-200 cursor-pointer min-h-[40px] flex items-center ${
               isActive
                 ? "bg-[#FFFDF9] text-[#5C3A1E] shadow-sm border border-[#EADFCB]/80"
                 : "text-[#64748B] hover:text-[#0F172A]"

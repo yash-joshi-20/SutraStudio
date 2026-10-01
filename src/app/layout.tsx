@@ -46,6 +46,13 @@ export default function RootLayout({
       className={`${playfair.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[var(--background)] text-[var(--foreground)] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
+        {/* Accessible Skip-to-Content Link */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#5C3A1E] focus:text-[#FFFDF9] focus:rounded-xl focus:shadow-xl focus:outline-none focus:ring-2 focus:ring-[#D4A35A] text-xs font-semibold uppercase tracking-wider"
+        >
+          Skip to main content
+        </a>
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

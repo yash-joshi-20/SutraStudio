@@ -12,7 +12,7 @@ export default function StudioPage() {
     <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A]">
       <Navbar />
 
-      <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full space-y-16">
+      <main id="main-content" className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full space-y-16">
         {/* Intro */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[#D4A35A]">

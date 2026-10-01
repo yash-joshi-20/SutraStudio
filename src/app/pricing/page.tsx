@@ -115,7 +115,7 @@ export default function PricingPage() {
     <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
       <Navbar />
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 w-full space-y-16">
+      <main id="main-content" className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 w-full space-y-16">
         {/* Intro Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] shadow-xs">
@@ -136,11 +136,13 @@ export default function PricingPage() {
 
           {/* Billing Cycle Toggle */}
           <div className="pt-4 flex items-center justify-center">
-            <div className="inline-flex rounded-full bg-[#FFFDF9] border border-[#EADFCB] p-1 shadow-xs">
+            <div role="tablist" aria-label="Billing frequency" className="inline-flex rounded-full bg-[#FFFDF9] border border-[#EADFCB] p-1 shadow-xs">
               <button
                 type="button"
+                role="tab"
+                aria-selected={billingCycle === "project"}
                 onClick={() => setBillingCycle("project")}
-                className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                className={`interactive-pill focus-ring px-4 py-2 rounded-full text-xs font-semibold cursor-pointer ${
                   billingCycle === "project"
                     ? "bg-[#5C3A1E] text-white shadow-xs"
                     : "text-[#64748B] hover:text-[#0F172A]"
@@ -150,8 +152,10 @@ export default function PricingPage() {
               </button>
               <button
                 type="button"
+                role="tab"
+                aria-selected={billingCycle === "monthly"}
                 onClick={() => setBillingCycle("monthly")}
-                className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`interactive-pill focus-ring px-4 py-2 rounded-full text-xs font-semibold cursor-pointer flex items-center gap-1.5 ${
                   billingCycle === "monthly"
                     ? "bg-[#5C3A1E] text-white shadow-xs"
                     : "text-[#64748B] hover:text-[#0F172A]"

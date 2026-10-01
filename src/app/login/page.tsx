@@ -144,7 +144,7 @@ export default function LoginPage() {
       </div>
 
       {/* Main Two-Column Luxury Card */}
-      <div className="w-full max-w-5xl rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-warm overflow-hidden grid grid-cols-1 lg:grid-cols-12">
+      <main id="main-content" className="w-full max-w-5xl rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-warm overflow-hidden grid grid-cols-1 lg:grid-cols-12">
         {/* ==========================================
             LEFT BRAND STORYTELLING COLUMN (Hidden on Mobile)
             ========================================== */}
@@ -481,7 +481,7 @@ export default function LoginPage() {
             </div>
           </div>
         </div>
-      </div>
+      </main>
 
       {/* Security Footer Notice */}
       <p className="mt-6 text-[11px] text-[#94A3B8] text-center max-w-md">
