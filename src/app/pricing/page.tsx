@@ -9,7 +9,7 @@ import { Check } from "lucide-react";
 const TIERS = [
   {
     name: "Starter Creative",
-    price: "$750",
+    price: "₹750",
     period: "/ project",
     description: "Ideal for boutique brands and founders needing immediate high-impact visuals.",
     features: [
@@ -24,7 +24,7 @@ const TIERS = [
   },
   {
     name: "Studio Growth",
-    price: "$1,850",
+    price: "₹1,850",
     period: "/ project",
     description: "Comprehensive creative suite across 3D, video, and digital marketing assets.",
     features: [
@@ -40,7 +40,7 @@ const TIERS = [
   },
   {
     name: "Bespoke Enterprise",
-    price: "$3,800+",
+    price: "₹3,800+",
     period: "/ monthly or milestone",
     description: "Complete digital ecosystem: custom Next.js web application, 3D pipelines, and AI automation.",
     features: [
@@ -80,11 +80,10 @@ export default function PricingPage() {
           {TIERS.map((tier) => (
             <div
               key={tier.name}
-              className={`rounded-3xl p-8 flex flex-col justify-between transition-all duration-300 ${
-                tier.popular
-                  ? "bg-[#FFFDF9] border-2 border-[#D4A35A] shadow-warm-hover relative"
-                  : "bg-[#FFFDF9] border border-[#EADFCB] shadow-sm hover:border-[#D4A35A]/60"
-              }`}
+              className={`rounded-3xl p-8 flex flex-col justify-between transition-all duration-300 ${tier.popular
+                ? "bg-[#FFFDF9] border-2 border-[#D4A35A] shadow-warm-hover relative"
+                : "bg-[#FFFDF9] border border-[#EADFCB] shadow-sm hover:border-[#D4A35A]/60"
+                }`}
             >
               {tier.popular && (
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#5C3A1E] text-white px-4 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase">

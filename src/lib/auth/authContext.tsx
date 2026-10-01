@@ -18,6 +18,9 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   loginAs: (role: UserRole) => void;
+  loginWithEmail: (email: string, password: string, role?: UserRole) => Promise<boolean>;
+  loginWithGoogle: () => Promise<boolean>;
+  registerWithEmail: (name: string, email: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -27,6 +30,9 @@ const AuthContext = createContext<AuthContextType>({
   isAuthenticated: true,
   isLoading: false,
   loginAs: () => {},
+  loginWithEmail: async () => true,
+  loginWithGoogle: async () => true,
+  registerWithEmail: async () => true,
   logout: () => {},
 });
 
@@ -59,6 +65,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, 200);
   };
 
+  const loginWithEmail = async (email: string, password: string, role: UserRole = "client"): Promise<boolean> => {
+    setIsLoading(true);
+    await new Promise((res) => setTimeout(res, 400));
+    const isAdmin = email.toLowerCase().includes("admin") || role === "admin";
+    setUser({
+      uid: isAdmin ? "usr_admin_001" : "usr_client_001",
+      email: email || (isAdmin ? "admin@sutrastudio.com" : "client@sutrastudio.com"),
+      displayName: isAdmin ? "Studio Producer" : email.split("@")[0] || "Client Member",
+      role: isAdmin ? "admin" : "client",
+      driveFolderId: "drive_fld_sutra_001",
+    });
+    setIsLoading(false);
+    return true;
+  };
+
+  const loginWithGoogle = async (): Promise<boolean> => {
+    setIsLoading(true);
+    await new Promise((res) => setTimeout(res, 400));
+    setUser({
+      uid: "usr_google_client",
+      email: "yash.google@sutrastudio.com",
+      displayName: "Yash Joshi",
+      role: "client",
+      driveFolderId: "drive_fld_sutra_001",
+    });
+    setIsLoading(false);
+    return true;
+  };
+
+  const registerWithEmail = async (name: string, email: string, password: string): Promise<boolean> => {
+    setIsLoading(true);
+    await new Promise((res) => setTimeout(res, 450));
+    setUser({
+      uid: `usr_${Date.now()}`,
+      email,
+      displayName: name || "Studio Client",
+      role: "client",
+      driveFolderId: "drive_fld_sutra_001",
+    });
+    setIsLoading(false);
+    return true;
+  };
+
   const logout = () => {
     setUser(null);
   };
@@ -71,6 +120,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: !!user,
         isLoading,
         loginAs,
+        loginWithEmail,
+        loginWithGoogle,
+        registerWithEmail,
         logout,
       }}
     >
