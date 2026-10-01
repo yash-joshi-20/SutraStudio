@@ -17,9 +17,8 @@ export function Footer() {
           {/* Studio Brand Column */}
           <div className="md:col-span-2 space-y-4">
             <SutraLogo
-              variant="horizontal"
+              variant="monochrome-white"
               size="md"
-              className="brightness-0 invert"
               href="/"
             />
             <p className="text-sm text-[#B4A795] max-w-sm leading-relaxed mt-4">

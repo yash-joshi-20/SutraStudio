@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 
 interface SutraLogoProps {
-  variant?: "horizontal" | "vertical" | "symbol" | "app-icon" | "monochrome-white" | "monochrome-black" | "watermark-light" | "watermark-dark";
+  variant?: "horizontal" | "horizontal-dark" | "vertical" | "symbol" | "app-icon" | "monochrome-white" | "monochrome-black" | "watermark-light" | "watermark-dark";
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
   showTagline?: boolean;
@@ -226,7 +226,7 @@ export function SutraLogo({
           <div className="flex items-center tracking-[0.14em]">
             <span
               className={`font-serif font-semibold tracking-wider ${sizeClasses.text} ${
-                variant === "monochrome-white"
+                variant === "monochrome-white" || variant === "horizontal-dark"
                   ? "text-white"
                   : variant === "monochrome-black"
                   ? "text-[#171717]"
@@ -242,6 +242,8 @@ export function SutraLogo({
               className={`font-sans tracking-[0.24em] uppercase font-medium mt-0.5 ${sizeClasses.tagline} ${
                 variant === "monochrome-white"
                   ? "text-white/70"
+                  : variant === "horizontal-dark"
+                  ? "text-[#94A3B8]"
                   : "text-[#64748B]"
               }`}
             >
