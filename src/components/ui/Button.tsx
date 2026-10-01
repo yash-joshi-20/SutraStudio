@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { ArrowRight, Loader2 } from "lucide-react";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -9,6 +10,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   isLoading?: boolean;
   withArrow?: boolean;
   leftIcon?: React.ReactNode;
+  href?: string;
 }
 
 export function Button({
@@ -20,6 +22,7 @@ export function Button({
   leftIcon,
   className = "",
   disabled,
+  href,
   ...props
 }: ButtonProps) {
   const baseStyles =
@@ -49,6 +52,21 @@ export function Button({
     // On Dark
     dark: "bg-gradient-to-r from-[#E2B872] via-[#D4A35A] to-[#8A5A2B] text-[#0F172A] font-semibold hover:opacity-95 shadow-md active:scale-[0.98]",
   }[variant];
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className={`${baseStyles} ${sizeStyles} ${variantStyles} ${className}`}
+      >
+        {leftIcon && <span className="inline-flex shrink-0">{leftIcon}</span>}
+        <span>{children}</span>
+        {withArrow && (
+          <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
+        )}
+      </Link>
+    );
+  }
 
   return (
     <button

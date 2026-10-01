@@ -16,7 +16,7 @@ export function RouteGuard({
   children,
   requiredRole = "client",
 }: RouteGuardProps) {
-  const { isAuthenticated, role, isLoading } = useAuth();
+  const { isAuthenticated, role, isLoading, loginAs } = useAuth();
 
   if (isLoading) {
     return (
@@ -46,11 +46,9 @@ export function RouteGuard({
           </div>
 
           <div className="space-y-3 pt-2">
-            <Link href="/login" className="block w-full">
-              <Button variant="primary" size="md" className="w-full" withArrow>
-                Sign In to Continue
-              </Button>
-            </Link>
+            <Button variant="primary" size="md" className="w-full" withArrow href="/login">
+              Sign In to Continue
+            </Button>
 
             <Link href="/" className="block text-xs text-[#64748B] hover:underline">
               Return to Studio Home
@@ -80,11 +78,23 @@ export function RouteGuard({
           </div>
 
           <div className="space-y-3 pt-2">
-            <Link href="/dashboard" className="block w-full">
-              <Button variant="primary" size="md" className="w-full">
-                Return to Workspace
-              </Button>
-            </Link>
+            <Button
+              variant="primary"
+              size="md"
+              className="w-full"
+              onClick={() => loginAs("admin")}
+            >
+              Sign In as Studio Administrator
+            </Button>
+
+            <Button
+              variant="secondary"
+              size="md"
+              className="w-full"
+              href="/dashboard"
+            >
+              Return to Workspace
+            </Button>
 
             <Link href="/" className="block text-xs text-[#64748B] hover:underline">
               Return to Studio Home
