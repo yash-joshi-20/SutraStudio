@@ -8,10 +8,12 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "npm run typecheck && npm run lint && node scripts/regression-test.mjs && node scripts/ai-workflow-regression.mjs && node scripts/storage-regression.mjs && node scripts/production-checks.mjs",
+    "test": "npm run typecheck && npm run lint && node scripts/regression-test.mjs && node scripts/ai-workflow-regression.mjs && node scripts/storage-regression.mjs && node scripts/production-checks.mjs && node scripts/final-acceptance-audit.mjs",
     "test:workflows": "node scripts/ai-workflow-regression.mjs",
     "test:storage": "node scripts/storage-regression.mjs",
-    "test:production": "node scripts/production-checks.mjs"
+    "test:production": "node scripts/production-checks.mjs",
+    "test:audit": "node scripts/final-acceptance-audit.mjs",
+    "audit": "node scripts/final-acceptance-audit.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
