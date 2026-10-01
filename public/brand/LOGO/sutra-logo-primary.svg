@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 120" fill="none">
+  <defs>
+    <!-- Shimmering Gold Gradient for Emblem & SUTRA text -->
+    <linearGradient id="sutraGoldHoriz" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F2CB7E" />
+      <stop offset="35%" stop-color="#D4A35A" />
+      <stop offset="70%" stop-color="#A87326" />
+      <stop offset="100%" stop-color="#73420E" />
+    </linearGradient>
+    <linearGradient id="sutraGoldShineHoriz" x1="0%" y1="0%" x2="100%" y2="80%">
+      <stop offset="0%" stop-color="#FCE5A6" />
+      <stop offset="50%" stop-color="#D99F45" />
+      <stop offset="100%" stop-color="#8E5316" />
+    </linearGradient>
+  </defs>
+
+  <!-- Left: The Lotus 'S' Emblem (Scale to fit 100x100) -->
+  <g transform="translate(6, 10) scale(0.1)">
+    <!-- Top Diamond Accent -->
+    <polygon points="500,52 538,122 500,192 462,122" fill="url(#sutraGoldHoriz)" />
+
+    <!-- Central S -->
+    <path
+      d="M 500,200 C 525,198 568,206 605,236 C 645,268 652,318 602,362 C 592,342 562,316 525,302 C 490,290 488,252 500,200 Z"
+      fill="url(#sutraGoldShineHoriz)"
+    />
+    <path
+      d="M 500,200 C 430,225 350,295 320,380 C 290,465 340,545 425,600 C 505,650 560,705 540,770 C 518,830 435,845 375,790 C 355,770 345,745 342,715 C 330,735 320,770 338,810 C 370,875 460,895 535,865 C 625,825 660,730 630,640 C 600,550 500,490 430,440 C 365,395 355,330 380,285 C 408,235 455,208 500,200 Z"
+      fill="url(#sutraGoldHoriz)"
+    />
+    <path
+      d="M 395,528 C 372,558 355,605 358,660 C 365,745 435,800 505,790 C 565,780 595,720 575,655 C 550,578 468,515 412,475 C 402,492 398,510 395,528 Z"
+      fill="url(#sutraGoldShineHoriz)"
+    />
+
+    <!-- Left Flanking Petals -->
+    <path d="M 390,795 C 320,785 195,750 115,670 C 50,605 35,535 45,540 C 80,540 150,600 220,680 C 270,735 330,775 390,795 Z" fill="url(#sutraGoldHoriz)" />
+    <path d="M 330,735 C 260,670 190,560 190,420 C 220,440 260,520 300,610 C 320,655 335,700 330,735 Z" fill="url(#sutraGoldHoriz)" />
+    <path d="M 345,610 C 320,530 270,395 240,320 C 275,345 320,430 345,520 C 350,545 352,580 345,610 Z" fill="url(#sutraGoldHoriz)" />
+
+    <!-- Right Flanking Petals -->
+    <path d="M 610,795 C 680,785 805,750 885,670 C 950,605 965,535 955,540 C 920,540 850,600 780,680 C 730,735 670,775 610,795 Z" fill="url(#sutraGoldHoriz)" />
+    <path d="M 670,735 C 740,670 810,560 810,420 C 780,440 740,520 700,610 C 680,655 665,700 670,735 Z" fill="url(#sutraGoldHoriz)" />
+    <path d="M 655,610 C 680,530 730,395 760,320 C 725,345 680,430 655,520 C 650,545 648,580 655,610 Z" fill="url(#sutraGoldHoriz)" />
+
+    <!-- Bottom Accents -->
+    <path d="M 235,845 C 300,835 380,838 440,855 C 380,858 300,862 235,845 Z" fill="url(#sutraGoldHoriz)" />
+    <path d="M 765,845 C 700,835 620,838 560,855 C 620,858 700,862 765,845 Z" fill="url(#sutraGoldHoriz)" />
+    <polygon points="500,820 558,890 500,968 442,890" fill="url(#sutraGoldHoriz)" />
+  </g>
+
+  <!-- Right: Typography Lockup matching sutra-logo-primary.png -->
+  <g transform="translate(122, 10)">
+    <!-- SUTRA (Gold Gradient Serif) -->
+    <text
+      x="0"
+      y="55"
+      fill="url(#sutraGoldHoriz)"
+      font-family="'Playfair Display', Georgia, serif"
+      font-size="44"
+      font-weight="700"
+      letter-spacing="5"
+    >
+      SUTRA
+    </text>
+
+    <!-- STUDIO (Secondary Clean Sans) -->
+    <text
+      x="195"
+      y="55"
+      fill="#0F172A"
+      font-family="'Inter', sans-serif"
+      font-size="36"
+      font-weight="400"
+      letter-spacing="10"
+    >
+      STUDIO
+    </text>
+
+    <!-- Thin Divider Line -->
+    <line
+      x1="0"
+      y1="72"
+      x2="400"
+      y2="72"
+      stroke="#D4A35A"
+      stroke-width="1.2"
+      stroke-opacity="0.6"
+    />
+
+    <!-- Subtitle: IDEAS ◆ DESIGN ◆ DEVELOPMENT ◆ GROWTH -->
+    <text
+      x="0"
+      y="90"
+      fill="#475569"
+      font-family="'Inter', sans-serif"
+      font-size="10.5"
+      font-weight="500"
+      letter-spacing="4.5"
+    >
+      IDEAS  ◆  DESIGN  ◆  DEVELOPMENT  ◆  GROWTH
+    </text>
+  </g>
+</svg>
