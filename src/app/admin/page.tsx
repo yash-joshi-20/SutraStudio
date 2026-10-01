@@ -487,7 +487,7 @@ export default function AdminHubPage() {
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as "overview" | "clients" | "conversations" | "workflows" | "audit")}
                 className={`px-4 py-2 rounded-xl text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
                   activeTab === tab.id
                     ? "bg-[#5C3A1E] text-white shadow-xs"

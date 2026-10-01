@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node scripts/regression-test.mjs && node scripts/ai-workflow-regression.mjs && node scripts/storage-regression.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run typecheck && npm run lint && node scripts/regression-test.mjs && node scripts/ai-workflow-regression.mjs && node scripts/storage-regression.mjs && node scripts/production-checks.mjs",
     "test:workflows": "node scripts/ai-workflow-regression.mjs",
-    "test:storage": "node scripts/storage-regression.mjs"
+    "test:storage": "node scripts/storage-regression.mjs",
+    "test:production": "node scripts/production-checks.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
