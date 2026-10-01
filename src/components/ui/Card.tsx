@@ -20,7 +20,7 @@ export function Card({
   }[variant];
 
   const hoverStyles = hoverable
-    ? "transition-all duration-200 hover:-translate-y-1 hover:border-[#D4A35A] hover:shadow-warm-hover cursor-pointer"
+    ? "interactive-card cursor-pointer"
     : "";
 
   return (

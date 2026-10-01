@@ -179,7 +179,7 @@ export default function ChatPage() {
       <div className="min-h-screen flex bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
         <PortalSidebar />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-6xl flex flex-col h-screen pb-24 md:pb-8">
+        <main id="main-content" className="flex-1 p-4 sm:p-6 lg:p-8 max-w-6xl flex flex-col h-screen pb-24 md:pb-8">
           {/* ========================================================
               TOP CHANNEL SELECTOR HEADER
               ======================================================== */}
