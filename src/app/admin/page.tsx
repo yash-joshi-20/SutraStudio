@@ -5,247 +5,629 @@ import Link from "next/link";
 import { PortalSidebar } from "@/components/dashboard/PortalSidebar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { KPITile } from "@/components/dashboard/KPITile";
-import { Badge } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
+import { Avatar } from "@/components/ui/Avatar";
 import {
   ShieldAlert,
   Users,
   Cpu,
   Bot,
-  CheckCircle,
+  CheckCircle2,
   FileCheck,
   Activity,
   ArrowRight,
+  Search,
+  HardDrive,
+  Eye,
+  SlidersHorizontal,
+  ExternalLink,
+  Lock,
+  Layers,
+  Sparkles,
+  AlertTriangle,
+  RotateCcw,
+  Send,
 } from "lucide-react";
 import { RouteGuard } from "@/components/auth/RouteGuard";
+
+interface ClientRecord {
+  id: string;
+  name: string;
+  company: string;
+  email: string;
+  tier: "Enterprise" | "Growth" | "Starter";
+  driveFolderId: string;
+  activeOrders: number;
+  lifetimeVolume: string;
+  status: "Active" | "Pending Brief" | "Under Review";
+  lastActive: string;
+}
+
+const CLIENTS_DATA: ClientRecord[] = [
+  {
+    id: "cl-1",
+    name: "Yash Joshi",
+    company: "Studio Living Architecture",
+    email: "yash@studioliving.com",
+    tier: "Enterprise",
+    driveFolderId: "drive_fld_sutra_001",
+    activeOrders: 2,
+    lifetimeVolume: "₹1,85,000",
+    status: "Active",
+    lastActive: "10 mins ago",
+  },
+  {
+    id: "cl-2",
+    name: "Aarav Singhania",
+    company: "Maison Aura Luxury Fragrances",
+    email: "aarav@maisonaura.com",
+    tier: "Enterprise",
+    driveFolderId: "drive_fld_maison_002",
+    activeOrders: 3,
+    lifetimeVolume: "₹2,40,000",
+    status: "Active",
+    lastActive: "45 mins ago",
+  },
+  {
+    id: "cl-3",
+    name: "Meera Patel",
+    company: "Zenith Spatial & Interiors",
+    email: "meera@zenithliving.in",
+    tier: "Growth",
+    driveFolderId: "drive_fld_zenith_003",
+    activeOrders: 1,
+    lifetimeVolume: "₹95,000",
+    status: "Under Review",
+    lastActive: "3 hours ago",
+  },
+  {
+    id: "cl-4",
+    name: "Karan Verma",
+    company: "Shri Naturals D2C",
+    email: "growth@shrinaturals.com",
+    tier: "Starter",
+    driveFolderId: "drive_fld_shri_004",
+    activeOrders: 0,
+    lifetimeVolume: "₹45,000",
+    status: "Pending Brief",
+    lastActive: "Yesterday",
+  },
+  {
+    id: "cl-5",
+    name: "Devika Rao",
+    company: "Vedic Living Heritage Resorts",
+    email: "devika@vedicresorts.com",
+    tier: "Enterprise",
+    driveFolderId: "drive_fld_vedic_005",
+    activeOrders: 4,
+    lifetimeVolume: "₹3,20,000",
+    status: "Active",
+    lastActive: "Just now",
+  },
+];
+
+const AUDIT_LOGS = [
+  { id: "log-1", event: "AUTH_SESSION", actor: "yash@studioliving.com", detail: "Firebase ID token validated. Session active.", time: "10:24:12 UTC", type: "info" },
+  { id: "log-2", event: "DRIVE_SYNC", actor: "n8n_webhook_worker", detail: "Master render synced to drive_fld_sutra_001/3D_RENDERS", time: "10:18:05 UTC", type: "success" },
+  { id: "log-3", event: "REVISION_REQUEST", actor: "yash@studioliving.com", detail: "Revision round 1 initiated on order #ORD-001", time: "10:04:30 UTC", type: "warning" },
+  { id: "log-4", event: "WORKFLOW_DISPATCH", actor: "ai_router_core", detail: "Triggered 3D spatial meshing pipeline in isolated container", time: "09:55:18 UTC", type: "info" },
+  { id: "log-5", event: "ORDER_CREATED", actor: "aarav@maisonaura.com", detail: "Order #ORD-008 created in Firestore: 4K Commercial Reel", time: "09:30:00 UTC", type: "success" },
+];
 
 export default function AdminHubPage() {
   const [activeTab, setActiveTab] = useState<
     "overview" | "clients" | "conversations" | "workflows" | "audit"
   >("overview");
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [tierFilter, setTierFilter] = useState<string>("All");
+  const [selectedClient, setSelectedClient] = useState<ClientRecord | null>(null);
+
+  const filteredClients = CLIENTS_DATA.filter((client) => {
+    const matchesTier = tierFilter === "All" || client.tier === tierFilter;
+    const matchesSearch =
+      searchQuery === "" ||
+      client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      client.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      client.email.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesTier && matchesSearch;
+  });
+
   return (
     <RouteGuard requiredRole="admin">
-      <div className="min-h-screen flex bg-[#F8F5EF] text-[#0F172A]">
-      <PortalSidebar />
+      <div className="min-h-screen flex bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
+        <PortalSidebar />
 
-      <main className="flex-1 p-6 sm:p-10 max-w-6xl pb-24 md:pb-10 space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-[#EADFCB] gap-4">
-          <div>
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#D4A35A]">
-              STUDIO OPERATIONS
-            </span>
-            <h1 className="font-serif text-3xl font-semibold text-[#0F172A] mt-1">
-              Admin Command Workspace
-            </h1>
-            <p className="text-xs text-[#64748B]">
-              Role-based control center: clients, AI routing pipelines, deliverable approvals, and audit logs.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 bg-[#FFFDF9] border border-[#EADFCB] px-3.5 py-1.5 rounded-full text-xs text-[#5C3A1E] font-semibold">
-            <ShieldAlert className="w-4 h-4 text-[#D4A35A]" />
-            <span>Admin Clearance Active</span>
-          </div>
-        </div>
-
-        {/* Admin Navigation Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto border-b border-[#EADFCB] pb-2">
-          {[
-            { id: "overview", label: "Operations Overview" },
-            { id: "clients", label: "Client Directory" },
-            { id: "conversations", label: "AI & Client Chats" },
-            { id: "workflows", label: "Active Workflows" },
-            { id: "audit", label: "System Audit Logs" },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`px-4 py-2 rounded-xl text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
-                activeTab === tab.id
-                  ? "bg-[#5C3A1E] text-white shadow-xs"
-                  : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A]"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab 1: Overview */}
-        {activeTab === "overview" && (
-          <div className="space-y-8">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-              <KPITile label="Registered Clients" value="48" sublabel="+4 this week" />
-              <KPITile label="Running Workflows" value="12" sublabel="n8n & AI active" variant="progress" />
-              <KPITile label="Deliverables Ready" value="7" sublabel="Awaiting review" variant="completed" />
-              <KPITile label="Total Studio Volume" value="$42,800" sublabel="Sep 2026" variant="pending" />
+        <main className="flex-1 p-6 sm:p-8 lg:p-10 max-w-7xl mx-auto pb-24 md:pb-12 space-y-8">
+          {/* Header Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-[#EADFCB] gap-4">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[10px] font-semibold uppercase tracking-wider text-[#5C3A1E] mb-2">
+                <ShieldAlert className="w-3.5 h-3.5 text-[#D4A35A]" />
+                <span>STUDIO OPERATIONS COMMAND</span>
+              </div>
+              <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-[#0F172A]">
+                Admin Operations & Client Management
+              </h1>
+              <p className="text-xs text-[#64748B] mt-0.5">
+                Centralized control: manage client workspaces, inspect isolated AI pipelines, approve master deliverables, and audit security.
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Recent Client Events */}
-              <div className="rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] p-6 shadow-xs space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-[#EADFCB]">
-                  <h3 className="font-serif font-semibold text-base text-[#0F172A] flex items-center gap-2">
-                    <Users className="w-4 h-4 text-[#5C3A1E]" />
-                    <span>New Client Registrations</span>
-                  </h3>
-                  <Badge variant="progress">Real-time</Badge>
-                </div>
-                <div className="space-y-3 text-xs">
-                  <div className="flex items-center justify-between p-2 rounded-xl bg-[#F8F5EF]">
-                    <div>
-                      <p className="font-semibold text-[#0F172A]">Maison Aura Luxury</p>
-                      <p className="text-[#64748B]">client@maisonaura.com</p>
-                    </div>
-                    <span className="text-[#94A3B8]">15m ago</span>
-                  </div>
-                  <div className="flex items-center justify-between p-2 rounded-xl bg-[#F8F5EF]">
-                    <div>
-                      <p className="font-semibold text-[#0F172A]">Vedic Living Residences</p>
-                      <p className="text-[#64748B]">architecture@vedicliving.in</p>
-                    </div>
-                    <span className="text-[#94A3B8]">2h ago</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Active AI Routing Jobs */}
-              <div className="rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] p-6 shadow-xs space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-[#EADFCB]">
-                  <h3 className="font-serif font-semibold text-base text-[#0F172A] flex items-center gap-2">
-                    <Cpu className="w-4 h-4 text-[#5C3A1E]" />
-                    <span>Workflow Pipelines in Execution</span>
-                  </h3>
-                  <Badge variant="completed">12 Active</Badge>
-                </div>
-                <div className="space-y-3 text-xs">
-                  <div className="flex items-center justify-between p-2 rounded-xl bg-[#F8F5EF]">
-                    <div>
-                      <p className="font-semibold text-[#0F172A]">3D Room Texture & Lighting</p>
-                      <p className="text-[#64748B]">Workflow: `interior` • Step 3/5</p>
-                    </div>
-                    <Badge variant="progress">Running</Badge>
-                  </div>
-                  <div className="flex items-center justify-between p-2 rounded-xl bg-[#F8F5EF]">
-                    <div>
-                      <p className="font-semibold text-[#0F172A]">10s Video Voiceover Sync</p>
-                      <p className="text-[#64748B]">Workflow: `video` • Render Done</p>
-                    </div>
-                    <Badge variant="completed">Completed</Badge>
-                  </div>
-                </div>
+            {/* System Status Pills */}
+            <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2 bg-[#FFFDF9] border border-[#EADFCB] px-3.5 py-1.5 rounded-full text-xs text-[#2E7D4F] font-semibold shadow-xs">
+                <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-pulse" />
+                <span>Pipelines Operational</span>
               </div>
             </div>
           </div>
-        )}
 
-        {/* Tab 2: Clients */}
-        {activeTab === "clients" && (
-          <div className="rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] divide-y divide-[#EADFCB]/60 shadow-xs overflow-hidden">
+          {/* High-Density Top Navigation Tabs */}
+          <div className="flex items-center gap-2 overflow-x-auto border-b border-[#EADFCB] pb-2">
             {[
-              { name: "Maison Aura", email: "info@maisonaura.com", orders: 3, spend: "$2,250", status: "Active" },
-              { name: "Vedic Living Architecture", email: "projects@vedic.com", orders: 2, spend: "$1,600", status: "Active" },
-              { name: "Zenith Developments", email: "marketing@zenith.ae", orders: 5, spend: "$5,400", status: "Active" },
-              { name: "Shri Naturals", email: "growth@shrinaturals.com", orders: 1, spend: "$750", status: "Active" },
-            ].map((client) => (
-              <div key={client.name} className="p-4 sm:p-5 flex items-center justify-between gap-4">
-                <div>
-                  <h4 className="font-semibold text-sm text-[#0F172A]">{client.name}</h4>
-                  <p className="text-xs text-[#64748B]">{client.email} • {client.orders} orders placed</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold text-sm text-[#5C3A1E]">{client.spend}</p>
-                  <span className="text-[11px] text-[#2E7D4F] font-semibold">{client.status}</span>
-                </div>
-              </div>
+              { id: "overview", label: "Operations Overview" },
+              { id: "clients", label: `Client Directory (${CLIENTS_DATA.length})` },
+              { id: "conversations", label: "Chat Sessions & Takeover" },
+              { id: "workflows", label: "Isolated n8n Pipelines" },
+              { id: "audit", label: "Security & Audit Logs" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`px-4 py-2 rounded-xl text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
+                  activeTab === tab.id
+                    ? "bg-[#5C3A1E] text-white shadow-xs"
+                    : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A]"
+                }`}
+              >
+                {tab.label}
+              </button>
             ))}
           </div>
-        )}
 
-        {/* Tab 3: Conversations & AI Takeover */}
-        {activeTab === "conversations" && (
-          <div className="rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] p-6 shadow-xs space-y-4">
-            <h3 className="font-serif font-semibold text-lg text-[#0F172A]">
-              Live AI Conversations & Human Takeover
-            </h3>
-            <p className="text-xs text-[#64748B]">
-              Inspect live client AI sessions. Admin leads can intervene and switch thread to human producer mode.
-            </p>
-            <div className="space-y-3 pt-2">
-              <div className="p-4 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm text-[#0F172A]">Yash Joshi (Living Suite)</span>
-                    <Badge variant="gold">AI Classifier Active</Badge>
+          {/* ========================================================
+              TAB 1: OPERATIONS OVERVIEW
+              ======================================================== */}
+          {activeTab === "overview" && (
+            <div className="space-y-8">
+              {/* KPI Metrics */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                <KPITile
+                  label="Registered Clients"
+                  value="48"
+                  sublabel="+5 onboarded this month"
+                  variant="ink"
+                />
+                <KPITile
+                  label="Running Workflows"
+                  value="12"
+                  sublabel="Isolated n8n containers"
+                  variant="progress"
+                />
+                <KPITile
+                  label="Deliverables Ready"
+                  value="7"
+                  sublabel="Awaiting review/sign-off"
+                  variant="completed"
+                />
+                <KPITile
+                  label="Monthly Volume"
+                  value="₹4,28,000"
+                  sublabel="Active pipeline value"
+                  variant="pending"
+                />
+              </div>
+
+              {/* Action Required & Pipeline Health */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* Urgent Deliverables & Approvals (7 Cols) */}
+                <div className="lg:col-span-7 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-[#EADFCB]">
+                    <h3 className="font-serif font-semibold text-base text-[#0F172A] flex items-center gap-2">
+                      <FileCheck className="w-4 h-4 text-[#5C3A1E]" />
+                      <span>Deliverables Pending Producer Review</span>
+                    </h3>
+                    <Badge variant="gold" size="sm">
+                      3 Urgent
+                    </Badge>
                   </div>
-                  <p className="text-xs text-[#475569] mt-1">
-                    Last prompt: &quot;Can we do 4K multi-angle lighting for our new catalog?&quot;
-                  </p>
+
+                  <div className="space-y-3">
+                    <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-bold text-[#5C3A1E]">#ORD-001</span>
+                          <span className="text-xs font-semibold text-[#0F172A]">Luxury Living Suite 3D</span>
+                        </div>
+                        <p className="text-[11px] text-[#64748B] mt-0.5">
+                          Client requested revision on wood texture specularity. Draft 02 ready for QA.
+                        </p>
+                      </div>
+                      <Link href="/orders">
+                        <Button variant="primary" size="sm">
+                          Review QA
+                        </Button>
+                      </Link>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-bold text-[#5C3A1E]">#ORD-003</span>
+                          <span className="text-xs font-semibold text-[#0F172A]">Commercial Brand Reel 15s</span>
+                        </div>
+                        <p className="text-[11px] text-[#64748B] mt-0.5">
+                          ProRes 422 color pass complete. Ready to dispatch to Google Drive vault.
+                        </p>
+                      </div>
+                      <Button variant="secondary" size="sm">
+                        Approve Release
+                      </Button>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Engine Health & Sync Status (5 Cols) */}
+                <div className="lg:col-span-5 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-[#EADFCB]">
+                    <h3 className="font-serif font-semibold text-base text-[#0F172A] flex items-center gap-2">
+                      <Cpu className="w-4 h-4 text-[#5C3A1E]" />
+                      <span>Infrastructure Status</span>
+                    </h3>
+                    <Badge variant="completed" size="sm">
+                      100% Uptime
+                    </Badge>
+                  </div>
+
+                  <div className="space-y-3 text-xs">
+                    <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <HardDrive className="w-4 h-4 text-[#5C3A1E]" />
+                        <span className="font-semibold text-[#0F172A]">Google Drive Vault API</span>
+                      </div>
+                      <span className="text-[#2E7D4F] font-bold">Connected (AES-256)</span>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Lock className="w-4 h-4 text-[#5C3A1E]" />
+                        <span className="font-semibold text-[#0F172A]">Firebase Auth Service</span>
+                      </div>
+                      <span className="text-[#2E7D4F] font-bold">Active & Enforced</span>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Layers className="w-4 h-4 text-[#5C3A1E]" />
+                        <span className="font-semibold text-[#0F172A]">n8n Workflow Daemon</span>
+                      </div>
+                      <span className="text-[#2E7D4F] font-bold">12 Isolated Queues</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================
+              TAB 2: CLIENT DIRECTORY & MANAGEMENT
+              ======================================================== */}
+          {activeTab === "clients" && (
+            <div className="space-y-6">
+              {/* Search & Tier Filters */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  {["All", "Enterprise", "Growth", "Starter"].map((tier) => (
+                    <button
+                      key={tier}
+                      type="button"
+                      onClick={() => setTierFilter(tier)}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                        tierFilter === tier
+                          ? "bg-[#5C3A1E] text-white shadow-xs"
+                          : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A]"
+                      }`}
+                    >
+                      {tier}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="relative flex items-center w-full sm:w-72">
+                  <Search className="w-4 h-4 text-[#94A3B8] absolute left-3.5 pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Search client, email or company..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#D4A35A]"
+                  />
+                </div>
+              </div>
+
+              {/* High-Density Client Table */}
+              <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] overflow-hidden shadow-xs">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-[#FAF9F5] border-b border-[#EADFCB] text-[10px] uppercase font-bold text-[#64748B] tracking-wider">
+                      <tr>
+                        <th className="py-3.5 px-6">Client / Company</th>
+                        <th className="py-3.5 px-4">Tier</th>
+                        <th className="py-3.5 px-4">Vault ID</th>
+                        <th className="py-3.5 px-4">Active Orders</th>
+                        <th className="py-3.5 px-4">Lifetime Spend</th>
+                        <th className="py-3.5 px-4">Status</th>
+                        <th className="py-3.5 px-6 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#EADFCB]/60">
+                      {filteredClients.map((client) => (
+                        <tr
+                          key={client.id}
+                          className="hover:bg-[#FAF9F5]/60 transition-colors"
+                        >
+                          <td className="py-4 px-6">
+                            <div className="flex items-center gap-3">
+                              <Avatar name={client.name} size="sm" />
+                              <div>
+                                <p className="font-semibold text-[#0F172A]">{client.name}</p>
+                                <p className="text-[11px] text-[#64748B]">{client.company}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <Badge
+                              variant={
+                                client.tier === "Enterprise"
+                                  ? "gold"
+                                  : client.tier === "Growth"
+                                  ? "progress"
+                                  : "neutral"
+                              }
+                              size="sm"
+                              showDot={false}
+                            >
+                              {client.tier}
+                            </Badge>
+                          </td>
+                          <td className="py-4 px-4 font-mono text-[11px] text-[#5C3A1E]">
+                            {client.driveFolderId}
+                          </td>
+                          <td className="py-4 px-4 font-semibold text-[#0F172A]">
+                            {client.activeOrders} Orders
+                          </td>
+                          <td className="py-4 px-4 font-serif font-bold text-[#5C3A1E]">
+                            {client.lifetimeVolume}
+                          </td>
+                          <td className="py-4 px-4">
+                            <span
+                              className={`text-[11px] font-semibold ${
+                                client.status === "Active"
+                                  ? "text-[#2E7D4F]"
+                                  : client.status === "Under Review"
+                                  ? "text-[#C2761A]"
+                                  : "text-[#64748B]"
+                              }`}
+                            >
+                              ● {client.status}
+                            </span>
+                          </td>
+                          <td className="py-4 px-6 text-right">
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => setSelectedClient(client)}
+                            >
+                              Inspect
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================
+              TAB 3: CONVERSATIONS & HUMAN TAKEOVER
+              ======================================================== */}
+          {activeTab === "conversations" && (
+            <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-6">
+              <div>
+                <h3 className="font-serif text-xl font-semibold text-[#0F172A]">
+                  Active AI Conversations & Live Takeover Supervisor
+                </h3>
+                <p className="text-xs text-[#64748B]">
+                  Inspect live client conversations with the Sutra AI Assistant. Admin producers can intervene and switch thread to human lead mode.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <Avatar name="Yash Joshi" size="md" status="online" className="shrink-0" />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm text-[#0F172A]">Yash Joshi (Studio Living)</span>
+                        <Badge variant="gold" size="sm">AI Routing Active</Badge>
+                      </div>
+                      <p className="text-xs text-[#64748B] mt-1 italic">
+                        Last Prompt: &quot;Can we do 4K multi-angle lighting passes for our new catalog?&quot;
+                      </p>
+                      <span className="text-[10px] text-[#94A3B8] block mt-1">
+                        Classified as: 3D Visualization (95% match) • 5m ago
+                      </span>
+                    </div>
+                  </div>
+
+                  <Link href="/chat">
+                    <Button variant="primary" size="sm" withArrow>
+                      Take Over as Raghavan
+                    </Button>
+                  </Link>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <Avatar name="Aarav Singhania" size="md" status="online" className="shrink-0" />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm text-[#0F172A]">Aarav Singhania (Maison Aura)</span>
+                        <Badge variant="completed" size="sm">Admin Handled</Badge>
+                      </div>
+                      <p className="text-xs text-[#64748B] mt-1 italic">
+                        Last Note: &quot;ProRes master video ready for Google Drive vault export.&quot;
+                      </p>
+                      <span className="text-[10px] text-[#94A3B8] block mt-1">
+                        Assigned Art Lead: Raghavan Sharma • 25m ago
+                      </span>
+                    </div>
+                  </div>
+
+                  <Link href="/chat">
+                    <Button variant="secondary" size="sm">
+                      Inspect Chat Log
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================
+              TAB 4: ISOLATED WORKFLOW PIPELINES
+              ======================================================== */}
+          {activeTab === "workflows" && (
+            <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-6">
+              <div>
+                <h3 className="font-serif text-xl font-semibold text-[#0F172A]">
+                  Isolated Generative Review Engines
+                </h3>
+                <p className="text-xs text-[#64748B]">
+                  Each service pipeline executes independently in isolated containers with HMAC webhook authentication.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {[
+                  { name: "3D Spatial Pipeline", slug: "three-d", jobs: 3, latency: "1.2s", provider: "Meshy/Spline + Blender" },
+                  { name: "Image Generation Engine", slug: "image", jobs: 4, latency: "850ms", provider: "Midjourney/Flux + Retouch" },
+                  { name: "Video Production Pipeline", slug: "video", jobs: 2, latency: "2.4s", provider: "Runway/Luma + ElevenLabs" },
+                  { name: "360 Virtual Tour VR", slug: "three-sixty", jobs: 1, latency: "1.1s", provider: "Pannellum Equirectangular" },
+                  { name: "Interior Architectural Engine", slug: "interior", jobs: 2, latency: "1.8s", provider: "ControlNet SDXL Architectural" },
+                  { name: "Google Drive Cloud Vault Router", slug: "automation", jobs: 5, latency: "340ms", provider: "n8n Webhook HMAC + Drive API" },
+                ].map((wf) => (
+                  <div key={wf.slug} className="p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-serif font-semibold text-sm text-[#0F172A]">{wf.name}</span>
+                      <Badge variant="completed" size="sm">Healthy</Badge>
+                    </div>
+                    <p className="text-xs text-[#64748B]">{wf.provider}</p>
+                    <div className="pt-2 border-t border-[#EADFCB]/60 flex items-center justify-between text-xs">
+                      <span className="font-mono text-[11px] text-[#5C3A1E] font-bold">{wf.jobs} Jobs Active</span>
+                      <span className="text-[#94A3B8]">Avg. {wf.latency}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================
+              TAB 5: SECURITY AUDIT TRAIL
+              ======================================================== */}
+          {activeTab === "audit" && (
+            <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-6">
+              <div>
+                <h3 className="font-serif text-xl font-semibold text-[#0F172A]">
+                  Cryptographic Security & System Audit Trail
+                </h3>
+                <p className="text-xs text-[#64748B]">
+                  Immutable ledger of authentication events, Google Drive file synchronizations, and pipeline dispatches.
+                </p>
+              </div>
+
+              <div className="space-y-2.5 font-mono text-xs text-[#475569]">
+                {AUDIT_LOGS.map((log) => (
+                  <div
+                    key={log.id}
+                    className="p-3.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className="font-bold text-[#5C3A1E] text-[11px] px-2 py-0.5 rounded bg-[#F8F5EF] border border-[#EADFCB]">
+                        [{log.event}]
+                      </span>
+                      <span className="font-medium text-[#0F172A]">{log.detail}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-[11px] text-[#94A3B8] shrink-0">
+                      <span>{log.actor}</span>
+                      <span>• {log.time}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </main>
+
+        <MobileBottomNav />
+
+        {/* Client Detail Drawer / Modal */}
+        <Modal
+          isOpen={!!selectedClient}
+          onClose={() => setSelectedClient(null)}
+          title={selectedClient?.name || "Client Dossier"}
+          description={`${selectedClient?.company} • Tier: ${selectedClient?.tier}`}
+          maxWidth="md"
+        >
+          {selectedClient && (
+            <div className="space-y-5 text-xs">
+              <div className="p-4 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-[#64748B]">Email:</span>
+                  <span className="font-semibold text-[#0F172A]">{selectedClient.email}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#64748B]">Google Drive Vault:</span>
+                  <span className="font-mono text-[#5C3A1E] font-semibold">{selectedClient.driveFolderId}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#64748B]">Active Orders:</span>
+                  <span className="font-bold text-[#0F172A]">{selectedClient.activeOrders} Orders</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#64748B]">Total Volume:</span>
+                  <span className="font-serif font-bold text-[#5C3A1E] text-sm">{selectedClient.lifetimeVolume}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#64748B]">Last Studio Activity:</span>
+                  <span className="text-[#0F172A]">{selectedClient.lastActive}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedClient(null)}
+                >
+                  Close
+                </Button>
                 <Link href="/chat">
-                  <Button variant="primary" size="sm">
-                    Take Over Chat
+                  <Button variant="primary" size="sm" withArrow>
+                    Message Client
                   </Button>
                 </Link>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Tab 4: Workflows */}
-        {activeTab === "workflows" && (
-          <div className="rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] p-6 shadow-xs space-y-4">
-            <h3 className="font-serif font-semibold text-lg text-[#0F172A]">
-              Isolated AI Service Workflow Engines
-            </h3>
-            <p className="text-xs text-[#64748B]">
-              Each workflow executes independently without cross-contaminating other pipelines.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-2">
-              {[
-                { name: "Image Pipeline", slug: "image", active: 4, provider: "Midjourney/Flux + Retouch" },
-                { name: "Video Pipeline", slug: "video", active: 2, provider: "Runway/Luma + ElevenLabs" },
-                { name: "3D Spatial Pipeline", slug: "three-d", active: 3, provider: "Meshy/Spline + Blender" },
-                { name: "360 Virtual Tour", slug: "three-sixty", active: 1, provider: "Pannellum + Equirectangular" },
-                { name: "Interior Render Engine", slug: "interior", active: 2, provider: "ControlNet SDXL Architectural" },
-                { name: "Automation & Drive Sync", slug: "automation", active: 5, provider: "n8n Webhook HMAC" },
-              ].map((wf) => (
-                <div key={wf.slug} className="p-4 rounded-xl border border-[#EADFCB] bg-[#FFFFFF]">
-                  <h4 className="font-semibold text-xs text-[#0F172A]">{wf.name}</h4>
-                  <p className="text-[10px] text-[#64748B] mt-0.5">{wf.provider}</p>
-                  <p className="text-xs font-bold text-[#5C3A1E] mt-3">{wf.active} Jobs Running</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Tab 5: System Audit Logs */}
-        {activeTab === "audit" && (
-          <div className="rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] p-6 shadow-xs space-y-4">
-            <h3 className="font-serif font-semibold text-lg text-[#0F172A]">
-              Security & Operations Audit Trail
-            </h3>
-            <div className="space-y-2 text-xs font-mono text-[#475569]">
-              <div className="p-2.5 rounded-lg bg-[#F8F5EF] flex justify-between">
-                <span>[AUTH] Client UID_098 verified via Firebase ID Token</span>
-                <span className="text-[#94A3B8]">10:14:22 UTC</span>
-              </div>
-              <div className="p-2.5 rounded-lg bg-[#F8F5EF] flex justify-between">
-                <span>[DRIVE] Asset `Aura_Noir.png` synced to Drive folder `SUTRA_CLIENT_001`</span>
-                <span className="text-[#94A3B8]">10:12:05 UTC</span>
-              </div>
-              <div className="p-2.5 rounded-lg bg-[#F8F5EF] flex justify-between">
-                <span>[WORKFLOW] Isolated run `img-wf-9921` completed in 4.2s</span>
-                <span className="text-[#94A3B8]">09:58:11 UTC</span>
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
-
-        <MobileBottomNav />
+          )}
+        </Modal>
       </div>
     </RouteGuard>
   );
