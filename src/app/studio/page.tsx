@@ -84,6 +84,104 @@ export default function StudioPage() {
           </div>
         </div>
 
+        {/* 8 AI Workflow Engines Architecture */}
+        <div className="space-y-8">
+          <div className="text-center max-w-2xl mx-auto space-y-3">
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#D4A35A]">
+              ENGINEERING ARCHITECTURE
+            </span>
+            <h2 className="font-serif text-3xl font-semibold text-[#0F172A]">
+              8 Isolated Production Pipelines
+            </h2>
+            <p className="text-sm text-[#64748B]">
+              Each creative discipline is powered by specialized generative models, automated validation chains, and direct Google Drive cloud sync.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {[
+              {
+                title: "Image Generation",
+                category: "Visual & 3D",
+                models: "Midjourney v6.1 • Flux Pro",
+                desc: "High-resolution diffusion rendering, studio lighting passes, and Real-ESRGAN upscaling.",
+                output: "4K Master PNG / TIFF",
+              },
+              {
+                title: "Video Production",
+                category: "Video & VR",
+                models: "Runway Gen-3 • Luma Dream",
+                desc: "Cinematographic camera choreography, temporal stabilization, and ElevenLabs audio sync.",
+                output: "ProRes / 4K MP4",
+              },
+              {
+                title: "3D Spatial Pipeline",
+                category: "Visual & 3D",
+                models: "Meshy v2 • Blender Nodes",
+                desc: "Subdivision surface modeling, PBR procedural materials, and web-ready GLTF/USDZ bakes.",
+                output: "GLTF / USDZ / FBX",
+              },
+              {
+                title: "360 Virtual Tour VR",
+                category: "Video & VR",
+                models: "Pannellum • Equirectangular",
+                desc: "Spherical panorama stitching, spatial hot-spot linking, and responsive WebXR compatibility.",
+                output: "Interactive WebXR",
+              },
+              {
+                title: "Interior Architecture",
+                category: "Visual & 3D",
+                models: "ControlNet SDXL • Depth Map",
+                desc: "CAD and blueprint conversion into architectural interior visualizations with authentic textures.",
+                output: "High-Res Render Suite",
+              },
+              {
+                title: "Marketing & Ads",
+                category: "Code & Growth",
+                models: "Sutra Copy • Dynamic Resize",
+                desc: "Contextual ad copywriting, multi-aspect layout generation (1:1, 9:16, 16:9), and campaign bundles.",
+                output: "Multi-Format Ad Pack",
+              },
+              {
+                title: "Website Development",
+                category: "Code & Growth",
+                models: "Next.js 16 • Turbopack CI",
+                desc: "Automated headless code compilation, responsive UI components, and sub-second Lighthouse scores.",
+                output: "Vercel / Next.js Repo",
+              },
+              {
+                title: "App & Mobile Mobile",
+                category: "Code & Growth",
+                models: "React Native • Firebase Sync",
+                desc: "Component architecture generation, offline state sync, and enterprise security rule validation.",
+                output: "iOS & Android PWA/App",
+              },
+            ].map((wf, idx) => (
+              <div
+                key={idx}
+                className="rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] p-5 space-y-3 hover:border-[#D4A35A] transition-all hover:shadow-xs"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#A98B57] font-semibold">
+                    {wf.category}
+                  </span>
+                  <span className="font-mono text-[11px] text-[#94A3B8]">0{idx + 1}</span>
+                </div>
+                <h4 className="font-serif font-semibold text-base text-[#0F172A]">
+                  {wf.title}
+                </h4>
+                <p className="text-xs text-[#64748B] leading-relaxed">
+                  {wf.desc}
+                </p>
+                <div className="pt-3 border-t border-[#EADFCB]/60 space-y-1 text-[11px] font-mono">
+                  <div className="text-[#0F172A] font-medium truncate">{wf.models}</div>
+                  <div className="text-[#5C3A1E] text-[10px]">{wf.output}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Process Flow */}
         <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-8 md:p-12 text-center space-y-6">
           <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#D4A35A]">

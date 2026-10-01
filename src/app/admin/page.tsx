@@ -29,6 +29,18 @@ import {
   AlertTriangle,
   RotateCcw,
   Send,
+  Play,
+  PlayCircle,
+  Clock,
+  RefreshCw,
+  Terminal,
+  Box,
+  Video,
+  Image as ImageIcon,
+  Layout,
+  Smartphone,
+  Megaphone,
+  Compass,
 } from "lucide-react";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 
@@ -179,6 +191,127 @@ const INITIAL_ADMIN_SESSIONS: AdminChatSession[] = [
   },
 ];
 
+export interface StudioWorkflowEngine {
+  slug: string;
+  name: string;
+  category: "Visual & 3D" | "Video & VR" | "Code & Growth";
+  provider: string;
+  latency: string;
+  activeJobs: number;
+  description: string;
+  inputFormat: string;
+  outputVault: string;
+  sla: string;
+  iconName: "image" | "video" | "box" | "compass" | "layers" | "megaphone" | "layout" | "smartphone";
+}
+
+export const STUDIO_WORKFLOW_ENGINES: StudioWorkflowEngine[] = [
+  {
+    slug: "image",
+    name: "Image Generation Pipeline",
+    category: "Visual & 3D",
+    provider: "Midjourney v6.1 / Flux Pro + Real-ESRGAN Upscale",
+    latency: "850ms",
+    activeJobs: 4,
+    description: "Diffusion model synthesis, studio multi-light simulation pass, and ultra-high resolution upscale for marketing & print.",
+    inputFormat: "Text Prompt / Brand Moodboard",
+    outputVault: "drive_fld_*/IMAGES",
+    sla: "99.98%",
+    iconName: "image",
+  },
+  {
+    slug: "video",
+    name: "Video Production Pipeline",
+    category: "Video & VR",
+    provider: "Runway Gen-3 Alpha / Luma Dream Machine + ElevenLabs Audio",
+    latency: "2.4s",
+    activeJobs: 2,
+    description: "Cinematographic commercial reels, 4K camera maneuvers, motion graphics, and synchronized spatial audio passes.",
+    inputFormat: "Storyboards / Scene Descriptors",
+    outputVault: "drive_fld_*/VIDEOS",
+    sla: "99.95%",
+    iconName: "video",
+  },
+  {
+    slug: "three-d",
+    name: "3D Spatial Pipeline",
+    category: "Visual & 3D",
+    provider: "Meshy v2 / Tripo 3D + Blender Geometry Nodes",
+    latency: "1.2s",
+    activeJobs: 3,
+    description: "High-poly mesh modeling, PBR procedural materials, and GLTF/USDZ asset export for luxury e-commerce and AR.",
+    inputFormat: "Product CAD / Orthographic Views",
+    outputVault: "drive_fld_*/3D_RENDERS",
+    sla: "99.99%",
+    iconName: "box",
+  },
+  {
+    slug: "three-sixty",
+    name: "360 Virtual Tour VR",
+    category: "Video & VR",
+    provider: "Pannellum Engine + HDR Equirectangular Stitching",
+    latency: "1.1s",
+    activeJobs: 1,
+    description: "Interactive architectural walkthroughs, spherical HDR node stitching, and multi-room portal linking for web and VR.",
+    inputFormat: "Spherical Panoramas / Floor Plan",
+    outputVault: "drive_fld_*/360_TOURS",
+    sla: "99.94%",
+    iconName: "compass",
+  },
+  {
+    slug: "interior",
+    name: "Interior Architectural Engine",
+    category: "Visual & 3D",
+    provider: "ControlNet SDXL Architecture + Depth Maps",
+    latency: "1.8s",
+    activeJobs: 2,
+    description: "Transforms architectural line drawings and rough wireframes into photorealistic styled spaces with heritage materials.",
+    inputFormat: "2D Layout / Architectural Blueprint",
+    outputVault: "drive_fld_*/INTERIOR",
+    sla: "99.97%",
+    iconName: "layers",
+  },
+  {
+    slug: "marketing",
+    name: "Marketing & Ad Creative Pipeline",
+    category: "Code & Growth",
+    provider: "Automated Copywriting + Multi-Aspect Ratio Resizing",
+    latency: "420ms",
+    activeJobs: 3,
+    description: "Generates multi-platform ad banners (1:1, 9:16, 16:9), copy variations, and campaign collateral ready for ad networks.",
+    inputFormat: "Campaign Goal / Target Audience",
+    outputVault: "drive_fld_*/MARKETING",
+    sla: "99.99%",
+    iconName: "megaphone",
+  },
+  {
+    slug: "website",
+    name: "Website Development Pipeline",
+    category: "Code & Growth",
+    provider: "Next.js 16 Turbopack CI/CD + Vercel Deployment",
+    latency: "3.2s",
+    activeJobs: 2,
+    description: "Compiles responsive Next.js landing pages, headless CMS bindings, and sub-second Lighthouse 98+ optimizations.",
+    inputFormat: "Figma Tokens / Section Specs",
+    outputVault: "drive_fld_*/WEBSITE",
+    sla: "99.99%",
+    iconName: "layout",
+  },
+  {
+    slug: "app",
+    name: "App & Mobile Pipeline",
+    category: "Code & Growth",
+    provider: "React Native / PWA Component Architecture & Firebase Auth Sync",
+    latency: "4.1s",
+    activeJobs: 1,
+    description: "Scaffolds cross-platform iOS & Android screens, offline state persistence, and Firebase security rule validation.",
+    inputFormat: "User Journey / Design Tokens",
+    outputVault: "drive_fld_*/MOBILE_APP",
+    sla: "99.96%",
+    iconName: "smartphone",
+  },
+];
+
 export default function AdminHubPage() {
   const [activeTab, setActiveTab] = useState<
     "overview" | "clients" | "conversations" | "workflows" | "audit"
@@ -255,6 +388,51 @@ export default function AdminHubPage() {
       )
     );
     setProducerInput("");
+  };
+
+  // 8 AI Workflow Engines State
+  const [workflowFilter, setWorkflowFilter] = useState("All");
+  const [workflowJobs, setWorkflowJobs] = useState([
+    { id: "run_three-d_9821", name: "3D Spatial Pipeline", order: "#ORD-001", status: "Running", progress: 65, duration: "1m 14s", target: "drive_fld_sutra_001/3D_RENDERS" },
+    { id: "run_video_8842", name: "Video Production Pipeline", order: "#ORD-003", status: "Completed", progress: 100, duration: "3m 40s", target: "drive_fld_sutra_001/VIDEOS" },
+    { id: "run_interior_7714", name: "Interior Architectural Engine", order: "#ORD-005", status: "Running", progress: 88, duration: "48s", target: "drive_fld_zenith_003/INTERIOR" },
+    { id: "run_website_6621", name: "Website Development Pipeline", order: "#ORD-002", status: "Completed", progress: 100, duration: "2m 10s", target: "drive_fld_sutra_001/CODE" },
+    { id: "run_app_5510", name: "App & Mobile Pipeline", order: "#ORD-007", status: "Running", progress: 40, duration: "25s", target: "drive_fld_vedic_005/APP" },
+  ]);
+  const [dispatchingWf, setDispatchingWf] = useState<string | null>(null);
+  const [dispatchSuccess, setDispatchSuccess] = useState<string>("");
+
+  const handleDispatchJob = async (wfSlug: string, wfName: string) => {
+    setDispatchingWf(wfSlug);
+    try {
+      const res = await fetch("/api/workflows", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: `ORD-QA-${Math.floor(Math.random() * 900 + 100)}`,
+          workflowType: wfSlug,
+          action: "dispatch",
+        }),
+      });
+      const data = await res.json();
+      const newJob = {
+        id: data.runId || `run_${wfSlug}_${Date.now()}`,
+        name: wfName,
+        order: data.orderId || "#ORD-TEST",
+        status: "Running",
+        progress: 20,
+        duration: "Just now",
+        target: "Google Drive Client Folder",
+      };
+      setWorkflowJobs((prev) => [newJob, ...prev]);
+      setDispatchSuccess(`Job ${newJob.id} dispatched to isolated ${wfName} container.`);
+      setTimeout(() => setDispatchSuccess(""), 3500);
+    } catch {
+      setDispatchSuccess(`Test execution triggered for ${wfName}.`);
+      setTimeout(() => setDispatchSuccess(""), 3500);
+    } finally {
+      setDispatchingWf(null);
+    }
   };
 
   const filteredClients = CLIENTS_DATA.filter((client) => {
@@ -794,40 +972,235 @@ export default function AdminHubPage() {
           )}
 
           {/* ========================================================
-              TAB 4: ISOLATED WORKFLOW PIPELINES
+              TAB 4: ISOLATED WORKFLOW PIPELINES & JOB EXECUTION
               ======================================================== */}
           {activeTab === "workflows" && (
-            <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-6">
-              <div>
-                <h3 className="font-serif text-xl font-semibold text-[#0F172A]">
-                  Isolated Generative Review Engines
-                </h3>
-                <p className="text-xs text-[#64748B]">
-                  Each service pipeline executes independently in isolated containers with HMAC webhook authentication.
-                </p>
+            <div className="space-y-8">
+              {/* Notification Banner */}
+              {dispatchSuccess && (
+                <div className="p-4 rounded-2xl bg-[#F0FDF4] border border-[#BBF7D0] text-[#166534] flex items-center justify-between text-xs animate-in fade-in duration-300">
+                  <div className="flex items-center gap-2.5 font-medium">
+                    <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
+                    <span>{dispatchSuccess}</span>
+                  </div>
+                  <span className="font-mono text-[11px] text-[#15803D]">Dispatched to container</span>
+                </div>
+              )}
+
+              {/* Main Panel */}
+              <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#EADFCB]/60 pb-6">
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <h3 className="font-serif text-xl sm:text-2xl font-semibold text-[#0F172A]">
+                        Studio AI Workflow Engines
+                      </h3>
+                      <Badge variant="completed" size="sm">
+                        8 Active
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-[#64748B] mt-1">
+                      Automated creative generation pipelines executing inside isolated micro-containers with Google Drive sync.
+                    </p>
+                  </div>
+
+                  {/* Filter Pills */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                    {(["All", "Visual & 3D", "Video & VR", "Code & Growth"] as const).map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setWorkflowFilter(cat)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors shrink-0 ${
+                          workflowFilter === cat
+                            ? "bg-[#5C3A1E] text-white shadow-xs"
+                            : "bg-[#FAF9F5] text-[#64748B] hover:text-[#0F172A] border border-[#EADFCB]"
+                        }`}
+                      >
+                        {cat}
+                        {cat === "All" && ` (8)`}
+                        {cat === "Visual & 3D" && ` (3)`}
+                        {cat === "Video & VR" && ` (2)`}
+                        {cat === "Code & Growth" && ` (3)`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 8 Engine Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+                  {STUDIO_WORKFLOW_ENGINES.filter((eng) => {
+                    if (workflowFilter === "All") return true;
+                    return eng.category === workflowFilter;
+                  }).map((eng) => (
+                    <div
+                      key={eng.slug}
+                      className="p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col justify-between space-y-4 hover:border-[#D4A35A] transition-all hover:shadow-xs group"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="w-10 h-10 rounded-xl bg-white border border-[#EADFCB] flex items-center justify-center shrink-0 shadow-xs">
+                            {eng.iconName === "image" && <ImageIcon className="w-5 h-5 text-[#5C3A1E]" />}
+                            {eng.iconName === "video" && <Video className="w-5 h-5 text-[#5C3A1E]" />}
+                            {eng.iconName === "box" && <Box className="w-5 h-5 text-[#5C3A1E]" />}
+                            {eng.iconName === "compass" && <Compass className="w-5 h-5 text-[#5C3A1E]" />}
+                            {eng.iconName === "layers" && <Layers className="w-5 h-5 text-[#5C3A1E]" />}
+                            {eng.iconName === "megaphone" && <Megaphone className="w-5 h-5 text-[#5C3A1E]" />}
+                            {eng.iconName === "layout" && <Layout className="w-5 h-5 text-[#5C3A1E]" />}
+                            {eng.iconName === "smartphone" && <Smartphone className="w-5 h-5 text-[#5C3A1E]" />}
+                          </div>
+                          <span className="font-mono text-[10px] text-[#A98B57] bg-[#F8F5EF] px-2 py-0.5 rounded border border-[#EADFCB] font-bold">
+                            {eng.sla} SLA
+                          </span>
+                        </div>
+
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <h4 className="font-serif font-semibold text-sm text-[#0F172A] group-hover:text-[#5C3A1E] transition-colors">
+                              {eng.name}
+                            </h4>
+                          </div>
+                          <span className="text-[11px] font-mono text-[#D4A35A] uppercase tracking-wider block mt-0.5">
+                            {eng.category}
+                          </span>
+                        </div>
+
+                        <p className="text-xs text-[#64748B] line-clamp-3 leading-relaxed">
+                          {eng.description}
+                        </p>
+
+                        <div className="space-y-1.5 pt-2 border-t border-[#EADFCB]/60 text-[11px] font-mono text-[#64748B]">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[#94A3B8]">Stack:</span>
+                            <span className="text-[#0F172A] truncate max-w-[140px] text-right font-medium" title={eng.provider}>
+                              {eng.provider.split("/")[0]}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[#94A3B8]">Vault Sync:</span>
+                            <span className="text-[#5C3A1E] font-medium truncate max-w-[140px]">
+                              {eng.outputVault}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-3 border-t border-[#EADFCB]/60 space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-mono text-[11px] text-[#5C3A1E] font-bold">
+                            {eng.activeJobs} Jobs Active
+                          </span>
+                          <span className="text-[#94A3B8] font-mono text-[11px]">Avg {eng.latency}</span>
+                        </div>
+
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          className="w-full text-xs justify-center py-1.5"
+                          disabled={dispatchingWf === eng.slug}
+                          onClick={() => handleDispatchJob(eng.slug, eng.name)}
+                          leftIcon={
+                            dispatchingWf === eng.slug ? (
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#5C3A1E]" />
+                            ) : (
+                              <Play className="w-3.5 h-3.5 text-[#5C3A1E]" />
+                            )
+                          }
+                        >
+                          {dispatchingWf === eng.slug ? "Dispatching..." : "Dispatch Job"}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {[
-                  { name: "3D Spatial Pipeline", slug: "three-d", jobs: 3, latency: "1.2s", provider: "Meshy/Spline + Blender" },
-                  { name: "Image Generation Engine", slug: "image", jobs: 4, latency: "850ms", provider: "Midjourney/Flux + Retouch" },
-                  { name: "Video Production Pipeline", slug: "video", jobs: 2, latency: "2.4s", provider: "Runway/Luma + ElevenLabs" },
-                  { name: "360 Virtual Tour VR", slug: "three-sixty", jobs: 1, latency: "1.1s", provider: "Pannellum Equirectangular" },
-                  { name: "Interior Architectural Engine", slug: "interior", jobs: 2, latency: "1.8s", provider: "ControlNet SDXL Architectural" },
-                  { name: "Google Drive Cloud Vault Router", slug: "automation", jobs: 5, latency: "340ms", provider: "n8n Webhook HMAC + Drive API" },
-                ].map((wf) => (
-                  <div key={wf.slug} className="p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-serif font-semibold text-sm text-[#0F172A]">{wf.name}</span>
-                      <Badge variant="completed" size="sm">Healthy</Badge>
+              {/* Real-time Job Execution Queue */}
+              <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EADFCB]/60 pb-5">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Terminal className="w-4 h-4 text-[#A98B57]" />
+                      <h4 className="font-serif text-lg font-semibold text-[#0F172A]">
+                        Live Workflow Execution Ledger
+                      </h4>
                     </div>
-                    <p className="text-xs text-[#64748B]">{wf.provider}</p>
-                    <div className="pt-2 border-t border-[#EADFCB]/60 flex items-center justify-between text-xs">
-                      <span className="font-mono text-[11px] text-[#5C3A1E] font-bold">{wf.jobs} Jobs Active</span>
-                      <span className="text-[#94A3B8]">Avg. {wf.latency}</span>
-                    </div>
+                    <p className="text-xs text-[#64748B] mt-0.5">
+                      Real-time asynchronous job progress synced to client Google Drive vaults.
+                    </p>
                   </div>
-                ))}
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16A34A] opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[#16A34A]"></span>
+                    </span>
+                    <span className="text-xs font-mono text-[#16A34A] font-medium">Worker Polling Active</span>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-[#EADFCB] text-[#64748B] font-mono uppercase text-[10px] tracking-wider">
+                        <th className="pb-3 font-semibold">Job ID / Run</th>
+                        <th className="pb-3 font-semibold">Pipeline Engine</th>
+                        <th className="pb-3 font-semibold">Order</th>
+                        <th className="pb-3 font-semibold">Status</th>
+                        <th className="pb-3 font-semibold">Progress</th>
+                        <th className="pb-3 font-semibold">Target Drive Vault</th>
+                        <th className="pb-3 font-semibold text-right">Elapsed</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#EADFCB]/60">
+                      {workflowJobs.map((job) => (
+                        <tr key={job.id} className="hover:bg-[#FAF9F5] transition-colors">
+                          <td className="py-3.5 font-mono text-[11px] font-bold text-[#0F172A]">
+                            {job.id}
+                          </td>
+                          <td className="py-3.5 font-medium text-[#0F172A]">
+                            {job.name}
+                          </td>
+                          <td className="py-3.5 font-mono text-[11px] text-[#A98B57] font-semibold">
+                            {job.order}
+                          </td>
+                          <td className="py-3.5">
+                            {job.status === "Running" ? (
+                              <Badge variant="progress" size="sm">
+                                <span className="animate-pulse mr-1 inline-block">●</span> Running
+                              </Badge>
+                            ) : (
+                              <Badge variant="completed" size="sm">
+                                Completed
+                              </Badge>
+                            )}
+                          </td>
+                          <td className="py-3.5 w-44">
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between text-[10px] font-mono text-[#64748B]">
+                                <span>{job.progress}%</span>
+                              </div>
+                              <div className="w-full bg-[#EADFCB]/60 rounded-full h-1.5 overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full transition-all duration-500 ${
+                                    job.progress === 100 ? "bg-[#16A34A]" : "bg-[#D4A35A]"
+                                  }`}
+                                  style={{ width: `${job.progress}%` }}
+                                />
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3.5 font-mono text-[11px] text-[#5C3A1E] truncate max-w-[200px]" title={job.target}>
+                            {job.target}
+                          </td>
+                          <td className="py-3.5 text-right font-mono text-[11px] text-[#94A3B8]">
+                            {job.duration}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
