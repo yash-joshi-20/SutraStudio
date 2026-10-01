@@ -87,6 +87,20 @@ export default function OrdersPage() {
       maxRevisions: 2,
       updatedAt: "3 hours ago",
     },
+    {
+      id: "ord-4",
+      code: "#ORD-004",
+      title: "Meta Ads Launch Suite — 3 Creative Ad Variants & Copy Matrix",
+      service: "Meta Ads Launcher",
+      status: "awaiting_approval",
+      statusLabel: "In Review / Awaiting Client Approval",
+      deliverablePreview: "3 Multi-Ratio Ad Sets (9:16 Video Reel, 1:1 Square Feed, 16:9 Banner) ready for client review in Google Drive.",
+      driveFolder: "drive_fld_sutra_001/META_ADS_CAMPAIGN",
+      revisionRound: 1,
+      maxRevisions: 2,
+      updatedAt: "Just now",
+      notes: "Please inspect Ad Set 1 video hook and verify audience targeting before Meta ad dispatch.",
+    },
   ]);
 
   // Inspection & Approval / Revision Modal

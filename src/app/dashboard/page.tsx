@@ -70,6 +70,17 @@ export default function ClientDashboardPage() {
       updatedAt: "3 days ago",
       progress: 88,
     },
+    {
+      id: "ord-4",
+      code: "#ORD-004",
+      title: "Diwali Festive Omni-Channel Meta Ads Campaign",
+      service: "Digital Marketing",
+      status: "review",
+      statusLabel: "In Review (Awaiting Client Approval)",
+      deliverable: "3 Multi-Ratio Ad Sets (9:16 Video, 1:1 Feed, 16:9 Banner) ready for client review",
+      updatedAt: "Just now",
+      progress: 70,
+    },
   ];
 
   const quickStartServices = [
@@ -152,7 +163,7 @@ export default function ClientDashboardPage() {
                       : "text-[#64748B] hover:text-[#0F172A]"
                   }`}
                 >
-                  Active Orders (3)
+                  Active Orders (4)
                 </button>
               </div>
 
