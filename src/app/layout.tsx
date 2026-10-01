@@ -29,6 +29,10 @@ export const metadata: Metadata = {
     "Web Development",
     "Video Creation",
   ],
+  icons: {
+    icon: "/favicon.svg",
+    apple: "/brand/app_icon.svg",
+  },
 };
 
 export default function RootLayout({

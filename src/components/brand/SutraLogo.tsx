@@ -3,8 +3,24 @@
 import React from "react";
 import Link from "next/link";
 
-interface SutraLogoProps {
-  variant?: "horizontal" | "horizontal-dark" | "vertical" | "symbol" | "app-icon" | "monochrome-white" | "monochrome-black" | "watermark-light" | "watermark-dark";
+export type LogoVariant =
+  | "horizontal"
+  | "horizontal-dark"
+  | "stacked"
+  | "vertical"
+  | "symbol"
+  | "favicon"
+  | "app-icon"
+  | "white"
+  | "black"
+  | "monochrome-white"
+  | "monochrome-black"
+  | "watermark"
+  | "watermark-light"
+  | "watermark-dark";
+
+export interface SutraLogoProps {
+  variant?: LogoVariant;
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
   showTagline?: boolean;
@@ -180,6 +196,42 @@ export function LotusSymbol({
   );
 }
 
+export function SutraAppIcon({
+  className = "w-12 h-12",
+  size = 48,
+}: {
+  className?: string;
+  size?: number;
+}) {
+  return (
+    <div
+      className={`relative inline-flex items-center justify-center rounded-[22%] bg-[#0F172A] shadow-md overflow-hidden ${className}`}
+      style={{ width: size, height: size }}
+    >
+      <LotusSymbol className="w-[68%] h-[68%]" color="gold" />
+    </div>
+  );
+}
+
+export function SutraFavicon({
+  className = "w-8 h-8",
+  size = 32,
+}: {
+  className?: string;
+  size?: number;
+}) {
+  return (
+    <div
+      className={`relative inline-flex items-center justify-center rounded-[22%] bg-[#FFFDF9] border border-[#EADFCB] shadow-sm overflow-hidden ${className}`}
+      style={{ width: size, height: size }}
+    >
+      <LotusSymbol className="w-[72%] h-[72%]" color="gold" />
+    </div>
+  );
+}
+
+export const SutraSymbol = LotusSymbol;
+
 export function SutraLogo({
   variant = "horizontal",
   size = "md",
@@ -194,64 +246,84 @@ export function SutraLogo({
     xl: { symbol: "w-20 h-20", text: "text-4xl", tagline: "text-sm" },
   }[size];
 
+  const isStacked = variant === "vertical" || variant === "stacked";
+  const isWhite = variant === "monochrome-white" || variant === "white";
+  const isBlack = variant === "monochrome-black" || variant === "black";
+  const isDarkHoriz = variant === "horizontal-dark";
+
+  if (variant === "app-icon") {
+    const iconSize = size === "sm" ? 32 : size === "md" ? 44 : size === "lg" ? 64 : 96;
+    const badge = <SutraAppIcon size={iconSize} className={className} />;
+    return href ? <Link href={href} className="inline-block">{badge}</Link> : badge;
+  }
+
+  if (variant === "favicon") {
+    const iconSize = size === "sm" ? 24 : size === "md" ? 32 : size === "lg" ? 48 : 64;
+    const badge = <SutraFavicon size={iconSize} className={className} />;
+    return href ? <Link href={href} className="inline-block">{badge}</Link> : badge;
+  }
+
+  const symbolColor = isWhite
+    ? "white"
+    : isBlack
+    ? "black"
+    : variant === "watermark-dark"
+    ? "watermark-dark"
+    : variant === "watermark" || variant === "watermark-light"
+    ? "watermark-light"
+    : "gold";
+
   const content = (
     <div
       className={`inline-flex items-center transition-opacity hover:opacity-95 ${
-        variant === "vertical" ? "flex-col text-center" : "flex-row gap-3"
+        isStacked ? "flex-col text-center" : "flex-row gap-3"
       } ${className}`}
     >
-      {/* Symbol */}
+      {/* Lotus S Emblem */}
       <LotusSymbol
         className={sizeClasses.symbol}
-        color={
-          variant === "monochrome-white"
-            ? "white"
-            : variant === "monochrome-black"
-            ? "black"
-            : variant === "watermark-light"
-            ? "watermark-light"
-            : variant === "watermark-dark"
-            ? "watermark-dark"
-            : "gold"
-        }
+        color={symbolColor}
       />
 
-      {/* Typography */}
-      {variant !== "symbol" && (
-        <div
-          className={`flex flex-col ${
-            variant === "vertical" ? "items-center mt-2" : "items-start"
-          }`}
-        >
-          <div className="flex items-center tracking-[0.14em]">
-            <span
-              className={`font-serif font-semibold tracking-wider ${sizeClasses.text} ${
-                variant === "monochrome-white" || variant === "horizontal-dark"
-                  ? "text-white"
-                  : variant === "monochrome-black"
-                  ? "text-[#171717]"
-                  : "text-[#0F172A]"
-              }`}
-            >
-              SUTRA STUDIO
-            </span>
-          </div>
+      {/* Typography Lockup */}
+      {variant !== "symbol" &&
+        variant !== "watermark" &&
+        variant !== "watermark-light" &&
+        variant !== "watermark-dark" && (
+          <div
+            className={`flex flex-col ${
+              isStacked ? "items-center mt-2" : "items-start"
+            }`}
+          >
+            <div className="flex items-center tracking-[0.14em]">
+              <span
+                className={`font-serif font-semibold tracking-wider ${sizeClasses.text} ${
+                  isWhite || isDarkHoriz
+                    ? "text-white"
+                    : isBlack
+                    ? "text-[#171717]"
+                    : "text-[#0F172A]"
+                }`}
+              >
+                SUTRA STUDIO
+              </span>
+            </div>
 
-          {showTagline && (
-            <span
-              className={`font-sans tracking-[0.24em] uppercase font-medium mt-0.5 ${sizeClasses.tagline} ${
-                variant === "monochrome-white"
-                  ? "text-white/70"
-                  : variant === "horizontal-dark"
-                  ? "text-[#94A3B8]"
-                  : "text-[#64748B]"
-              }`}
-            >
-              IDEAS ◆ DESIGN ◆ DEVELOPMENT ◆ GROWTH
-            </span>
-          )}
-        </div>
-      )}
+            {showTagline && (
+              <span
+                className={`font-sans tracking-[0.24em] uppercase font-medium mt-0.5 ${sizeClasses.tagline} ${
+                  isWhite
+                    ? "text-white/70"
+                    : isDarkHoriz
+                    ? "text-[#94A3B8]"
+                    : "text-[#64748B]"
+                }`}
+              >
+                IDEAS ◆ DESIGN ◆ DEVELOPMENT ◆ GROWTH
+              </span>
+            )}
+          </div>
+        )}
     </div>
   );
 
