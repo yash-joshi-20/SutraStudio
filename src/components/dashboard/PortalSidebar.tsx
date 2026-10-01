@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/authContext";
+import { Avatar } from "@/components/ui/Avatar";
 
 const SIDEBAR_ITEMS = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -85,9 +86,11 @@ export function PortalSidebar() {
       {/* Footer / Account */}
       <div className="pt-6 border-t border-[#EADFCB]/60 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-[#5C3A1E] text-white flex items-center justify-center text-xs font-semibold">
-            {user?.displayName ? user.displayName[0] : "Y"}
-          </div>
+          <Avatar
+            name={user?.displayName || "Studio Client"}
+            size="sm"
+            status="online"
+          />
           <div className="text-xs">
             <p className="font-semibold text-[#0F172A]">{user?.displayName || "Studio Client"}</p>
             <p className="text-[#64748B] capitalize">{role} Clearance</p>
