@@ -116,6 +116,69 @@ const AUDIT_LOGS = [
   { id: "log-5", event: "ORDER_CREATED", actor: "aarav@maisonaura.com", detail: "Order #ORD-008 created in Firestore: 4K Commercial Reel", time: "09:30:00 UTC", type: "success" },
 ];
 
+interface AdminChatSession {
+  id: string;
+  clientName: string;
+  company: string;
+  vaultId: string;
+  mode: "ai" | "human";
+  lastPrompt: string;
+  workflowTag: string;
+  lastTime: string;
+  messages: {
+    sender: "client" | "ai" | "admin" | "note";
+    text: string;
+    time: string;
+    workflow?: string;
+  }[];
+}
+
+const INITIAL_ADMIN_SESSIONS: AdminChatSession[] = [
+  {
+    id: "cl-1",
+    clientName: "Yash Joshi",
+    company: "Studio Living Architecture",
+    vaultId: "drive_fld_sutra_001",
+    mode: "ai",
+    lastPrompt: "Can we do 4K multi-angle lighting passes for our new catalog?",
+    workflowTag: "3D Visualization (95% match)",
+    lastTime: "5m ago",
+    messages: [
+      { sender: "client", text: "Can we do 4K multi-angle lighting passes for our new catalog?", time: "10:20 AM" },
+      { sender: "ai", text: "I have classified your request under 3D Visualization pipeline. We can generate draft renders in 48 hours.", time: "10:21 AM", workflow: "3D Visualization (95% match)" },
+    ],
+  },
+  {
+    id: "cl-2",
+    clientName: "Aarav Singhania",
+    company: "Maison Aura Luxury Fragrances",
+    vaultId: "drive_fld_maison_002",
+    mode: "human",
+    lastPrompt: "ProRes master video ready for Google Drive vault export.",
+    workflowTag: "Video Production",
+    lastTime: "25m ago",
+    messages: [
+      { sender: "client", text: "Can you confirm the color grading pass on the fragrance reel?", time: "09:45 AM" },
+      { sender: "admin", text: "Raghavan here: I've personally reviewed the color balance. ProRes master will be in your Drive vault by 2 PM.", time: "09:50 AM" },
+      { sender: "note", text: "Client requested warm golden highlights on the glass bottle refraction.", time: "09:52 AM" },
+    ],
+  },
+  {
+    id: "cl-5",
+    clientName: "Devika Rao",
+    company: "Vedic Living Heritage Resorts",
+    vaultId: "drive_fld_vedic_005",
+    mode: "ai",
+    lastPrompt: "Need 360 VR virtual tour bake for our heritage pavilion",
+    workflowTag: "360 VR Spatial",
+    lastTime: "1h ago",
+    messages: [
+      { sender: "client", text: "Need 360 VR virtual tour bake for our heritage pavilion", time: "09:10 AM" },
+      { sender: "ai", text: "Sutra AI: Initialized 360 View pipeline. Panoramas will be compiled for web and VR headsets.", time: "09:12 AM", workflow: "360 View (96% match)" },
+    ],
+  },
+];
+
 export default function AdminHubPage() {
   const [activeTab, setActiveTab] = useState<
     "overview" | "clients" | "conversations" | "workflows" | "audit"
@@ -124,6 +187,75 @@ export default function AdminHubPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [tierFilter, setTierFilter] = useState<string>("All");
   const [selectedClient, setSelectedClient] = useState<ClientRecord | null>(null);
+
+  // Admin Chat & AI Takeover Console State
+  const [sessions, setSessions] = useState<AdminChatSession[]>(INITIAL_ADMIN_SESSIONS);
+  const [selectedSessionId, setSelectedSessionId] = useState<string>("cl-1");
+  const [producerInput, setProducerInput] = useState("");
+
+  const currentSession = sessions.find((s) => s.id === selectedSessionId) || sessions[0];
+
+  const handleToggleTakeover = (sessionId: string) => {
+    setSessions((prev) =>
+      prev.map((s) =>
+        s.id === sessionId
+          ? {
+              ...s,
+              mode: s.mode === "human" ? "ai" : "human",
+            }
+          : s
+      )
+    );
+  };
+
+  const handleSendProducerMessage = (textToSend?: string) => {
+    const content = textToSend || producerInput;
+    if (!content.trim()) return;
+
+    setSessions((prev) =>
+      prev.map((s) =>
+        s.id === selectedSessionId
+          ? {
+              ...s,
+              mode: "human",
+              lastPrompt: content,
+              lastTime: "Just now",
+              messages: [
+                ...s.messages,
+                {
+                  sender: "admin",
+                  text: content,
+                  time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                },
+              ],
+            }
+          : s
+      )
+    );
+    setProducerInput("");
+  };
+
+  const handleAddInternalNote = () => {
+    if (!producerInput.trim()) return;
+    setSessions((prev) =>
+      prev.map((s) =>
+        s.id === selectedSessionId
+          ? {
+              ...s,
+              messages: [
+                ...s.messages,
+                {
+                  sender: "note",
+                  text: producerInput,
+                  time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                },
+              ],
+            }
+          : s
+      )
+    );
+    setProducerInput("");
+  };
 
   const filteredClients = CLIENTS_DATA.filter((client) => {
     const matchesTier = tierFilter === "All" || client.tier === tierFilter;
@@ -438,63 +570,224 @@ export default function AdminHubPage() {
               TAB 3: CONVERSATIONS & HUMAN TAKEOVER
               ======================================================== */}
           {activeTab === "conversations" && (
-            <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-6">
-              <div>
-                <h3 className="font-serif text-xl font-semibold text-[#0F172A]">
-                  Active AI Conversations & Live Takeover Supervisor
-                </h3>
-                <p className="text-xs text-[#64748B]">
-                  Inspect live client conversations with the Sutra AI Assistant. Admin producers can intervene and switch thread to human lead mode.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div className="p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <Avatar name="Yash Joshi" size="md" status="online" className="shrink-0" />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm text-[#0F172A]">Yash Joshi (Studio Living)</span>
-                        <Badge variant="gold" size="sm">AI Routing Active</Badge>
-                      </div>
-                      <p className="text-xs text-[#64748B] mt-1 italic">
-                        Last Prompt: &quot;Can we do 4K multi-angle lighting passes for our new catalog?&quot;
-                      </p>
-                      <span className="text-[10px] text-[#94A3B8] block mt-1">
-                        Classified as: 3D Visualization (95% match) • 5m ago
-                      </span>
-                    </div>
-                  </div>
-
-                  <Link href="/chat">
-                    <Button variant="primary" size="sm" withArrow>
-                      Take Over as Raghavan
-                    </Button>
-                  </Link>
+            <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-xs overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[620px]">
+              {/* Left Column: Client Sessions List (4 Cols) */}
+              <div className="lg:col-span-4 border-b lg:border-b-0 lg:border-r border-[#EADFCB] bg-[#FAF9F5] flex flex-col">
+                <div className="p-4 border-b border-[#EADFCB]">
+                  <h3 className="font-serif font-semibold text-base text-[#0F172A]">
+                    Client AI Sessions ({sessions.length})
+                  </h3>
+                  <p className="text-[11px] text-[#64748B] mt-0.5">
+                    Live client conversations with Sutra AI router.
+                  </p>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <Avatar name="Aarav Singhania" size="md" status="online" className="shrink-0" />
+                <div className="divide-y divide-[#EADFCB]/60 overflow-y-auto flex-1">
+                  {sessions.map((sess) => {
+                    const isSelected = selectedSessionId === sess.id;
+                    const isTakenOver = sess.mode === "human";
+                    return (
+                      <div
+                        key={sess.id}
+                        onClick={() => setSelectedSessionId(sess.id)}
+                        className={`p-4 transition-all cursor-pointer ${
+                          isSelected
+                            ? "bg-[#FFFDF9] border-l-4 border-l-[#5C3A1E]"
+                            : "hover:bg-[#FFFDF9]/60"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="font-semibold text-xs text-[#0F172A]">
+                            {sess.clientName}
+                          </span>
+                          <Badge
+                            variant={isTakenOver ? "completed" : "gold"}
+                            size="sm"
+                            showDot={true}
+                          >
+                            {isTakenOver ? "Producer Lead" : "AI Routing"}
+                          </Badge>
+                        </div>
+                        <p className="text-[11px] text-[#64748B] truncate font-medium">
+                          {sess.company}
+                        </p>
+                        <p className="text-[11px] text-[#475569] mt-1 line-clamp-2 italic">
+                          &quot;{sess.lastPrompt}&quot;
+                        </p>
+                        <span className="text-[10px] text-[#94A3B8] block mt-1.5 font-mono">
+                          {sess.workflowTag} • {sess.lastTime}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Right Column: Interactive Takeover Console (8 Cols) */}
+              <div className="lg:col-span-8 flex flex-col justify-between bg-[#FFFDF9]">
+                {/* Takeover Header */}
+                <div className="p-4 sm:p-5 border-b border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#FAF9F5]/50">
+                  <div className="flex items-center gap-3">
+                    <Avatar name={currentSession.clientName} size="md" status="online" />
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm text-[#0F172A]">Aarav Singhania (Maison Aura)</span>
-                        <Badge variant="completed" size="sm">Admin Handled</Badge>
+                        <h4 className="font-serif font-semibold text-base text-[#0F172A]">
+                          {currentSession.clientName}
+                        </h4>
+                        <span className="text-xs text-[#64748B]">({currentSession.company})</span>
                       </div>
-                      <p className="text-xs text-[#64748B] mt-1 italic">
-                        Last Note: &quot;ProRes master video ready for Google Drive vault export.&quot;
+                      <p className="text-[11px] text-[#94A3B8]">
+                        Vault ID: <span className="font-mono text-[#5C3A1E]">{currentSession.vaultId}</span> • Channel: {currentSession.mode === "human" ? "Direct Producer (Human Lead)" : "Autonomous Sutra AI"}
                       </p>
-                      <span className="text-[10px] text-[#94A3B8] block mt-1">
-                        Assigned Art Lead: Raghavan Sharma • 25m ago
-                      </span>
                     </div>
                   </div>
 
-                  <Link href="/chat">
-                    <Button variant="secondary" size="sm">
-                      Inspect Chat Log
+                  {/* Mode Switcher Toggle */}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant={currentSession.mode === "human" ? "secondary" : "primary"}
+                      size="sm"
+                      onClick={() => handleToggleTakeover(currentSession.id)}
+                      leftIcon={currentSession.mode === "human" ? <Bot className="w-3.5 h-3.5" /> : <ShieldAlert className="w-3.5 h-3.5" />}
+                    >
+                      {currentSession.mode === "human"
+                        ? "Release to AI Router"
+                        : "Take Over as Producer"}
                     </Button>
-                  </Link>
+                  </div>
+                </div>
+
+                {/* Message Stream */}
+                <div className="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1 max-h-[380px]">
+                  {currentSession.messages.map((m, idx) => {
+                    const isClient = m.sender === "client";
+                    const isAdmin = m.sender === "admin";
+                    const isNote = m.sender === "note";
+
+                    if (isNote) {
+                      return (
+                        <div
+                          key={idx}
+                          className="p-2.5 rounded-xl bg-[#FFFBEB] border border-[#FDE68A] text-xs text-[#92400E] flex items-center gap-2 max-w-lg mx-auto font-medium"
+                        >
+                          <Lock className="w-3.5 h-3.5 shrink-0 text-[#D97706]" />
+                          <span>[Studio Producer Note]: {m.text}</span>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div
+                        key={idx}
+                        className={`flex gap-3 max-w-xl ${
+                          isAdmin
+                            ? "ml-auto flex-row-reverse"
+                            : isClient
+                            ? "mr-auto"
+                            : "mr-auto"
+                        }`}
+                      >
+                        <div className="shrink-0 pt-0.5">
+                          {isAdmin ? (
+                            <Avatar name="Raghavan Sharma" size="sm" status="online" />
+                          ) : isClient ? (
+                            <div className="w-7 h-7 rounded-full bg-[#5C3A1E] text-white flex items-center justify-center text-[10px] font-bold">
+                              C
+                            </div>
+                          ) : (
+                            <div className="w-7 h-7 rounded-full bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-center text-[10px] text-[#5C3A1E] font-bold">
+                              ✦
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="space-y-1">
+                          <div
+                            className={`p-3.5 rounded-2xl text-xs leading-relaxed ${
+                              isAdmin
+                                ? "bg-[#5C3A1E] text-white rounded-tr-none shadow-xs"
+                                : isClient
+                                ? "bg-[#F8F5EF] border border-[#EADFCB] text-[#0F172A] rounded-tl-none"
+                                : "bg-[#FAF9F5] border border-[#EADFCB] text-[#0F172A] rounded-tl-none"
+                            }`}
+                          >
+                            <p>{m.text}</p>
+                            {m.workflow && (
+                              <div className="mt-2 pt-2 border-t border-[#EADFCB]/60 text-[10px] font-semibold text-[#D4A35A] flex items-center gap-1">
+                                <Sparkles className="w-3 h-3" />
+                                <span>Classified: {m.workflow}</span>
+                              </div>
+                            )}
+                          </div>
+                          <span className={`text-[9px] text-[#94A3B8] block ${isAdmin ? "text-right" : "text-left"}`}>
+                            {m.sender.toUpperCase()} • {m.time}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Producer Dispatch Input */}
+                <div className="p-4 border-t border-[#EADFCB] bg-[#FAF9F5]/40 space-y-3">
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                    <span className="text-[10px] uppercase font-bold text-[#94A3B8] shrink-0">Quick Producer Replies:</span>
+                    {[
+                      "I am reviewing your 4K renders right now.",
+                      "Revision round 01 assigned to senior 3D lead.",
+                      "Google Drive vault files updated.",
+                    ].map((snippet, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleSendProducerMessage(snippet)}
+                        className="text-[11px] bg-[#FFFDF9] border border-[#EADFCB] text-[#5C3A1E] hover:border-[#D4A35A] px-2.5 py-1 rounded-full whitespace-nowrap shadow-2xs cursor-pointer"
+                      >
+                        {snippet}
+                      </button>
+                    ))}
+                  </div>
+
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleSendProducerMessage(producerInput);
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <input
+                      type="text"
+                      placeholder={
+                        currentSession.mode === "human"
+                          ? "Send message as Raghavan Sharma (Principal Art Director)..."
+                          : "Take over session to message directly..."
+                      }
+                      value={producerInput}
+                      onChange={(e) => setProducerInput(e.target.value)}
+                      className="flex-1 bg-[#FFFFFF] border border-[#EADFCB] rounded-xl px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                    />
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleAddInternalNote()}
+                      title="Post Internal Producer Note (Not sent to client)"
+                    >
+                      <Lock className="w-3.5 h-3.5 text-[#A98B57]" />
+                      <span className="hidden sm:inline">Note</span>
+                    </Button>
+
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      size="sm"
+                      disabled={!producerInput.trim()}
+                      leftIcon={<Send className="w-3.5 h-3.5" />}
+                    >
+                      Send
+                    </Button>
+                  </form>
                 </div>
               </div>
             </div>

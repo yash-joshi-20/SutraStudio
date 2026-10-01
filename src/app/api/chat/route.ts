@@ -37,7 +37,7 @@ function classifyPrompt(prompt: string): ClassifyResult {
 
 export async function POST(req: Request) {
   try {
-    const { message, mode } = await req.json();
+    const { message, mode, clientId, internalNote } = await req.json();
 
     if (!message || typeof message !== "string") {
       return NextResponse.json(
@@ -46,10 +46,14 @@ export async function POST(req: Request) {
       );
     }
 
-    if (mode === "admin") {
+    if (mode === "admin" || mode === "takeover") {
       return NextResponse.json({
-        reply: `Admin Studio Producer: I have received your request regarding "${message}". We are reviewing the deliverables and will reach out with details shortly.`,
+        reply: `Admin Studio Producer (Raghavan Sharma): I have received your request regarding "${message}". We are reviewing the deliverables and will reach out with details shortly.`,
         mode: "admin",
+        producer: "Raghavan Sharma",
+        clientId: clientId || "cl-1",
+        internalNote: internalNote || null,
+        timestamp: new Date().toISOString(),
       });
     }
 
