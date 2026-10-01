@@ -7,8 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node scripts/regression-test.mjs && node scripts/ai-workflow-regression.mjs",
-    "test:workflows": "node scripts/ai-workflow-regression.mjs"
+    "test": "node scripts/regression-test.mjs && node scripts/ai-workflow-regression.mjs && node scripts/storage-regression.mjs",
+    "test:workflows": "node scripts/ai-workflow-regression.mjs",
+    "test:storage": "node scripts/storage-regression.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
