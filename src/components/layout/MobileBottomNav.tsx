@@ -25,8 +25,8 @@ export function MobileBottomNav() {
           <Link
             key={tab.name}
             href={tab.href}
-            className={`flex flex-col items-center justify-center py-1 px-3 transition-colors ${
-              isActive ? "text-[#5C3A1E] font-semibold" : "text-[#64748B]"
+            className={`interactive-pill flex flex-col items-center justify-center py-1 px-3 transition-colors ${
+              isActive ? "text-[#5C3A1E] font-semibold" : "text-[#64748B] hover:text-[#0F172A]"
             }`}
           >
             <Icon

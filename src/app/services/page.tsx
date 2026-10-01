@@ -145,10 +145,10 @@ export default function ServicesPage() {
                   <button
                     key={cat}
                     onClick={() => setActiveCategory(cat)}
-                    className={`px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
+                    className={`interactive-pill focus-ring px-4 py-2 rounded-full text-xs font-medium cursor-pointer flex items-center gap-1.5 ${
                       isActive
                         ? "bg-[#5C3A1E] text-white shadow-xs border border-[#5C3A1E]"
-                        : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A]"
+                        : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A] hover:text-[#0F172A]"
                     }`}
                   >
                     <span>{cat}</span>

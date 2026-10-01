@@ -87,12 +87,51 @@ body {
   box-shadow: 0 16px 40px rgba(92, 58, 30, 0.12);
 }
 
-/* Reduced motion compliance */
+/* Subtle Micro-Interaction & Motion Utilities */
+.interactive-card {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.2s ease;
+}
+
+.interactive-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px rgba(92, 58, 30, 0.09);
+  border-color: #D4A35A;
+}
+
+.interactive-pill {
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.interactive-pill:active {
+  transform: scale(0.97);
+}
+
+.focus-ring {
+  outline: none;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.focus-ring:focus-visible {
+  border-color: #D4A35A;
+  box-shadow: 0 0 0 3px rgba(212, 163, 90, 0.25);
+}
+
+/* Reduced motion compliance: suppresses all heavy animations, spins and transforms */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
-    animation-duration: 0.01ms !important;
+    animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+    transform: none !important;
+  }
+
+  .interactive-card:hover {
+    transform: none !important;
+  }
+
+  .interactive-pill:active {
+    transform: none !important;
   }
 }
+

@@ -19,7 +19,7 @@ export function ServiceCard({ service }: { service: ServiceItem }) {
   return (
     <Link
       href={`/orders?service=${service.slug}`}
-      className="group relative flex flex-col justify-between rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-[#D4A35A] hover:shadow-warm-hover"
+      className="group interactive-card relative flex flex-col justify-between rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] overflow-hidden transition-all duration-300 hover:border-[#D4A35A] hover:shadow-warm-hover"
     >
       <div>
         {/* Visual Media Presentation Banner */}

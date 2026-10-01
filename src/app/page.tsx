@@ -259,7 +259,7 @@ export default function HomePage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* Feature 1 */}
-              <div className="rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] p-8 transition-all hover:border-[#D4A35A] hover:shadow-warm">
+              <div className="interactive-card rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] p-8 hover:border-[#D4A35A]">
                 <div className="w-12 h-12 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center mb-6">
                   <Layers className="w-6 h-6 text-[#5C3A1E]" />
                 </div>
@@ -273,7 +273,7 @@ export default function HomePage() {
               </div>
 
               {/* Feature 2 */}
-              <div className="rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] p-8 transition-all hover:border-[#D4A35A] hover:shadow-warm">
+              <div className="interactive-card rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] p-8 hover:border-[#D4A35A]">
                 <div className="w-12 h-12 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center mb-6">
                   <Zap className="w-6 h-6 text-[#5C3A1E]" />
                 </div>
@@ -287,7 +287,7 @@ export default function HomePage() {
               </div>
 
               {/* Feature 3 */}
-              <div className="rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] p-8 transition-all hover:border-[#D4A35A] hover:shadow-warm">
+              <div className="interactive-card rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] p-8 hover:border-[#D4A35A]">
                 <div className="w-12 h-12 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center mb-6">
                   <Target className="w-6 h-6 text-[#5C3A1E]" />
                 </div>
@@ -327,10 +327,10 @@ export default function HomePage() {
                     <button
                       key={cat}
                       onClick={() => setSelectedCategory(cat)}
-                      className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                      className={`interactive-pill focus-ring px-4 py-1.5 rounded-full text-xs font-medium cursor-pointer ${
                         isActive
                           ? "bg-[#5C3A1E] text-white shadow-xs"
-                          : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A]"
+                          : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A] hover:text-[#0F172A]"
                       }`}
                     >
                       {cat}

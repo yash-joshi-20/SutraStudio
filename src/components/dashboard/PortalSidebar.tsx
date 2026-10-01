@@ -50,7 +50,7 @@ export function PortalSidebar() {
           </div>
           <button
             onClick={() => loginAs(role === "admin" ? "client" : "admin")}
-            className="text-[10px] px-2 py-1 rounded bg-[#FFFDF9] border border-[#EADFCB] text-[#5C3A1E] font-medium hover:border-[#D4A35A] cursor-pointer"
+            className="interactive-pill focus-ring text-[10px] px-2.5 py-1 rounded-lg bg-[#FFFDF9] border border-[#EADFCB] text-[#5C3A1E] font-medium hover:border-[#D4A35A] cursor-pointer"
           >
             Switch to {role === "admin" ? "Client" : "Admin"}
           </button>
@@ -65,7 +65,7 @@ export function PortalSidebar() {
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                className={`interactive-pill focus-ring flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   isActive
                     ? "bg-[#F8F5EF] text-[#5C3A1E] font-semibold shadow-xs border border-[#EADFCB]"
                     : "text-[#475569] hover:bg-[#F8F5EF]/60 hover:text-[#0F172A]"
