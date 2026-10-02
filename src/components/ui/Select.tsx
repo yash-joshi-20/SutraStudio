@@ -35,7 +35,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             id={selectId}
             aria-invalid={error ? "true" : undefined}
             aria-describedby={errorId}
-            className={`w-full appearance-none rounded-xl bg-[#FFFDF9] border border-[#EADFCB] px-4 py-2.5 pr-10 text-sm text-[#0F172A] transition-all duration-200 focus:border-[#D4A35A] focus:outline-none focus:ring-2 focus:ring-[#D4A35A]/35 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`w-full min-h-[44px] appearance-none rounded-xl bg-[#FFFDF9] border border-[#EADFCB] px-4 py-2.5 pr-10 text-base sm:text-sm text-[#0F172A] transition-all duration-200 focus:border-[#D4A35A] focus:outline-none focus:ring-2 focus:ring-[#D4A35A]/35 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
               error ? "border-[#B42318] focus:ring-[#B42318]/20" : ""
             } ${className}`}
             {...props}

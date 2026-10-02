@@ -58,6 +58,7 @@ interface OrderItem {
 export default function ClientDashboardPage() {
   const { user } = useAuth();
   const [viewMode, setViewMode] = useState<"orders" | "commission" | "zero_state">("orders");
+  const isZeroState = viewMode === "zero_state";
 
   // Orders State with Approvals & Revisions
   const [orders, setOrders] = useState<OrderItem[]>([
@@ -120,6 +121,7 @@ export default function ClientDashboardPage() {
       notes: "Please inspect Ad Set 1 video hook and verify audience targeting before Meta ad dispatch.",
     },
   ]);
+  const mockOrders = orders;
 
   // Inspection & Approval / Revision Modal
   const [inspectingOrder, setInspectingOrder] = useState<OrderItem | null>(null);
@@ -256,7 +258,7 @@ export default function ClientDashboardPage() {
       <div className="min-h-screen flex bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
         <PortalSidebar />
 
-        <main id="main-content" className="flex-1 p-6 sm:p-8 lg:p-10 max-w-7xl mx-auto pb-24 md:pb-12 space-y-8">
+        <main id="main-content" className="flex-1 p-4 sm:p-8 lg:p-10 max-w-7xl mx-auto pb-24 md:pb-12 space-y-8">
           {/* =========================================================
               TOP HEADER BAR WITH COMMISSIONING & PIPELINE SWITCHER
               ========================================================= */}

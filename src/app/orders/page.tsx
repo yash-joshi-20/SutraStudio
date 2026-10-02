@@ -211,7 +211,7 @@ export default function OrdersPage() {
       <div className="min-h-screen flex bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
         <PortalSidebar />
 
-        <main id="main-content" className="flex-1 p-6 sm:p-8 lg:p-10 max-w-6xl pb-24 md:pb-12 space-y-8">
+        <main id="main-content" className="flex-1 p-4 sm:p-8 lg:p-10 max-w-6xl pb-24 md:pb-12 space-y-8">
           {/* Header & Tab Selector */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-[#EADFCB] gap-4">
             <div>

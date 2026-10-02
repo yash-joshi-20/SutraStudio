@@ -1,0 +1,30 @@
+{
+  "name": "Sutra Studio — Tradition Meets Technology",
+  "short_name": "Sutra Studio",
+  "description": "AI-Powered Creative, Design, Development & Digital Marketing Solutions for Modern Businesses.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF9F5",
+  "theme_color": "#F8F5EF",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/brand/sutra-app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/sutra-app-icon@4x.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/sutra-app-icon@4x.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

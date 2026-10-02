@@ -22,6 +22,7 @@ import { Avatar } from "@/components/ui/Avatar";
 
 const CLIENT_NAV_ITEMS = [
   { name: "Workspace", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Sutra AI Assistant", href: "/chat", icon: Sparkles },
   { name: "Services", href: "/services", icon: Sparkles },
   { name: "Pricing & Plans", href: "/pricing", icon: DollarSign },
   { name: "My Orders", href: "/orders", icon: ShoppingBag },

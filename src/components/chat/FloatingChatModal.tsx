@@ -305,7 +305,7 @@ export function FloatingChatModal() {
   return (
     <>
       {/* Floating Trigger Button */}
-      <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
+      <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-50 flex items-center gap-3">
         {!isOpen && (
           <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -320,7 +320,7 @@ export function FloatingChatModal() {
         <button
           onClick={() => setIsOpen(!isOpen)}
           aria-label={isOpen ? "Close AI Assistant" : "Open AI Assistant"}
-          className="w-14 h-14 rounded-full bg-[#5C3A1E] text-white flex items-center justify-center shadow-xl hover:bg-[#432A15] hover:scale-105 active:scale-95 transition-all duration-200 border-2 border-[#D4A35A]/50 focus:outline-none focus:ring-4 focus:ring-[#D4A35A]/30 cursor-pointer"
+          className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-[#5C3A1E] text-white flex items-center justify-center shadow-xl hover:bg-[#432A15] hover:scale-105 active:scale-95 transition-all duration-200 border-2 border-[#D4A35A]/50 focus:outline-none focus:ring-4 focus:ring-[#D4A35A]/30 cursor-pointer touch-target"
         >
           {isOpen ? (
             <X className="w-6 h-6 text-white" />
@@ -341,7 +341,7 @@ export function FloatingChatModal() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-24 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[430px] max-h-[640px] h-[82vh] bg-[#FAF9F5] border border-[#E5E1D8] rounded-3xl shadow-2xl flex flex-col overflow-hidden text-[#171717]"
+            className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-24 right-2 sm:right-6 z-50 w-[calc(100vw-1rem)] sm:w-[430px] max-h-[82dvh] h-[80dvh] bg-[#FAF9F5] border border-[#E5E1D8] rounded-3xl shadow-2xl flex flex-col overflow-hidden text-[#171717]"
           >
             {/* Modal Header */}
             <div className="p-4 bg-white border-b border-[#E5E1D8] flex items-center justify-between shrink-0">
@@ -507,7 +507,7 @@ export function FloatingChatModal() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Ask about services, pricing, studio capabilities..."
-                  className="flex-1 bg-[#FAF9F5] border border-[#E5E1D8] rounded-xl px-3.5 py-2 text-xs text-[#171717] placeholder:text-[#94A3B8] focus:outline-none focus:bg-white focus:border-[#A98B57] focus:ring-1 focus:ring-[#A98B57] transition-all"
+                  className="flex-1 min-h-[44px] bg-[#FAF9F5] border border-[#E5E1D8] rounded-xl px-3.5 py-2 text-base sm:text-xs text-[#171717] placeholder:text-[#94A3B8] focus:outline-none focus:bg-white focus:border-[#A98B57] focus:ring-1 focus:ring-[#A98B57] transition-all"
                 />
                 <button
                   type="submit"

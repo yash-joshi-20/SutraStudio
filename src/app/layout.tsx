@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import { AppProviders } from "@/components/providers/AppProviders";
@@ -15,6 +15,14 @@ const inter = Inter({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+  themeColor: "#F8F5EF",
+};
+
 export const metadata: Metadata = {
   title: "Sutra Studio — Tradition Meets Technology | Creative & AI Studio",
   description:
@@ -29,6 +37,12 @@ export const metadata: Metadata = {
     "Web Development",
     "Video Creation",
   ],
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Sutra Studio",
+  },
   icons: {
     icon: "/favicon.svg",
     apple: "/brand/app_icon.svg",

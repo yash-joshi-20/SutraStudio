@@ -31,7 +31,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           disabled={disabled}
           aria-invalid={error ? "true" : undefined}
           aria-describedby={describedBy}
-          className={`w-full rounded-xl bg-[#FFFDF9] border border-[#EADFCB] px-4 py-2.5 text-sm text-[#0F172A] placeholder:text-[#64748B]/70 transition-all duration-200 focus:border-[#D4A35A] focus:outline-none focus:ring-2 focus:ring-[#D4A35A]/35 disabled:opacity-50 disabled:bg-[#F8F5EF] min-h-[100px] resize-y ${
+          className={`w-full rounded-xl bg-[#FFFDF9] border border-[#EADFCB] px-4 py-2.5 text-base sm:text-sm text-[#0F172A] placeholder:text-[#64748B]/70 transition-all duration-200 focus:border-[#D4A35A] focus:outline-none focus:ring-2 focus:ring-[#D4A35A]/35 disabled:opacity-50 disabled:bg-[#F8F5EF] min-h-[100px] resize-y ${
             error
               ? "border-[#B42318] focus:border-[#B42318] focus:ring-[#B42318]/20"
               : ""
