@@ -40,7 +40,7 @@
   --color-status-review: var(--status-review);
   --color-status-pending: var(--status-pending);
   --color-status-error: var(--status-error);
-  --font-serif: var(--font-playfair), Georgia, serif;
+  --font-serif: var(--font-inter), system-ui, -apple-system, sans-serif;
   --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
 }
 
@@ -55,7 +55,9 @@ body {
 
 /* Custom Typography Utilities */
 .font-display {
-  font-family: var(--font-playfair), Georgia, serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .text-gold-gradient {
