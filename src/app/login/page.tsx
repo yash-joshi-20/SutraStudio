@@ -63,18 +63,14 @@ export default function LoginPage() {
         const isAdmin = email.toLowerCase().includes("admin");
         setSuccessMsg(isAdmin ? "Access authorized. Entering Executive Hub..." : "Welcome back. Entering Client Portal...");
         setTimeout(() => {
-          if (isAdmin) {
-            window.location.href = "/admin";
-          } else {
-            window.location.href = "/dashboard";
-          }
-        }, 300);
+          window.location.href = isAdmin ? "/admin" : "/dashboard";
+        }, 100);
       } else {
         await registerWithEmail(fullName, email, password);
         setSuccessMsg("Studio workspace created. Initializing Google Drive vault...");
         setTimeout(() => {
           window.location.href = "/dashboard";
-        }, 350);
+        }, 100);
       }
     } catch {
       setErrorMsg("Authentication error. Please check your credentials.");
@@ -89,7 +85,7 @@ export default function LoginPage() {
       setSuccessMsg("Google workspace verified. Entering portal...");
       setTimeout(() => {
         window.location.href = "/dashboard";
-      }, 300);
+      }, 100);
     } catch {
       setErrorMsg("Failed to authenticate with Google. Try with studio email.");
     }
@@ -104,7 +100,7 @@ export default function LoginPage() {
       setSuccessMsg("Signed in as Studio Producer (Admin). Entering Executive Hub...");
       setTimeout(() => {
         window.location.href = "/admin";
-      }, 250);
+      }, 100);
     } else {
       setEmail("yash@studioliving.com");
       setPassword("••••••••••••");
@@ -112,7 +108,7 @@ export default function LoginPage() {
       setSuccessMsg("Signed in as Client (Yash Joshi). Entering Client Portal...");
       setTimeout(() => {
         window.location.href = "/dashboard";
-      }, 250);
+      }, 100);
     }
   };
 

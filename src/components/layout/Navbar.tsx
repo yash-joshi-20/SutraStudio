@@ -36,14 +36,14 @@ const CLIENT_NAV_LINKS: NavLinkItem[] = [
   { name: "Services", href: "/services" },
   { name: "Pricing", href: "/pricing" },
   { name: "My Orders", href: "/orders" },
-  { name: "Sutra AI", href: "/chat" },
+  { name: "My Projects", href: "/projects-client" },
 ];
 
 const ADMIN_NAV_LINKS: NavLinkItem[] = [
   { name: "Overview", href: "/admin" },
   { name: "Clients", href: "/admin?tab=clients" },
   { name: "Approvals", href: "/admin?tab=approvals" },
-  { name: "Conversations", href: "/admin?tab=conversations" },
+  { name: "Pipelines", href: "/admin?tab=workflows" },
   { name: "Site Control", href: "/admin?tab=site-control" },
 ];
 

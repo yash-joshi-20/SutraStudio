@@ -43,9 +43,13 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${playfair.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[var(--background)] text-[var(--foreground)] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
+      <body
+        suppressHydrationWarning
+        className="min-h-full flex flex-col bg-[var(--background)] text-[var(--foreground)] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]"
+      >
         {/* Accessible Skip-to-Content Link */}
         <a
           href="#main-content"

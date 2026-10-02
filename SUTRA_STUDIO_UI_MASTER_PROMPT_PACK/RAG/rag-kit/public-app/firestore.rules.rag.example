@@ -1,0 +1,22 @@
+// MERGE into your existing firestore.rules. Writes to these collections happen only through the server (Admin SDK).
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Clients can read their own chats (messages), never write them directly, never see the AI trace.
+    match /conversations/{conversationId} {
+      allow read: if request.auth != null && resource.data.clientId == request.auth.uid;
+      allow write: if false;
+
+      match /messages/{messageId} {
+        allow read: if request.auth != null
+          && get(/databases/$(database)/documents/conversations/$(conversationId)).data.clientId == request.auth.uid;
+        allow write: if false;
+      }
+      match /aiTrace/{traceId} { allow read, write: if false; }
+    }
+
+    // Brand knowledge is read and written by the server only (retrieval and ingest use the Admin SDK).
+    match /brandKnowledge/{docId} { allow read, write: if false; }
+  }
+}

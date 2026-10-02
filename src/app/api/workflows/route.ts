@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { N8nAutomationService } from "@/lib/services/n8nService";
 
 export const VALID_WORKFLOW_ENGINES = [
   "image",
@@ -28,6 +29,14 @@ export async function GET(req: Request) {
     activeEnginesCount: VALID_WORKFLOW_ENGINES.length,
     supportedEngines: VALID_WORKFLOW_ENGINES,
     isolationEnforced: true,
+    n8nPipelines: [
+      "synapse-master-orchestrator",
+      "synapse-client-intake-chat",
+      "synapse-trend-research-engine",
+      "synapse-brand-banner-generator",
+      "synapse-video-reels-pipeline",
+      "synapse-meta-ads-automation",
+    ],
   });
 }
 
@@ -41,7 +50,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { orderId, workflowType, action } = await req.json();
+    const { orderId, workflowType, action, niche, plan, brandAssets } = await req.json();
 
     if (!workflowType || !VALID_WORKFLOW_ENGINES.includes(workflowType as ValidWorkflowEngine)) {
       return NextResponse.json(
@@ -54,21 +63,43 @@ export async function POST(req: Request) {
       );
     }
 
-    const runId = `run_${workflowType}_${Date.now()}`;
+    // Map workflowType to specific n8n pipeline
+    let n8nWorkflowId:
+      | "synapse-master-orchestrator"
+      | "synapse-brand-banner-generator"
+      | "synapse-video-reels-pipeline"
+      | "synapse-meta-ads-automation"
+      | "synapse-trend-research-engine" = "synapse-master-orchestrator";
+
+    if (workflowType === "image") n8nWorkflowId = "synapse-brand-banner-generator";
+    else if (workflowType === "video") n8nWorkflowId = "synapse-video-reels-pipeline";
+    else if (workflowType === "marketing") n8nWorkflowId = "synapse-meta-ads-automation";
+
+    const n8nResult = await N8nAutomationService.dispatchWorkflow({
+      workflowId: n8nWorkflowId,
+      orderId: orderId || `ORD-${Date.now()}`,
+      niche,
+      plan: plan || "starter",
+      services: [workflowType],
+      brandAssets,
+    });
+
     const suppressedEngines = VALID_WORKFLOW_ENGINES.filter((e) => e !== workflowType);
 
     return NextResponse.json({
       success: true,
-      runId,
+      runId: n8nResult.runId,
       orderId: orderId || `ORD-ISO-${Math.floor(Math.random() * 900 + 100)}`,
       workflowType,
+      n8nWorkflowId,
       executedOnly: workflowType,
       otherEnginesSuppressed: true,
       suppressedEnginesCount: suppressedEngines.length,
       containerIsolation: "Strict sandbox - single worker dispatched",
-      status: "running",
+      status: n8nResult.status,
       action: action || "dispatch",
-      message: `Isolated [${workflowType}] workflow successfully triggered. Zero leakage into remaining ${suppressedEngines.length} engines.`,
+      n8nOutput: n8nResult.output,
+      message: n8nResult.message,
       targetStorage: "Google Drive Client Folder",
       timestamp: new Date().toISOString(),
     });
@@ -79,4 +110,3 @@ export async function POST(req: Request) {
     );
   }
 }
-

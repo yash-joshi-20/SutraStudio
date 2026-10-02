@@ -2,18 +2,19 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { SutraLogo } from "@/components/brand/SutraLogo";
 import {
   LayoutDashboard,
   ShoppingBag,
   FolderGit2,
   FolderOpen,
-  Bot,
   FileText,
   User,
   ShieldCheck,
   LogOut,
+  Sparkles,
+  DollarSign,
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/authContext";
@@ -21,10 +22,11 @@ import { Avatar } from "@/components/ui/Avatar";
 
 const CLIENT_NAV_ITEMS = [
   { name: "Workspace", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Services", href: "/services", icon: Sparkles },
+  { name: "Pricing & Plans", href: "/pricing", icon: DollarSign },
   { name: "My Orders", href: "/orders", icon: ShoppingBag },
   { name: "My Projects", href: "/projects-client", icon: FolderGit2 },
   { name: "Media Vault", href: "/media", icon: FolderOpen },
-  { name: "Sutra AI", href: "/chat", icon: Bot },
   { name: "Invoices", href: "/invoices", icon: FileText },
   { name: "Profile", href: "/profile", icon: User },
 ];
@@ -33,14 +35,17 @@ const ADMIN_NAV_ITEMS = [
   { name: "Operations Hub", href: "/admin", icon: ShieldCheck },
   { name: "Client Directory", href: "/admin?tab=clients", icon: LayoutDashboard },
   { name: "Approvals Hub", href: "/admin?tab=approvals", icon: ShoppingBag },
-  { name: "Chat & Takeover", href: "/admin?tab=conversations", icon: Bot },
   { name: "Creative Pipelines", href: "/admin?tab=workflows", icon: FolderGit2 },
+  { name: "Services Catalog", href: "/services", icon: Sparkles },
+  { name: "Pricing Matrix", href: "/pricing", icon: DollarSign },
   { name: "Website Site Control", href: "/admin?tab=site-control", icon: FileText },
   { name: "Security Audit", href: "/admin?tab=audit", icon: User },
 ];
 
 export function PortalSidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentTab = searchParams.get("tab") || "overview";
   const { user, role, logout } = useAuth();
   const isAdmin = role === "admin";
   const navItems = isAdmin ? ADMIN_NAV_ITEMS : CLIENT_NAV_ITEMS;
@@ -68,7 +73,15 @@ export function PortalSidebar() {
         <nav className="mt-6 space-y-1.5">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href || (item.href.includes("?tab=") && pathname === "/admin");
+            let isActive = false;
+            if (isAdmin) {
+              const itemTab = item.href.includes("?tab=")
+                ? item.href.split("?tab=")[1]
+                : "overview";
+              isActive = pathname === "/admin" && currentTab === itemTab;
+            } else {
+              isActive = pathname === item.href;
+            }
             return (
               <Link
                 key={item.name}

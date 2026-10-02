@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import { PortalSidebar } from "@/components/dashboard/PortalSidebar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { KPITile } from "@/components/dashboard/KPITile";
@@ -321,20 +322,40 @@ type AdminTab =
   | "site-control"
   | "audit";
 
-export default function AdminHubPage() {
+function AdminHubContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const tabParam = searchParams.get("tab") as AdminTab;
+
   const [activeTab, setActiveTab] = useState<AdminTab>(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const tabParam = params.get("tab") as AdminTab;
-      if (
-        tabParam &&
-        ["overview", "clients", "approvals", "conversations", "workflows", "site-control", "audit"].includes(tabParam)
-      ) {
-        return tabParam;
-      }
+    if (
+      tabParam &&
+      ["overview", "clients", "approvals", "conversations", "workflows", "site-control", "audit"].includes(tabParam)
+    ) {
+      return tabParam;
     }
     return "overview";
   });
+
+  useEffect(() => {
+    if (
+      tabParam &&
+      ["overview", "clients", "approvals", "conversations", "workflows", "site-control", "audit"].includes(tabParam)
+    ) {
+      setActiveTab(tabParam);
+    } else if (!tabParam) {
+      setActiveTab("overview");
+    }
+  }, [tabParam]);
+
+  const handleTabChange = (tab: AdminTab) => {
+    setActiveTab(tab);
+    if (tab === "overview") {
+      router.push("/admin");
+    } else {
+      router.push(`/admin?tab=${tab}`);
+    }
+  };
 
   const [searchQuery, setSearchQuery] = useState("");
   const [tierFilter, setTierFilter] = useState<string>("All");
@@ -596,7 +617,6 @@ export default function AdminHubPage() {
               { id: "overview", label: "Operations Overview" },
               { id: "clients", label: `Client Directory (${CLIENTS_DATA.length})` },
               { id: "approvals", label: `Approvals Hub (${approvalsList.length})` },
-              { id: "conversations", label: "Chat Sessions & Takeover" },
               { id: "workflows", label: "Creative Pipelines" },
               { id: "site-control", label: "Website Site Control" },
               { id: "audit", label: "Security & Audit Logs" },
@@ -604,7 +624,7 @@ export default function AdminHubPage() {
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id as AdminTab)}
+                onClick={() => handleTabChange(tab.id as AdminTab)}
                 className={`px-4 py-2 rounded-xl text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
                   activeTab === tab.id
                     ? "bg-[#5C3A1E] text-white shadow-xs"
@@ -1793,5 +1813,19 @@ export default function AdminHubPage() {
         </Modal>
       </div>
     </RouteGuard>
+  );
+}
+
+export default function AdminHubPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-[#F8F5EF]">
+          <div className="w-8 h-8 rounded-full border-2 border-[#D4A35A] border-t-transparent animate-spin" />
+        </div>
+      }
+    >
+      <AdminHubContent />
+    </Suspense>
   );
 }

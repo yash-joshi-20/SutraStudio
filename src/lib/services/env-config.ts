@@ -48,7 +48,7 @@ export function getSutraConfig(): SutraEnvConfig {
       storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || `${projectId}.appspot.com`,
       messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
       appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "",
-      isConfigured: !!(apiKey && apiKey !== "AIzaSyA_example_sutra_public_key"),
+      isConfigured: !!apiKey,
     },
     googleDrive: {
       rootFolderId: driveRoot,
@@ -57,12 +57,12 @@ export function getSutraConfig(): SutraEnvConfig {
     },
     payments: {
       razorpayKeyId: rzpKey,
-      isRazorpayActive: !!(rzpKey && !rzpKey.includes("example")),
+      isRazorpayActive: !!rzpKey,
       isStripeActive: !!process.env.STRIPE_SECRET_KEY,
     },
     aiEngine: {
-      isOpenAIConfigured: !!(process.env.OPENAI_API_KEY && !process.env.OPENAI_API_KEY.includes("example")),
-      isPineconeConfigured: !!(process.env.PINECONE_API_KEY && !process.env.PINECONE_API_KEY.includes("example")),
+      isOpenAIConfigured: !!process.env.OPENAI_API_KEY,
+      isPineconeConfigured: !!process.env.PINECONE_API_KEY,
     },
   };
 }

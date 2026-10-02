@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ShoppingBag, Bot, FolderGit2, LayoutDashboard, ShieldCheck } from "lucide-react";
+import { Home, ShoppingBag, FolderGit2, LayoutDashboard, ShieldCheck, Sparkles, DollarSign } from "lucide-react";
 import { useAuth } from "@/lib/auth/authContext";
 
 export function MobileBottomNav() {
@@ -14,15 +14,17 @@ export function MobileBottomNav() {
   const tabs = isAdmin
     ? [
         { name: "Admin", href: "/admin", icon: ShieldCheck },
+        { name: "Services", href: "/services", icon: Sparkles },
+        { name: "Pricing", href: "/pricing", icon: DollarSign },
         { name: "Approvals", href: "/admin?tab=approvals", icon: ShoppingBag },
-        { name: "Chat", href: "/admin?tab=conversations", icon: Bot },
-        { name: "Clients", href: "/admin?tab=clients", icon: FolderGit2 },
+        { name: "Pipelines", href: "/admin?tab=workflows", icon: FolderGit2 },
       ]
     : [
-        { name: "Home", href: "/", icon: Home },
         { name: "Workspace", href: "/dashboard", icon: LayoutDashboard },
+        { name: "Services", href: "/services", icon: Sparkles },
+        { name: "Pricing", href: "/pricing", icon: DollarSign },
         { name: "Orders", href: "/orders", icon: ShoppingBag },
-        { name: "AI Chat", href: "/chat", icon: Bot },
+        { name: "Projects", href: "/projects-client", icon: FolderGit2 },
       ];
 
   return (

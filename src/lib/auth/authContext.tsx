@@ -38,42 +38,44 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Session initialization with localStorage persistence and route-aware persona
-  const [user, setUser] = useState<AuthUser | null>(() => {
-    if (typeof window !== "undefined") {
+  const defaultUser: AuthUser = {
+    uid: "usr_mock_001",
+    email: "yash@studioliving.com",
+    displayName: "Yash Joshi",
+    role: "client",
+    driveFolderId: "drive_fld_sutra_001",
+  };
+
+  const [user, setUser] = useState<AuthUser | null>(defaultUser);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Helper to persist auth cookies for Next.js middleware
+  const setAuthCookies = (authUser: AuthUser | null) => {
+    if (typeof document === "undefined") return;
+    if (authUser) {
+      document.cookie = `role=${authUser.role}; path=/; max-age=604800; SameSite=Lax`;
+      document.cookie = `sutra_user=${encodeURIComponent(JSON.stringify(authUser))}; path=/; max-age=604800; SameSite=Lax`;
+    } else {
+      document.cookie = "role=; path=/; max-age=0; SameSite=Lax";
+      document.cookie = "sutra_user=; path=/; max-age=0; SameSite=Lax";
+    }
+  };
+
+  // Synchronize state with client localStorage and cookies on mount
+  useEffect(() => {
+    try {
       const saved = localStorage.getItem("sutra_auth_user");
       if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch {}
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.email) {
+          setUser(parsed);
+          setAuthCookies(parsed);
+          return;
+        }
       }
-      // If direct navigation to /admin or ?role=admin in development
-      const isDirectAdmin =
-        window.location.pathname.startsWith("/admin") ||
-        window.location.search.includes("role=admin");
-      if (isDirectAdmin) {
-        const adminPersona: AuthUser = {
-          uid: "usr_admin_001",
-          email: "admin@sutrastudio.com",
-          displayName: "Studio Producer",
-          role: "admin",
-          driveFolderId: "drive_fld_sutra_001",
-        };
-        try {
-          localStorage.setItem("sutra_auth_user", JSON.stringify(adminPersona));
-        } catch {}
-        return adminPersona;
-      }
-    }
-    return {
-      uid: "usr_mock_001",
-      email: "yash@studioliving.com",
-      displayName: "Yash Joshi",
-      role: "client",
-      driveFolderId: "drive_fld_sutra_001",
-    };
-  });
-  const [isLoading, setIsLoading] = useState(false);
+      setAuthCookies(defaultUser);
+    } catch {}
+  }, []);
 
   const loginAs = (targetRole: UserRole) => {
     setIsLoading(true);
@@ -82,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (typeof window !== "undefined") {
           localStorage.removeItem("sutra_auth_user");
         }
+        setAuthCookies(null);
         setUser(null);
       } else {
         const newUser: AuthUser = {
@@ -94,6 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (typeof window !== "undefined") {
           localStorage.setItem("sutra_auth_user", JSON.stringify(newUser));
         }
+        setAuthCookies(newUser);
         setUser(newUser);
       }
       setIsLoading(false);
@@ -102,7 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithEmail = async (email: string, password: string, role: UserRole = "client"): Promise<boolean> => {
     setIsLoading(true);
-    await new Promise((res) => setTimeout(res, 400));
+    await new Promise((res) => setTimeout(res, 300));
     const isAdmin = email.toLowerCase().includes("admin") || role === "admin";
     const newUser: AuthUser = {
       uid: isAdmin ? "usr_admin_001" : "usr_client_001",
@@ -114,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       localStorage.setItem("sutra_auth_user", JSON.stringify(newUser));
     }
+    setAuthCookies(newUser);
     setUser(newUser);
     setIsLoading(false);
     return true;
@@ -121,7 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGoogle = async (): Promise<boolean> => {
     setIsLoading(true);
-    await new Promise((res) => setTimeout(res, 400));
+    await new Promise((res) => setTimeout(res, 300));
     const newUser: AuthUser = {
       uid: "usr_google_client",
       email: "yash.google@sutrastudio.com",
@@ -132,6 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       localStorage.setItem("sutra_auth_user", JSON.stringify(newUser));
     }
+    setAuthCookies(newUser);
     setUser(newUser);
     setIsLoading(false);
     return true;
@@ -139,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const registerWithEmail = async (name: string, email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
-    await new Promise((res) => setTimeout(res, 450));
+    await new Promise((res) => setTimeout(res, 350));
     const newUser: AuthUser = {
       uid: `usr_${Date.now()}`,
       email,
@@ -150,6 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       localStorage.setItem("sutra_auth_user", JSON.stringify(newUser));
     }
+    setAuthCookies(newUser);
     setUser(newUser);
     setIsLoading(false);
     return true;
@@ -159,6 +166,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       localStorage.removeItem("sutra_auth_user");
     }
+    setAuthCookies(null);
     setUser(null);
   };
 
