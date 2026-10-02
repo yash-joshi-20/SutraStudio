@@ -40,7 +40,7 @@ const AI_INITIAL_MESSAGES: Message[] = [
   {
     id: "ai-1",
     sender: "ai",
-    text: "Namaste Yash! 🙏 I am Sutra AI, your dedicated creative studio assistant. I can parse your concepts across 3D spatial modeling, commercial video ads, architectural renders, or Next.js engineering and map them to our autonomous n8n generative review pipelines. What would you like to conceptualize or commission today?",
+    text: "Namaste Yash! 🙏 I am Sutra AI, your dedicated creative studio assistant. Tell me in plain words what you would like to create—such as 4K architectural renders, commercial motion video, 3D product models, Meta Ads campaigns, or Next.js web applications—and I will prepare an order draft for you.",
     time: "10:00 AM",
   },
 ];
@@ -57,10 +57,10 @@ const ADMIN_INITIAL_MESSAGES: Message[] = [
 
 const SUGGESTIONS = {
   ai: [
-    "Design 3D spatial architectural renders",
-    "Generate 15-second 4K commercial video",
-    "Structure Next.js brand flagship",
-    "Create Sanskrit-inspired brand identity",
+    "Commission 3D architectural spatial render",
+    "Create 15-second 4K commercial motion reel",
+    "Launch Meta Ads growth creative campaign",
+    "Develop bespoke Next.js luxury flagship",
   ],
   admin: [
     "Inquire about 4K render delivery time",
@@ -209,12 +209,12 @@ export default function ChatPage() {
                     size="sm"
                     showDot={true}
                   >
-                    {chatChannel === "ai" ? "AI Workflow Core" : "Principal Art Director"}
+                    {chatChannel === "ai" ? "Creative Assistant" : "Principal Art Director"}
                   </Badge>
                 </div>
                 <p className="text-xs text-[#64748B]">
                   {chatChannel === "ai"
-                    ? "Autonomous scope classifier, Sanskrit aesthetic advisor & n8n pipeline routing."
+                    ? "Conversational creative briefing, service scoping & automated draft creation."
                     : "Direct 1-on-1 concierge with studio leadership for active deliverables."}
                 </p>
               </div>
@@ -303,12 +303,12 @@ export default function ChatPage() {
                         </div>
                       )}
 
-                      {/* Workflow Classification Tag */}
+                      {/* Service Classification Tag */}
                       {msg.workflowTriggered && (
                         <div className="mt-3 pt-2.5 border-t border-[#EADFCB]/60 text-xs flex items-center justify-between gap-2 text-[#5C3A1E]">
                           <div className="flex items-center gap-1.5 font-semibold">
                             <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
-                            <span>Workflow: {msg.workflowTriggered}</span>
+                            <span>Service Track: {msg.workflowTriggered}</span>
                           </div>
                           {msg.confidence && (
                             <span className="text-[10px] font-mono text-[#2E7D4F] bg-[#EDF7F0] px-1.5 py-0.2 rounded">

@@ -154,11 +154,30 @@ export const SUTRA_PRICING_INR = {
     threeDModeling: "₹34,999",
     threeSixtyTour: "₹18,999",
     interiorArchitecture: "₹29,999",
-    marketingCampaigns: "₹19,999",
-    webDevelopment: "₹39,999",
-    appPlatform: "₹49,999",
+    windowDesign: "₹14,999",
+    digitalMarketing: "₹19,999",
+    metaAdsLauncher: "₹12,999",
+    websiteDevelopment: "₹39,999",
+    webAppDevelopment: "₹59,999",
+    mobileAppSetup: "₹49,999",
+    aiAutomation: "₹24,999",
   },
 } as const;
+
+export const SUTRA_SERVICES_12 = [
+  { id: "image", name: "Image Creation", category: "Creative", price: "From ₹9,999", description: "Bespoke 4K brand imagery, campaign visuals, and master key visuals." },
+  { id: "video", name: "Video Creation", category: "Creative", price: "From ₹24,999", description: "Cinematic commercial motion reels, product promos, and social ads with audio." },
+  { id: "three-d", name: "3D Modeling", category: "Design", price: "From ₹34,999", description: "Photorealistic 3D spatial renders and interactive web-ready GLTF models." },
+  { id: "three-sixty", name: "360 View", category: "Design", price: "From ₹18,999", description: "Immersive 360 virtual architectural and luxury showroom spatial tours." },
+  { id: "interior", name: "Interior Design", category: "Design", price: "From ₹29,999", description: "Lighting, materiality, and bespoke spatial layout CGI for architecture." },
+  { id: "window", name: "Window Design", category: "Design", price: "From ₹14,999", description: "High-end retail storefront visual merchandising and facade styling." },
+  { id: "marketing", name: "Digital Marketing", category: "Marketing", price: "From ₹19,999", description: "Omni-channel growth creative assets, ad variations, and performance copy." },
+  { id: "meta-ads", name: "Meta Ads Launcher", category: "Marketing", price: "From ₹12,999", description: "Direct Facebook/Instagram ad deployment with spend caps and audience sync." },
+  { id: "website", name: "Website Development", category: "Development", price: "From ₹39,999", description: "Editorial luxury web platforms engineered on Next.js with sub-second speed." },
+  { id: "web-app", name: "Web App Development", category: "Development", price: "From ₹59,999", description: "Full-stack client portals, customized SaaS engines, and cloud databases." },
+  { id: "mobile-app", name: "Mobile App Setup", category: "Development", price: "From ₹49,999", description: "Cross-platform iOS and Android mobile applications built on Expo/React Native." },
+  { id: "automation", name: "AI Automation", category: "Automation", price: "From ₹24,999", description: "Custom intelligent agent pipelines, CRM sync, and operational automations." },
+] as const;
 
 export const SUTRA_RBAC = {
   roles: {

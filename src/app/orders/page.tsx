@@ -152,7 +152,7 @@ export default function OrdersPage() {
         service: currentService.name,
         status: "in_progress",
         statusLabel: "In Production",
-        deliverablePreview: "Brief received. n8n workflow pipeline triggered.",
+        deliverablePreview: "Brief received. Studio production pipeline initiated.",
         driveFolder: "drive_fld_sutra_001/NEW_ORDERS",
         revisionRound: 0,
         maxRevisions: 2,

@@ -198,7 +198,7 @@ export function Navbar() {
                     leftIcon={<User className="w-3.5 h-3.5" />}
                     className="text-xs uppercase tracking-wider"
                   >
-                    Sign In
+                    Log In
                   </Button>
                 </Link>
                 <Link href="/contact">
@@ -208,19 +208,28 @@ export function Navbar() {
                     withArrow
                     className="text-xs uppercase tracking-wider"
                   >
-                    Start Project
+                    Get Started
                   </Button>
                 </Link>
               </>
             ) : isClient ? (
-              <>
+              <div className="flex items-center gap-2">
+                {/* Notification Bell */}
+                <Link
+                  href="/dashboard"
+                  aria-label="Notifications"
+                  className="relative p-2 rounded-full hover:bg-[#F4EFE6] text-[#5C3A1E] transition-colors"
+                >
+                  <Sparkles className="w-4 h-4 text-[#D4A35A]" />
+                  <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#D4A35A]" />
+                </Link>
                 <Link href="/dashboard">
                   <Button
                     variant="secondary"
                     size="sm"
                     className="text-xs uppercase tracking-wider"
                   >
-                    Workspace
+                    Dashboard
                   </Button>
                 </Link>
                 <Button
@@ -231,9 +240,17 @@ export function Navbar() {
                 >
                   Sign Out
                 </Button>
-              </>
+              </div>
             ) : (
-              <>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/admin"
+                  aria-label="Admin Alerts"
+                  className="relative p-2 rounded-full hover:bg-[#F4EFE6] text-[#5C3A1E] transition-colors"
+                >
+                  <Sparkles className="w-4 h-4 text-[#D4A35A]" />
+                  <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#2E7D4F]" />
+                </Link>
                 <Link href="/admin">
                   <Button
                     variant="primary"
@@ -251,7 +268,7 @@ export function Navbar() {
                 >
                   Sign Out
                 </Button>
-              </>
+              </div>
             )}
           </div>
 
