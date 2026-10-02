@@ -189,6 +189,13 @@ export function SutraLogo({
   showTagline = true,
   href = "/",
 }: SutraLogoProps) {
+  const heightClasses = {
+    sm: "h-8",
+    md: "h-10",
+    lg: "h-14",
+    xl: "h-20",
+  }[size];
+
   const sizeClasses = {
     sm: { symbol: "w-7 h-7", text: "text-lg", tagline: "text-[9px]" },
     md: { symbol: "w-9 h-9", text: "text-xl", tagline: "text-[10px]" },
@@ -223,57 +230,42 @@ export function SutraLogo({
     ? "watermark-light"
     : "gold";
 
+  // Official Brand Asset file mapping
+  const assetSrc =
+    variant === "horizontal"
+      ? "/brand/sutra-logo-horizontal.svg"
+      : variant === "horizontal-dark"
+      ? "/brand/sutra-logo-horizontal-dark.svg"
+      : isWhite
+      ? "/brand/sutra-logo-monochrome-white.svg"
+      : isBlack
+      ? "/brand/sutra-logo-monochrome-black.svg"
+      : isStacked
+      ? "/brand/sutra-logo-vertical.svg"
+      : variant === "symbol"
+      ? "/brand/sutra-mark.svg"
+      : variant === "watermark-dark"
+      ? "/brand/watermark_dark.svg"
+      : variant === "watermark" || variant === "watermark-light"
+      ? "/brand/watermark_light.svg"
+      : "/brand/sutra-logo-horizontal.svg";
+
   const content = (
     <div
       className={`inline-flex items-center transition-opacity hover:opacity-95 ${
         isStacked ? "flex-col text-center" : "flex-row gap-3"
       } ${className}`}
     >
-      {/* Lotus S Emblem */}
-      <LotusSymbol
-        className={sizeClasses.symbol}
-        color={symbolColor}
+      {/* Official Vector Logo File Render */}
+      <img
+        src={assetSrc}
+        alt="Sutra Studio"
+        className={`${heightClasses} w-auto max-w-full object-contain`}
+        onError={(e) => {
+          // If image fails, fallback to inline SVG component
+          (e.currentTarget as HTMLElement).style.display = "none";
+        }}
       />
-
-      {/* Typography Lockup */}
-      {variant !== "symbol" &&
-        variant !== "watermark" &&
-        variant !== "watermark-light" &&
-        variant !== "watermark-dark" && (
-          <div
-            className={`flex flex-col ${
-              isStacked ? "items-center mt-2" : "items-start"
-            }`}
-          >
-            <div className="flex items-center tracking-[0.14em]">
-              <span
-                className={`font-serif font-semibold tracking-wider ${sizeClasses.text} ${
-                  isWhite || isDarkHoriz
-                    ? "text-white"
-                    : isBlack
-                    ? "text-[#171717]"
-                    : "text-[#0F172A]"
-                }`}
-              >
-                SUTRA STUDIO
-              </span>
-            </div>
-
-            {showTagline && (
-              <span
-                className={`font-sans tracking-[0.24em] uppercase font-medium mt-0.5 ${sizeClasses.tagline} ${
-                  isWhite
-                    ? "text-white/70"
-                    : isDarkHoriz
-                    ? "text-[#94A3B8]"
-                    : "text-[#64748B]"
-                }`}
-              >
-                IDEAS ◆ DESIGN ◆ DEVELOPMENT ◆ GROWTH
-              </span>
-            )}
-          </div>
-        )}
     </div>
   );
 
