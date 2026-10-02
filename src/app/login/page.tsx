@@ -60,17 +60,21 @@ export default function LoginPage() {
     try {
       if (mode === "signin") {
         await loginWithEmail(email, password);
-        setSuccessMsg("Welcome back. Redirecting to your studio portal...");
+        const isAdmin = email.toLowerCase().includes("admin");
+        setSuccessMsg(isAdmin ? "Access authorized. Entering Executive Hub..." : "Welcome back. Entering Client Portal...");
         setTimeout(() => {
-          const isAdmin = email.toLowerCase().includes("admin");
-          router.push(isAdmin ? "/admin" : "/dashboard");
-        }, 600);
+          if (isAdmin) {
+            window.location.href = "/admin";
+          } else {
+            window.location.href = "/dashboard";
+          }
+        }, 300);
       } else {
         await registerWithEmail(fullName, email, password);
         setSuccessMsg("Studio workspace created. Initializing Google Drive vault...");
         setTimeout(() => {
-          router.push("/dashboard");
-        }, 700);
+          window.location.href = "/dashboard";
+        }, 350);
       }
     } catch {
       setErrorMsg("Authentication error. Please check your credentials.");
@@ -82,10 +86,10 @@ export default function LoginPage() {
     setSuccessMsg("");
     try {
       await loginWithGoogle();
-      setSuccessMsg("Google workspace verified. Accessing portal...");
+      setSuccessMsg("Google workspace verified. Entering portal...");
       setTimeout(() => {
-        router.push("/dashboard");
-      }, 500);
+        window.location.href = "/dashboard";
+      }, 300);
     } catch {
       setErrorMsg("Failed to authenticate with Google. Try with studio email.");
     }
@@ -97,14 +101,18 @@ export default function LoginPage() {
       setEmail("admin@sutrastudio.com");
       setPassword("••••••••••••");
       loginAs("admin");
-      setSuccessMsg("Signed in as Studio Producer (Admin). Redirecting...");
-      setTimeout(() => router.push("/admin"), 500);
+      setSuccessMsg("Signed in as Studio Producer (Admin). Entering Executive Hub...");
+      setTimeout(() => {
+        window.location.href = "/admin";
+      }, 250);
     } else {
       setEmail("yash@studioliving.com");
       setPassword("••••••••••••");
       loginAs("client");
-      setSuccessMsg("Signed in as Client (Yash Joshi). Redirecting...");
-      setTimeout(() => router.push("/dashboard"), 500);
+      setSuccessMsg("Signed in as Client (Yash Joshi). Entering Client Portal...");
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 250);
     }
   };
 
@@ -160,14 +168,14 @@ export default function LoginPage() {
               <span>CLIENT & PRODUCER CLEARANCE</span>
             </div>
 
-            <div className="space-y-3">
-              <SutraLogo variant="horizontal" size="md" showTagline={false} />
+            <div className="space-y-4">
+              <SutraLogo variant="horizontal" size="lg" showTagline={true} />
               <h1 className="font-serif text-2xl lg:text-3xl font-semibold text-[#0F172A] leading-snug">
                 The Sanctum for Creative Architecture.
               </h1>
               <p className="text-xs text-[#64748B] leading-relaxed">
                 Connect directly with your art director, inspect 4K visual renders,
-                and orchestrate custom AI pipelines in real-time.
+                and orchestrate bespoke creative pipelines in real-time.
               </p>
             </div>
 
@@ -204,8 +212,8 @@ export default function LoginPage() {
                   <Cpu className="w-3.5 h-3.5 text-[#5C3A1E]" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-semibold text-[#0F172A]">Live Workflow Automation</h4>
-                  <p className="text-[11px] text-[#64748B]">Autonomous n8n generative review pipelines.</p>
+                  <h4 className="text-xs font-semibold text-[#0F172A]">Creative Automation</h4>
+                  <p className="text-[11px] text-[#64748B]">Autonomous generative review and approval workflows.</p>
                 </div>
               </div>
             </div>

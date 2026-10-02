@@ -50,7 +50,7 @@ export function PortalSidebar() {
       <div>
         {/* Brand Header */}
         <div className="pb-6 border-b border-[#EADFCB]/60 flex items-center justify-between">
-          <SutraLogo variant="horizontal" size="sm" href="/" />
+          <SutraLogo variant="horizontal" size="md" href={isAdmin ? "/admin" : "/dashboard"} />
         </div>
 
         {/* Portal Scope Indicator (Admin Only) */}

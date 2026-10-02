@@ -190,17 +190,17 @@ export function SutraLogo({
   href = "/",
 }: SutraLogoProps) {
   const heightClasses = {
-    sm: "h-8",
-    md: "h-10",
-    lg: "h-14",
-    xl: "h-20",
+    sm: "h-9 sm:h-10",
+    md: "h-11 sm:h-12",
+    lg: "h-16 sm:h-18",
+    xl: "h-24 sm:h-28",
   }[size];
 
   const sizeClasses = {
-    sm: { symbol: "w-7 h-7", text: "text-lg", tagline: "text-[9px]" },
-    md: { symbol: "w-9 h-9", text: "text-xl", tagline: "text-[10px]" },
-    lg: { symbol: "w-14 h-14", text: "text-3xl", tagline: "text-xs" },
-    xl: { symbol: "w-20 h-20", text: "text-4xl", tagline: "text-sm" },
+    sm: { symbol: "w-8 h-8", text: "text-xl", tagline: "text-[10px]" },
+    md: { symbol: "w-11 h-11", text: "text-2xl", tagline: "text-xs" },
+    lg: { symbol: "w-16 h-16", text: "text-3xl", tagline: "text-sm" },
+    xl: { symbol: "w-24 h-24", text: "text-5xl", tagline: "text-base" },
   }[size];
 
   const isStacked = variant === "vertical" || variant === "stacked";
