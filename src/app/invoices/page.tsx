@@ -18,6 +18,7 @@ import {
   CreditCard,
   ShieldCheck,
   Search,
+  Globe,
 } from "lucide-react";
 
 interface InvoiceRecord {
@@ -110,7 +111,16 @@ export default function InvoicesPage() {
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#F4EFE6] transition-all shadow-xs touch-target min-h-[36px]"
+                title="Go to Public Website"
+              >
+                <Globe className="w-3.5 h-3.5 text-[#D4A35A]" />
+                <span>View Website</span>
+              </Link>
+
               <div className="relative flex items-center w-full sm:w-60">
                 <Search className="w-4 h-4 text-[#94A3B8] absolute left-3 pointer-events-none" />
                 <input

@@ -15,6 +15,7 @@ import {
   LogOut,
   Sparkles,
   DollarSign,
+  Globe,
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/authContext";
@@ -55,8 +56,21 @@ export function PortalSidebar() {
     <aside className="w-64 shrink-0 border-r border-[#EADFCB] bg-[#FFFDF9] min-h-screen p-6 flex flex-col justify-between hidden md:flex">
       <div>
         {/* Brand Header */}
-        <div className="pb-6 border-b border-[#EADFCB]/60 flex items-center justify-between">
-          <SutraLogo variant="horizontal" size="md" href={isAdmin ? "/admin" : "/dashboard"} />
+        <div className="pb-5 border-b border-[#EADFCB]/60 flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <SutraLogo variant="horizontal" size="md" href={isAdmin ? "/admin" : "/dashboard"} />
+          </div>
+          <Link
+            href="/"
+            className="inline-flex items-center justify-between px-3 py-1.5 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#F4EFE6] transition-all"
+            title="Return to Public Website"
+          >
+            <span className="flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-[#D4A35A]" />
+              <span>Public Website</span>
+            </span>
+            <span className="text-[10px] text-[#94A3B8]">↗</span>
+          </Link>
         </div>
 
         {/* Portal Scope Indicator (Admin Only) */}

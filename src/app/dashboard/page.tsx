@@ -36,6 +36,7 @@ import {
   Cpu,
   Share2,
   TrendingUp,
+  Globe,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -328,6 +329,12 @@ export default function ClientDashboardPage() {
                   Zero State
                 </button>
               </div>
+
+              <Link href="/">
+                <Button variant="secondary" size="sm" leftIcon={<Globe className="w-3.5 h-3.5 text-[#D4A35A]" />} className="min-h-[44px]">
+                  Website
+                </Button>
+              </Link>
 
               <Link href="/services">
                 <Button variant="secondary" size="sm" leftIcon={<Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />}>

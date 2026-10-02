@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import Image from "next/image";
 import { PortalSidebar } from "@/components/dashboard/PortalSidebar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
@@ -10,6 +11,7 @@ import { Modal } from "@/components/ui/Modal";
 import {
   Download,
   HardDrive,
+  Globe,
   Image as ImageIcon,
   Video,
   Box,
@@ -276,6 +278,15 @@ export default function MediaLibraryPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#F4EFE6] transition-all shadow-xs touch-target min-h-[36px]"
+                title="Go to Public Website"
+              >
+                <Globe className="w-3.5 h-3.5 text-[#D4A35A]" />
+                <span>View Website</span>
+              </Link>
+
               <Button
                 variant="secondary"
                 size="sm"

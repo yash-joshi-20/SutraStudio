@@ -23,6 +23,7 @@ import {
   AlertCircle,
   MessageSquare,
   Sparkles,
+  Globe,
 } from "lucide-react";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { motion, AnimatePresence } from "framer-motion";
@@ -226,8 +227,19 @@ export default function OrdersPage() {
               </p>
             </div>
 
-            {/* Navigation Tabs */}
-            <div className="inline-flex rounded-full bg-[#FFFDF9] border border-[#EADFCB] p-1 shadow-xs">
+            {/* Header Actions */}
+            <div className="flex flex-wrap items-center gap-2.5">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#F4EFE6] transition-all shadow-xs touch-target min-h-[36px]"
+                title="Go to Public Website"
+              >
+                <Globe className="w-3.5 h-3.5 text-[#D4A35A]" />
+                <span>View Website</span>
+              </Link>
+
+              {/* Navigation Tabs */}
+              <div className="inline-flex rounded-full bg-[#FFFDF9] border border-[#EADFCB] p-1 shadow-xs">
               <button
                 type="button"
                 onClick={() => setActiveTab("orders")}
@@ -253,6 +265,7 @@ export default function OrdersPage() {
               </button>
             </div>
           </div>
+        </div>
 
           {/* ========================================================
               TAB 1: ORDERS & APPROVALS VIEW
