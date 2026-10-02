@@ -42,7 +42,7 @@ export function MobileBottomNav() {
         { name: "Clients", href: "/admin?tab=clients", icon: Users },
         { name: "Approvals", href: "/admin?tab=approvals", icon: CheckCircle },
         { name: "Pipelines", href: "/admin?tab=workflows", icon: GitBranch },
-        { name: "Audit", href: "/admin?tab=audit", icon: ShieldCheck },
+        { name: "Profile", href: "/profile", icon: User },
       ]
     : isClient
     ? [

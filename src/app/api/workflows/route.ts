@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { N8nAutomationService } from "@/lib/services/n8nService";
 
-export const VALID_WORKFLOW_ENGINES = [
+const VALID_WORKFLOW_ENGINES = [
   "image",
   "video",
   "three-d",
@@ -12,7 +12,7 @@ export const VALID_WORKFLOW_ENGINES = [
   "app",
 ] as const;
 
-export type ValidWorkflowEngine = (typeof VALID_WORKFLOW_ENGINES)[number];
+type ValidWorkflowEngine = (typeof VALID_WORKFLOW_ENGINES)[number];
 
 export async function GET(req: Request) {
   const userRole = req.headers.get("x-user-role");

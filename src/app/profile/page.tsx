@@ -21,10 +21,11 @@ import {
   Sparkles,
   ArrowRight,
   Palette,
+  LogOut,
 } from "lucide-react";
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const [profile, setProfile] = useState({
     businessName: user?.company || "Studio Living Architecture",
@@ -70,6 +71,15 @@ export default function ProfilePage() {
               <Badge variant="completed" size="sm">
                 Enterprise Client
               </Badge>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={logout}
+                leftIcon={<LogOut className="w-3.5 h-3.5 text-[#B42318]" />}
+                className="border-[#FECDCA] text-[#B42318] hover:bg-[#FEF3F2] min-h-[44px]"
+              >
+                Sign Out
+              </Button>
             </div>
           </div>
 
@@ -228,12 +238,22 @@ export default function ProfilePage() {
             </div>
 
             {/* Form Actions */}
-            <div className="pt-4 border-t border-[#EADFCB] flex items-center justify-end gap-3">
+            <div className="pt-4 border-t border-[#EADFCB] flex flex-col sm:flex-row items-center justify-between gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={logout}
+                leftIcon={<LogOut className="w-4 h-4 text-[#B42318]" />}
+                className="w-full sm:w-auto text-[#B42318] hover:bg-[#FEF3F2] min-h-[44px]"
+              >
+                Log Out of Session
+              </Button>
               <Button
                 type="submit"
                 variant="primary"
                 size="md"
                 leftIcon={<Save className="w-4 h-4" />}
+                className="w-full sm:w-auto min-h-[44px]"
               >
                 Save Profile & Brand Vault
               </Button>
