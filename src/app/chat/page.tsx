@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth/authContext";
 import { PortalSidebar } from "@/components/dashboard/PortalSidebar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { LotusSymbol } from "@/components/brand/SutraLogo";
@@ -101,6 +103,18 @@ const CALL_TRANSCRIPTS = [
 ];
 
 export default function ChatPage() {
+  const router = useRouter();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    // Per directive: The dedicated /chat page is deprecated from desktop & mobile.
+    // Opening the main floating modal and routing the user to their dashboard/home.
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("open-sutra-chat"));
+      router.replace(user ? "/dashboard" : "/");
+    }
+  }, [router, user]);
+
   const [chatChannel, setChatChannel] = useState<"ai" | "admin">("ai");
   const [aiMessages, setAiMessages] = useState<Message[]>(AI_INITIAL_MESSAGES);
   const [adminMessages, setAdminMessages] = useState<Message[]>(ADMIN_INITIAL_MESSAGES);

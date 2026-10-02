@@ -87,6 +87,14 @@ export function PortalSidebar() {
               <Link
                 key={item.name}
                 href={item.href}
+                onClick={(e) => {
+                  if (item.href === "/chat") {
+                    e.preventDefault();
+                    if (typeof window !== "undefined") {
+                      window.dispatchEvent(new CustomEvent("open-sutra-chat"));
+                    }
+                  }
+                }}
                 className={`interactive-pill focus-ring flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   isActive
                     ? "bg-[#F8F5EF] text-[#5C3A1E] font-semibold shadow-xs border border-[#EADFCB]"

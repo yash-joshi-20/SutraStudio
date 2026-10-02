@@ -42,7 +42,7 @@ export function MobileBottomNav() {
         { name: "Clients", href: "/admin?tab=clients", icon: Users },
         { name: "Approvals", href: "/admin?tab=approvals", icon: CheckCircle },
         { name: "Pipelines", href: "/admin?tab=workflows", icon: GitBranch },
-        { name: "AI Chat", href: "/chat", icon: MessageSquare },
+        { name: "Audit", href: "/admin?tab=audit", icon: ShieldCheck },
       ]
     : isClient
     ? [
@@ -50,7 +50,7 @@ export function MobileBottomNav() {
         { name: "Orders", href: "/orders", icon: ShoppingBag },
         { name: "Vault", href: "/media", icon: FolderOpen },
         { name: "Billing", href: "/invoices", icon: FileText },
-        { name: "Studio Chat", href: "/chat", icon: MessageSquare },
+        { name: "Profile", href: "/profile", icon: User },
       ]
     : [
         { name: "Home", href: "/", icon: Home },

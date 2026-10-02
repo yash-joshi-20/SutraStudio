@@ -168,8 +168,20 @@ function FormattedMessageContent({ text, isUser }: { text: string; isUser: boole
   );
 }
 
+export function openSutraChat() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("open-sutra-chat"));
+  }
+}
+
 export function FloatingChatModal() {
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOpen = () => setIsOpen(true);
+    window.addEventListener("open-sutra-chat", handleOpen);
+    return () => window.removeEventListener("open-sutra-chat", handleOpen);
+  }, []);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "msg-welcome",

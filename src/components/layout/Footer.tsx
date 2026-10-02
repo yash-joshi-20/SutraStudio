@@ -171,7 +171,18 @@ export function Footer() {
             <ul className="space-y-2 text-sm text-[#64748B]">
               {operationLinks.map((item) => (
                 <li key={item.label}>
-                  <Link href={item.href} className="hover:text-[#5C3A1E] transition-colors">
+                  <Link
+                    href={item.href}
+                    onClick={(e) => {
+                      if (item.href === "/chat") {
+                        e.preventDefault();
+                        if (typeof window !== "undefined") {
+                          window.dispatchEvent(new CustomEvent("open-sutra-chat"));
+                        }
+                      }
+                    }}
+                    className="hover:text-[#5C3A1E] transition-colors"
+                  >
                     {item.label}
                   </Link>
                 </li>
@@ -346,6 +357,14 @@ export function Footer() {
                     <li key={item.label}>
                       <Link
                         href={item.href}
+                        onClick={(e) => {
+                          if (item.href === "/chat") {
+                            e.preventDefault();
+                            if (typeof window !== "undefined") {
+                              window.dispatchEvent(new CustomEvent("open-sutra-chat"));
+                            }
+                          }
+                        }}
                         className="block py-1 text-xs hover:text-[#5C3A1E] transition-colors"
                       >
                         {item.label}
