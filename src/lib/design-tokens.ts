@@ -89,22 +89,23 @@ export const SUTRA_TYPOGRAPHY = {
 } as const;
 
 export const SUTRA_LOGOS = {
-  primaryHorizontal: "/brand/LOGO/sutra-logo-primary.svg",
-  primaryVertical: "/brand/LOGO/sutra-logo-vertical.svg",
-  lotusSymbol: "/brand/LOGO/sutra-symbol.svg",
-  monogramSymbol: "/brand/LOGO/sutra-monogram.svg",
-  appIcon: "/brand/LOGO/sutra-app-icon.svg",
-  favicon: "/brand/LOGO/sutra-favicon.svg",
-  socialIcon: "/brand/LOGO/sutra-social-icon.svg",
-  monochromeBlack: "/brand/LOGO/sutra-logo-black.svg",
-  monochromeWhite: "/brand/LOGO/sutra-logo-white.svg",
-  watermarkLight: "/brand/LOGO/sutra-watermark-light.svg",
-  watermarkDark: "/brand/LOGO/sutra-watermark-dark.svg",
-  // Root fallbacks
-  rootHorizontal: "/brand/logo_horizontal_primary.svg",
-  rootVertical: "/brand/logo_vertical_primary.svg",
-  rootDarkBg: "/brand/logo_horizontal_dark_bg.svg",
-  rootWhiteBg: "/brand/logo_horizontal_white_bg.svg",
+  primaryHorizontal: "/brand/sutra-logo-horizontal.svg",
+  primaryVertical: "/brand/sutra-logo-vertical.svg",
+  lotusSymbol: "/brand/sutra-mark.svg",
+  monogramSymbol: "/brand/sutra-monogram.svg",
+  appIcon: "/brand/sutra-app-icon.svg",
+  favicon: "/brand/sutra-favicon.svg",
+  socialIcon: "/brand/sutra-social-icon.svg",
+  monochromeBlack: "/brand/sutra-logo-monochrome-black.svg",
+  monochromeWhite: "/brand/sutra-logo-monochrome-white.svg",
+  horizontalDark: "/brand/sutra-logo-horizontal-dark.svg",
+  horizontalBlack: "/brand/sutra-logo-horizontal-black.svg",
+  watermarkLight: "/brand/watermark_light.svg",
+  watermarkDark: "/brand/watermark_dark.svg",
+  // Alternative subfolder mappings
+  logoPrimary: "/brand/LOGO/sutra-logo-horizontal.svg",
+  logoSymbol: "/brand/LOGO/sutra-mark.svg",
+  logoVertical: "/brand/LOGO/sutra-logo-vertical.svg",
 } as const;
 
 export const SUTRA_PRICING_INR = {
