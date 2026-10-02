@@ -28,6 +28,8 @@ export interface SutraEnvConfig {
   aiEngine: {
     isOpenAIConfigured: boolean;
     isPineconeConfigured: boolean;
+    isGeminiConfigured: boolean;
+    geminiModel: string;
   };
 }
 
@@ -63,6 +65,8 @@ export function getSutraConfig(): SutraEnvConfig {
     aiEngine: {
       isOpenAIConfigured: !!process.env.OPENAI_API_KEY,
       isPineconeConfigured: !!process.env.PINECONE_API_KEY,
+      isGeminiConfigured: !!process.env.GEMINI_API_KEY,
+      geminiModel: process.env.GEMINI_CHAT_MODEL || "gemini-2.0-flash",
     },
   };
 }

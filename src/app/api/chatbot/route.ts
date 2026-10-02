@@ -22,12 +22,13 @@ export async function POST(req: Request) {
     }
 
     const kbStore = getKnowledgeBase();
-    const targetClientId = client_id || "client_shriram";
+    const targetClientId = client_id || "client_sutra";
 
     const eligibleRecords = kbStore.filter((k) => {
       const matchesClient =
         !k.client_id ||
         k.client_id === targetClientId ||
+        k.client_id === "client_sutra" ||
         k.client_id === "client_shriram" ||
         k.client_id === "client_default";
 
