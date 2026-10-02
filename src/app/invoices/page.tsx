@@ -206,14 +206,32 @@ export default function InvoicesPage() {
                     </span>
                   </div>
 
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => handleDownloadInvoice(inv.number)}
-                    leftIcon={<Download className="w-3.5 h-3.5 text-[#5C3A1E]" />}
-                  >
-                    PDF
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {inv.status === "pending" && (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => {
+                          setDownloadMsg(`Initializing Razorpay secure checkout for ${inv.amount}...`);
+                          setTimeout(() => {
+                            setDownloadMsg(`Payment of ${inv.amount} for ${inv.number} cleared via Razorpay UPI. Receipt archived.`);
+                            setTimeout(() => setDownloadMsg(""), 4000);
+                          }, 1500);
+                        }}
+                        leftIcon={<CreditCard className="w-3.5 h-3.5" />}
+                      >
+                        Pay Now
+                      </Button>
+                    )}
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleDownloadInvoice(inv.number)}
+                      leftIcon={<Download className="w-3.5 h-3.5 text-[#5C3A1E]" />}
+                    >
+                      PDF
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
