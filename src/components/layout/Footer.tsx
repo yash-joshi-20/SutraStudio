@@ -58,7 +58,7 @@ export function Footer() {
             <div className="pt-2 flex flex-col gap-2">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#5C3A1E] w-fit shadow-xs">
                 <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-pulse" />
-                <span className="font-medium">Studio Online • n8n Creative Router</span>
+                <span className="font-medium">Studio Online • Real-Time Creative Engine</span>
               </div>
               <p className="text-xs text-[#94A3B8] tracking-wide">
                 Ideas ◆ Design ◆ Development ◆ Growth

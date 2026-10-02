@@ -38,15 +38,15 @@ const SERVICE_OPTIONS = [
   { label: "Website Architecture & Development", value: "Website Development" },
   { label: "Web Application & SaaS Engineering", value: "Web App Development" },
   { label: "Mobile App Implementation", value: "Mobile App Setup" },
-  { label: "AI Autonomous Workflows (n8n)", value: "AI Automation" },
+  { label: "AI Creative Automation", value: "AI Automation" },
 ];
 
 const BUDGET_OPTIONS = [
   { label: "Select estimated budget...", value: "" },
-  { label: "$1,000 – $3,000 (Starter / Single Deliverable)", value: "1k-3k" },
-  { label: "$3,000 – $8,000 (Multi-Asset Campaign)", value: "3k-8k" },
-  { label: "$8,000 – $20,000 (Full Studio Retainer / Web)", value: "8k-20k" },
-  { label: "$20,000+ (Enterprise Architecture / Bespoke)", value: "20k+" },
+  { label: "₹5,000 – ₹15,000 (Starter / Single Deliverable)", value: "5k-15k" },
+  { label: "₹15,000 – ₹35,000 (Multi-Asset Campaign)", value: "15k-35k" },
+  { label: "₹35,000 – ₹75,000 (Full Studio Retainer / Web)", value: "35k-75k" },
+  { label: "₹75,000+ (Enterprise Architecture / Bespoke)", value: "75k+" },
 ];
 
 export default function ContactPage() {

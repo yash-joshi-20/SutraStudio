@@ -33,8 +33,8 @@ interface PricingTier {
 const TIERS: PricingTier[] = [
   {
     name: "Starter Creative",
-    projectPrice: "₹18,500",
-    monthlyPrice: "₹45,000",
+    projectPrice: "₹3,499",
+    monthlyPrice: "₹5,999",
     description: "Ideal for boutique brands, luxury founders, and product launches needing immediate high-impact visuals.",
     features: [
       "Up to 5 Photorealistic 4K Renders",
@@ -51,8 +51,8 @@ const TIERS: PricingTier[] = [
   },
   {
     name: "Studio Growth",
-    projectPrice: "₹48,500",
-    monthlyPrice: "₹1,25,000",
+    projectPrice: "₹7,999",
+    monthlyPrice: "₹12,999",
     description: "Comprehensive creative suite across 3D spatial renders, promotional video, and multi-channel Meta ad campaigns.",
     features: [
       "15x High-Resolution 3D & Product Renders",
@@ -70,12 +70,12 @@ const TIERS: PricingTier[] = [
   },
   {
     name: "Bespoke Enterprise",
-    projectPrice: "₹95,000+",
-    monthlyPrice: "₹2,50,000",
+    projectPrice: "₹14,999",
+    monthlyPrice: "₹19,999",
     description: "Full digital studio ecosystem: custom Next.js web application, autonomous 3D pipelines, and AI cloud automation.",
     features: [
       "Bespoke Next.js 16 Web Application Build",
-      "Custom n8n Automated Creative Pipelines",
+      "Intelligent Production Automation Pipelines",
       "Unlimited 3D Modeling & Spatial Renders",
       "Cross-Platform Mobile App Setup (Expo/PWA)",
       "Custom AI Classifier & Real-Time Sync",

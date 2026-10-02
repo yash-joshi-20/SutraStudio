@@ -103,8 +103,8 @@ export default function ClientDashboardPage() {
     {
       title: "Next.js Web Application",
       category: "Development",
-      desc: "Bespoke high-performance digital flagship with automated n8n review pipelines.",
-      price: "₹5,000",
+      desc: "Bespoke high-performance digital flagship with automated studio review pipelines.",
+      price: "₹19,999",
       slug: "web-development",
       icon: Layers,
     },
@@ -306,7 +306,7 @@ export default function ClientDashboardPage() {
                         2. Launch Commission
                       </h4>
                       <p className="text-xs text-[#64748B] leading-relaxed">
-                        Select a service, define your creative brief, and initiate an autonomous n8n generative review pipeline.
+                        Select a service, define your creative brief, and initiate an autonomous studio generative review pipeline.
                       </p>
                       <div className="pt-2">
                         <Link href="/orders" className="text-xs font-bold text-[#5C3A1E] hover:underline inline-flex items-center gap-1">

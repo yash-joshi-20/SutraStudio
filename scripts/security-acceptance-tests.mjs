@@ -460,8 +460,8 @@ async function runSecurityTests() {
     "Admin contains dedicated Site Control & Master Business Management panel"
   );
   assert(
-    adminPageContent.includes("Starter Graphics Pack") &&
-      adminPageContent.includes("Growth Creative Tier") &&
+    (adminPageContent.includes("Starter Creative Pack") || adminPageContent.includes("Starter Graphics Pack")) &&
+      (adminPageContent.includes("Growth Creative Studio") || adminPageContent.includes("Growth Creative Tier")) &&
       adminPageContent.includes("Atelier Enterprise") &&
       adminPageContent.includes("prices: {"),
     "Admin Site Control provides live INR pricing controls for all creative tiers and services"

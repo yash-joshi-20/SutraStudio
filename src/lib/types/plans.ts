@@ -37,8 +37,8 @@ export const SEEDED_MONTHLY_PLANS: MonthlyPlan[] = [
     id: 'starter',
     name: 'Starter Creative Pack',
     tagline: 'Ideal for emerging boutique brands requiring foundational 4K creative assets',
-    priceMonthlyINR: 9999,
-    priceFormattedINR: '₹9,999',
+    priceMonthlyINR: 5999,
+    priceFormattedINR: '₹5,999',
     quotas: [
       { serviceId: 'image', serviceName: 'Image Creation', monthlyAllowance: 5, unitLabel: '4K Renders' },
       { serviceId: 'marketing', serviceName: 'Digital Marketing Creatives', monthlyAllowance: 5, unitLabel: 'Ad Visuals' },
@@ -58,8 +58,8 @@ export const SEEDED_MONTHLY_PLANS: MonthlyPlan[] = [
     id: 'growth',
     name: 'Growth Creative Studio',
     tagline: 'Comprehensive omni-channel production for scaling digital businesses',
-    priceMonthlyINR: 24999,
-    priceFormattedINR: '₹24,999',
+    priceMonthlyINR: 12999,
+    priceFormattedINR: '₹12,999',
     isPopular: true,
     quotas: [
       { serviceId: 'image', serviceName: 'Image Creation', monthlyAllowance: 15, unitLabel: '4K Renders' },
@@ -81,8 +81,8 @@ export const SEEDED_MONTHLY_PLANS: MonthlyPlan[] = [
     id: 'enterprise',
     name: 'Atelier Enterprise Retainer',
     tagline: 'Full-service bespoke digital atelier and custom technology development',
-    priceMonthlyINR: 59999,
-    priceFormattedINR: '₹59,999',
+    priceMonthlyINR: 19999,
+    priceFormattedINR: '₹19,999',
     quotas: [
       { serviceId: 'image', serviceName: 'Image Creation', monthlyAllowance: 40, unitLabel: '4K Renders' },
       { serviceId: 'video', serviceName: 'Video Creation', monthlyAllowance: 12, unitLabel: 'Reels' },

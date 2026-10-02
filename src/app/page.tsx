@@ -278,10 +278,10 @@ export default function HomePage() {
                   <Zap className="w-6 h-6 text-[#5C3A1E]" />
                 </div>
                 <h3 className="font-serif text-xl font-semibold text-[#0F172A]">
-                  Autonomous AI Workflows (n8n)
+                  Autonomous Creative Intelligence
                 </h3>
                 <p className="text-sm text-[#64748B] mt-3 leading-relaxed">
-                  State-of-the-art multimodal reasoning models, automated render
+                  State-of-the-art computational design models, automated render
                   dispatchers, and continuous progress updates delivered to your portal.
                 </p>
               </div>

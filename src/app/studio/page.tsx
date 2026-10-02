@@ -48,11 +48,11 @@ export default function StudioPage() {
               <Cpu className="w-6 h-6 text-[#5C3A1E]" />
             </div>
             <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
-              2. Isolated AI Workflows
+              2. Specialized Generative Engines
             </h3>
             <p className="text-sm text-[#64748B] mt-3 leading-relaxed">
               Every creative discipline (image, video, 3D, interior) operates inside
-              dedicated AI models and n8n pipelines, ensuring precision outputs
+              dedicated high-precision generation pipelines, ensuring precision outputs
               without generic artifacts.
             </p>
           </div>

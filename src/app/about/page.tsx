@@ -40,7 +40,7 @@ const PILLARS = [
     icon: Layers,
     sanskrit: "यन्त्र (Yantra)",
     title: "Algorithmic Precision",
-    desc: "Autonomous n8n workflows, generative diffusion pipelines, and modern web architectures delivering accelerated commercial turnarounds.",
+    desc: "Autonomous studio pipelines, generative diffusion models, and modern web architectures delivering accelerated commercial turnarounds.",
   },
 ];
 
@@ -57,8 +57,8 @@ const MILESTONES = [
   },
   {
     year: "2026",
-    title: "Autonomous Workflow Platform",
-    desc: "Integrated Firebase Cloud Firestore and n8n autonomous delivery pipelines, launching the 24/7 client workspace and real-time AI Assistant.",
+    title: "Autonomous Delivery Platform",
+    desc: "Integrated Firebase Cloud Firestore and automated delivery pipelines, launching the 24/7 client workspace and real-time AI Assistant.",
   },
 ];
 

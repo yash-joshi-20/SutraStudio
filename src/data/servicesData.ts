@@ -27,7 +27,7 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     description:
       "High-fidelity AI generated and human-perfected commercial product imagery, luxury brand mockups, and advertising visual assets.",
     workflow: "image",
-    startingPrice: "$250",
+    startingPrice: "₹5,499",
     deliverables: ["4K High-Res Renders", "Commercial Usage Rights", "Multi-Angle Mockups"],
     icon: "Image",
     thumbnail: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=800&q=80",
@@ -46,7 +46,7 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     description:
       "Engaging 10-to-30 second cinematic video ads, social reels, motion sequences, and voiceover-synced commercial promotional clips.",
     workflow: "video",
-    startingPrice: "$450",
+    startingPrice: "₹7,999",
     deliverables: ["10-30s Cinematic Ad", "Voiceover Audio", "Vertical & Horizontal Aspect Ratios"],
     icon: "Video",
     thumbnail: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
@@ -65,7 +65,7 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     description:
       "Precision 3D product models, architectural exterior structures, and interactive web-ready 3D assets.",
     workflow: "three-d",
-    startingPrice: "$500",
+    startingPrice: "₹9,499",
     deliverables: ["glTF / USDZ Files", "PBR Textured Models", "Turntable Renders"],
     icon: "Box",
     thumbnail: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=800&q=80",
@@ -84,7 +84,7 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     description:
       "Immersive 360-degree interactive panoramic virtual tours for luxury villas, hospitality spaces, and real-estate showrooms.",
     workflow: "three-sixty",
-    startingPrice: "$600",
+    startingPrice: "₹11,999",
     deliverables: ["Interactive Panorama Viewer", "Hotspot Annotations", "Embeddable Web Code"],
     icon: "Compass",
     thumbnail: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80",
@@ -103,7 +103,7 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     description:
       "Photorealistic interior architectural visualization, luxury room staging, lighting studies, and material palettes.",
     workflow: "interior",
-    startingPrice: "$650",
+    startingPrice: "₹12,499",
     deliverables: ["High-Res Renders", "Moodboard & Color Schemes", "Furniture Layout Specs"],
     icon: "Home",
     thumbnail: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=800&q=80",
@@ -122,7 +122,7 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     description:
       "Architectural window framing, modern facade elevations, and custom glass architectural visualization.",
     workflow: "window",
-    startingPrice: "$350",
+    startingPrice: "₹6,499",
     deliverables: ["Elevation Profiles", "Glass Material Studies", "Facade Renders"],
     icon: "Grid",
     thumbnail: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80",
@@ -141,7 +141,7 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     description:
       "Data-driven creative growth strategies, content blueprints, audience profiling, and brand storytelling campaigns.",
     workflow: "marketing",
-    startingPrice: "$800",
+    startingPrice: "₹14,999",
     deliverables: ["Monthly Content Calendar", "Copywriting Decks", "Competitor Trend Analysis"],
     icon: "TrendingUp",
     thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
@@ -160,7 +160,7 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     description:
       "End-to-end Facebook & Instagram ad campaign setups, high-converting creative ad variations, copy testing, and optimization.",
     workflow: "social",
-    startingPrice: "$750",
+    startingPrice: "₹13,499",
     deliverables: ["Targeting Blueprint", "5 Creative Ad Variations", "Conversion Tracking Setup"],
     icon: "Share2",
     thumbnail: "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80",
@@ -179,7 +179,7 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     description:
       "High-performance, bespoke websites engineered with Next.js, fluid GSAP micro-interactions, responsive precision, and fast loading.",
     workflow: "website",
-    startingPrice: "$1,200",
+    startingPrice: "₹16,999",
     deliverables: ["Full Responsive Web Code", "SEO & Meta Optimization", "CMS Integration"],
     icon: "Globe",
     thumbnail: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
@@ -198,7 +198,7 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     description:
       "Robust SaaS applications, custom client portals, real-time collaboration dashboards, and secure backend integrations.",
     workflow: "app",
-    startingPrice: "$2,400",
+    startingPrice: "₹19,999",
     deliverables: ["Auth & RBAC", "Firestore Real-time DB", "Production-Ready Code"],
     icon: "Layout",
     thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80",
@@ -217,7 +217,7 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     description:
       "Cross-platform Expo / React Native mobile applications sharing unified Firebase backends and APIs.",
     workflow: "app",
-    startingPrice: "$2,800",
+    startingPrice: "₹18,499",
     deliverables: ["Expo / React Native Codebase", "iOS & Android Builds", "Push Notification Setup"],
     icon: "Smartphone",
     thumbnail: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=800&q=80",
@@ -232,18 +232,18 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     name: "AI Automation",
     slug: "ai-automation",
     category: "Automation",
-    tagline: "n8n, Workflows, Integrations",
+    tagline: "Autonomous Pipelines & Integrations",
     description:
-      "Custom automated operational pipelines, n8n webhook integrations, AI content classifiers, and automated Drive synchronization.",
+      "Custom automated operational pipelines, secure cloud webhook integrations, AI content classifiers, and automated Drive synchronization.",
     workflow: "automation",
-    startingPrice: "$950",
-    deliverables: ["n8n Workflow Blueprints", "Webhook Security Verification", "Drive Automated Pipeline"],
+    startingPrice: "₹15,999",
+    deliverables: ["Automated Workflow Blueprints", "Webhook Security Verification", "Drive Automated Pipeline"],
     icon: "Cpu",
     thumbnail: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80",
     badge: "Automation",
     mediaType: "code",
-    mediaFormat: "n8n JSON Blueprint + Cloud Webhooks",
+    mediaFormat: "Cloud Workflow Engine + Secure Webhooks",
     turnaround: "48–72 Hours",
-    pipelineEngine: "n8n HMAC Webhook & Drive Router",
+    pipelineEngine: "HMAC Webhook & Drive Router",
   },
 ];

@@ -369,7 +369,7 @@ export default function ServicesPage() {
                     24 – 72 Hour Turnarounds
                   </h4>
                   <p className="text-xs text-[#64748B] mt-1 leading-relaxed">
-                    Autonomous n8n generative pipelines and accelerated review
+                    High-speed generative studio pipelines and accelerated review
                     cycles designed for fast-moving businesses.
                   </p>
                 </div>
