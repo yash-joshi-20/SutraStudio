@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { PortalSidebar } from "@/components/dashboard/PortalSidebar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Input, Badge } from "@/components/ui/Card";
 import { Modal } from "@/components/ui/Modal";
 import { SUTRA_SERVICES } from "@/data/servicesData";
+import { useAuth } from "@/lib/auth/authContext";
 import {
   Check,
   ArrowRight,
@@ -21,88 +22,152 @@ import {
   FileCheck,
   Plus,
   AlertCircle,
-  MessageSquare,
   Sparkles,
   Globe,
+  Layers,
+  Zap,
+  Calendar,
+  ShieldCheck,
+  Upload,
+  Minus,
+  Loader2,
+  CalendarDays,
+  Phone,
+  Mail,
+  User,
+  ExternalLink,
+  ChevronRight,
+  FileText,
+  CreditCard,
+  Receipt,
+  Lock,
+  MessageSquare,
+  Send,
 } from "lucide-react";
 import { RouteGuard } from "@/components/auth/RouteGuard";
-import { motion, AnimatePresence } from "framer-motion";
+import { openRazorpayCheckout } from "@/lib/services/razorpayClient";
+import { OrderReceiptModal, ReceiptOrderData } from "@/components/orders/OrderReceiptModal";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { computeOrderProgress, type OrderProgressInfo } from "@/lib/services/orderProgress";
 
+// Unified Order Item representing both legacy and modern Firestore orders
 interface OrderItem {
   id: string;
   code: string;
+  orderNumber?: string;
   title: string;
   service: string;
-  status: "awaiting_approval" | "in_progress" | "revision_requested" | "completed";
+  status:
+    | "pending_payment"
+    | "paid"
+    | "brief_review"
+    | "in_production"
+    | "draft_delivered"
+    | "awaiting_approval"
+    | "revision_requested"
+    | "approved"
+    | "completed"
+    | "cancelled"
+    | "refunded"
+    | "on_hold"
+    | "closed"
+    | "expired"
+    | "pending"
+    | "confirmed"
+    | "in_progress"
+    | "trial"
+    | "active"
+    | "delivered";
   statusLabel: string;
   deliverablePreview: string;
+  deliverables?: {
+    driveFileId?: string;
+    filename: string;
+    checksum?: string;
+    fileSize?: string;
+    mimeType?: string;
+    previewUrl?: string;
+    version?: string;
+    category?: string;
+  }[];
+  deliveredAt?: string;
   driveFolder: string;
+  driveFolderPath?: string;
   revisionRound: number;
   maxRevisions: number;
   updatedAt: string;
+  createdAt?: string;
   notes?: string;
+  requirements?: string;
+  type?: "service" | "monthly_plan";
+  items?: {
+    serviceId?: string;
+    planId?: string;
+    name: string;
+    price: number;
+    quantity: number;
+  }[];
+  totalAmount?: number;
+  billingCycle?: "monthly" | "quarterly" | "annual";
+  attachments?: {
+    name: string;
+    size?: string;
+    url?: string;
+  }[];
+  source?: "dashboard" | "ai_chat";
+  clientName?: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  paymentStatus?: "unpaid" | "paid" | "failed" | "refunded";
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  amountPaid?: number;
+  paidAt?: string;
+  paymentMethod?: string;
+  failureReason?: string;
+  subscriptionId?: string;
+  subscriptionStatus?: string;
+  nextBillingDate?: string;
+  trialEndsAt?: string;
+  currentPeriodStart?: string;
+  currentPeriodEnd?: string;
+  estimatedDeliveryDays?: number;
+  estimatedDueDate?: string;
+  comments?: Array<{
+    id: string;
+    sender: "client" | "admin" | "system";
+    authorName: string;
+    text: string;
+    attachmentUrl?: string;
+    attachmentName?: string;
+    createdAt: string;
+  }>;
+  statusHistory?: {
+    status: string;
+    changedAt: string;
+    changedBy: string;
+    note?: string;
+  }[];
 }
 
-export default function OrdersPage() {
-  const [activeTab, setActiveTab] = useState<"orders" | "create">("orders");
+import {
+  SEED_CATALOG_SERVICES,
+  SEED_CATALOG_PLANS,
+  CatalogService,
+  CatalogPlan,
+  BriefFormField,
+} from "@/lib/services/catalogData";
 
-  // Orders State with Approvals & Revisions
-  const [orders, setOrders] = useState<OrderItem[]>([
-    {
-      id: "ord-1",
-      code: "#ORD-001",
-      title: "3D Spatial Architecture — Luxury Living Suite",
-      service: "3D Visualization",
-      status: "awaiting_approval",
-      statusLabel: "Awaiting Client Approval",
-      deliverablePreview: "4K Render Pass 02 with warm teak wood materials and diffused sunlight.",
-      driveFolder: "drive_fld_sutra_001/3D_RENDERS",
-      revisionRound: 1,
-      maxRevisions: 2,
-      updatedAt: "2 hours ago",
-      notes: "Please inspect material specular intensity on marble backsplash.",
-    },
-    {
-      id: "ord-2",
-      code: "#ORD-002",
-      title: "Sutra Studio Brand Identity & Sanskrit Typography",
-      service: "Brand Identity",
-      status: "completed",
-      statusLabel: "Approved & Vaulted",
-      deliverablePreview: "Full vector pack, guidelines PDF, and font licenses packaged in Google Drive.",
-      driveFolder: "drive_fld_sutra_001/BRAND_ASSETS",
-      revisionRound: 2,
-      maxRevisions: 2,
-      updatedAt: "Yesterday",
-    },
-    {
-      id: "ord-3",
-      code: "#ORD-003",
-      title: "Promotional Brand Film — 15s Showreel Reel",
-      service: "Video Production",
-      status: "in_progress",
-      statusLabel: "In Production",
-      deliverablePreview: "Color grade rough-cut in progress by lead compositor.",
-      driveFolder: "drive_fld_sutra_001/VIDEOS",
-      revisionRound: 0,
-      maxRevisions: 2,
-      updatedAt: "3 hours ago",
-    },
-    {
-      id: "ord-4",
-      code: "#ORD-004",
-      title: "Meta Ads Launch Suite — 3 Creative Ad Variants & Copy Matrix",
-      service: "Meta Ads Launcher",
-      status: "awaiting_approval",
-      statusLabel: "In Review / Awaiting Client Approval",
-      deliverablePreview: "3 Multi-Ratio Ad Sets (9:16 Video Reel, 1:1 Square Feed, 16:9 Banner) ready for client review in Google Drive.",
-      driveFolder: "drive_fld_sutra_001/META_ADS_CAMPAIGN",
-      revisionRound: 1,
-      maxRevisions: 2,
-      updatedAt: "Just now",
-      notes: "Please inspect Ad Set 1 video hook and verify audience targeting before Meta ad dispatch.",
-    },
-  ]);
+const FALLBACK_SERVICES: CatalogService[] = SEED_CATALOG_SERVICES;
+const FALLBACK_PLANS: CatalogPlan[] = SEED_CATALOG_PLANS;
+
+export default function OrdersPage() {
+  const { user, profile } = useAuth();
+
+  // Orders State with real-time updates
+  const [orders, setOrders] = useState<OrderItem[]>([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
 
   // Inspection & Approval / Revision Modal
   const [inspectingOrder, setInspectingOrder] = useState<OrderItem | null>(null);
@@ -110,101 +175,1073 @@ export default function OrdersPage() {
   const [revisionNotes, setRevisionNotes] = useState("");
   const [feedbackSuccess, setFeedbackSuccess] = useState("");
 
-  // Create Order Wizard State
-  const [step, setStep] = useState(1);
-  const [selectedService, setSelectedService] = useState(SUTRA_SERVICES[0].id);
-  const [orderDetails, setOrderDetails] = useState({
-    title: "",
-    timeline: "Standard (48-72h)",
-    brief: "",
-    references: "",
+  // New Order Modal Flow State
+  const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
+  const [flowStep, setFlowStep] = useState<
+    | "choose_type"
+    | "services_select"
+    | "plan_select"
+    | "service_details"
+    | "plan_details"
+    | "drive_assets"
+    | "review_confirm"
+    | "success"
+    | "dismissed"
+  >("choose_type");
+
+  const [orderType, setOrderType] = useState<"service" | "monthly_plan">("service");
+
+  // Catalogs loaded from backend
+  const [servicesCatalog, setServicesCatalog] = useState<CatalogService[]>(FALLBACK_SERVICES);
+  const [plansCatalog, setPlansCatalog] = useState<CatalogPlan[]>(FALLBACK_PLANS);
+  const [isLoadingCatalogs, setIsLoadingCatalogs] = useState(false);
+
+  // Individual Services Flow State: serviceId -> quantity (>= 1)
+  const [selectedServices, setSelectedServices] = useState<Record<string, number>>({
+    "img-creation": 1,
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [orderSubmitted, setOrderSubmitted] = useState(false);
 
-  const currentService =
-    SUTRA_SERVICES.find((s) => s.id === selectedService) || SUTRA_SERVICES[0];
+  // Monthly Plan Flow State
+  const [selectedPlanId, setSelectedPlanId] = useState<string>("studio-growth");
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "quarterly" | "annual">("monthly");
 
-  const handleNext = () => {
-    if (step < 4) setStep(step + 1);
-  };
+  // Details State
+  const [commissionTitle, setCommissionTitle] = useState("");
+  const [requirements, setRequirements] = useState("");
+  const [briefAnswers, setBriefAnswers] = useState<Record<string, any>>({});
+  const [preferredTimeline, setPreferredTimeline] = useState("Standard Studio SLA (48-72h)");
+  const [targetKickoffDate, setTargetKickoffDate] = useState("");
+  const [clientContact, setClientContact] = useState({
+    name: user?.displayName || "Studio Client",
+    email: user?.email || "client@sutrastudio.com",
+    phone: "",
+  });
+  const [driveLink, setDriveLink] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState<{ name: string; size: string }[]>([]);
+  const [agreedToTerms, setAgreedToTerms] = useState(true);
 
-  const handleBack = () => {
-    if (step > 1) setStep(step - 1);
-  };
+  // Draft Management State
+  const [hasSavedDraft, setHasSavedDraft] = useState(false);
+  const [savedDraftData, setSavedDraftData] = useState<any | null>(null);
+  const [draftStatus, setDraftStatus] = useState("");
 
-  const handleFinalSubmit = async () => {
-    setIsSubmitting(true);
+  // Submission & Confirmation state
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [createdOrderResult, setCreatedOrderResult] = useState<OrderItem | null>(null);
+  const [receiptOrder, setReceiptOrder] = useState<ReceiptOrderData | null>(null);
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
+  const [retryingOrderId, setRetryingOrderId] = useState<string | null>(null);
+
+  // Tab Filtering: Active Orders vs Order History
+  const [activeFilterTab, setActiveFilterTab] = useState<"active" | "history" | "all">("active");
+
+  // Order Details Modal Tabs & Comments State
+  const [activeModalTab, setActiveModalTab] = useState<"scope" | "deliverables" | "timeline" | "discussion">("scope");
+  const [orderComments, setOrderComments] = useState<any[]>([]);
+  const [isLoadingComments, setIsLoadingComments] = useState(false);
+  const [newCommentText, setNewCommentText] = useState("");
+  const [newCommentAttachmentUrl, setNewCommentAttachmentUrl] = useState("");
+  const [annotationUrl, setAnnotationUrl] = useState("");
+  const [isPostingComment, setIsPostingComment] = useState(false);
+
+  // Load Order Discussion Comments
+  const loadOrderComments = useCallback(async (orderId: string) => {
+    setIsLoadingComments(true);
     try {
-      await fetch("/api/orders", {
+      const res = await fetch(`/api/orders/comments?orderId=${encodeURIComponent(orderId)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setOrderComments(data.comments || []);
+      }
+    } catch {
+      // safe fallback
+    } finally {
+      setIsLoadingComments(false);
+    }
+  }, []);
+
+  // Post Order Discussion Comment
+  const handlePostComment = async () => {
+    if (!inspectingOrder || !newCommentText.trim()) return;
+    setIsPostingComment(true);
+    try {
+      const res = await fetch("/api/orders/comments", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": user?.uid || "usr_mock_001",
+          "x-user-role": "client",
+        },
         body: JSON.stringify({
-          serviceId: selectedService,
-          serviceName: currentService.name,
-          ...orderDetails,
+          orderId: inspectingOrder.id,
+          text: newCommentText.trim(),
+          authorName: user?.displayName || "Studio Client",
+          attachmentUrl: newCommentAttachmentUrl.trim() || undefined,
+          attachmentName: newCommentAttachmentUrl.trim() ? "Reference Asset" : undefined,
         }),
       });
-      // Append newly created order to active list
-      const newOrder: OrderItem = {
-        id: `ord-${Date.now()}`,
-        code: `#ORD-00${orders.length + 1}`,
-        title: orderDetails.title || `${currentService.name} Order`,
-        service: currentService.name,
-        status: "in_progress",
-        statusLabel: "In Production",
-        deliverablePreview: "Brief received. Studio production pipeline initiated.",
-        driveFolder: "drive_fld_sutra_001/NEW_ORDERS",
-        revisionRound: 0,
-        maxRevisions: 2,
-        updatedAt: "Just now",
-      };
-      setOrders([newOrder, ...orders]);
-      setOrderSubmitted(true);
-    } catch {
-      setOrderSubmitted(true);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.comment) {
+          setOrderComments((prev) => [...prev, data.comment]);
+        }
+        setNewCommentText("");
+        setNewCommentAttachmentUrl("");
+      }
+    } catch (err: any) {
+      alert(`Failed to post message: ${err.message}`);
     } finally {
-      setIsSubmitting(false);
+      setIsPostingComment(false);
     }
   };
 
-  const handleApproveDeliverable = (orderId: string) => {
-    setOrders((prev) =>
-      prev.map((o) =>
-        o.id === orderId
-          ? { ...o, status: "completed", statusLabel: "Approved & Vaulted" }
-          : o
-      )
+  // Sync comments when inspecting order changes
+  useEffect(() => {
+    if (inspectingOrder?.id) {
+      loadOrderComments(inspectingOrder.id);
+    }
+  }, [inspectingOrder?.id, loadOrderComments]);
+
+  // Synchronize client contact with user auth on change
+  useEffect(() => {
+    if (user) {
+      setClientContact((prev) => ({
+        ...prev,
+        name: prev.name || user.displayName || "Studio Client",
+        email: prev.email || user.email || "client@sutrastudio.com",
+      }));
+    }
+  }, [user]);
+
+  // Load Catalogs from Firebase API
+  const loadCatalogs = useCallback(async () => {
+    setIsLoadingCatalogs(true);
+    try {
+      const res = await fetch("/api/orders?catalog=all");
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.services) && data.services.length > 0) {
+          setServicesCatalog(data.services);
+        }
+        if (Array.isArray(data.plans) && data.plans.length > 0) {
+          setPlansCatalog(data.plans);
+        }
+      }
+    } catch {
+      // Fallback catalogs already set
+    } finally {
+      setIsLoadingCatalogs(false);
+    }
+  }, []);
+
+  // Real-Time Firestore Listener / Poller for My Orders
+  const loadOrders = useCallback(async (silent = false) => {
+    if (!silent) setIsLoadingOrders(true);
+    setOrdersError(null);
+    try {
+      const clientUid = user?.uid || "usr_mock_001";
+      const res = await fetch(`/api/orders?clientUid=${encodeURIComponent(clientUid)}`);
+      if (!res.ok) {
+        throw new Error("Failed to load orders");
+      }
+      const data = await res.json();
+      if (Array.isArray(data.orders)) {
+        // Map raw Firestore records to consistent OrderItem interface
+        const mapped: OrderItem[] = data.orders.map((o: any) => ({
+          id: o.id,
+          code: o.code || `#ORD-${String(o.id).slice(-3)}`,
+          orderNumber: o.orderNumber || o.code,
+          title: o.title || o.service || "Studio Commission",
+          service: o.service || "Creative Direction",
+          status: o.status || "in_progress",
+          statusLabel:
+            o.statusLabel ||
+            (o.status === "completed"
+              ? "Approved & Vaulted"
+              : o.status === "approved"
+              ? "Approved — Finalizing Commission"
+              : o.status === "delivered"
+              ? "Result Delivered — Waiting for Your Approval"
+              : o.status === "awaiting_approval"
+              ? "Awaiting Client Approval"
+              : o.status === "revision_requested"
+              ? "Revision in Progress"
+              : o.status === "pending_payment"
+              ? "Pending Payment via Razorpay"
+              : o.status === "paid"
+              ? "Payment Verified — In Studio Queue"
+              : o.status === "pending"
+              ? "Pending Studio Confirmation"
+              : "In Production"),
+          deliverablePreview:
+            o.deliverablePreview ||
+            (o.requirements ? `Scope: ${o.requirements.slice(0, 100)}...` : "Studio production pipeline registered."),
+          deliverables: o.deliverables || [],
+          deliveredAt: o.deliveredAt,
+          driveFolder: o.driveFolder || o.driveFolderId || "drive_fld_sutra_001/COMMISSIONS",
+          driveFolderPath: o.driveFolderPath || "drive_fld_sutra_001/COMMISSIONS",
+          revisionRound: o.revisionRound ?? 0,
+          maxRevisions: o.maxRevisions ?? 2,
+          updatedAt: o.updatedAt ? new Date(o.updatedAt).toLocaleDateString() : "Recently",
+          createdAt: o.createdAt,
+          notes: o.notes || o.requirements,
+          requirements: o.requirements,
+          type: o.type || "service",
+          items: o.items || [],
+          totalAmount: o.totalAmount,
+          billingCycle: o.billingCycle,
+          attachments: o.attachments || [],
+          source: o.source || "dashboard",
+          clientName: o.clientName,
+          clientEmail: o.clientEmail,
+          clientPhone: o.clientPhone,
+          paymentStatus: o.paymentStatus || (o.status === "pending_payment" ? "unpaid" : "paid"),
+          razorpayOrderId: o.razorpayOrderId,
+          razorpayPaymentId: o.razorpayPaymentId,
+          amountPaid: o.amountPaid,
+          paidAt: o.paidAt,
+          paymentMethod: o.paymentMethod,
+          failureReason: o.failureReason,
+          subscriptionId: o.subscriptionId,
+          subscriptionStatus: o.subscriptionStatus,
+          nextBillingDate: o.nextBillingDate,
+          statusHistory: o.statusHistory || [
+            {
+              status: o.status || "in_progress",
+              changedAt: o.createdAt || new Date().toISOString(),
+              changedBy: o.source || "system",
+              note: "Order created",
+            },
+          ],
+        }));
+        setOrders(mapped);
+      }
+    } catch {
+      setOrdersError("Unable to connect to order pipeline. Check network or reload.");
+    } finally {
+      if (!silent) setIsLoadingOrders(false);
+    }
+  }, [user]);
+
+  // Initial fetch and Real-Time Event Subscription
+  useEffect(() => {
+    loadOrders();
+    loadCatalogs();
+
+    // Set up Real-Time polling interval (every 5 seconds) to catch changes
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        loadOrders(true);
+      }
+    }, 5000);
+
+    // Custom event listener for instant local sync across tabs/modals
+    const handleOrderEvent = () => {
+      loadOrders(true);
+    };
+    window.addEventListener("sutra_orders_changed", handleOrderEvent);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("sutra_orders_changed", handleOrderEvent);
+    };
+  }, [loadOrders, loadCatalogs]);
+
+  // Load saved draft on mount
+  const loadDraft = useCallback(async () => {
+    try {
+      const clientUid = user?.uid || "usr_mock_001";
+      const res = await fetch(`/api/orders/drafts?clientUid=${encodeURIComponent(clientUid)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.draft) {
+          setSavedDraftData(data.draft);
+          setHasSavedDraft(true);
+        }
+      }
+    } catch {
+      // Ignore draft loading error
+    }
+  }, [user]);
+
+  useEffect(() => {
+    loadDraft();
+  }, [loadDraft]);
+
+  // Primary selected service calculation
+  const primarySelectedServiceId = useMemo(() => {
+    const found = Object.keys(selectedServices).find((k) => (selectedServices[k] || 0) > 0);
+    return found || servicesCatalog[0]?.id || "img-creation";
+  }, [selectedServices, servicesCatalog]);
+
+  const activeServiceDetails = useMemo(() => {
+    return (
+      servicesCatalog.find((s) => s.id === primarySelectedServiceId) ||
+      servicesCatalog[0] ||
+      SEED_CATALOG_SERVICES[0]
     );
-    setFeedbackSuccess("Deliverable approved! High-resolution masters have been finalized in your Google Drive vault.");
-    setTimeout(() => {
-      setInspectingOrder(null);
-      setFeedbackSuccess("");
-    }, 1500);
+  }, [servicesCatalog, primarySelectedServiceId]);
+
+  // Live price calculation for Individual Services
+  const liveServicesTotal = useMemo(() => {
+    let total = 0;
+    for (const [srvId, qty] of Object.entries(selectedServices)) {
+      if (qty > 0) {
+        const item = servicesCatalog.find((s) => s.id === srvId);
+        if (item) {
+          const unitPrice = item.startingPrice ?? (item as any).price ?? 5499;
+          total += unitPrice * qty;
+        }
+      }
+    }
+    return total;
+  }, [selectedServices, servicesCatalog]);
+
+  const selectedServicesCount = useMemo(() => {
+    return Object.values(selectedServices).reduce((sum, q) => sum + (q > 0 ? q : 0), 0);
+  }, [selectedServices]);
+
+  // Live price calculation for Monthly Plan
+  const selectedPlan = useMemo(() => {
+    return plansCatalog.find((p) => p.id === selectedPlanId) || plansCatalog[0];
+  }, [plansCatalog, selectedPlanId]);
+
+  const livePlanTotal = useMemo(() => {
+    if (!selectedPlan) return 0;
+    const base = selectedPlan.monthlyPrice ?? selectedPlan.price ?? 5999;
+    if (billingCycle === "quarterly") {
+      return Math.round(base * 3 * 0.9); // 10% savings
+    }
+    if (billingCycle === "annual") {
+      return Math.round(base * 12 * 0.8); // 20% savings
+    }
+    return base;
+  }, [selectedPlan, billingCycle]);
+
+  // Tab Filtering Computations (Active vs History)
+  const activeOrders = useMemo(() => {
+    return orders.filter((o) =>
+      [
+        "pending_payment",
+        "paid",
+        "brief_review",
+        "in_production",
+        "in_progress",
+        "draft_delivered",
+        "awaiting_approval",
+        "delivered",
+        "revision_requested",
+        "pending",
+        "confirmed",
+        "on_hold",
+        "trial",
+        "active",
+      ].includes(o.status)
+    );
+  }, [orders]);
+
+  const historyOrders = useMemo(() => {
+    return orders.filter((o) =>
+      ["completed", "approved", "cancelled", "refunded", "closed", "expired"].includes(o.status)
+    );
+  }, [orders]);
+
+  const filteredOrders = useMemo(() => {
+    if (activeFilterTab === "active") return activeOrders;
+    if (activeFilterTab === "history") return historyOrders;
+    return orders;
+  }, [activeFilterTab, activeOrders, historyOrders, orders]);
+
+  // Auto-Save Draft Debounced to Firebase
+  useEffect(() => {
+    if (!isNewOrderOpen || flowStep === "choose_type" || flowStep === "success") return;
+    const timeout = setTimeout(async () => {
+      try {
+        setDraftStatus("Saving draft...");
+        const clientUid = user?.uid || "usr_mock_001";
+        await fetch("/api/orders/drafts", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-user-id": clientUid,
+          },
+          body: JSON.stringify({
+            clientUid,
+            orderType,
+            selectedServices,
+            selectedPlanId,
+            billingCycle,
+            commissionTitle,
+            requirements,
+            briefAnswers,
+            preferredTimeline,
+            targetKickoffDate,
+            clientContact,
+            driveLink,
+            uploadedFiles,
+          }),
+        });
+        setDraftStatus("Draft auto-saved to cloud");
+        setHasSavedDraft(true);
+        setTimeout(() => setDraftStatus(""), 3000);
+      } catch {
+        setDraftStatus("");
+      }
+    }, 1200);
+
+    return () => clearTimeout(timeout);
+  }, [
+    isNewOrderOpen,
+    flowStep,
+    orderType,
+    selectedServices,
+    selectedPlanId,
+    billingCycle,
+    commissionTitle,
+    requirements,
+    briefAnswers,
+    preferredTimeline,
+    targetKickoffDate,
+    clientContact,
+    driveLink,
+    uploadedFiles,
+    user,
+  ]);
+
+  // Handle toggling / selecting an individual service
+  const handleToggleService = (srvId: string) => {
+    setSelectedServices((prev) => {
+      const copy = { ...prev };
+      if (copy[srvId]) {
+        delete copy[srvId];
+      } else {
+        copy[srvId] = 1;
+      }
+      return copy;
+    });
   };
 
-  const handleRequestRevision = (orderId: string) => {
-    if (!revisionNotes) return;
-    setOrders((prev) =>
-      prev.map((o) =>
-        o.id === orderId
-          ? {
-              ...o,
-              status: "revision_requested",
-              statusLabel: "Revision in Progress",
-              revisionRound: o.revisionRound + 1,
-              notes: revisionNotes,
-            }
-          : o
-      )
+  const handleUpdateQuantity = (srvId: string, delta: number) => {
+    setSelectedServices((prev) => {
+      const current = prev[srvId] || 0;
+      const next = current + delta;
+      if (next <= 0) {
+        const copy = { ...prev };
+        delete copy[srvId];
+        return copy;
+      }
+      return { ...prev, [srvId]: Math.min(next, 50) };
+    });
+  };
+
+  // Open New Order Flow from Scratch
+  const handleOpenNewOrder = () => {
+    setFlowStep("choose_type");
+    setSelectedServices({ "img-creation": 1 });
+    setSelectedPlanId("studio-growth");
+    setBillingCycle("monthly");
+    setCommissionTitle("");
+    setRequirements("");
+    setBriefAnswers({});
+    setTargetKickoffDate("");
+    setSubmitError(null);
+    setCreatedOrderResult(null);
+    setIsNewOrderOpen(true);
+  };
+
+  // Resume Existing Draft from Firebase
+  const handleResumeDraft = () => {
+    if (!savedDraftData) return;
+    setOrderType(savedDraftData.orderType || "service");
+    setSelectedServices(
+      savedDraftData.selectedServices && Object.keys(savedDraftData.selectedServices).length > 0
+        ? savedDraftData.selectedServices
+        : { "img-creation": 1 }
     );
-    setFeedbackSuccess(`Revision round submitted to Art Director. Estimated turnaround: 24 hours.`);
-    setTimeout(() => {
-      setIsRevisionMode(false);
-      setRevisionNotes("");
-      setInspectingOrder(null);
-      setFeedbackSuccess("");
-    }, 1500);
+    setSelectedPlanId(savedDraftData.selectedPlanId || "studio-growth");
+    setBillingCycle(savedDraftData.billingCycle || "monthly");
+    setCommissionTitle(savedDraftData.commissionTitle || "");
+    setRequirements(savedDraftData.requirements || "");
+    setBriefAnswers(savedDraftData.briefAnswers || {});
+    setPreferredTimeline(savedDraftData.preferredTimeline || "Standard Studio SLA (48-72h)");
+    setTargetKickoffDate(savedDraftData.targetKickoffDate || "");
+    if (savedDraftData.clientContact) {
+      setClientContact(savedDraftData.clientContact);
+    }
+    setDriveLink(savedDraftData.driveLink || "");
+    setUploadedFiles(savedDraftData.uploadedFiles || []);
+
+    if (savedDraftData.orderType === "service") {
+      setFlowStep("service_details");
+    } else {
+      setFlowStep("plan_details");
+    }
+    setIsNewOrderOpen(true);
+  };
+
+  // Mock file attachment handler with size check
+  const handleAddFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const newItems = Array.from(files).map((f) => ({
+        name: f.name,
+        size: `${(f.size / (1024 * 1024)).toFixed(1)} MB`,
+      }));
+      setUploadedFiles((prev) => [...prev, ...newItems]);
+    }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // Submit New Order with DOUBLE-SUBMIT PROTECTION & SERVER PRICE RECOMPUTATION
+  const handleSubmitNewOrder = async () => {
+    if (isSubmittingOrder) return; // Prevent double-submit
+
+    setIsSubmittingOrder(true);
+    setSubmitError(null);
+
+    try {
+      const payload: any = {
+        type: orderType,
+        clientUid: user?.uid || "usr_mock_001",
+        clientId: user?.uid || "usr_mock_001",
+        clientName: clientContact.name,
+        clientEmail: clientContact.email,
+        clientPhone: clientContact.phone,
+        requirements,
+        attachments: [
+          ...uploadedFiles.map((f) => ({ name: f.name, size: f.size })),
+          ...(driveLink ? [{ name: "External Vault Drive Folder", url: driveLink }] : []),
+        ],
+        source: "dashboard",
+        driveFolderId: profile?.driveFolderId || "",
+      };
+
+      if (orderType === "service") {
+        const items = Object.entries(selectedServices)
+          .filter(([, qty]) => qty > 0)
+          .map(([serviceId, quantity]) => ({
+            serviceId,
+            quantity,
+          }));
+
+        if (items.length === 0) {
+          setSubmitError("Please select at least one creative service.");
+          setIsSubmittingOrder(false);
+          return;
+        }
+
+        payload.title = commissionTitle.trim() || undefined;
+        payload.items = items;
+        payload.preferredTimeline = preferredTimeline;
+      } else {
+        payload.planId = selectedPlanId;
+        payload.billingCycle = billingCycle;
+        payload.title = commissionTitle.trim() || `${selectedPlan?.name || "Studio Retainer"} Package`;
+        payload.targetKickoffDate = targetKickoffDate || undefined;
+      }
+
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": user?.uid || "usr_mock_001",
+          "x-user-role": user?.role || "client",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to create order on server.");
+      }
+
+      // Clear draft upon successful creation
+      try {
+        const clientUid = user?.uid || "usr_mock_001";
+        fetch(`/api/orders/drafts?clientUid=${encodeURIComponent(clientUid)}`, {
+          method: "DELETE",
+        });
+        setHasSavedDraft(false);
+        setSavedDraftData(null);
+      } catch {
+        // Ignore
+      }
+
+      // Order registered on server with pending_payment status!
+      const newOrderCreated: OrderItem = {
+        id: data.order.id,
+        code: data.order.code || `#ORD-${String(data.order.id).slice(-3)}`,
+        orderNumber: data.order.orderNumber || data.order.code,
+        title: data.order.title,
+        service: data.order.service,
+        status: "pending_payment",
+        statusLabel: "Pending Payment via Razorpay",
+        deliverablePreview: data.order.deliverablePreview || "Brief registered in Firestore. Ready for Razorpay payment.",
+        driveFolder: data.order.driveFolderId || "drive_fld_sutra_001/COMMISSIONS",
+        driveFolderPath: data.order.driveFolderPath || "drive_fld_sutra_001/COMMISSIONS",
+        revisionRound: 0,
+        maxRevisions: 2,
+        updatedAt: "Just now",
+        createdAt: data.order.createdAt,
+        requirements: data.order.requirements,
+        notes: data.order.requirements,
+        type: data.order.type,
+        items: data.order.items,
+        totalAmount: data.order.totalAmount,
+        billingCycle: data.order.billingCycle,
+        attachments: data.order.attachments,
+        source: "dashboard",
+        clientName: data.order.clientName,
+        clientEmail: data.order.clientEmail,
+        clientPhone: data.order.clientPhone,
+        paymentStatus: "unpaid",
+        razorpayOrderId: data.razorpay?.orderId,
+        subscriptionId: data.order.subscriptionId,
+        statusHistory: data.order.statusHistory || [
+          {
+            status: "pending_payment",
+            changedAt: new Date().toISOString(),
+            changedBy: "client",
+            note: "Order placed with server-verified catalog pricing. Awaiting Razorpay payment.",
+          },
+        ],
+      };
+
+      setOrders((prev) => [newOrderCreated, ...prev.filter((o) => o.id !== newOrderCreated.id)]);
+
+      // Open Razorpay Branded Checkout Modal
+      if (data.razorpay && data.razorpay.orderId) {
+        await openRazorpayCheckout({
+          key: data.razorpay.keyId,
+          amount: data.razorpay.amountInPaise,
+          currency: data.razorpay.currency || "INR",
+          name: "Sutra Studio",
+          description: `${newOrderCreated.title} (${newOrderCreated.orderNumber})`,
+          order_id: data.razorpay.orderId,
+          prefill: {
+            name: clientContact.name,
+            email: clientContact.email,
+            contact: clientContact.phone,
+          },
+          theme: {
+            color: "#5C3A1E",
+          },
+          onSuccess: async (rzpRes) => {
+            try {
+              const verifyRes = await fetch("/api/payments/verify", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "x-user-id": user?.uid || "usr_mock_001",
+                  "x-user-role": user?.role || "client",
+                },
+                body: JSON.stringify({
+                  orderId: data.order.id,
+                  razorpay_order_id: rzpRes.razorpay_order_id,
+                  razorpay_payment_id: rzpRes.razorpay_payment_id,
+                  razorpay_signature: rzpRes.razorpay_signature,
+                  paymentMethod: "razorpay_checkout",
+                }),
+              });
+
+              const verifyData = await verifyRes.json();
+              if (verifyRes.ok && verifyData.success) {
+                const verifiedOrder: OrderItem = {
+                  ...newOrderCreated,
+                  status: "paid",
+                  statusLabel: "Payment Verified — In Studio Queue",
+                  paymentStatus: "paid",
+                  razorpayOrderId: rzpRes.razorpay_order_id,
+                  razorpayPaymentId: rzpRes.razorpay_payment_id,
+                  amountPaid: data.order.totalAmount,
+                  paidAt: new Date().toISOString(),
+                };
+                setCreatedOrderResult(verifiedOrder);
+                setOrders((prev) => [verifiedOrder, ...prev.filter((o) => o.id !== verifiedOrder.id)]);
+                setFlowStep("success");
+                window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
+              } else {
+                setSubmitError(verifyData.error || "Payment verification failed on server.");
+              }
+            } catch (vErr: any) {
+              setSubmitError(`Signature verification failed: ${vErr.message}`);
+            }
+          },
+          onDismiss: () => {
+            setCreatedOrderResult(newOrderCreated);
+            setFlowStep("dismissed");
+            window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
+          },
+          onFailure: (rzpErr) => {
+            setSubmitError(`Payment failed: ${rzpErr.description || rzpErr.reason || "Gateway error"}`);
+          },
+        });
+      } else {
+        setCreatedOrderResult(newOrderCreated);
+        setFlowStep("success");
+      }
+
+      window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
+    } catch (err: any) {
+      setSubmitError(err.message || "An unexpected error occurred while placing your order.");
+    } finally {
+      setIsSubmittingOrder(false);
+    }
+  };
+
+  // Retry Razorpay Payment for any Unpaid / Pending Commission
+  const handleRetryPayment = async (order: OrderItem) => {
+    setRetryingOrderId(order.id);
+    try {
+      const res = await fetch("/api/payments/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": user?.uid || "usr_mock_001",
+          "x-user-role": user?.role || "client",
+        },
+        body: JSON.stringify({
+          orderId: order.id,
+          amountINR: order.totalAmount,
+          customerEmail: order.clientEmail || user?.email,
+          description: order.title,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.razorpayOrderId) {
+        throw new Error(data.error || "Failed to initialize Razorpay checkout intent.");
+      }
+
+      await openRazorpayCheckout({
+        key: data.keyId,
+        amount: data.amountInPaise,
+        currency: data.currency || "INR",
+        name: "Sutra Studio",
+        description: `${order.title} (${order.orderNumber || order.code})`,
+        order_id: data.razorpayOrderId,
+        prefill: {
+          name: order.clientName || user?.displayName || "Studio Client",
+          email: order.clientEmail || user?.email || "client@sutrastudio.com",
+          contact: order.clientPhone || "",
+        },
+        theme: {
+          color: "#5C3A1E",
+        },
+        onSuccess: async (rzpRes) => {
+          try {
+            const verifyRes = await fetch("/api/payments/verify", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-user-id": user?.uid || "usr_mock_001",
+                "x-user-role": user?.role || "client",
+              },
+              body: JSON.stringify({
+                orderId: order.id,
+                razorpay_order_id: rzpRes.razorpay_order_id,
+                razorpay_payment_id: rzpRes.razorpay_payment_id,
+                razorpay_signature: rzpRes.razorpay_signature,
+              }),
+            });
+            const verifyData = await verifyRes.json();
+            if (verifyRes.ok && verifyData.success) {
+              setOrders((prev) =>
+                prev.map((o) =>
+                  o.id === order.id
+                    ? {
+                        ...o,
+                        status: "paid",
+                        statusLabel: "Payment Verified — In Studio Queue",
+                        paymentStatus: "paid",
+                        razorpayOrderId: rzpRes.razorpay_order_id,
+                        razorpayPaymentId: rzpRes.razorpay_payment_id,
+                        amountPaid: order.totalAmount,
+                        paidAt: new Date().toISOString(),
+                      }
+                    : o
+                )
+              );
+              window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
+            }
+          } catch (vErr) {
+            console.error("Retry verification error:", vErr);
+          }
+        },
+        onFailure: (err) => {
+          alert(`Payment attempt unsuccessful: ${err.description || err.reason}`);
+        },
+      });
+    } catch (err: any) {
+      alert(`Unable to open Razorpay checkout: ${err.message}`);
+    } finally {
+      setRetryingOrderId(null);
+    }
+  };
+
+  // Client Cancellation of Monthly Subscription or Free Trial
+  const handleCancelPlan = async (orderId: string, isTrial?: boolean) => {
+    const confirmMsg = isTrial
+      ? "Are you sure you wish to cancel your 3-Day Free Trial? No charge will be incurred."
+      : "Are you sure you wish to cancel this recurring monthly studio retainer? Access remains active until the end of your billing cycle.";
+
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      const res = await fetch("/api/payments/cancel-subscription", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": user?.uid || "usr_mock_001",
+          "x-user-role": user?.role || "client",
+        },
+        body: JSON.stringify({
+          orderId,
+          isTrialCancel: Boolean(isTrial),
+        }),
+      });
+
+      if (res.ok) {
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.id === orderId
+              ? {
+                  ...o,
+                  status: isTrial ? "cancelled" : o.status,
+                  statusLabel: isTrial ? "Free Trial Cancelled" : o.statusLabel,
+                  subscriptionStatus: "cancelled",
+                  autoRenew: false,
+                }
+              : o
+          )
+        );
+        window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
+      }
+    } catch {
+      alert("Failed to cancel subscription. Please contact your Art Director.");
+    }
+  };
+
+  // Client Renewal of Monthly Subscription
+  const handleRenewSubscription = async (order: OrderItem) => {
+    setRetryingOrderId(order.id);
+    try {
+      const res = await fetch("/api/payments/renew", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": user?.uid || "usr_mock_001",
+          "x-user-role": user?.role || "client",
+        },
+        body: JSON.stringify({ orderId: order.id }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to initialize renewal.");
+
+      await openRazorpayCheckout({
+        order_id: data.razorpay.orderId,
+        amount: data.razorpay.amountInPaise,
+        currency: data.razorpay.currency,
+        key: data.razorpay.keyId,
+        name: "SUTRA STUDIO",
+        description: `Monthly Renewal: ${order.title}`,
+        prefill: {
+          name: clientContact.name || user?.displayName || "Studio Client",
+          email: clientContact.email || user?.email || "client@sutrastudio.com",
+          contact: clientContact.phone || "",
+        },
+        onSuccess: async (rzpRes) => {
+          try {
+            await fetch("/api/payments/verify", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-user-id": user?.uid || "usr_mock_001",
+                "x-user-role": user?.role || "client",
+              },
+              body: JSON.stringify({
+                orderId: order.id,
+                razorpay_order_id: rzpRes.razorpay_order_id,
+                razorpay_payment_id: rzpRes.razorpay_payment_id,
+                razorpay_signature: rzpRes.razorpay_signature,
+              }),
+            });
+            window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
+          } catch (vErr) {
+            console.error("Renewal verification error:", vErr);
+          }
+        },
+        onFailure: (err) => {
+          alert(`Renewal payment unsuccessful: ${err.description || err.reason}`);
+        },
+      });
+    } catch (err: any) {
+      alert(`Unable to open Razorpay checkout for renewal: ${err.message}`);
+    } finally {
+      setRetryingOrderId(null);
+    }
+  };
+
+  // Deliverable 1-Click Approval Workflow connected to backend
+  const handleApproveDeliverable = async (orderId: string) => {
+    setIsSubmittingOrder(true);
+    try {
+      const res = await fetch("/api/orders/review", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": user?.uid || "usr_mock_001",
+          "x-user-role": "client",
+        },
+        body: JSON.stringify({
+          orderId,
+          action: "approve",
+          clientName: user?.displayName || "Studio Client",
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Approval failed.");
+      }
+
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId
+            ? {
+                ...o,
+                status: "completed",
+                statusLabel: "Approved & Vaulted",
+                statusHistory: data.order?.statusHistory || [
+                  ...(o.statusHistory || []),
+                  {
+                    status: "completed",
+                    changedAt: new Date().toISOString(),
+                    changedBy: user?.displayName || "client",
+                    note: "Deliverables approved by client. Final master vaulted to Google Drive.",
+                  },
+                ],
+              }
+            : o
+        )
+      );
+      setFeedbackSuccess(
+        "Deliverable approved! High-resolution masters have been finalized in your Google Drive vault."
+      );
+      window.dispatchEvent(new Event("sutra_orders_changed"));
+      setTimeout(() => {
+        setInspectingOrder(null);
+        setFeedbackSuccess("");
+      }, 1500);
+    } catch (err: any) {
+      alert(`Approval error: ${err.message}`);
+    } finally {
+      setIsSubmittingOrder(false);
+    }
+  };
+
+  // Structured Revision Request with 24-hr turnaround SLA connected to backend
+  const handleRequestRevision = async (orderId: string) => {
+    if (!revisionNotes?.trim()) {
+      alert("Please enter revision details or specific changes required.");
+      return;
+    }
+    setIsSubmittingOrder(true);
+    try {
+      const res = await fetch("/api/orders/review", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": user?.uid || "usr_mock_001",
+          "x-user-role": "client",
+        },
+        body: JSON.stringify({
+          orderId,
+          action: "revision",
+          comment: revisionNotes,
+          clientName: user?.displayName || "Studio Client",
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Revision request failed.");
+      }
+
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId
+            ? {
+                ...o,
+                status: "revision_requested",
+                statusLabel: "Revision in Progress",
+                revisionRound: (o.revisionRound || 0) + 1,
+                notes: revisionNotes,
+                statusHistory: data.order?.statusHistory || [
+                  ...(o.statusHistory || []),
+                  {
+                    status: "revision_requested",
+                    changedAt: new Date().toISOString(),
+                    changedBy: user?.displayName || "client",
+                    note: `Client Revision Pass: ${revisionNotes}`,
+                  },
+                ],
+              }
+            : o
+        )
+      );
+      setFeedbackSuccess(
+        `Revision request submitted to Art Director. Estimated turnaround: 24 hours.`
+      );
+      window.dispatchEvent(new Event("sutra_orders_changed"));
+      setTimeout(() => {
+        setIsRevisionMode(false);
+        setRevisionNotes("");
+        setInspectingOrder(null);
+        setFeedbackSuccess("");
+      }, 1500);
+    } catch (err: any) {
+      alert(`Revision request error: ${err.message}`);
+    } finally {
+      setIsSubmittingOrder(false);
+    }
+  };
+
+  // Helper to render status badge with semantic styling
+  const renderStatusBadge = (status: OrderItem["status"], label: string) => {
+    let badgeVariant: "gold" | "completed" | "progress" | "neutral" = "neutral";
+    let customClasses = "bg-[#FAF9F5] text-[#5C3A1E] border-[#EADFCB]";
+
+    if (status === "completed" || status === "paid" || status === "approved") {
+      badgeVariant = "completed";
+      customClasses = "bg-[#EDF7F0] text-[#1B663E] border-[#C8E7D2]";
+    } else if (status === "delivered" || status === "awaiting_approval") {
+      badgeVariant = "gold";
+      customClasses = "bg-[#FFF9EE] text-[#8C6D23] border-[#E7D6A7]";
+    } else if (status === "in_progress") {
+      badgeVariant = "progress";
+      customClasses = "bg-[#EFF6FF] text-[#1D4ED8] border-[#BFDBFE]";
+    } else if (status === "revision_requested") {
+      badgeVariant = "progress";
+      customClasses = "bg-[#FAF5FF] text-[#6B21A8] border-[#E9D5FF]";
+    } else if (status === "pending" || status === "pending_payment") {
+      badgeVariant = "gold";
+      customClasses = "bg-[#FFFDF0] text-[#9A6700] border-[#F1E0A6]";
+    } else if (status === "cancelled") {
+      customClasses = "bg-[#FEF2F2] text-[#991B1B] border-[#FECACA]";
+    }
+
+    return (
+      <Badge variant={badgeVariant} size="sm" className={customClasses}>
+        {label}
+      </Badge>
+    );
   };
 
   return (
@@ -223,7 +1260,7 @@ export default function OrdersPage() {
                 Orders, Approvals & Revisions
               </h1>
               <p className="text-xs text-[#64748B] mt-0.5">
-                Track creative workflows, review draft deliverables, and request revision passes.
+                Track creative workflows, review draft deliverables, and place verified commissions.
               </p>
             </div>
 
@@ -238,415 +1275,1608 @@ export default function OrdersPage() {
                 <span>View Website</span>
               </Link>
 
-              {/* Navigation Tabs */}
-              <div className="inline-flex rounded-full bg-[#FFFDF9] border border-[#EADFCB] p-1 shadow-xs">
+              <NotificationBell />
+
+              {/* Primary New Order CTA */}
               <button
                 type="button"
-                onClick={() => setActiveTab("orders")}
-                className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all cursor-pointer ${
-                  activeTab === "orders"
-                    ? "bg-[#5C3A1E] text-white shadow-xs"
-                    : "text-[#64748B] hover:text-[#0F172A]"
-                }`}
+                onClick={handleOpenNewOrder}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#5C3A1E] hover:bg-[#432A15] text-white text-xs font-semibold shadow-xs hover:shadow-warm transition-all cursor-pointer touch-target min-h-[36px]"
               >
-                Active Orders ({orders.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("create")}
-                className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all cursor-pointer flex items-center gap-1.5 ${
-                  activeTab === "create"
-                    ? "bg-[#5C3A1E] text-white shadow-xs"
-                    : "text-[#64748B] hover:text-[#0F172A]"
-                }`}
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>New Commission</span>
+                <Plus className="w-4 h-4 stroke-[2.5]" />
+                <span>New Order</span>
               </button>
             </div>
           </div>
-        </div>
 
           {/* ========================================================
-              TAB 1: ORDERS & APPROVALS VIEW
+              ORDERS & APPROVALS LIST VIEW
               ======================================================== */}
-          {activeTab === "orders" && (
-            <div className="space-y-6">
-              {/* Approval Notice Banner if any orders need approval */}
-              {orders.some((o) => o.status === "awaiting_approval") && (
-                <div className="p-4 rounded-2xl bg-[#FFFDF9] border-2 border-[#D4A35A] shadow-xs flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-[#F8F5EF] text-[#D4A35A] flex items-center justify-center shrink-0">
-                      <Sparkles className="w-5 h-5 text-[#D4A35A]" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-serif font-semibold text-[#0F172A]">
-                        Action Required: 1 Deliverable Awaiting Your Review
-                      </h4>
-                      <p className="text-xs text-[#64748B]">
-                        Inspect the 4K render pass below to approve for final Google Drive release or request revisions.
-                      </p>
-                    </div>
+          <div className="space-y-6">
+            {/* Resume Draft Banner if client has an unfinished draft */}
+            {hasSavedDraft && savedDraftData && (
+              <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#D4A35A] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-[#5C3A1E] flex items-center justify-center shrink-0">
+                    <Sparkles className="w-5 h-5 text-[#A98B57]" />
                   </div>
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#5C3A1E]">
+                      Unfinished Commission Draft Available
+                    </h4>
+                    <p className="text-[11px] text-[#64748B]">
+                      You have an active draft for{" "}
+                      <strong>
+                        {savedDraftData.orderType === "service"
+                          ? "Individual Services"
+                          : "Monthly Retainer"}
+                      </strong>{" "}
+                      saved to cloud.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
                   <Button
                     variant="primary"
                     size="sm"
-                    onClick={() => {
-                      const pending = orders.find((o) => o.status === "awaiting_approval");
-                      if (pending) setInspectingOrder(pending);
-                    }}
+                    onClick={handleResumeDraft}
+                    leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
                   >
-                    Review Deliverable
+                    Resume Draft
                   </Button>
-                </div>
-              )}
-
-              {/* Orders List Table */}
-              <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] divide-y divide-[#EADFCB]/60 shadow-xs overflow-hidden">
-                {orders.map((ord) => (
-                  <div
-                    key={ord.id}
-                    className="p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6 hover:bg-[#FAF9F5]/50 transition-colors"
-                  >
-                    <div className="space-y-2 flex-1">
-                      <div className="flex flex-wrap items-center gap-2.5">
-                        <span className="text-xs font-mono font-bold text-[#5C3A1E]">
-                          {ord.code}
-                        </span>
-                        <Badge
-                          variant={
-                            ord.status === "completed"
-                              ? "completed"
-                              : ord.status === "awaiting_approval"
-                              ? "gold"
-                              : ord.status === "revision_requested"
-                              ? "progress"
-                              : "neutral"
-                          }
-                          size="sm"
-                        >
-                          {ord.statusLabel}
-                        </Badge>
-                        <span className="text-xs text-[#94A3B8]">• {ord.service}</span>
-                        <span className="text-[11px] font-medium text-[#64748B] bg-[#F8F5EF] px-2 py-0.5 rounded-full border border-[#EADFCB]">
-                          Round {ord.revisionRound} of {ord.maxRevisions} Revisions
-                        </span>
-                      </div>
-
-                      <h3 className="font-serif text-lg font-semibold text-[#0F172A]">
-                        {ord.title}
-                      </h3>
-
-                      <p className="text-xs text-[#64748B] leading-relaxed max-w-3xl">
-                        {ord.deliverablePreview}
-                      </p>
-
-                      <div className="flex items-center gap-4 text-[11px] text-[#94A3B8] pt-1">
-                        <span className="flex items-center gap-1">
-                          <HardDrive className="w-3.5 h-3.5 text-[#5C3A1E]" />
-                          <span>Vault: {ord.driveFolder}</span>
-                        </span>
-                        <span>• Updated {ord.updatedAt}</span>
-                      </div>
-                    </div>
-
-                    {/* Order Action Triggers */}
-                    <div className="flex items-center gap-2.5 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setInspectingOrder(ord);
-                          setIsRevisionMode(false);
-                        }}
-                        className="px-4 py-2 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#FFFDF9] transition-all cursor-pointer flex items-center gap-1.5"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>Inspect & Review</span>
-                      </button>
-
-                      {ord.status === "awaiting_approval" && (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={() => handleApproveDeliverable(ord.id)}
-                          leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
-                        >
-                          Approve
-                        </Button>
-                      )}
-
-                      {ord.status === "completed" && (
-                        <Link href="/media">
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            leftIcon={<Download className="w-3.5 h-3.5 text-[#5C3A1E]" />}
-                          >
-                            Vault Master
-                          </Button>
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ========================================================
-              TAB 2: CREATE NEW COMMISSION (4-STEP WIZARD)
-              ======================================================== */}
-          {activeTab === "create" && (
-            <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-warm p-6 sm:p-10 space-y-8">
-              {/* Stepper Progress Bar */}
-              <div className="flex items-center justify-between pb-8 border-b border-[#EADFCB] max-w-xl mx-auto">
-                {[
-                  { num: 1, label: "Service" },
-                  { num: 2, label: "Brief" },
-                  { num: 3, label: "Drive Assets" },
-                  { num: 4, label: "Confirm" },
-                ].map((s) => (
-                  <div key={s.num} className="flex items-center gap-2">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                        step === s.num
-                          ? "bg-[#5C3A1E] text-white shadow-xs"
-                          : step > s.num
-                          ? "bg-[#D4A35A] text-[#0F172A]"
-                          : "bg-[#F8F5EF] text-[#94A3B8] border border-[#EADFCB]"
-                      }`}
-                    >
-                      {step > s.num ? <Check className="w-4 h-4 stroke-[3]" /> : s.num}
-                    </div>
-                    <span
-                      className={`text-xs font-medium hidden sm:inline ${
-                        step >= s.num ? "text-[#0F172A]" : "text-[#94A3B8]"
-                      }`}
-                    >
-                      {s.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Step 1: Select Capability */}
-              {step === 1 && (
-                <div className="space-y-6">
-                  <div className="text-center max-w-md mx-auto">
-                    <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
-                      Select Studio Capability
-                    </h3>
-                    <p className="text-xs text-[#64748B] mt-1">
-                      Choose from our 12 specialized disciplines to route to the correct workflow.
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {SUTRA_SERVICES.map((srv) => {
-                      const isSelected = selectedService === srv.id;
-                      return (
-                        <div
-                          key={srv.id}
-                          onClick={() => setSelectedService(srv.id)}
-                          className={`p-4 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center justify-between ${
-                            isSelected
-                              ? "bg-[#FDF9F0] border-[#D4A35A] shadow-xs"
-                              : "bg-[#FFFFFF] border-[#EADFCB] hover:border-[#D4A35A]/50"
-                          }`}
-                        >
-                          <span className="text-xs font-semibold text-[#0F172A] mt-2">
-                            {srv.name}
-                          </span>
-                          <span className="text-[10px] text-[#64748B] mt-1">
-                            {srv.tagline}
-                          </span>
-                          <span className="text-[10px] font-bold text-[#D4A35A] mt-3">
-                            From {srv.startingPrice}
-                          </span>
-                        </div>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setHasSavedDraft(false);
+                      setSavedDraftData(null);
+                      const clientUid = user?.uid || "usr_mock_001";
+                      await fetch(
+                        `/api/orders/drafts?clientUid=${encodeURIComponent(clientUid)}`,
+                        { method: "DELETE" }
                       );
-                    })}
-                  </div>
+                    }}
+                    className="px-3 py-1.5 rounded-xl text-xs text-[#64748B] hover:text-[#DC2626] hover:bg-[#FEF2F2] transition-colors cursor-pointer"
+                  >
+                    Dismiss
+                  </button>
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Step 2: Brief Details */}
-              {step === 2 && (
-                <div className="space-y-6 max-w-xl mx-auto">
-                  <div className="text-center">
-                    <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
-                      {currentService.name} Specifications
-                    </h3>
-                    <p className="text-xs text-[#64748B] mt-1">
-                      Define your project goals, dimensions, and creative requirements.
-                    </p>
+            {/* Approval Notice Banner if any orders need approval */}
+            {orders.some((o) => o.status === "delivered" || o.status === "awaiting_approval") && (
+              <div className="p-4 rounded-2xl bg-[#FFFDF9] border-2 border-[#D4A35A] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-[#F8F5EF] text-[#D4A35A] flex items-center justify-center shrink-0">
+                    <Sparkles className="w-5 h-5 text-[#D4A35A]" />
                   </div>
-
-                  <Input
-                    label="Project Title / Campaign Name *"
-                    placeholder="e.g. Autumn Living Spatial Render Suite"
-                    value={orderDetails.title}
-                    onChange={(e) =>
-                      setOrderDetails({ ...orderDetails, title: e.target.value })
-                    }
-                  />
-
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#0F172A]">
-                      Creative Brief & Scope *
-                    </label>
-                    <textarea
-                      rows={4}
-                      placeholder="Describe target audience, lighting mood, color palette preferences, or specific deliverables..."
-                      value={orderDetails.brief}
-                      onChange={(e) =>
-                        setOrderDetails({ ...orderDetails, brief: e.target.value })
-                      }
-                      className="w-full rounded-xl bg-[#FFFDF9] border border-[#EADFCB] px-4 py-2.5 text-xs text-[#0F172A] focus:border-[#D4A35A] focus:outline-none focus:ring-2 focus:ring-[#D4A35A]/20"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Reference Assets */}
-              {step === 3 && (
-                <div className="space-y-6 max-w-xl mx-auto">
-                  <div className="text-center">
-                    <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
-                      References & Asset Uploads
-                    </h3>
-                    <p className="text-xs text-[#64748B] mt-1">
-                      Assets will automatically sync to your private Google Drive vault folder.
-                    </p>
-                  </div>
-
-                  <div className="border-2 border-dashed border-[#EADFCB] rounded-2xl p-8 text-center bg-[#FAF9F5] space-y-2">
-                    <HardDrive className="w-8 h-8 text-[#5C3A1E] mx-auto opacity-70" />
-                    <p className="text-sm font-semibold text-[#0F172A]">
-                      Upload Moodboards, CAD or Logo Files
-                    </p>
+                  <div>
+                    <h4 className="text-sm font-serif font-semibold text-[#0F172A]">
+                      Action Required: Deliverable Awaiting Your Review
+                    </h4>
                     <p className="text-xs text-[#64748B]">
-                      PNG, JPG, PDF, glTF, USDZ up to 500MB (Encrypted storage)
+                      Inspect render passes below to approve for final Google Drive vault release or request revisions.
                     </p>
-                    <button
-                      type="button"
-                      className="mt-2 px-4 py-2 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A]"
-                    >
-                      Select Files to Upload
-                    </button>
                   </div>
-
-                  <Input
-                    label="Or paste Cloud / Google Drive Link"
-                    placeholder="https://drive.google.com/drive/folders/..."
-                    value={orderDetails.references}
-                    onChange={(e) =>
-                      setOrderDetails({ ...orderDetails, references: e.target.value })
-                    }
-                  />
                 </div>
-              )}
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => {
+                    const pending = orders.find((o) => o.status === "delivered" || o.status === "awaiting_approval");
+                    if (pending) setInspectingOrder(pending);
+                  }}
+                >
+                  Review Deliverable
+                </Button>
+              </div>
+            )}
 
-              {/* Step 4: Confirm Order */}
-              {step === 4 && (
-                <div className="space-y-6 max-w-xl mx-auto">
-                  {orderSubmitted ? (
-                    <div className="py-8 text-center space-y-4">
-                      <div className="w-14 h-14 rounded-full bg-[#EDF7F0] text-[#2E7D4F] flex items-center justify-center mx-auto">
-                        <CheckCircle2 className="w-8 h-8" />
-                      </div>
-                      <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
-                        Order Dispatched to Workflow Router
-                      </h3>
-                      <p className="text-xs text-[#64748B] leading-relaxed">
-                        Your order has been registered in Firestore and routed to your dedicated Art Director.
-                      </p>
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => {
-                          setStep(1);
-                          setOrderSubmitted(false);
-                          setActiveTab("orders");
-                        }}
+            {/* Loading State */}
+            {isLoadingOrders && (
+              <div className="p-12 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] text-center space-y-3">
+                <Loader2 className="w-6 h-6 animate-spin text-[#5C3A1E] mx-auto" />
+                <p className="text-xs font-medium text-[#64748B]">
+                  Connecting to real-time studio database...
+                </p>
+              </div>
+            )}
+
+            {/* Error State */}
+            {!isLoadingOrders && ordersError && (
+              <div className="p-6 rounded-2xl bg-[#FEF2F2] border border-[#FCA5A5] text-xs text-[#991B1B] flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0" />
+                  <span>{ordersError}</span>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => loadOrders()}>
+                  Retry
+                </Button>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!isLoadingOrders && !ordersError && orders.length === 0 && (
+              <div className="p-12 sm:p-16 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] text-center space-y-4 max-w-xl mx-auto shadow-xs">
+                <div className="w-14 h-14 rounded-full bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-center mx-auto text-[#5C3A1E]">
+                  <FileCheck className="w-7 h-7 text-[#A98B57]" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-serif text-xl font-semibold text-[#0F172A]">
+                    No Active Commissions
+                  </h3>
+                  <p className="text-xs text-[#64748B] max-w-sm mx-auto leading-relaxed">
+                    You have not placed any orders yet. Tap below to commission individual creative services or activate a monthly retainer package.
+                  </p>
+                </div>
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={handleOpenNewOrder}
+                  leftIcon={<Plus className="w-4 h-4" />}
+                >
+                  Commission New Order
+                </Button>
+              </div>
+            )}
+
+            {/* Tab Pill Switcher (Active Orders vs Order History vs All) */}
+            {!isLoadingOrders && orders.length > 0 && (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] shadow-2xs overflow-x-auto no-scrollbar">
+                  {[
+                    { id: "active", label: `Active Orders (${activeOrders.length})` },
+                    { id: "history", label: `Order History & Vault (${historyOrders.length})` },
+                    { id: "all", label: `All Commissions (${orders.length})` },
+                  ].map((tab) => {
+                    const isActive = activeFilterTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setActiveFilterTab(tab.id as any)}
+                        className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
+                          isActive
+                            ? "bg-[#5C3A1E] text-white shadow-xs"
+                            : "text-[#64748B] hover:text-[#0F172A] hover:bg-[#FAF9F5]"
+                        }`}
                       >
-                        Return to Orders List
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-6">
-                      <div className="text-center">
-                        <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
-                          Review & Confirm Order
-                        </h3>
-                        <p className="text-xs text-[#64748B] mt-1">
-                          Verify project parameters before triggering studio production.
-                        </p>
-                      </div>
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
 
-                      <div className="rounded-2xl bg-[#F8F5EF] p-5 space-y-3 border border-[#EADFCB]">
-                        <div className="flex justify-between text-xs">
-                          <span className="text-[#64748B]">Service:</span>
-                          <span className="font-bold text-[#0F172A]">{currentService.name}</span>
+                <span className="text-[11px] text-[#64748B] font-mono">
+                  Showing {filteredOrders.length} of {orders.length} orders
+                </span>
+              </div>
+            )}
+
+            {/* Empty State for Filtered Tab */}
+            {!isLoadingOrders && !ordersError && filteredOrders.length === 0 && orders.length > 0 && (
+              <div className="p-12 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] text-center space-y-3">
+                <FileCheck className="w-8 h-8 text-[#A98B57] mx-auto opacity-70" />
+                <h4 className="font-serif font-bold text-base text-[#0F172A]">
+                  No {activeFilterTab === "active" ? "Active" : "Archived"} Orders
+                </h4>
+                <p className="text-xs text-[#64748B]">
+                  {activeFilterTab === "active"
+                    ? "All your orders have been approved and completed."
+                    : "No completed or archived commissions in your vault yet."}
+                </p>
+                <Button variant="secondary" size="sm" onClick={() => setActiveFilterTab("all")}>
+                  View All Orders
+                </Button>
+              </div>
+            )}
+
+            {/* Orders List Cards with Real-time Progress Bar */}
+            {!isLoadingOrders && filteredOrders.length > 0 && (
+              <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] divide-y divide-[#EADFCB]/60 shadow-xs overflow-hidden">
+                {filteredOrders.map((ord) => {
+                  const prog = computeOrderProgress(ord);
+                  const isDeliveredOrReview =
+                    ord.status === "delivered" ||
+                    ord.status === "draft_delivered" ||
+                    ord.status === "awaiting_approval";
+
+                  return (
+                    <div
+                      key={ord.id}
+                      onClick={() => {
+                        setInspectingOrder(ord);
+                        setIsRevisionMode(false);
+                      }}
+                      className="p-5 sm:p-6 flex flex-col gap-4 hover:bg-[#FAF9F5]/80 transition-colors cursor-pointer"
+                    >
+                      {/* Top Row: Meta, Code, Badges & Price */}
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                        <div className="space-y-1.5 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-xs font-mono font-bold text-[#5C3A1E]">
+                              {ord.orderNumber || ord.code}
+                            </span>
+                            {renderStatusBadge(ord.status, ord.statusLabel)}
+                            {ord.paymentStatus === "paid" && (
+                              <Badge variant="completed" size="sm" className="bg-[#EDF7F0] text-[#1B663E] border-[#C8E7D2]">
+                                Paid
+                              </Badge>
+                            )}
+                            {(ord.paymentStatus === "unpaid" || ord.status === "pending_payment") && (
+                              <Badge variant="gold" size="sm" className="bg-[#FFFDF0] text-[#9A6700] border-[#F1E0A6]">
+                                Payment Pending
+                              </Badge>
+                            )}
+                            {ord.paymentStatus === "refunded" && (
+                              <Badge variant="progress" size="sm" className="bg-[#FAF5FF] text-[#6B21A8] border-[#E9D5FF]">
+                                Refunded
+                              </Badge>
+                            )}
+                            <span className="text-xs text-[#94A3B8]">
+                              • {ord.type === "monthly_plan" ? "Monthly Retainer" : ord.service}
+                            </span>
+                            {ord.type === "service" && (
+                              <span className="text-[11px] font-medium text-[#64748B] bg-[#F8F5EF] px-2 py-0.5 rounded-full border border-[#EADFCB]">
+                                Round {ord.revisionRound} of {ord.maxRevisions} Revisions
+                              </span>
+                            )}
+                          </div>
+
+                          <h3 className="font-serif text-lg font-semibold text-[#0F172A]">
+                            {ord.title}
+                          </h3>
+
+                          <p className="text-xs text-[#64748B] leading-relaxed max-w-3xl line-clamp-2">
+                            {ord.deliverablePreview}
+                          </p>
                         </div>
-                        <div className="flex justify-between text-xs">
-                          <span className="text-[#64748B]">Project Title:</span>
-                          <span className="font-bold text-[#0F172A]">
-                            {orderDetails.title || "Untitled Studio Order"}
+
+                        {/* Price & Timestamp */}
+                        <div className="text-left lg:text-right shrink-0">
+                          {ord.totalAmount !== undefined && (
+                            <div className="font-serif font-bold text-lg text-[#5C3A1E]">
+                              ₹{ord.totalAmount.toLocaleString("en-IN")}
+                            </div>
+                          )}
+                          <span className="text-[11px] text-[#94A3B8]">
+                            Updated {ord.updatedAt}
                           </span>
                         </div>
-                        <div className="flex justify-between text-xs">
-                          <span className="text-[#64748B]">Starting Investment:</span>
-                          <span className="font-bold text-[#5C3A1E]">{currentService.startingPrice}</span>
+                      </div>
+
+                      {/* Middle: Progress Tracker Bar (Reaches exactly 100% on Completed/Approved) */}
+                      <div className="space-y-1.5 p-3 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB]/80">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-semibold text-[#5C3A1E] flex items-center gap-1.5">
+                            <span
+                              className={`w-2 h-2 rounded-full ${
+                                prog.isComplete
+                                  ? "bg-[#16A34A]"
+                                  : prog.statusCategory === "paused"
+                                  ? "bg-[#D97706]"
+                                  : "bg-[#D4A35A] animate-pulse"
+                              }`}
+                            />
+                            <span>Stage: <strong>{prog.stageLabel}</strong></span>
+                          </span>
+                          <span className="font-mono font-bold text-xs text-[#0F172A]">
+                            {prog.percentage}% Complete
+                          </span>
                         </div>
-                        <div className="flex justify-between text-xs">
-                          <span className="text-[#64748B]">Vault Storage:</span>
-                          <span className="font-bold text-[#2E7D4F]">Google Drive Encrypted</span>
+
+                        {/* Visual Progress Bar */}
+                        <div className="w-full bg-[#EADFCB]/60 rounded-full h-2 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-700 ${
+                              prog.percentage === 100
+                                ? "bg-[#16A34A]"
+                                : prog.statusCategory === "paused"
+                                ? "bg-[#D97706]"
+                                : prog.statusCategory === "cancelled"
+                                ? "bg-[#DC2626]"
+                                : "bg-[#D4A35A]"
+                            }`}
+                            style={{ width: `${Math.max(prog.percentage, 5)}%` }}
+                          />
+                        </div>
+
+                        {/* Monthly Retainer Cycle Progress & Days Remaining */}
+                        {ord.type === "monthly_plan" && prog.daysRemaining !== undefined && (
+                          <div className="flex items-center justify-between text-[11px] text-[#64748B] pt-0.5">
+                            <span>
+                              Billing Cycle: {ord.currentPeriodStart ? new Date(ord.currentPeriodStart).toLocaleDateString() : "Active"} &rarr;{" "}
+                              {ord.currentPeriodEnd ? new Date(ord.currentPeriodEnd).toLocaleDateString() : "Renewal"}
+                            </span>
+                            <span className="font-bold text-[#5C3A1E] bg-[#FFFDF9] px-2 py-0.5 rounded-md border border-[#EADFCB]">
+                              {prog.daysRemaining} days remaining in cycle
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Bottom Row: Vault Sync, Razorpay ID & Action Buttons */}
+                      <div
+                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex flex-wrap items-center gap-3 text-[11px] text-[#64748B]">
+                          <span className="flex items-center gap-1 text-[#5C3A1E] font-medium">
+                            <HardDrive className="w-3.5 h-3.5 text-[#A98B57]" />
+                            <span>Vault: {ord.driveFolder}</span>
+                          </span>
+                          {ord.razorpayPaymentId && (
+                            <span className="font-mono text-[10px] text-[#94A3B8]">
+                              ID: {ord.razorpayPaymentId}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex flex-wrap items-center gap-2">
+                          {/* Pay Now for Unpaid */}
+                          {(ord.status === "pending_payment" || ord.paymentStatus === "unpaid") && (
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => handleRetryPayment(ord)}
+                              isLoading={retryingOrderId === ord.id}
+                              disabled={retryingOrderId !== null}
+                              leftIcon={<Lock className="w-3.5 h-3.5 text-[#EADFCB]" />}
+                            >
+                              Pay Now
+                            </Button>
+                          )}
+
+                          {/* Official Receipt */}
+                          {ord.paymentStatus === "paid" && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setReceiptOrder({
+                                  ...ord,
+                                  orderNumber: ord.orderNumber || ord.code || ord.id,
+                                });
+                                setIsReceiptOpen(true);
+                              }}
+                              className="px-3 py-1.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#F8F5EF] transition-all cursor-pointer flex items-center gap-1.5 min-h-[36px]"
+                              title="View & Print Official Receipt"
+                            >
+                              <Receipt className="w-3.5 h-3.5 text-[#A98B57]" />
+                              <span>Receipt</span>
+                            </button>
+                          )}
+
+                          {/* Review Draft / Result */}
+                          {isDeliveredOrReview && (
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => {
+                                setInspectingOrder(ord);
+                                setActiveModalTab("deliverables");
+                                setIsRevisionMode(false);
+                              }}
+                              leftIcon={<Sparkles className="w-3.5 h-3.5 text-[#EADFCB]" />}
+                            >
+                              Review Draft
+                            </Button>
+                          )}
+
+                          {/* Cancel Trial / Auto-Renew */}
+                          {ord.type === "monthly_plan" && ord.subscriptionStatus === "trial" && (
+                            <button
+                              type="button"
+                              onClick={() => handleCancelPlan(ord.id, true)}
+                              className="px-2.5 py-1.5 rounded-xl text-xs text-[#DC2626] hover:bg-[#FEF2F2] transition-colors cursor-pointer font-semibold"
+                              title="Cancel 3-day free trial with zero charge"
+                            >
+                              Cancel Trial
+                            </button>
+                          )}
+
+                          {ord.type === "monthly_plan" && ord.subscriptionStatus === "active" && (
+                            <button
+                              type="button"
+                              onClick={() => handleCancelPlan(ord.id, false)}
+                              className="px-2.5 py-1.5 rounded-xl text-xs text-[#64748B] hover:text-[#DC2626] hover:bg-[#FEF2F2] transition-colors cursor-pointer"
+                              title="Cancel recurring auto-renewal"
+                            >
+                              Cancel Auto-Renew
+                            </button>
+                          )}
+
+                          {ord.type === "monthly_plan" &&
+                            (ord.status === "cancelled" ||
+                              ord.subscriptionStatus === "cancelled" ||
+                              ord.subscriptionStatus === "expired" ||
+                              ord.status === "closed") && (
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={() => handleRenewSubscription(ord)}
+                                isLoading={retryingOrderId === ord.id}
+                                leftIcon={<RotateCcw className="w-3.5 h-3.5 text-[#EADFCB]" />}
+                              >
+                                Renew Retainer
+                              </Button>
+                            )}
+
+                          {/* Inspect & Details */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setInspectingOrder(ord);
+                              setActiveModalTab("scope");
+                              setIsRevisionMode(false);
+                            }}
+                            className="px-3.5 py-1.5 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#FFFDF9] transition-all cursor-pointer flex items-center gap-1.5 min-h-[36px]"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Details</span>
+                          </button>
+
+                          {/* Completed Vault Master */}
+                          {ord.status === "completed" && (
+                            <Link href="/media">
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                leftIcon={<Download className="w-3.5 h-3.5 text-[#5C3A1E]" />}
+                              >
+                                Vault Master
+                              </Button>
+                            </Link>
+                          )}
                         </div>
                       </div>
                     </div>
-                  )}
-                </div>
-              )}
-
-              {/* Stepper Controls */}
-              {!orderSubmitted && (
-                <div className="flex items-center justify-between pt-6 border-t border-[#EADFCB]">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleBack}
-                    disabled={step === 1}
-                    leftIcon={<ArrowLeft className="w-4 h-4" />}
-                  >
-                    Back
-                  </Button>
-
-                  {step < 4 ? (
-                    <Button variant="primary" size="sm" onClick={handleNext} withArrow>
-                      Next Step
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="primary"
-                      size="md"
-                      onClick={handleFinalSubmit}
-                      isLoading={isSubmitting}
-                      withArrow
-                    >
-                      Authorize & Launch
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </main>
 
         <MobileBottomNav />
 
         {/* ========================================================
-            ORDER INSPECTION, APPROVAL & REVISION MODAL
+            NEW ORDER COMMISSION FLOW (MODAL / MOBILE BOTTOM-SHEET)
+            ======================================================== */}
+        <Modal
+          isOpen={isNewOrderOpen}
+          onClose={() => setIsNewOrderOpen(false)}
+          title={
+            flowStep === "choose_type"
+              ? "New Studio Commission"
+              : flowStep === "services_select"
+              ? "Select Individual Services"
+              : flowStep === "plan_select"
+              ? "Select Monthly Retainer Plan"
+              : flowStep === "service_details" || flowStep === "plan_details"
+              ? "Commission Brief & Details"
+              : flowStep === "review_confirm"
+              ? "Review & Confirm Order"
+              : "Order Confirmation"
+          }
+          description="Crafted with pure traditional craftsmanship and AI precision."
+          maxWidth="xl"
+          variant="auto"
+        >
+          <div className="space-y-6 pt-1">
+            {/* STEP 1: CHOOSE PATH (INDIVIDUAL SERVICES vs MONTHLY PLAN) */}
+            {flowStep === "choose_type" && (
+              <div className="space-y-4">
+                <div className="text-center max-w-md mx-auto space-y-1">
+                  <h3 className="font-serif text-xl font-semibold text-[#0F172A]">
+                    Select Your Commission Structure
+                  </h3>
+                  <p className="text-xs text-[#64748B]">
+                    Choose between booking standalone creative services or subscribing to an ongoing monthly creative capacity.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  {/* Option A: Individual Services */}
+                  <div
+                    onClick={() => {
+                      setOrderType("service");
+                      setFlowStep("services_select");
+                    }}
+                    className="group p-5 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] hover:border-[#D4A35A] hover:shadow-warm transition-all cursor-pointer flex flex-col justify-between space-y-4 text-left"
+                  >
+                    <div className="space-y-3">
+                      <div className="w-11 h-11 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-[#5C3A1E] flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <Layers className="w-5 h-5 text-[#A98B57]" />
+                      </div>
+                      <div>
+                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[10px] font-semibold text-[#A98B57] uppercase tracking-wider mb-1.5">
+                          <span>Bespoke Multi-Select</span>
+                        </div>
+                        <h4 className="font-serif text-base font-semibold text-[#0F172A] group-hover:text-[#5C3A1E] transition-colors">
+                          Individual Services
+                        </h4>
+                        <p className="text-xs text-[#64748B] mt-1 leading-relaxed">
+                          Order one or more specialized studio disciplines (3D, Video, Branding, etc.) with custom quantities and a live calculated total.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-[#EADFCB]/60 flex items-center justify-between text-xs font-semibold text-[#5C3A1E]">
+                      <span>Select Services</span>
+                      <ChevronRight className="w-4 h-4 text-[#A98B57] group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
+
+                  {/* Option B: Monthly Plan */}
+                  <div
+                    onClick={() => {
+                      setOrderType("monthly_plan");
+                      setFlowStep("plan_select");
+                    }}
+                    className="group p-5 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] hover:border-[#D4A35A] hover:shadow-warm transition-all cursor-pointer flex flex-col justify-between space-y-4 text-left"
+                  >
+                    <div className="space-y-3">
+                      <div className="w-11 h-11 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-[#5C3A1E] flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <Clock className="w-5 h-5 text-[#5C3A1E]" />
+                      </div>
+                      <div>
+                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[10px] font-semibold text-[#5C3A1E] uppercase tracking-wider mb-1.5">
+                          <span>Retainer Packages</span>
+                        </div>
+                        <h4 className="font-serif text-base font-semibold text-[#0F172A] group-hover:text-[#5C3A1E] transition-colors">
+                          Monthly Plan
+                        </h4>
+                        <p className="text-xs text-[#64748B] mt-1 leading-relaxed">
+                          Retainer-based ongoing creative production with bundled 4K renders, video commercials, priority SLAs, and billing savings.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-[#EADFCB]/60 flex items-center justify-between text-xs font-semibold text-[#5C3A1E]">
+                      <span>Choose Monthly Plan</span>
+                      <ChevronRight className="w-4 h-4 text-[#A98B57] group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2A: SELECT SERVICES & QUANTITIES */}
+            {flowStep === "services_select" && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-serif text-lg font-semibold text-[#0F172A]">
+                      Select Studio Services
+                    </h3>
+                    <p className="text-xs text-[#64748B]">
+                      Pick one or multiple disciplines. Adjust quantities to update live investment.
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setFlowStep("choose_type")}
+                    leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
+                  >
+                    Change Structure
+                  </Button>
+                </div>
+
+                {isLoadingCatalogs ? (
+                  <div className="py-8 text-center">
+                    <Loader2 className="w-6 h-6 animate-spin text-[#5C3A1E] mx-auto" />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[46vh] overflow-y-auto pr-1">
+                    {servicesCatalog.map((srv) => {
+                      const qty = selectedServices[srv.id] || 0;
+                      const isSelected = qty > 0;
+                      const srvPrice = srv.startingPrice ?? (srv as any).price ?? 5499;
+                      return (
+                        <div
+                          key={srv.id}
+                          className={`p-3.5 rounded-2xl border transition-all flex flex-col justify-between gap-3 text-left ${
+                            isSelected
+                              ? "bg-[#FFFDF9] border-[#D4A35A] ring-1 ring-[#D4A35A]/30 shadow-xs"
+                              : "bg-[#FFFFFF] border-[#EADFCB] hover:border-[#D4A35A]/50"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <div className="flex items-center gap-1.5 mb-1">
+                                <span className="text-[10px] uppercase font-bold text-[#A98B57] tracking-wider">
+                                  {srv.tagline || srv.category}
+                                </span>
+                                {srv.estimatedDeliveryDays && (
+                                  <span className="px-1.5 py-0.2 rounded bg-[#FAF9F5] border border-[#EADFCB] text-[9px] text-[#64748B]">
+                                    {srv.estimatedDeliveryDays}d SLA
+                                  </span>
+                                )}
+                              </div>
+                              <h4 className="text-sm font-semibold text-[#0F172A]">
+                                {srv.name}
+                              </h4>
+                            </div>
+                            <span className="text-xs font-bold text-[#5C3A1E] shrink-0">
+                              From ₹{srvPrice.toLocaleString("en-IN")}
+                            </span>
+                          </div>
+
+                          <p className="text-[11px] text-[#64748B] line-clamp-2">
+                            {srv.shortDescription || ""}
+                          </p>
+
+                          {/* Selection toggle & Quantity Counter */}
+                          <div className="pt-2 border-t border-[#EADFCB]/60 flex items-center justify-between">
+                            {isSelected ? (
+                              <div className="flex items-center gap-2 bg-[#F8F5EF] p-1 rounded-xl border border-[#EADFCB]">
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateQuantity(srv.id, -1)}
+                                  className="w-6 h-6 rounded-lg bg-white border border-[#EADFCB] flex items-center justify-center hover:bg-[#F4EFE6] text-[#5C3A1E] transition-colors"
+                                  title="Decrease quantity"
+                                >
+                                  <Minus className="w-3 h-3" />
+                                </button>
+                                <span className="text-xs font-bold text-[#0F172A] w-5 text-center">
+                                  {qty}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateQuantity(srv.id, 1)}
+                                  className="w-6 h-6 rounded-lg bg-white border border-[#EADFCB] flex items-center justify-center hover:bg-[#F4EFE6] text-[#5C3A1E] transition-colors"
+                                  title="Increase quantity"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleToggleService(srv.id)}
+                                className="px-3 py-1 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#FFFDF9] transition-all cursor-pointer"
+                              >
+                                Select Service
+                              </button>
+                            )}
+
+                            {isSelected && (
+                              <span className="text-xs font-semibold text-[#0F172A]">
+                                Subtotal: ₹{(srvPrice * qty).toLocaleString("en-IN")}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Sticky Live Total Bar */}
+                <div className="p-3.5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <span className="text-[11px] text-[#64748B] block">
+                      {selectedServicesCount} Service{selectedServicesCount === 1 ? "" : "s"} Selected
+                    </span>
+                    <p className="text-base font-bold text-[#5C3A1E]">
+                      Live Total: ₹{liveServicesTotal.toLocaleString("en-IN")}
+                    </p>
+                  </div>
+                  <Button
+                    variant="primary"
+                    size="md"
+                    disabled={selectedServicesCount === 0}
+                    onClick={() => setFlowStep("service_details")}
+                    withArrow
+                  >
+                    Continue to Brief (Step 2)
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 1B: SELECT MONTHLY PLAN & BILLING CYCLE */}
+            {flowStep === "plan_select" && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-serif text-lg font-semibold text-[#0F172A]">
+                      Select Monthly Retainer Plan
+                    </h3>
+                    <p className="text-xs text-[#64748B]">
+                      Dedicated ongoing studio capacity with 3-day free trial on initial activation.
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setFlowStep("choose_type")}
+                    leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
+                  >
+                    Change Structure
+                  </Button>
+                </div>
+
+                {/* Billing Cycle Selector */}
+                <div className="inline-flex rounded-full bg-[#FFFDF9] border border-[#EADFCB] p-1 shadow-xs mx-auto">
+                  <button
+                    type="button"
+                    onClick={() => setBillingCycle("monthly")}
+                    className={`px-3 sm:px-4 py-1.5 text-xs font-medium rounded-full transition-all cursor-pointer ${
+                      billingCycle === "monthly"
+                        ? "bg-[#5C3A1E] text-white shadow-xs"
+                        : "text-[#64748B] hover:text-[#0F172A]"
+                    }`}
+                  >
+                    Monthly (Standard)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBillingCycle("quarterly")}
+                    className={`px-3 sm:px-4 py-1.5 text-xs font-medium rounded-full transition-all cursor-pointer ${
+                      billingCycle === "quarterly"
+                        ? "bg-[#5C3A1E] text-white shadow-xs"
+                        : "text-[#64748B] hover:text-[#0F172A]"
+                    }`}
+                  >
+                    Quarterly (Save 10%)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBillingCycle("annual")}
+                    className={`px-3 sm:px-4 py-1.5 text-xs font-medium rounded-full transition-all cursor-pointer ${
+                      billingCycle === "annual"
+                        ? "bg-[#5C3A1E] text-white shadow-xs"
+                        : "text-[#64748B] hover:text-[#0F172A]"
+                    }`}
+                  >
+                    Annual (Save 20%)
+                  </button>
+                </div>
+
+                {/* Plans Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                  {plansCatalog.map((plan) => {
+                    const isSelected = selectedPlanId === plan.id;
+                    const basePrice = plan.monthlyPrice ?? plan.price ?? 5999;
+                    const calculatedRate =
+                      billingCycle === "quarterly"
+                        ? Math.round(basePrice * 3 * 0.9)
+                        : billingCycle === "annual"
+                        ? Math.round(basePrice * 12 * 0.8)
+                        : basePrice;
+
+                    return (
+                      <div
+                        key={plan.id}
+                        onClick={() => setSelectedPlanId(plan.id)}
+                        className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 text-left ${
+                          isSelected
+                            ? "bg-[#FFFDF9] border-[#D4A35A] ring-2 ring-[#D4A35A]/30 shadow-warm"
+                            : "bg-[#FFFFFF] border-[#EADFCB] hover:border-[#D4A35A]/50"
+                        }`}
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#A98B57]">
+                              {plan.tier || plan.name}
+                            </span>
+                            <span className="px-2 py-0.5 rounded-full bg-[#EDF7F0] border border-[#A3E635] text-[9px] font-bold text-[#2E7D4F]">
+                              3-Day Free Trial
+                            </span>
+                          </div>
+                          <h4 className="font-serif text-base font-semibold text-[#0F172A]">
+                            {plan.name}
+                          </h4>
+                          <div className="pt-1">
+                            <span className="text-xl font-bold text-[#5C3A1E]">
+                              ₹{calculatedRate.toLocaleString("en-IN")}
+                            </span>
+                            <span className="text-[11px] text-[#64748B] ml-1">
+                              /{billingCycle === "monthly" ? "mo" : billingCycle === "quarterly" ? "quarter" : "yr"}
+                            </span>
+                          </div>
+                          <p className="text-xs text-[#64748B] leading-relaxed">
+                            {plan.features?.[0] || "Full creative studio access with dedicated art director."}
+                          </p>
+                        </div>
+
+                        <div className="space-y-1.5 pt-2 border-t border-[#EADFCB]/60 text-[11px] text-[#0F172A]">
+                          {(plan.features || []).slice(0, 4).map((f, i) => (
+                            <div key={i} className="flex items-start gap-1.5">
+                              <Check className="w-3.5 h-3.5 text-[#2E7D4F] shrink-0 mt-0.5" />
+                              <span className="line-clamp-1">{f}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <button
+                          type="button"
+                          className={`w-full py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                            isSelected
+                              ? "bg-[#5C3A1E] text-white shadow-xs"
+                              : "bg-[#F8F5EF] text-[#5C3A1E] border border-[#EADFCB]"
+                          }`}
+                        >
+                          {isSelected ? "Selected" : "Select Plan"}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Footer Controls */}
+                <div className="p-3.5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between">
+                  <div>
+                    <span className="text-[11px] text-[#64748B] block">Selected Retainer</span>
+                    <p className="text-sm font-bold text-[#5C3A1E]">
+                      {selectedPlan?.name} (₹{livePlanTotal.toLocaleString("en-IN")})
+                    </p>
+                  </div>
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={() => setFlowStep("plan_details")}
+                    withArrow
+                  >
+                    Continue to Details (Step 2)
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: DYNAMIC BRIEF QUESTIONNAIRE & SPECIFICATIONS */}
+            {(flowStep === "service_details" || flowStep === "plan_details") && (
+              <div className="space-y-4 max-h-[62vh] overflow-y-auto pr-1">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-serif text-lg font-semibold text-[#0F172A]">
+                      Step 2: {orderType === "service" ? `${activeServiceDetails.name} Brief` : "Retainer Onboarding Goals"}
+                    </h3>
+                    <p className="text-xs text-[#64748B]">
+                      {orderType === "service"
+                        ? "Dynamic parameters configured for this studio discipline."
+                        : "Company and brand details for ongoing monthly retainer capacity."}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {draftStatus && (
+                      <span className="text-[10px] text-[#A98B57] font-medium animate-pulse">
+                        {draftStatus}
+                      </span>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        setFlowStep(orderType === "service" ? "services_select" : "plan_select")
+                      }
+                      leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
+                    >
+                      Back
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Title */}
+                <Input
+                  label="Commission Title / Campaign Name"
+                  placeholder={
+                    orderType === "service"
+                      ? `e.g. ${activeServiceDetails.name} — Luxury Brand Launch`
+                      : "e.g. Q4 Studio Retainer Brand Refresh"
+                  }
+                  value={commissionTitle}
+                  onChange={(e) => setCommissionTitle(e.target.value)}
+                />
+
+                {/* DYNAMIC BRIEF SCHEMA FIELDS */}
+                {orderType === "service" &&
+                  activeServiceDetails.briefSchema &&
+                  activeServiceDetails.briefSchema.length > 0 && (
+                    <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] space-y-3.5">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-[#A98B57] flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
+                        <span>{activeServiceDetails.name} Dynamic Questionnaire</span>
+                      </h4>
+
+                      <div className="space-y-3">
+                        {activeServiceDetails.briefSchema.map((field) => (
+                          <div key={field.key} className="space-y-1.5 text-left">
+                            <label className="block text-xs font-semibold text-[#0F172A]">
+                              {field.label}{" "}
+                              {field.required && <span className="text-[#DC2626]">*</span>}
+                            </label>
+
+                            {field.type === "select" && (
+                              <select
+                                value={briefAnswers[field.key] ?? field.defaultValue ?? ""}
+                                onChange={(e) =>
+                                  setBriefAnswers({
+                                    ...briefAnswers,
+                                    [field.key]: e.target.value,
+                                  })
+                                }
+                                className="w-full rounded-xl bg-[#FAF9F5] border border-[#EADFCB] px-3.5 py-2 text-xs text-[#0F172A] focus:border-[#D4A35A] focus:outline-none"
+                              >
+                                <option value="" disabled>
+                                  Select an option...
+                                </option>
+                                {field.options?.map((opt, i) => (
+                                  <option key={i} value={opt}>
+                                    {opt}
+                                  </option>
+                                ))}
+                              </select>
+                            )}
+
+                            {field.type === "textarea" && (
+                              <div className="space-y-1">
+                                <textarea
+                                  rows={3}
+                                  maxLength={1000}
+                                  placeholder={field.helpText || "Enter details..."}
+                                  value={briefAnswers[field.key] ?? ""}
+                                  onChange={(e) =>
+                                    setBriefAnswers({
+                                      ...briefAnswers,
+                                      [field.key]: e.target.value,
+                                    })
+                                  }
+                                  className="w-full rounded-xl bg-[#FAF9F5] border border-[#EADFCB] px-4 py-2.5 text-xs text-[#0F172A] focus:border-[#D4A35A] focus:outline-none focus:ring-2 focus:ring-[#D4A35A]/20"
+                                />
+                                <div className="flex justify-between text-[10px] text-[#94A3B8]">
+                                  <span>{field.helpText}</span>
+                                  <span>{(briefAnswers[field.key] || "").length} / 1000</span>
+                                </div>
+                              </div>
+                            )}
+
+                            {field.type === "number" && (
+                              <input
+                                type="number"
+                                min={1}
+                                max={100}
+                                value={briefAnswers[field.key] ?? field.defaultValue ?? 1}
+                                onChange={(e) =>
+                                  setBriefAnswers({
+                                    ...briefAnswers,
+                                    [field.key]: Number(e.target.value),
+                                  })
+                                }
+                                className="w-full rounded-xl bg-[#FAF9F5] border border-[#EADFCB] px-3.5 py-2 text-xs text-[#0F172A] focus:border-[#D4A35A] focus:outline-none"
+                              />
+                            )}
+
+                            {field.type === "multiselect" && (
+                              <div className="flex flex-wrap gap-2 pt-1">
+                                {field.options?.map((opt, i) => {
+                                  const currentArr: string[] = Array.isArray(briefAnswers[field.key])
+                                    ? briefAnswers[field.key]
+                                    : [];
+                                  const isChecked = currentArr.includes(opt);
+                                  return (
+                                    <button
+                                      type="button"
+                                      key={i}
+                                      onClick={() => {
+                                        if (isChecked) {
+                                          setBriefAnswers({
+                                            ...briefAnswers,
+                                            [field.key]: currentArr.filter((x) => x !== opt),
+                                          });
+                                        } else {
+                                          setBriefAnswers({
+                                            ...briefAnswers,
+                                            [field.key]: [...currentArr, opt],
+                                          });
+                                        }
+                                      }}
+                                      className={`px-3 py-1 rounded-xl text-xs border transition-all cursor-pointer ${
+                                        isChecked
+                                          ? "bg-[#5C3A1E] text-white border-[#5C3A1E]"
+                                          : "bg-[#FAF9F5] text-[#0F172A] border-[#EADFCB] hover:border-[#D4A35A]"
+                                      }`}
+                                    >
+                                      {opt}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                            {(field.type === "text" ||
+                              field.type === "url" ||
+                              field.type === "date") && (
+                              <input
+                                type={field.type}
+                                placeholder={field.helpText || ""}
+                                value={briefAnswers[field.key] ?? ""}
+                                onChange={(e) =>
+                                  setBriefAnswers({
+                                    ...briefAnswers,
+                                    [field.key]: e.target.value,
+                                  })
+                                }
+                                className="w-full rounded-xl bg-[#FAF9F5] border border-[#EADFCB] px-3.5 py-2 text-xs text-[#0F172A] focus:border-[#D4A35A] focus:outline-none"
+                              />
+                            )}
+
+                            {field.helpText && field.type !== "textarea" && (
+                              <span className="text-[10px] text-[#94A3B8] block">
+                                {field.helpText}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                {/* Scope & General Requirements */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[#0F172A]">
+                    Overall Scope & Additional Instructions
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="Specify any additional guidelines, lighting atmosphere, specific deliverables, or target deadlines..."
+                    value={requirements}
+                    onChange={(e) => setRequirements(e.target.value)}
+                    className="w-full rounded-xl bg-[#FFFDF9] border border-[#EADFCB] px-4 py-2.5 text-xs text-[#0F172A] focus:border-[#D4A35A] focus:outline-none focus:ring-2 focus:ring-[#D4A35A]/20"
+                  />
+                </div>
+
+                {/* Timeline / Target Date */}
+                {orderType === "service" ? (
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#0F172A]">
+                      Production SLA
+                    </label>
+                    <select
+                      value={preferredTimeline}
+                      onChange={(e) => setPreferredTimeline(e.target.value)}
+                      className="w-full rounded-xl bg-[#FFFDF9] border border-[#EADFCB] px-3.5 py-2 text-xs text-[#0F172A] focus:border-[#D4A35A] focus:outline-none"
+                    >
+                      <option value="Standard Studio SLA (48-72h)">Standard Studio SLA (48–72h)</option>
+                      <option value="Priority Rush Turnaround (24-48h)">Priority Rush Turnaround (24–48h)</option>
+                      <option value="Same-Day Expedited Pass (Dedicated Director)">Same-Day Expedited Pass</option>
+                    </select>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#0F172A]">
+                      Target Kickoff Date
+                    </label>
+                    <input
+                      type="date"
+                      value={targetKickoffDate}
+                      onChange={(e) => setTargetKickoffDate(e.target.value)}
+                      className="w-full rounded-xl bg-[#FFFDF9] border border-[#EADFCB] px-3.5 py-2 text-xs text-[#0F172A] focus:border-[#D4A35A] focus:outline-none"
+                    />
+                  </div>
+                )}
+
+                {/* Contact Confirmation */}
+                <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#A98B57] flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5" />
+                    <span>Client Contact Information</span>
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <Input
+                      label="Contact Name"
+                      value={clientContact.name}
+                      onChange={(e) =>
+                        setClientContact({ ...clientContact, name: e.target.value })
+                      }
+                    />
+                    <Input
+                      label="Email Address"
+                      type="email"
+                      value={clientContact.email}
+                      onChange={(e) =>
+                        setClientContact({ ...clientContact, email: e.target.value })
+                      }
+                    />
+                    <Input
+                      label="Phone / WhatsApp"
+                      placeholder="+91 98765 43210"
+                      value={clientContact.phone}
+                      onChange={(e) =>
+                        setClientContact({ ...clientContact, phone: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+
+                {/* Advance to Step 3 Drive Assets */}
+                <div className="pt-2 flex items-center justify-end gap-3">
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={() => setFlowStep("drive_assets")}
+                    withArrow
+                  >
+                    Continue to Drive Assets (Step 3)
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3: DRIVE ASSETS & REFERENCE UPLOADS */}
+            {flowStep === "drive_assets" && (
+              <div className="space-y-4 max-h-[62vh] overflow-y-auto pr-1">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-serif text-lg font-semibold text-[#0F172A]">
+                      Step 3: Reference Files & Google Drive Vault
+                    </h3>
+                    <p className="text-xs text-[#64748B]">
+                      Upload reference moodboards, CAD models, product photos, or paste a Google Drive folder URL.
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      setFlowStep(orderType === "service" ? "service_details" : "plan_details")
+                    }
+                    leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
+                  >
+                    Back to Brief
+                  </Button>
+                </div>
+
+                {/* Required Assets Hints for this Service */}
+                {orderType === "service" &&
+                  activeServiceDetails.requiredAssets &&
+                  activeServiceDetails.requiredAssets.length > 0 && (
+                    <div className="p-3.5 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] space-y-2">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#A98B57] block">
+                        Recommended Assets for {activeServiceDetails.name}:
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[#0F172A]">
+                        {activeServiceDetails.requiredAssets.map((asset, i) => (
+                          <div key={i} className="flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#2E7D4F] shrink-0" />
+                            <span>{asset}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                {/* File Upload Drop Area */}
+                <div className="p-5 rounded-2xl bg-[#FAF9F5] border-2 border-dashed border-[#EADFCB] hover:border-[#D4A35A] transition-all text-center space-y-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-[#5C3A1E] flex items-center justify-center mx-auto">
+                    <Upload className="w-5 h-5 text-[#A98B57]" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-[#0F172A]">
+                      Upload Reference Assets (Images, Videos, CAD, PDFs, ZIPs)
+                    </p>
+                    <p className="text-[11px] text-[#64748B] mt-0.5">
+                      Max 500 MB per file. Staged directly into your private Google Drive vault.
+                    </p>
+                  </div>
+
+                  <label className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#5C3A1E] text-white text-xs font-semibold hover:bg-[#432A15] transition-all cursor-pointer shadow-xs">
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Select Files to Attach</span>
+                    <input
+                      type="file"
+                      multiple
+                      onChange={handleAddFile}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                {/* Staged Uploads List */}
+                {uploadedFiles.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#64748B] block">
+                      Staged Attachments ({uploadedFiles.length})
+                    </span>
+                    <div className="space-y-1.5">
+                      {uploadedFiles.map((file, i) => (
+                        <div
+                          key={i}
+                          className="p-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] flex items-center justify-between text-xs"
+                        >
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-[#A98B57] shrink-0" />
+                            <span className="font-semibold text-[#0F172A]">{file.name}</span>
+                            <span className="text-[10px] text-[#94A3B8]">({file.size})</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFile(i)}
+                            className="text-xs text-[#DC2626] hover:underline cursor-pointer"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Google Drive / Cloud Link Input */}
+                <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#0F172A]">
+                      Or Paste Existing Google Drive / Cloud Folder Link
+                    </label>
+                    {driveLink && (
+                      <span
+                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                          driveLink.includes("drive.google.com")
+                            ? "bg-[#F0FDF4] text-[#166534] border border-[#BBF7D0]"
+                            : driveLink.startsWith("https://")
+                            ? "bg-[#FFFBEB] text-[#92400E] border border-[#FDE68A]"
+                            : "bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA]"
+                        }`}
+                      >
+                        {driveLink.includes("drive.google.com")
+                          ? "✓ Verified Drive Link"
+                          : driveLink.startsWith("https://")
+                          ? "Cloud Storage Link"
+                          : "Invalid URL"}
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    type="url"
+                    placeholder="https://drive.google.com/drive/folders/..."
+                    value={driveLink}
+                    onChange={(e) => setDriveLink(e.target.value)}
+                    className="w-full rounded-xl bg-[#FAF9F5] border border-[#EADFCB] px-3.5 py-2 text-xs text-[#0F172A] focus:border-[#D4A35A] focus:outline-none"
+                  />
+                  <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70 text-[11px] text-[#64748B] space-y-1">
+                    <div className="font-semibold text-[#0F172A] flex items-center gap-1.5">
+                      <HardDrive className="w-3.5 h-3.5 text-[#A98B57]" />
+                      <span>Google Drive Sharing Guide:</span>
+                    </div>
+                    <p className="leading-relaxed">
+                      1. Open your folder in Google Drive &rarr; Click <strong>Share</strong> &rarr; Under General Access choose <strong>&quot;Anyone with the link can view&quot;</strong> &rarr; Copy and paste link above.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Advance to Step 4 Review & Confirm */}
+                <div className="pt-2 flex items-center justify-end gap-3">
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={() => setFlowStep("review_confirm")}
+                    withArrow
+                  >
+                    Continue to Review & Authorize (Step 4)
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4: REVIEW & AUTHORIZE (WITH SERVER RECOMPUTATION & RAZORPAY) */}
+            {flowStep === "review_confirm" && (
+              <div className="space-y-4 max-h-[62vh] overflow-y-auto pr-1">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-serif text-lg font-semibold text-[#0F172A]">
+                      Step 4: Review & Authorize Order
+                    </h3>
+                    <p className="text-xs text-[#64748B]">
+                      Verify commission parameters before triggering studio production.
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setFlowStep("drive_assets")}
+                    leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
+                  >
+                    Back to Assets
+                  </Button>
+                </div>
+
+                {/* Server-Verified Pricing Notice */}
+                <div className="p-3.5 rounded-2xl bg-[#FFFDF9] border border-[#D4A35A]/60 text-xs text-[#5C3A1E] flex items-center gap-2.5">
+                  <ShieldCheck className="w-5 h-5 text-[#D4A35A] shrink-0" />
+                  <span>
+                    <strong>Server-Verified Pricing:</strong> The backend recomputes all official rates directly from the studio catalog.
+                  </span>
+                </div>
+
+                {/* Financial Summary */}
+                <div className="rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] p-4 space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#A98B57]">
+                    Order Summary ({orderType === "service" ? "Individual Services" : "Monthly Retainer"})
+                  </h4>
+
+                  {orderType === "service" ? (
+                    <div className="divide-y divide-[#EADFCB]/60 text-xs space-y-2">
+                      {Object.entries(selectedServices)
+                        .filter(([, qty]) => qty > 0)
+                        .map(([srvId, qty]) => {
+                          const srv = servicesCatalog.find((s) => s.id === srvId);
+                          if (!srv) return null;
+                          const srvPrice = srv.startingPrice ?? (srv as any).price ?? 5499;
+                          return (
+                            <div key={srvId} className="pt-2 flex justify-between items-center">
+                              <div>
+                                <span className="font-semibold text-[#0F172A]">{srv.name}</span>
+                                <span className="text-[#64748B] block text-[11px]">
+                                  {qty} × ₹{srvPrice.toLocaleString("en-IN")} • {srv.estimatedDeliveryDays || 2}d SLA • {srv.revisionsIncluded || 2} revisions
+                                </span>
+                              </div>
+                              <span className="font-bold text-[#5C3A1E]">
+                                ₹{(srvPrice * qty).toLocaleString("en-IN")}
+                              </span>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  ) : (
+                    <div className="text-xs space-y-1.5">
+                      <div className="flex justify-between items-center">
+                        <span className="font-semibold text-[#0F172A]">{selectedPlan?.name}</span>
+                        <span className="font-bold text-[#5C3A1E]">
+                          ₹{livePlanTotal.toLocaleString("en-IN")}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-[#64748B] block">
+                        Billing Interval: {billingCycle.toUpperCase()} • 3-Day Free Trial Included
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="pt-3 border-t border-[#EADFCB] flex justify-between items-center text-sm">
+                    <span className="font-serif font-bold text-[#0F172A]">Total Investment:</span>
+                    <span className="font-serif text-lg font-bold text-[#5C3A1E]">
+                      ₹
+                      {(orderType === "service"
+                        ? liveServicesTotal
+                        : livePlanTotal
+                      ).toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Brief & Assets Overview */}
+                <div className="rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] p-4 text-xs space-y-2.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <span className="text-[#64748B] block text-[11px]">Project Title</span>
+                      <p className="font-semibold text-[#0F172A]">
+                        {commissionTitle ||
+                          (orderType === "service"
+                            ? `${activeServiceDetails.name} Commission`
+                            : `${selectedPlan?.name} Retainer`)}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-[#64748B] block text-[11px]">Contact Person</span>
+                      <p className="font-semibold text-[#0F172A]">
+                        {clientContact.name} ({clientContact.email})
+                      </p>
+                    </div>
+                  </div>
+
+                  {requirements && (
+                    <div className="pt-2 border-t border-[#EADFCB]/60">
+                      <span className="text-[#64748B] block text-[11px]">Overall Scope</span>
+                      <p className="text-[#0F172A] leading-relaxed line-clamp-2">{requirements}</p>
+                    </div>
+                  )}
+
+                  {Object.keys(briefAnswers).length > 0 && (
+                    <div className="pt-2 border-t border-[#EADFCB]/60 space-y-1">
+                      <span className="text-[#64748B] block text-[11px]">Questionnaire Parameters</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {Object.entries(briefAnswers).map(([k, v]) => (
+                          <span
+                            key={k}
+                            className="px-2 py-0.5 rounded bg-[#FAF9F5] border border-[#EADFCB] text-[10px] text-[#5C3A1E]"
+                          >
+                            <strong>{k}:</strong> {Array.isArray(v) ? v.join(", ") : String(v)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="pt-2 border-t border-[#EADFCB]/60 flex items-center justify-between text-[11px] text-[#64748B]">
+                    <span>Vault Sync: Google Drive Encrypted</span>
+                    <span>
+                      {uploadedFiles.length > 0
+                        ? `${uploadedFiles.length} file(s) staged`
+                        : driveLink
+                        ? "External Drive link attached"
+                        : "No reference files"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Terms Agreement Checkbox */}
+                <label className="flex items-center gap-2 text-xs text-[#64748B] cursor-pointer pt-1">
+                  <input
+                    type="checkbox"
+                    checked={agreedToTerms}
+                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                    className="rounded text-[#5C3A1E] focus:ring-[#D4A35A]"
+                  />
+                  <span>
+                    I agree to the Studio Production Terms, SLA, and Google Drive vault storage policy.
+                  </span>
+                </label>
+
+                {/* Error Banner */}
+                {submitError && (
+                  <div className="p-3.5 rounded-xl bg-[#FEF2F2] border border-[#FCA5A5] text-xs text-[#991B1B] flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0" />
+                    <span>{submitError}</span>
+                  </div>
+                )}
+
+                {/* Double-Submit Protected CTA */}
+                <div className="pt-3 border-t border-[#EADFCB] flex items-center justify-between gap-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setFlowStep("drive_assets")}
+                    disabled={isSubmittingOrder}
+                  >
+                    Back
+                  </Button>
+
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={handleSubmitNewOrder}
+                    isLoading={isSubmittingOrder}
+                    disabled={isSubmittingOrder || !agreedToTerms}
+                    leftIcon={<Lock className="w-4 h-4 text-[#A98B57]" />}
+                  >
+                    {isSubmittingOrder
+                      ? "Initializing Razorpay..."
+                      : orderType === "service"
+                      ? `Pay & Place Order (₹${liveServicesTotal.toLocaleString("en-IN")})`
+                      : `Start 3-Day Free Trial (₹${livePlanTotal.toLocaleString("en-IN")}/mo)`}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 5: SUCCESS CONFIRMATION SCREEN */}
+            {flowStep === "success" && createdOrderResult && (
+              <div className="py-6 text-center space-y-5">
+                <div className="w-16 h-16 rounded-full bg-[#EDF7F0] border-2 border-[#A3E635] text-[#2E7D4F] flex items-center justify-center mx-auto shadow-xs">
+                  <CheckCircle2 className="w-10 h-10" />
+                </div>
+
+                <div className="space-y-1">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[11px] font-mono font-bold text-[#5C3A1E] uppercase">
+                    ORDER #{createdOrderResult.orderNumber || createdOrderResult.code}
+                  </span>
+                  <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
+                    Payment Verified & Dispatched
+                  </h3>
+                  <p className="text-xs text-[#64748B] max-w-md mx-auto leading-relaxed">
+                    Your Razorpay payment has been cryptographically verified by the studio server. Your commission is now marked <strong>&quot;paid&quot;</strong> and has entered the production queue.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] max-w-sm mx-auto text-xs space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-[#64748B]">Payment Status:</span>
+                    <span className="font-bold text-[#2E7D4F] uppercase">Verified & Paid</span>
+                  </div>
+                  {createdOrderResult.razorpayPaymentId && (
+                    <div className="flex justify-between">
+                      <span className="text-[#64748B]">Payment ID:</span>
+                      <span className="font-mono text-[#5C3A1E] text-[11px]">
+                        {createdOrderResult.razorpayPaymentId}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-[#64748B]">Total Amount Paid:</span>
+                    <span className="font-bold text-[#5C3A1E]">
+                      ₹{(createdOrderResult.totalAmount || 0).toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#64748B]">Vault Folder:</span>
+                    <span className="font-mono text-[#2E7D4F] text-[10px]">
+                      {createdOrderResult.driveFolder}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={() => {
+                      setReceiptOrder({
+                        ...createdOrderResult,
+                        orderNumber: createdOrderResult.orderNumber || createdOrderResult.code || createdOrderResult.id,
+                      });
+                      setIsReceiptOpen(true);
+                    }}
+                    leftIcon={<Receipt className="w-4 h-4" />}
+                  >
+                    View & Print Receipt
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="md"
+                    onClick={() => {
+                      setIsNewOrderOpen(false);
+                      setInspectingOrder(createdOrderResult);
+                    }}
+                    leftIcon={<Eye className="w-4 h-4" />}
+                  >
+                    View Order Details
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="md"
+                    onClick={() => setIsNewOrderOpen(false)}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* DISMISSED / PENDING PAYMENT NOTICE */}
+            {flowStep === "dismissed" && createdOrderResult && (
+              <div className="py-6 text-center space-y-5">
+                <div className="w-16 h-16 rounded-full bg-[#FFFDF0] border-2 border-[#F1E0A6] text-[#9A6700] flex items-center justify-center mx-auto shadow-xs">
+                  <Clock className="w-10 h-10" />
+                </div>
+
+                <div className="space-y-1">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[11px] font-mono font-bold text-[#5C3A1E] uppercase">
+                    ORDER #{createdOrderResult.orderNumber || createdOrderResult.code}
+                  </span>
+                  <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
+                    Order Saved — Pending Payment
+                  </h3>
+                  <p className="text-xs text-[#64748B] max-w-md mx-auto leading-relaxed">
+                    Your commission has been registered in the database with status <strong>&quot;pending_payment&quot;</strong>. You can complete checkout anytime from My Orders.
+                  </p>
+                </div>
+
+                <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={() => handleRetryPayment(createdOrderResult)}
+                    leftIcon={<Lock className="w-4 h-4 text-[#A98B57]" />}
+                  >
+                    Complete Payment Now
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="md"
+                    onClick={() => setIsNewOrderOpen(false)}
+                  >
+                    Return to My Orders
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </Modal>
+
+        {/* ========================================================
+            ORDER INSPECTION, DETAILS & STATUS HISTORY MODAL
             ======================================================== */}
         <Modal
           isOpen={!!inspectingOrder}
@@ -655,43 +2885,436 @@ export default function OrdersPage() {
             setIsRevisionMode(false);
           }}
           title={inspectingOrder?.title || "Deliverable Scope"}
-          description={`Order ${inspectingOrder?.code} • ${inspectingOrder?.service}`}
+          description={`Order ${inspectingOrder?.orderNumber || inspectingOrder?.code} • ${inspectingOrder?.service}`}
           maxWidth="lg"
+          variant="auto"
         >
           {inspectingOrder && (
             <div className="space-y-6">
-              {/* Status Header */}
-              <div className="p-4 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-between">
-                <div>
-                  <span className="text-[11px] text-[#64748B] block">Current Stage</span>
-                  <p className="font-bold text-[#0F172A]">{inspectingOrder.statusLabel}</p>
-                </div>
-                <div className="text-right">
-                  <span className="text-[11px] text-[#64748B] block">Revision Rounds</span>
-                  <p className="text-xs font-semibold text-[#5C3A1E]">
-                    {inspectingOrder.revisionRound} of {inspectingOrder.maxRevisions} Used
-                  </p>
-                </div>
+              {/* Top Progress Header */}
+              {(() => {
+                const prog = computeOrderProgress(inspectingOrder);
+                return (
+                  <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-3 shadow-2xs">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        {renderStatusBadge(inspectingOrder.status, inspectingOrder.statusLabel)}
+                        {inspectingOrder.paymentStatus === "paid" && (
+                          <Badge variant="completed" size="sm" className="bg-[#EDF7F0] text-[#1B663E] border-[#C8E7D2]">
+                            Paid
+                          </Badge>
+                        )}
+                        <span className="text-xs font-mono font-bold text-[#5C3A1E]">
+                          {inspectingOrder.orderNumber || inspectingOrder.code}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-right">
+                        {inspectingOrder.totalAmount !== undefined && (
+                          <span className="font-serif font-bold text-sm text-[#5C3A1E]">
+                            ₹{inspectingOrder.totalAmount.toLocaleString("en-IN")}
+                          </span>
+                        )}
+                        <span className="font-mono text-xs font-bold text-[#0F172A] bg-white px-2 py-0.5 rounded-lg border border-[#EADFCB]">
+                          {prog.percentage}% Complete
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Visual Progress Bar */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between text-[11px] text-[#64748B]">
+                        <span>Stage: <strong className="text-[#5C3A1E]">{prog.stageLabel}</strong></span>
+                        <span>{prog.isComplete ? "100% Finalized" : `${100 - prog.percentage}% remaining`}</span>
+                      </div>
+                      <div className="w-full bg-[#EADFCB]/60 rounded-full h-2 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-700 ${
+                            prog.percentage === 100
+                              ? "bg-[#16A34A]"
+                              : prog.statusCategory === "paused"
+                              ? "bg-[#D97706]"
+                              : prog.statusCategory === "cancelled"
+                              ? "bg-[#DC2626]"
+                              : "bg-[#D4A35A]"
+                          }`}
+                          style={{ width: `${Math.max(prog.percentage, 5)}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Monthly Details if Retainer */}
+                    {inspectingOrder.type === "monthly_plan" && prog.daysRemaining !== undefined && (
+                      <div className="text-[11px] text-[#64748B] flex items-center justify-between pt-1 border-t border-[#EADFCB]/60">
+                        <span>Period: {inspectingOrder.currentPeriodStart ? new Date(inspectingOrder.currentPeriodStart).toLocaleDateString() : "Active"} &rarr; {inspectingOrder.currentPeriodEnd ? new Date(inspectingOrder.currentPeriodEnd).toLocaleDateString() : "Renewal"}</span>
+                        <span className="font-semibold text-[#5C3A1E]">{prog.daysRemaining} days remaining in cycle</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* Modal Sub-Tab Selector */}
+              <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] overflow-x-auto no-scrollbar">
+                {[
+                  { id: "scope", label: "Scope & Brief", icon: FileText },
+                  {
+                    id: "deliverables",
+                    label: `Vaulted Files (${inspectingOrder.deliverables?.length || 0})`,
+                    icon: HardDrive,
+                  },
+                  {
+                    id: "timeline",
+                    label: `Timeline (${inspectingOrder.statusHistory?.length || 0})`,
+                    icon: Clock,
+                  },
+                  {
+                    id: "discussion",
+                    label: `Discussion (${orderComments.length})`,
+                    icon: MessageSquare,
+                  },
+                ].map((t) => {
+                  const Icon = t.icon;
+                  const isActive = activeModalTab === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setActiveModalTab(t.id as any)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                        isActive
+                          ? "bg-[#5C3A1E] text-white shadow-xs"
+                          : "text-[#64748B] hover:text-[#0F172A] hover:bg-[#FFFFFF]"
+                      }`}
+                    >
+                      <Icon className={`w-3.5 h-3.5 ${isActive ? "text-[#D4A35A]" : "text-[#94A3B8]"}`} />
+                      <span>{t.label}</span>
+                    </button>
+                  );
+                })}
               </div>
 
-              {/* Deliverable Review Note */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-[#A98B57]">
-                  Deliverable Summary & Feedback Notes
-                </h4>
-                <div className="p-4 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] leading-relaxed">
-                  {inspectingOrder.deliverablePreview}
-                  {inspectingOrder.notes && (
-                    <p className="mt-2 text-[#5C3A1E] font-medium pt-2 border-t border-[#EADFCB]/60">
-                      Revision Note: {inspectingOrder.notes}
+              {/* =======================================================
+                  SUB-TAB 1: SCOPE & BRIEF
+                  ======================================================= */}
+              {activeModalTab === "scope" && (
+                <div className="space-y-4 text-xs">
+                  {/* Scope Summary */}
+                  <div className="p-4 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] space-y-2">
+                    <span className="text-[10px] uppercase font-bold text-[#A98B57] block">
+                      Deliverable Scope & Brief
+                    </span>
+                    <p className="text-xs text-[#0F172A] leading-relaxed">
+                      {inspectingOrder.deliverablePreview}
                     </p>
+                    {inspectingOrder.requirements && (
+                      <div className="pt-2 border-t border-[#EADFCB]/60 text-[#64748B]">
+                        <strong className="text-[#0F172A]">Client Intake Brief:</strong>{" "}
+                        {inspectingOrder.requirements}
+                      </div>
+                    )}
+                    {inspectingOrder.notes && inspectingOrder.notes !== inspectingOrder.requirements && (
+                      <p className="pt-2 border-t border-[#EADFCB]/60 text-[#5C3A1E] font-medium">
+                        Revision Instruction: {inspectingOrder.notes}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Line Items Allocation Table */}
+                  {Array.isArray(inspectingOrder.items) && inspectingOrder.items.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-[10px] font-bold uppercase tracking-wider text-[#A98B57]">
+                        Commission Items & Rates
+                      </h4>
+                      <div className="rounded-xl border border-[#EADFCB] bg-[#FFFDF9] divide-y divide-[#EADFCB]/60 overflow-hidden text-xs">
+                        {inspectingOrder.items.map((item, idx) => (
+                          <div key={idx} className="p-3 flex justify-between items-center">
+                            <div>
+                              <span className="font-semibold text-[#0F172A]">{item.name}</span>
+                              <span className="text-[#64748B] block text-[11px]">
+                                Quantity: {item.quantity}
+                              </span>
+                            </div>
+                            <span className="font-bold text-[#5C3A1E]">
+                              ₹{(item.price * item.quantity).toLocaleString("en-IN")}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Client Info & Revisions Overview */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] space-y-1">
+                      <span className="text-[10px] uppercase font-bold text-[#94A3B8] block">Commissioned By</span>
+                      <p className="font-semibold text-[#0F172A]">{inspectingOrder.clientName || user?.displayName || "Studio Client"}</p>
+                      <p className="text-[11px] text-[#64748B]">{inspectingOrder.clientEmail || user?.email}</p>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] space-y-1">
+                      <span className="text-[10px] uppercase font-bold text-[#94A3B8] block">Revision Rounds</span>
+                      <p className="font-semibold text-[#5C3A1E]">
+                        Round {inspectingOrder.revisionRound || 0} of {inspectingOrder.maxRevisions || 2} Used
+                      </p>
+                      <p className="text-[11px] text-[#64748B]">
+                        {(inspectingOrder.revisionRound || 0) >= (inspectingOrder.maxRevisions || 2)
+                          ? "Standard revision capacity reached."
+                          : `${(inspectingOrder.maxRevisions || 2) - (inspectingOrder.revisionRound || 0)} included rounds remaining.`}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* =======================================================
+                  SUB-TAB 2: DELIVERABLES & DRIVE VAULT
+                  ======================================================= */}
+              {activeModalTab === "deliverables" && (
+                <div className="space-y-4 text-xs">
+                  {/* Google Drive Vault Banner */}
+                  <div className="p-4 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 text-[#5C3A1E]">
+                      <HardDrive className="w-5 h-5 text-[#A98B57] shrink-0" />
+                      <div>
+                        <span className="font-bold text-xs block text-[#0F172A]">
+                          Google Drive Cloud Vault
+                        </span>
+                        <span className="font-mono text-[11px] text-[#64748B]">
+                          {inspectingOrder.driveFolder}
+                        </span>
+                      </div>
+                    </div>
+                    <Link
+                      href="/media"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FFFFFF] hover:bg-[#F4EFE6] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] transition-colors shrink-0"
+                    >
+                      <span>Open Vault</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+
+                  {/* Delivered Assets List with Version Tags */}
+                  <div className="space-y-2">
+                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-[#A98B57] flex items-center justify-between">
+                      <span>Vaulted Deliverables & Master Files ({inspectingOrder.deliverables?.length || 0})</span>
+                      {inspectingOrder.deliveredAt && (
+                        <span className="text-[10px] text-[#64748B] font-normal">
+                          Last Delivery: {new Date(inspectingOrder.deliveredAt).toLocaleDateString()}
+                        </span>
+                      )}
+                    </h4>
+
+                    {Array.isArray(inspectingOrder.deliverables) && inspectingOrder.deliverables.length > 0 ? (
+                      <div className="rounded-xl border border-[#EADFCB] bg-[#FFFDF9] divide-y divide-[#EADFCB]/60 overflow-hidden text-xs">
+                        {inspectingOrder.deliverables.map((del, idx) => (
+                          <div key={idx} className="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-9 h-9 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-center shrink-0 text-[#5C3A1E]">
+                                <FileCheck className="w-4 h-4 text-[#A98B57]" />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-semibold text-[#0F172A] truncate block">{del.filename}</span>
+                                  {del.version && (
+                                    <span className="font-mono text-[10px] font-bold text-[#5C3A1E] px-1.5 py-0.5 rounded bg-[#FAF9F5] border border-[#EADFCB]">
+                                      {del.version}
+                                    </span>
+                                  )}
+                                  {del.category && (
+                                    <span className="text-[9px] uppercase font-bold text-[#A98B57] px-1.5 py-0.5 rounded bg-[#FFFDF0] border border-[#F1E0A6]">
+                                      {del.category}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[10px] text-[#64748B] block mt-0.5">
+                                  {del.fileSize || "Cloud Master Asset"} {del.mimeType ? `• ${del.mimeType}` : ""}
+                                </span>
+                              </div>
+                            </div>
+
+                            {del.previewUrl && (
+                              <a
+                                href={del.previewUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF9F5] hover:bg-[#F4EFE6] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] transition-colors shrink-0"
+                              >
+                                <Download className="w-3.5 h-3.5" />
+                                <span>Download Asset</span>
+                              </a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-8 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-center text-xs text-[#64748B] space-y-1">
+                        <Sparkles className="w-6 h-6 text-[#A98B57] mx-auto opacity-60" />
+                        <p className="font-semibold text-[#0F172A]">Deliverables in Production</p>
+                        <p className="text-[11px]">
+                          Your assets are currently being crafted in the studio pipeline. Draft renders will appear here upon completion.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* =======================================================
+                  SUB-TAB 3: STATUS HISTORY TIMELINE
+                  ======================================================= */}
+              {activeModalTab === "timeline" && (
+                <div className="space-y-3 text-xs">
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-[#A98B57] flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>Lifecycle Event Log</span>
+                  </h4>
+
+                  {Array.isArray(inspectingOrder.statusHistory) && inspectingOrder.statusHistory.length > 0 ? (
+                    <div className="p-4 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] space-y-3.5 max-h-80 overflow-y-auto">
+                      {inspectingOrder.statusHistory.map((step, idx) => (
+                        <div key={idx} className="flex items-start gap-3 text-xs pb-3 border-b border-[#EADFCB]/50 last:border-b-0 last:pb-0">
+                          <div className="w-3 h-3 rounded-full bg-[#D4A35A] mt-1 shrink-0 ring-4 ring-[#D4A35A]/10" />
+                          <div className="flex-1 space-y-0.5">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-[#0F172A] uppercase text-[10px] tracking-wider">
+                                {step.status.replace("_", " ")}
+                              </span>
+                              <span className="text-[10px] text-[#94A3B8]">
+                                {step.changedAt ? new Date(step.changedAt).toLocaleString("en-IN") : "Recorded"}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-[#64748B]">
+                              Updated by <strong className="text-[#0F172A]">{step.changedBy}</strong>
+                            </p>
+                            {step.note && (
+                              <p className="text-[11px] text-[#475569] italic pt-0.5">
+                                &ldquo;{step.note}&rdquo;
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-6 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-center text-xs text-[#64748B]">
+                      Initial order placement event recorded.
+                    </div>
                   )}
                 </div>
-              </div>
+              )}
+
+              {/* =======================================================
+                  SUB-TAB 4: ORDER DISCUSSION & COMMENTS THREAD
+                  ======================================================= */}
+              {activeModalTab === "discussion" && (
+                <div className="space-y-4 text-xs">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-[#A98B57] flex items-center gap-1.5">
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      <span>Studio Comments Thread</span>
+                    </h4>
+                    <span className="text-[10px] text-[#64748B]">
+                      Direct communication on Order #{inspectingOrder.orderNumber || inspectingOrder.code}
+                    </span>
+                  </div>
+
+                  {/* Messages Feed */}
+                  <div className="p-4 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] space-y-3 max-h-72 overflow-y-auto">
+                    {isLoadingComments ? (
+                      <div className="p-6 text-center text-xs text-[#64748B]">
+                        <Loader2 className="w-4 h-4 animate-spin text-[#5C3A1E] mx-auto mb-1" />
+                        <span>Loading order discussion...</span>
+                      </div>
+                    ) : orderComments.length === 0 ? (
+                      <div className="p-6 text-center text-xs text-[#64748B] space-y-1">
+                        <MessageSquare className="w-6 h-6 text-[#94A3B8] mx-auto opacity-50" />
+                        <p className="font-semibold text-[#0F172A]">No comments yet</p>
+                        <p className="text-[11px]">Send a note, question, or reference link directly to the studio art director below.</p>
+                      </div>
+                    ) : (
+                      orderComments.map((comm) => {
+                        const isClient = comm.sender === "client";
+                        return (
+                          <div
+                            key={comm.id}
+                            className={`flex flex-col space-y-1 max-w-[85%] ${
+                              isClient ? "ml-auto items-end" : "mr-auto items-start"
+                            }`}
+                          >
+                            <div className="flex items-center gap-1.5 text-[10px] text-[#94A3B8] px-1">
+                              <span className="font-semibold text-[#5C3A1E]">{comm.authorName}</span>
+                              <span>• {new Date(comm.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                            </div>
+                            <div
+                              className={`p-3 rounded-2xl text-xs leading-relaxed ${
+                                isClient
+                                  ? "bg-[#5C3A1E] text-white rounded-tr-none shadow-2xs"
+                                  : "bg-[#FAF9F5] border border-[#EADFCB] text-[#0F172A] rounded-tl-none"
+                              }`}
+                            >
+                              <p className="whitespace-pre-line">{comm.text}</p>
+                              {comm.attachmentUrl && (
+                                <a
+                                  href={comm.attachmentUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={`mt-2 inline-flex items-center gap-1 text-[11px] underline font-semibold ${
+                                    isClient ? "text-[#D4A35A]" : "text-[#5C3A1E]"
+                                  }`}
+                                >
+                                  <span>📎 {comm.attachmentName || "Attached Reference"}</span>
+                                  <ExternalLink className="w-3 h-3" />
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* Post Comment Input Form */}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handlePostComment();
+                    }}
+                    className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] space-y-2"
+                  >
+                    <textarea
+                      rows={2}
+                      placeholder="Write a message to the studio art director..."
+                      value={newCommentText}
+                      onChange={(e) => setNewCommentText(e.target.value)}
+                      className="w-full p-2.5 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                    />
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <input
+                        type="url"
+                        placeholder="Optional reference / annotation link (Figma, Drive, Loom)..."
+                        value={newCommentAttachmentUrl}
+                        onChange={(e) => setNewCommentAttachmentUrl(e.target.value)}
+                        className="w-full sm:w-80 px-2.5 py-1.5 rounded-lg bg-white border border-[#EADFCB] text-[11px] text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                      />
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        size="sm"
+                        disabled={!newCommentText.trim() || isPostingComment}
+                        isLoading={isPostingComment}
+                        leftIcon={<Send className="w-3.5 h-3.5" />}
+                      >
+                        Send Note
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+              )}
 
               {/* Feedback Success State */}
               {feedbackSuccess && (
-                <div className="p-3 rounded-xl bg-[#F0FDF4] border border-[#86EFAC] text-xs text-[#166534] flex items-center gap-2">
+                <div className="p-3.5 rounded-xl bg-[#F0FDF4] border border-[#86EFAC] text-xs text-[#166534] flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
                   <span>{feedbackSuccess}</span>
                 </div>
@@ -699,17 +3322,33 @@ export default function OrdersPage() {
 
               {/* Revision Form Mode */}
               {isRevisionMode ? (
-                <div className="space-y-4 pt-2 border-t border-[#EADFCB]">
-                  <h4 className="font-serif text-sm font-semibold text-[#0F172A]">
-                    Submit Revision Notes to Art Director
-                  </h4>
+                <div className="space-y-4 pt-3 border-t border-[#EADFCB]">
+                  <div className="space-y-1">
+                    <h4 className="font-serif text-sm font-semibold text-[#0F172A]">
+                      Submit Revision Request to Art Director
+                    </h4>
+                    <p className="text-[11px] text-[#64748B]">
+                      Pass {(inspectingOrder.revisionRound || 0) + 1} of {inspectingOrder.maxRevisions || 2} included revisions. Turnaround: 24-48 hours.
+                    </p>
+                  </div>
+
+                  {(inspectingOrder.revisionRound || 0) >= (inspectingOrder.maxRevisions || 2) && (
+                    <div className="p-3 rounded-xl bg-[#FFFBEB] border border-[#FDE68A] text-xs text-[#92400E] flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-[#D97706] shrink-0 mt-0.5" />
+                      <span>
+                        Note: All standard included revisions ({inspectingOrder.maxRevisions || 2}) have been utilized. This extra pass request will be scheduled and coordinated directly with the Art Director.
+                      </span>
+                    </div>
+                  )}
+
                   <textarea
                     rows={3}
-                    placeholder="Specify the exact adjustments desired (e.g. increase lighting softness, refine Sanskrit typography kerning, adjust texture reflectiveness)..."
+                    placeholder="Specify the exact adjustments desired (e.g. increase ambient lighting softness, refine Sanskrit typography kerning, adjust texture reflectiveness)..."
                     value={revisionNotes}
                     onChange={(e) => setRevisionNotes(e.target.value)}
                     className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/20"
                   />
+
                   <div className="flex items-center justify-end gap-2">
                     <Button
                       variant="ghost"
@@ -721,6 +3360,8 @@ export default function OrdersPage() {
                     <Button
                       variant="primary"
                       size="sm"
+                      disabled={!revisionNotes.trim() || isSubmittingOrder}
+                      isLoading={isSubmittingOrder}
                       onClick={() => handleRequestRevision(inspectingOrder.id)}
                     >
                       Send Revision Request
@@ -728,9 +3369,9 @@ export default function OrdersPage() {
                   </div>
                 </div>
               ) : (
-                /* Primary Actions: Approve vs Request Revision */
+                /* Primary Actions: Approve vs Request Revision vs Receipt vs Pay */
                 <div className="pt-4 border-t border-[#EADFCB] flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -738,26 +3379,64 @@ export default function OrdersPage() {
                     >
                       Close
                     </Button>
-                    {inspectingOrder.revisionRound < inspectingOrder.maxRevisions && (
+
+                    {inspectingOrder.paymentStatus === "paid" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setReceiptOrder({
+                            ...inspectingOrder,
+                            orderNumber: inspectingOrder.orderNumber || inspectingOrder.code || inspectingOrder.id,
+                          });
+                          setIsReceiptOpen(true);
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#F8F5EF] transition-all cursor-pointer flex items-center gap-1.5 min-h-[36px]"
+                      >
+                        <Receipt className="w-3.5 h-3.5 text-[#A98B57]" />
+                        <span>View Receipt</span>
+                      </button>
+                    )}
+
+                    {(inspectingOrder.status === "pending_payment" || inspectingOrder.paymentStatus === "unpaid") && (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => {
+                          handleRetryPayment(inspectingOrder);
+                          setInspectingOrder(null);
+                        }}
+                        leftIcon={<Lock className="w-3.5 h-3.5 text-[#EADFCB]" />}
+                      >
+                        Pay Now
+                      </Button>
+                    )}
+
+                    {(inspectingOrder.status === "delivered" ||
+                      inspectingOrder.status === "draft_delivered" ||
+                      inspectingOrder.status === "awaiting_approval") && (
                       <Button
                         variant="secondary"
                         size="sm"
                         onClick={() => setIsRevisionMode(true)}
                         leftIcon={<RotateCcw className="w-3.5 h-3.5 text-[#5C3A1E]" />}
                       >
-                        Request Revision
+                        Request Changes (Round {(inspectingOrder.revisionRound || 0) + 1})
                       </Button>
                     )}
                   </div>
 
-                  {inspectingOrder.status === "awaiting_approval" && (
+                  {(inspectingOrder.status === "delivered" ||
+                    inspectingOrder.status === "draft_delivered" ||
+                    inspectingOrder.status === "awaiting_approval") && (
                     <Button
                       variant="primary"
                       size="md"
+                      disabled={isSubmittingOrder}
+                      isLoading={isSubmittingOrder}
                       onClick={() => handleApproveDeliverable(inspectingOrder.id)}
-                      leftIcon={<CheckCircle2 className="w-4 h-4" />}
+                      leftIcon={<CheckCircle2 className="w-4 h-4 text-[#EADFCB]" />}
                     >
-                      Approve & Release to Drive
+                      Approve & Complete (100%)
                     </Button>
                   )}
                 </div>
@@ -765,6 +3444,13 @@ export default function OrdersPage() {
             </div>
           )}
         </Modal>
+
+        {/* Official Receipt & Tax Invoice Modal */}
+        <OrderReceiptModal
+          order={receiptOrder}
+          isOpen={isReceiptOpen}
+          onClose={() => setIsReceiptOpen(false)}
+        />
       </div>
     </RouteGuard>
   );

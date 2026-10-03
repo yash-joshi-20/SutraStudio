@@ -1,0 +1,552 @@
+{
+  "name": "Sutra Studio — W1 Order Fulfillment Router",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "W1_order_fulfillment_router",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": false
+        }
+      },
+      "id": "node-webhook-intake",
+      "name": "Intake Webhook (Verified Payment)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300],
+      "webhookId": "sutra-w1-order-router"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"received\": true,\n  \"orderId\": \"{{ $json.body?.orderId || $json.orderId }}\",\n  \"status\": \"queued\",\n  \"message\": \"Order intake verified by Sutra Studio Fulfillment Router.\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "node-respond-200",
+      "name": "Respond 200 Immediately",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.APP_BASE_URL || 'http://localhost:3000' }}/api/n8n/orders",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "orderId",
+              "value": "={{ $('Intake Webhook (Verified Payment)').item.json.body?.orderId || $('Intake Webhook (Verified Payment)').item.json.orderId }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-sutra-secret",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET || 'sutra_n8n_sec_live_9941a8' }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": false
+            }
+          }
+        }
+      },
+      "id": "node-fetch-order-context",
+      "name": "Fetch Order Context from Sutra App",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.service }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "Image Creation",
+              "outputKey": "ai_image"
+            },
+            {
+              "value2": "Video Production",
+              "outputKey": "ai_video"
+            },
+            {
+              "value2": "Interior Design",
+              "outputKey": "ai_interior"
+            },
+            {
+              "value2": "Digital Marketing",
+              "outputKey": "ai_marketing"
+            },
+            {
+              "value2": "Meta Ads & Digital Marketing",
+              "outputKey": "ai_meta_ads"
+            }
+          ]
+        },
+        "fallbackOutput": 5
+      },
+      "id": "node-service-switch",
+      "name": "Route by Service Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "={{ $env.GEMINI_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": \"You are Senior Art Director at Sutra Studio. Synthesize an ultra-detailed 8K prompt for commercial image synthesis based on this brief:\\nOrder: {{ $('Fetch Order Context from Sutra App').item.json.orderNumber }}\\nTitle: {{ $('Fetch Order Context from Sutra App').item.json.title }}\\nBrief: {{ $('Fetch Order Context from Sutra App').item.json.requirements }}\\nProduce only a JSON with fields: prompt, negativePrompt, lighting, camera, colorPalette.\"\n    }]\n  }]\n}"
+      },
+      "id": "node-ai-image-prompt",
+      "name": "AI Image Art Direction Prompt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1180, 80]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer ={{ $env.STABILITY_API_KEY || $env.IMAGE_PROVIDER_API_KEY }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text_prompts\": [\n    {\n      \"text\": \"{{ $json.candidates[0].content.parts[0].text.replace(/\\n/g, ' ') }}\",\n      \"weight\": 1\n    }\n  ],\n  \"cfg_scale\": 7,\n  \"height\": 1024,\n  \"width\": 1024,\n  \"samples\": 1,\n  \"steps\": 30\n}"
+      },
+      "id": "node-render-image-draft",
+      "name": "Render High-Fidelity Draft Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1420, 80]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "xi-api-key",
+              "value": "={{ $env.ELEVENLABS_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"{{ $('Fetch Order Context from Sutra App').item.json.requirements || 'Experience premium Indian craftsmanship infused with modern spatial intelligence by Sutra Studio.' }}\",\n  \"model_id\": \"eleven_multilingual_v2\",\n  \"voice_settings\": {\n    \"stability\": 0.65,\n    \"similarity_boost\": 0.85\n  }\n}"
+      },
+      "id": "node-voiceover-generator",
+      "name": "Generate Studio Voiceover Audio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1180, 240]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.klingai.com/v1/videos/text2video",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer ={{ $env.KLING_API_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"kling-v1\",\n  \"prompt\": \"{{ $('Fetch Order Context from Sutra App').item.json.requirements }}. Cinematic luxury architectural cinematography, 4k resolution, smooth camera dolly.\",\n  \"negative_prompt\": \"blurry, low quality, glitch, distortion\",\n  \"cfg_scale\": 0.5,\n  \"mode\": \"std\",\n  \"aspect_ratio\": \"16:9\",\n  \"duration\": \"5\"\n}"
+      },
+      "id": "node-kling-video-init",
+      "name": "Initialize Kling Video Render Task",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1420, 240]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.klingai.com/v1/videos/text2video/{{ $json.data.task_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer ={{ $env.KLING_API_TOKEN }}"
+            }
+          ]
+        }
+      },
+      "id": "node-kling-task-poll",
+      "name": "Poll Kling Video Task Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1660, 240]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "={{ $env.GEMINI_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": \"You are Lead Architect at Sutra Studio. Create 3 photorealistic concept descriptions and material palettes for this interior design project:\\nClient: {{ $('Fetch Order Context from Sutra App').item.json.clientName }}\\nBrief: {{ $('Fetch Order Context from Sutra App').item.json.requirements }}\\nSpecify teak wood, polished brass, kota stone, lighting mood, and spatial layout.\"\n    }]\n  }]\n}"
+      },
+      "id": "node-interior-design-concept",
+      "name": "Draft Interior Spatial Concepts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1180, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "={{ $env.GEMINI_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": \"You are Head of Growth at Sutra Studio. Draft a 30-day digital marketing content schedule, viral hook ideas, ad angles, and copywriting for:\\nBrand: {{ $('Fetch Order Context from Sutra App').item.json.clientName }}\\nBrief: {{ $('Fetch Order Context from Sutra App').item.json.requirements }}\"\n    }]\n  }]\n}"
+      },
+      "id": "node-marketing-plan-generator",
+      "name": "Draft 30-Day Content Matrix",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1180, 560]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "={{ $env.GEMINI_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": \"Structure a PAUSED Meta Ads campaign draft with targeting, 3 ad variations (headline, primary text, CTA), and a daily budget cap of INR 1,500 for brief:\\n{{ $('Fetch Order Context from Sutra App').item.json.requirements }}. Strict rule: campaign must be created as PAUSED pending client approval.\"\n    }]\n  }]\n}"
+      },
+      "id": "node-meta-ads-draft",
+      "name": "Create Paused Meta Ads Structure",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1180, 720]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "={{ $env.GEMINI_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": \"You are Studio Executive Producer at Sutra Studio. For this human-led service: {{ $('Fetch Order Context from Sutra App').item.json.service }}\\nClient: {{ $('Fetch Order Context from Sutra App').item.json.clientName }}\\nRequirements: {{ $('Fetch Order Context from Sutra App').item.json.requirements }}\\nCreate a comprehensive production task breakdown: 1. Executive Summary, 2. Technical Checklist, 3. Milestones Timeline, 4. Asset Deliverable Matrix for Drive '02 Drafts'.\"\n    }]\n  }]\n}"
+      },
+      "id": "node-human-production-task",
+      "name": "Synthesize Human Production Task & Brief",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1180, 900]
+    },
+    {
+      "parameters": {},
+      "id": "node-merge-branches",
+      "name": "Merge Execution Branches",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [1940, 480]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.APP_BASE_URL || 'http://localhost:3000' }}/api/n8n/webhook",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-sutra-secret",
+              "value": "={{ $env.N8N_WEBHOOK_SECRET || 'sutra_n8n_sec_live_9941a8' }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"orderId\": \"{{ $('Fetch Order Context from Sutra App').item.json.orderId }}\",\n  \"clientId\": \"{{ $('Fetch Order Context from Sutra App').item.json.clientUid }}\",\n  \"runId\": \"sutra_run_{{ $now.timestamp }}\",\n  \"workflowId\": \"W1_order_fulfillment_router\",\n  \"status\": \"draft_ready\",\n  \"driveFolder\": \"02 Drafts\",\n  \"deliverableUrl\": \"https://drive.google.com/drive/folders/{{ $('Fetch Order Context from Sutra App').item.json.driveFolderId }}\",\n  \"filename\": \"{{ $('Fetch Order Context from Sutra App').item.json.service }}_Draft_v1.zip\",\n  \"notes\": \"Autonomous creative draft uploaded to Google Drive '02 Drafts' vault. Ready for Studio Admin review.\"\n}"
+      },
+      "id": "node-callback-app-admin",
+      "name": "Report Draft Ready to Sutra App (Admin Review Gate)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2200, 480]
+    }
+  ],
+  "connections": {
+    "Intake Webhook (Verified Payment)": {
+      "main": [
+        [
+          {
+            "node": "Respond 200 Immediately",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond 200 Immediately": {
+      "main": [
+        [
+          {
+            "node": "Fetch Order Context from Sutra App",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Order Context from Sutra App": {
+      "main": [
+        [
+          {
+            "node": "Route by Service Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Service Type": {
+      "main": [
+        [
+          {
+            "node": "AI Image Art Direction Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate Studio Voiceover Audio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Draft Interior Spatial Concepts",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Draft 30-Day Content Matrix",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Paused Meta Ads Structure",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Synthesize Human Production Task & Brief",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Image Art Direction Prompt": {
+      "main": [
+        [
+          {
+            "node": "Render High-Fidelity Draft Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render High-Fidelity Draft Image": {
+      "main": [
+        [
+          {
+            "node": "Merge Execution Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Studio Voiceover Audio": {
+      "main": [
+        [
+          {
+            "node": "Initialize Kling Video Render Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Kling Video Render Task": {
+      "main": [
+        [
+          {
+            "node": "Poll Kling Video Task Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll Kling Video Task Status": {
+      "main": [
+        [
+          {
+            "node": "Merge Execution Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Draft Interior Spatial Concepts": {
+      "main": [
+        [
+          {
+            "node": "Merge Execution Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Draft 30-Day Content Matrix": {
+      "main": [
+        [
+          {
+            "node": "Merge Execution Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Paused Meta Ads Structure": {
+      "main": [
+        [
+          {
+            "node": "Merge Execution Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Synthesize Human Production Task & Brief": {
+      "main": [
+        [
+          {
+            "node": "Merge Execution Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Execution Branches": {
+      "main": [
+        [
+          {
+            "node": "Report Draft Ready to Sutra App (Admin Review Gate)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "W4_error_handler"
+  }
+}

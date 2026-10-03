@@ -116,7 +116,7 @@ export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
     title: "GPay & Dynamic UPI Zero-Commission Payment System",
     content: `Our studio supports 100% direct bank settlement with zero gateway commissions:
 
-• **Merchant VPA**: \`yashj9428-1@oksbi\` (SUTRA STUDIO / SYNAPSE KINETIC)
+• **Merchant VPA**: \`yashj9428-1@oksbi\` (SUTRA STUDIO)
 • **Instant Mobile Deep-Linking**: 1-Click payment via Google Pay, PhonePe, Paytm, or BHIM.
 • **Dynamic QR Codes**: Generated on-demand with exact order amount and order code.
 • **UTR Verification**: Submit the 12-digit Bank Transaction Reference Number (UTR) from your GPay/UPI receipt to instantly verify payment and unlock production pipelines (T+0 instant settlement).
@@ -137,7 +137,7 @@ export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
     client_id: "client_sutra",
     category: "About",
     title: "About Sutra Studio — Creative Technology & Digital Craftsmanship",
-    content: `**Sutra Studio** (Synapse Kinetic) is a premier Indian-inspired creative technology atelier blending ancient aesthetic harmony with cutting-edge digital engineering.
+    content: `**Sutra Studio** is a premier Indian-inspired creative technology atelier blending ancient aesthetic harmony with cutting-edge digital engineering.
 
 • **Core Focus**: Bespoke 3D Spatial Visualization, Cinematic 4K Video Commercials, High-Performance Next.js Digital Flagships, and Autonomous AI Workflows.
 • **Design Philosophy**: Sacred geometric proportions, minimalist warm-ivory aesthetics, and zero-compromise precision.

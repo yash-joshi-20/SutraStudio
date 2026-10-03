@@ -32,21 +32,22 @@ import {
 } from "lucide-react";
 
 export default function ProfilePage() {
-  const { user, logout } = useAuth();
+  const { user, profile: authProfile, logout, logoutEverywhere } = useAuth();
 
   const [isEditing, setIsEditing] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // Professional Client Account Details
+  // Seeded from the verified server profile. Empty string means "not provided
+  // yet" — never a placeholder identity presented as real data.
   const [profile, setProfile] = useState({
-    fullName: user?.displayName || "Yash Joshi",
-    jobTitle: "Creative Director & Lead Architect",
-    email: user?.email || "yash@studioliving.com",
-    phone: "+91 98201 44820",
-    companyName: user?.company || "Studio Living Architecture",
-    companyWebsite: "https://studioliving.com",
-    location: "Mumbai, India",
-    driveFolder: user?.driveFolderId || "drive_fld_sutra_001",
+    fullName: authProfile?.displayName || user?.displayName || "",
+    jobTitle: "",
+    email: user?.email || "",
+    phone: authProfile?.phone || "",
+    companyName: authProfile?.companyName || "",
+    companyWebsite: authProfile?.website || "",
+    location: authProfile?.billing?.city || "",
+    driveFolder: authProfile?.driveFolderId || "",
   });
 
   // Password Change State
@@ -129,7 +130,7 @@ export default function ProfilePage() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={logout}
+                onClick={() => void logout()}
                 leftIcon={<LogOut className="w-3.5 h-3.5 text-[#B42318]" />}
                 className="border-[#FECDCA] text-[#B42318] hover:bg-[#FEF3F2] min-h-[44px] touch-target"
               >
@@ -451,16 +452,35 @@ export default function ProfilePage() {
               </p>
             </div>
 
-            <Button
-              type="button"
-              variant="secondary"
-              size="md"
-              onClick={logout}
-              leftIcon={<LogOut className="w-4 h-4 text-[#B42318]" />}
-              className="w-full sm:w-auto border-[#FECDCA] text-[#B42318] hover:bg-[#FEF3F2] min-h-[44px]"
-            >
-              Sign Out of Studio
-            </Button>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Button
+                type="button"
+                variant="secondary"
+                size="md"
+                onClick={() => void logout()}
+                leftIcon={<LogOut className="w-4 h-4 text-[#B42318]" />}
+                className="w-full sm:w-auto border-[#FECDCA] text-[#B42318] hover:bg-[#FEF3F2] min-h-[44px]"
+              >
+                Sign Out of Studio
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="md"
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "Sign out of every device, including this one? You will need to sign in again."
+                    )
+                  ) {
+                    void logoutEverywhere();
+                  }
+                }}
+                className="w-full sm:w-auto min-h-[44px]"
+              >
+                Sign Out Everywhere
+              </Button>
+            </div>
           </div>
         </main>
 

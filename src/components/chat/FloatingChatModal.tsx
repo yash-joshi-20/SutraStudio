@@ -20,11 +20,17 @@ import {
   HelpCircle,
   ArrowRight,
   ExternalLink,
+  CreditCard,
+  Clock,
+  CheckCircle2,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { LotusSymbol } from "@/components/brand/SutraLogo";
 import { motion, AnimatePresence } from "framer-motion";
+import { openRazorpayCheckout } from "@/lib/services/razorpayClient";
+import { useAuth } from "@/lib/auth/authContext";
 
 interface ChatMessage {
   id: string;
@@ -33,6 +39,16 @@ interface ChatMessage {
   time: string;
   sources?: Array<{ title: string; category: string }>;
   isLeadPrompt?: boolean;
+  orderDraft?: {
+    orderId: string;
+    orderNumber: string;
+    service: string;
+    totalAmount: number;
+    razorpayOrderId: string;
+    keyId: string;
+    paid?: boolean;
+    paymentId?: string;
+  };
 }
 
 const QUICK_ACTIONS = [
@@ -174,7 +190,12 @@ export function openSutraChat() {
   }
 }
 
+import { usePathname, useRouter } from "next/navigation";
+
 export function FloatingChatModal() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { user, profile, isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
@@ -182,6 +203,7 @@ export function FloatingChatModal() {
     window.addEventListener("open-sutra-chat", handleOpen);
     return () => window.removeEventListener("open-sutra-chat", handleOpen);
   }, []);
+
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "msg-welcome",
@@ -197,14 +219,15 @@ export function FloatingChatModal() {
   // Human Handoff / Lead Capture Modal
   const [showHandoffModal, setShowHandoffModal] = useState(false);
   const [handoffForm, setHandoffForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    company: "",
+    name: user?.displayName || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    company: profile?.companyName || "",
     requirement: "",
     message: "",
   });
   const [handoffSubmitted, setHandoffSubmitted] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -213,6 +236,96 @@ export function FloatingChatModal() {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, isOpen, isLoading]);
+
+  // Hide the AI Launcher on auth pages (or when navigating to /login or /admin/login).
+  // This guard deliberately sits AFTER every hook so the hook order never
+  // changes between renders — moving it earlier crashes React on navigation.
+  if (pathname === "/login" || pathname === "/admin/login" || pathname?.startsWith("/admin/login")) {
+    return null;
+  }
+
+  const handlePayChatOrder = async (msgId: string, draft: NonNullable<ChatMessage["orderDraft"]>) => {
+    if (!isAuthenticated || !user) {
+      // Save draft into session and redirect to login with returnTo
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("sutra_pending_chat_order", JSON.stringify(draft));
+      }
+      router.push(`/login?returnTo=${encodeURIComponent("/orders")}`);
+      return;
+    }
+
+    setIsProcessingPayment(draft.orderId);
+    try {
+      await openRazorpayCheckout({
+        key: draft.keyId,
+        amountINR: draft.totalAmount,
+        currency: "INR",
+        name: "Sutra Studio",
+        description: `${draft.service} Commission (#${draft.orderNumber})`,
+        order_id: draft.razorpayOrderId,
+        prefill: {
+          name: user.displayName || "Studio Client",
+          email: user.email || "client@sutrastudio.com",
+          contact: user.phone || "+91 98765 43210",
+        },
+        onSuccess: async (response) => {
+          try {
+            const verifyRes = await fetch("/api/payments/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                orderId: draft.orderId,
+              }),
+            });
+            const verifyData = await verifyRes.json();
+            if (!verifyRes.ok || !verifyData.verified) {
+              throw new Error(verifyData.error || "Payment signature verification failed");
+            }
+
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === msgId
+                  ? {
+                      ...m,
+                      orderDraft: {
+                        ...m.orderDraft!,
+                        paid: true,
+                        paymentId: response.razorpay_payment_id,
+                      },
+                    }
+                  : m
+              )
+            );
+
+            const confirmationMsg: ChatMessage = {
+              id: `bot_confirm_${Date.now()}`,
+              sender: "bot",
+              text: `✓ Payment verified! Razorpay Transaction ID: ${response.razorpay_payment_id}. Your order #${draft.orderNumber} is now officially paid and has moved to our active production pipeline. You can review all details in My Orders.`,
+              time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            };
+            setMessages((prev) => [...prev, confirmationMsg]);
+            window.dispatchEvent(new Event("sutra_orders_changed"));
+          } catch (err: any) {
+            alert(`Payment verification failed: ${err.message}`);
+          }
+        },
+        onDismiss: () => {
+          setIsProcessingPayment(null);
+        },
+        onError: (err: any) => {
+          setIsProcessingPayment(null);
+          alert(`Payment failed: ${err.description || err.message || "Unknown error"}`);
+        },
+      });
+    } catch (err: any) {
+      alert(`Could not launch Razorpay: ${err.message}`);
+    } finally {
+      setIsProcessingPayment(null);
+    }
+  };
 
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend || input).trim();
@@ -230,32 +343,55 @@ export function FloatingChatModal() {
     setIsLoading(true);
 
     try {
-      const res = await fetch("/api/chatbot", {
+      const res = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, client_id: "client_sutra" }),
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": user?.uid || "usr_mock_001",
+          "x-user-role": user?.role || "client",
+        },
+        body: JSON.stringify({
+          message: text,
+          mode: "ai",
+          clientId: user?.uid || "client_sutra",
+        }),
       });
-
-      if (!res.ok) throw new Error("API error");
 
       const data = await res.json();
       const botMsg: ChatMessage = {
         id: `bot_${Date.now()}`,
         sender: "bot",
-        text: data.answer || "I don't have verified information about that yet. Please contact our team for the most accurate information.",
+        text: data.reply || data.answer || "I have received your inquiry.",
+        orderDraft: data.orderDraft,
         sources: data.sources,
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
-
       setMessages((prev) => [...prev, botMsg]);
     } catch {
-      const errMsg: ChatMessage = {
-        id: `err_${Date.now()}`,
-        sender: "bot",
-        text: "I don't have verified information about that yet. Please contact our team for the most accurate information.",
-        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      };
-      setMessages((prev) => [...prev, errMsg]);
+      try {
+        const fallbackRes = await fetch("/api/chatbot", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text, client_id: user?.uid || "client_sutra" }),
+        });
+        const fallbackData = await fallbackRes.json();
+        const fallbackMsg: ChatMessage = {
+          id: `bot_${Date.now()}`,
+          sender: "bot",
+          text: fallbackData.answer || "I don't have verified information about that yet. Please contact our team for assistance.",
+          sources: fallbackData.sources,
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        };
+        setMessages((prev) => [...prev, fallbackMsg]);
+      } catch {
+        const errMsg: ChatMessage = {
+          id: `err_${Date.now()}`,
+          sender: "bot",
+          text: "I am currently unable to process your request. Please contact our art director or place your commission directly in My Orders.",
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        };
+        setMessages((prev) => [...prev, errMsg]);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -316,13 +452,21 @@ export function FloatingChatModal() {
 
   return (
     <>
-      {/* Floating Trigger Button */}
-      <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-50 flex items-center gap-3">
+      {/*
+        Floating Trigger Button.
+        Layering: sits ABOVE the bottom navigation (--z-launcher 45 > --z-nav 40)
+        but BELOW modals, drawers and toasts. The previous `z-45` class does not
+        exist in Tailwind's scale, so the launcher had no stacking context at all
+        and was painted underneath the bottom navigation.
+        Vertical offset uses --nav-space so it clears the nav plus the iOS home
+        indicator, and the trigger is always 56px (w-13/h-13 are not real classes).
+      */}
+      <div className="fixed bottom-[calc(var(--nav-space)+0.75rem)] sm:bottom-6 right-4 sm:right-6 z-[var(--z-launcher)] flex items-center gap-3">
         {!isOpen && (
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="hidden sm:flex items-center gap-2 bg-[#FFFDF9] border border-[#E5E1D8] px-3.5 py-2 rounded-full shadow-lg text-xs text-[#5C3A1E] font-medium"
+            className="hidden sm:flex items-center gap-2 bg-[#FFFDF9] border border-[#EADFCB] px-3.5 py-2 rounded-full shadow-lg text-xs text-[#5C3A1E] font-medium"
           >
             <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-pulse" />
             <span>Ask Sutra AI</span>
@@ -330,9 +474,11 @@ export function FloatingChatModal() {
         )}
 
         <button
+          type="button"
           onClick={() => setIsOpen(!isOpen)}
           aria-label={isOpen ? "Close AI Assistant" : "Open AI Assistant"}
-          className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-[#5C3A1E] text-white flex items-center justify-center shadow-xl hover:bg-[#432A15] hover:scale-105 active:scale-95 transition-all duration-200 border-2 border-[#D4A35A]/50 focus:outline-none focus:ring-4 focus:ring-[#D4A35A]/30 cursor-pointer touch-target"
+          aria-expanded={isOpen}
+          className="w-14 h-14 shrink-0 rounded-full bg-[#5C3A1E] text-white flex items-center justify-center shadow-xl hover:bg-[#432A15] hover:scale-105 active:scale-95 transition-all duration-200 border-2 border-[#D4A35A]/50 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#D4A35A]/40 cursor-pointer touch-target"
         >
           {isOpen ? (
             <X className="w-6 h-6 text-white" />
@@ -345,7 +491,7 @@ export function FloatingChatModal() {
         </button>
       </div>
 
-      {/* Floating Chat Modal */}
+      {/* Floating Chat Panel (z-[var(--z-modal)]) */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -353,7 +499,10 @@ export function FloatingChatModal() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-24 right-2 sm:right-6 z-50 w-[calc(100vw-1rem)] sm:w-[430px] max-h-[82dvh] h-[80dvh] bg-[#FAF9F5] border border-[#E5E1D8] rounded-3xl shadow-2xl flex flex-col overflow-hidden text-[#171717]"
+            role="dialog"
+            aria-modal="false"
+            aria-label="Sutra AI Assistant"
+            className="fixed bottom-[calc(var(--nav-space)+var(--launcher-size)+1rem)] sm:bottom-24 right-2 sm:right-6 z-[var(--z-modal)] w-[calc(100vw-1rem)] sm:w-[430px] max-h-[78dvh] h-[78dvh] bg-[#FFFDF9] border border-[#EADFCB] rounded-3xl shadow-2xl flex flex-col overflow-hidden text-[#0F172A]"
           >
             {/* Modal Header */}
             <div className="p-4 bg-white border-b border-[#E5E1D8] flex items-center justify-between shrink-0">
@@ -444,6 +593,60 @@ export function FloatingChatModal() {
                         text={m.text}
                         isUser={m.sender === "user"}
                       />
+
+                      {/* Order Draft & Razorpay Pay Now Card */}
+                      {m.orderDraft && (
+                        <div className="mt-3 p-3 rounded-xl bg-[#FFFDF9] border border-[#D4A35A]/50 space-y-2 shadow-2xs">
+                          <div className="flex items-center justify-between">
+                            <span className="font-mono text-xs font-bold text-[#5C3A1E]">
+                              #{m.orderDraft.orderNumber}
+                            </span>
+                            {m.orderDraft.paid ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#F0FDF4] text-[#15803D] border border-[#BBF7D0]">
+                                <CheckCircle2 className="w-3 h-3" />
+                                <span>Paid & Confirmed</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A]">
+                                <Clock className="w-3 h-3" />
+                                <span>Pending Payment</span>
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-[#64748B] font-medium">{m.orderDraft.service}</span>
+                            <span className="font-serif font-bold text-sm text-[#5C3A1E]">
+                              ₹{m.orderDraft.totalAmount.toLocaleString("en-IN")}
+                            </span>
+                          </div>
+
+                          {m.orderDraft.paid ? (
+                            <div className="p-2 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] text-[11px] text-[#15803D] flex items-center gap-1.5">
+                              <Check className="w-3.5 h-3.5 shrink-0" />
+                              <span>Verified (ID: <strong className="font-mono">{m.orderDraft.paymentId}</strong>). In production.</span>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handlePayChatOrder(m.id, m.orderDraft!)}
+                              disabled={isProcessingPayment === m.orderDraft.orderId}
+                              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-[#5C3A1E] text-white text-xs font-semibold hover:bg-[#432A15] disabled:opacity-50 cursor-pointer shadow-xs transition-all"
+                            >
+                              {isProcessingPayment === m.orderDraft.orderId ? (
+                                <>
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  <span>Opening Razorpay...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <CreditCard className="w-3.5 h-3.5 text-[#D4A35A]" />
+                                  <span>Pay Now via Razorpay</span>
+                                </>
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      )}
 
                       {/* Verified Sources pill */}
                       {m.sources && m.sources.length > 0 && (

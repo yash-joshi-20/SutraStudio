@@ -8,23 +8,29 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "npm run typecheck && npm run lint && node scripts/regression-test.mjs && node scripts/ai-workflow-regression.mjs && node scripts/storage-regression.mjs && node scripts/production-checks.mjs && node scripts/final-acceptance-audit.mjs && node scripts/security-acceptance-tests.mjs",
+    "test": "npm run typecheck && npm run lint && node scripts/step8-e2e-verification.mjs && node scripts/regression-test.mjs && node scripts/ai-workflow-regression.mjs && node scripts/storage-regression.mjs && node scripts/production-checks.mjs && node scripts/final-acceptance-audit.mjs && node scripts/security-acceptance-tests.mjs",
+    "test:e2e": "node scripts/step8-e2e-verification.mjs",
     "test:security": "node scripts/security-acceptance-tests.mjs",
     "test:workflows": "node scripts/ai-workflow-regression.mjs",
     "test:storage": "node scripts/storage-regression.mjs",
     "test:production": "node scripts/production-checks.mjs",
     "test:audit": "node scripts/final-acceptance-audit.mjs",
-    "audit": "node scripts/final-acceptance-audit.mjs"
+    "audit": "node scripts/final-acceptance-audit.mjs",
+    "migrate:firebase": "node scripts/migrate-to-firebase.mjs",
+    "migrate:dry-run": "node scripts/migrate-to-firebase.mjs --dry-run"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
     "clsx": "^2.1.1",
+    "firebase": "^11.10.0",
+    "firebase-admin": "^13.10.0",
     "framer-motion": "^13.4.6",
     "gsap": "^3.15.0",
     "lucide-react": "^1.49.0",
     "next": "16.3.8",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "server-only": "^0.0.1",
     "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {

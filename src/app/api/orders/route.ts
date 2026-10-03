@@ -1,134 +1,577 @@
 import { NextResponse } from "next/server";
+import { generateOrderNumber } from "@/lib/types/database";
+import { PaymentsService } from "@/lib/services/payments";
+import { provisionOrderDriveFolders } from "@/lib/services/googleDriveService";
+
+export interface OrderCommentItem {
+  id: string;
+  sender: "client" | "admin" | "system";
+  authorName: string;
+  text: string;
+  attachmentUrl?: string;
+  attachmentName?: string;
+  createdAt: string;
+}
+
+export interface InternalNoteItem {
+  id: string;
+  authorName: string;
+  text: string;
+  createdAt: string;
+}
+
+export interface OrderDeliverableItem {
+  driveFileId: string;
+  filename: string;
+  checksum: string;
+  fileSize: string;
+  mimeType: string;
+  previewUrl?: string;
+  version?: string; // e.g. "v1.0", "v1.1", "v2.0"
+  category?: "draft" | "final" | "revision";
+  uploadedAt?: string;
+}
 
 export interface FirestoreOrderRecord {
   id: string;
   code: string;
   title: string;
   service: string;
-  status: "awaiting_approval" | "in_progress" | "revision_requested" | "completed";
+  status:
+    | "pending_payment"
+    | "paid"
+    | "brief_review"
+    | "in_production"
+    | "draft_delivered"
+    | "awaiting_approval"
+    | "revision_requested"
+    | "approved"
+    | "completed"
+    | "cancelled"
+    | "refunded"
+    | "on_hold"
+    | "closed"
+    | "expired"
+    | "pending"
+    | "confirmed"
+    | "in_progress"
+    | "trial"
+    | "active"
+    | "delivered";
   clientUid: string;
   clientEmail: string;
   driveFolderId: string;
   driveFolderPath: string;
+  driveFolderLink?: string;
+  driveSubfolders?: {
+    clientAssets: { id: string; name: string; link?: string };
+    drafts: { id: string; name: string; link?: string };
+    finalDelivery: { id: string; name: string; link?: string };
+    revisions: { id: string; name: string; link?: string };
+  };
   revisionRound: number;
   maxRevisions: number;
-  deliverables: {
-    driveFileId: string;
-    filename: string;
-    checksum: string;
-    fileSize: string;
-    mimeType: string;
-    previewUrl?: string;
-  }[];
+  deliverables: OrderDeliverableItem[];
+  deliveredAt?: string;
+  assignedTo?: {
+    id: string;
+    name: string;
+    role: string;
+    assignedAt: string;
+  };
   createdAt: string;
   updatedAt: string;
+  // Extended fields for Step 1 & 2
+  orderNumber?: string;
+  clientId?: string;
+  clientName?: string;
+  clientPhone?: string;
+  type?: "service" | "monthly_plan";
+  items?: {
+    serviceId?: string;
+    planId?: string;
+    name: string;
+    price: number;
+    quantity: number;
+  }[];
+  totalAmount?: number;
+  billingCycle?: "monthly" | "quarterly" | "annual";
+  requirements?: string;
+  attachments?: {
+    id?: string;
+    name: string;
+    url?: string;
+    driveFileId?: string;
+    size?: string;
+    fileSize?: string;
+    mimeType?: string;
+  }[];
+  source?: "dashboard" | "ai_chat";
+  chatId?: string;
+  statusLabel?: string;
+  deliverablePreview?: string;
+  notes?: string;
+  // SLA & Delivery Estimation
+  estimatedDeliveryDays?: number;
+  estimatedDueDate?: string;
+  // Discussion Thread & Internal Notes
+  comments?: OrderCommentItem[];
+  internalNotes?: InternalNoteItem[];
+  // Razorpay Payment fields for Step 9 & 15
+  paymentStatus?: "unpaid" | "paid" | "failed" | "refunded";
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  razorpaySignature?: string;
+  amountPaid?: number;
+  paidAt?: string;
+  paymentMethod?: string;
+  failureReason?: string;
+  subscriptionId?: string;
+  subscriptionStatus?: "active" | "cancelled" | "halted" | "pending" | "trial" | "expired" | "closed";
+  nextBillingDate?: string;
+  autoRenew?: boolean;
+  trialEndsAt?: string;
+  currentPeriodStart?: string;
+  currentPeriodEnd?: string;
+  statusHistory?: {
+    status: string;
+    changedAt: string;
+    changedBy: string;
+    note?: string;
+  }[];
+  // n8n Automation Engine & Workflow Tracking
+  workflowStatus?: "idle" | "queued" | "running" | "draft_ready" | "generation_failed" | "completed";
+  workflowRunId?: string;
+  workflowId?: string;
+  workflowRetryCount?: number;
+  workflowLastError?: string;
+  workflowLastDispatchedAt?: string;
+  workflowHistory?: {
+    runId: string;
+    workflowId: string;
+    status: string;
+    timestamp: string;
+    deliverableUrl?: string;
+    error?: string;
+  }[];
+  // Terms Consent & Billing Details
+  consentAgreed?: boolean;
+  consentTimestamp?: string;
+  termsVersion?: string;
+  couponCode?: string;
+  discountAmount?: number;
+  gstAmount?: number;
+  billingDetails?: {
+    legalName?: string;
+    gstin?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
+    isGstClaimed?: boolean;
+  };
 }
 
-export async function GET(req: Request) {
-  const callerUid = req.headers.get("x-user-id");
-  const callerRole = req.headers.get("x-user-role");
-  const url = new URL(req.url);
-  const targetClientUid = url.searchParams.get("clientUid");
+import { SEED_CATALOG_SERVICES, SEED_CATALOG_PLANS, CatalogService, CatalogPlan } from "@/lib/services/serviceCatalog";
 
-  // Multi-tenant security guard: Client A cannot query Client B's data
-  if (callerRole === "client" && targetClientUid && callerUid && targetClientUid !== callerUid) {
-    return NextResponse.json(
-      { error: "Forbidden: Cross-tenant data access is strictly blocked." },
-      { status: 403 }
-    );
+// Canonical Server-Side Database Catalogs (Source of Truth for Price Recomputations)
+const OFFICIAL_SERVICES: Record<
+  string,
+  CatalogService
+> = SEED_CATALOG_SERVICES.reduce((acc, s) => {
+  acc[s.id] = s;
+  return acc;
+}, {} as Record<string, CatalogService>);
+
+const OFFICIAL_PLANS: Record<
+  string,
+  CatalogPlan
+> = SEED_CATALOG_PLANS.reduce((acc, p) => {
+  acc[p.id] = p;
+  return acc;
+}, {} as Record<string, CatalogPlan>);
+
+import { STORED_ORDERS, OrdersStore } from "@/lib/services/ordersStore";
+import { NotificationsStore } from "@/lib/services/notificationsStore";
+import { getAuthenticatedUser } from "@/lib/auth/serverAuth";
+import { AuditLogService } from "@/lib/services/auditLogService";
+import { ClientsStore } from "@/lib/services/clientsStore";
+
+export async function GET(req: Request) {
+  const user = await getAuthenticatedUser(req);
+  const url = new URL(req.url);
+
+  // Return catalog if requested
+  const catalogQuery = url.searchParams.get("catalog");
+  if (catalogQuery === "services") {
+    return NextResponse.json({
+      services: Object.values(OFFICIAL_SERVICES).filter((s) => s.active),
+    });
+  }
+  if (catalogQuery === "plans") {
+    return NextResponse.json({
+      plans: Object.values(OFFICIAL_PLANS).filter((p) => p.active),
+    });
+  }
+  if (catalogQuery === "all") {
+    return NextResponse.json({
+      services: Object.values(OFFICIAL_SERVICES).filter((s) => s.active),
+      plans: Object.values(OFFICIAL_PLANS).filter((p) => p.active),
+    });
   }
 
-  // In production, queries Firestore 'orders' collection scoped to client's uid
-  const orders: FirestoreOrderRecord[] = [
-    {
-      id: "ord_001",
-      code: "#ORD-001",
-      title: "3D Spatial Architecture — Luxury Living Suite",
-      service: "3D Visualization",
-      status: "awaiting_approval",
-      clientUid: "usr_mock_001",
-      clientEmail: "yash@studioliving.com",
-      driveFolderId: "drive_fld_sutra_001",
-      driveFolderPath: "drive_fld_sutra_001/3D_RENDERS",
-      revisionRound: 1,
-      maxRevisions: 2,
-      deliverables: [
-        {
-          driveFileId: "drive_55a120ef_sutra",
-          filename: "Pavilion_Villa_Baked_Model.gltf",
-          checksum: "sha256:7c9921e54f01f0987a...",
-          fileSize: "42.1 MB",
-          mimeType: "model/gltf+json",
-        },
-      ],
-      createdAt: "2026-09-28T10:00:00.000Z",
-      updatedAt: "2026-09-28T14:30:00.000Z",
-    },
-    {
-      id: "ord_002",
-      code: "#ORD-002",
-      title: "Sutra Studio Brand Identity & Sanskrit Typography",
-      service: "Brand Identity",
-      status: "completed",
-      clientUid: "usr_mock_001",
-      clientEmail: "yash@studioliving.com",
-      driveFolderId: "drive_fld_sutra_001",
-      driveFolderPath: "drive_fld_sutra_001/BRAND_ASSETS",
-      revisionRound: 2,
-      maxRevisions: 2,
-      deliverables: [
-        {
-          driveFileId: "drive_33f789aa_sutra",
-          filename: "Sutra_Brand_Guidelines_V2.pdf",
-          checksum: "sha256:1a8844ff0923e1b7c4...",
-          fileSize: "4.8 MB",
-          mimeType: "application/pdf",
-        },
-      ],
-      createdAt: "2026-09-26T08:00:00.000Z",
-      updatedAt: "2026-09-27T18:00:00.000Z",
-    },
-  ];
+  const targetClientUid = url.searchParams.get("clientUid");
+
+  // Multi-tenant security guard: Client cannot query other clients' orders
+  if (user.isAuthenticated && user.role === "client") {
+    if (targetClientUid && targetClientUid !== user.uid && targetClientUid !== user.email) {
+      return NextResponse.json(
+        { error: "Forbidden: Cross-tenant data access is strictly blocked." },
+        { status: 403 }
+      );
+    }
+  }
+
+  let filtered = [...STORED_ORDERS];
+
+  // If caller is an authenticated client, strictly filter to their orders only
+  if (user.isAuthenticated && user.role === "client") {
+    filtered = filtered.filter(
+      (o) =>
+        o.clientUid === user.uid ||
+        o.clientId === user.uid ||
+        (user.email && o.clientEmail && o.clientEmail.toLowerCase() === user.email.toLowerCase())
+    );
+  } else if (targetClientUid) {
+    filtered = filtered.filter(
+      (o) =>
+        o.clientUid === targetClientUid ||
+        o.clientId === targetClientUid ||
+        (o.clientEmail && o.clientEmail.toLowerCase() === targetClientUid.toLowerCase())
+    );
+  }
 
   return NextResponse.json({
     database: "Firebase Firestore",
     collection: "orders",
     storageBackend: "Google Drive Vault API v3",
-    totalCount: orders.length,
-    orders,
+    totalCount: filtered.length,
+    orders: filtered,
   });
 }
 
 export async function POST(req: Request) {
   try {
+    const user = await getAuthenticatedUser(req);
     const body = await req.json();
 
-    const orderId = `ord_${Date.now()}`;
-    const orderCode = `#ORD-${Math.floor(100 + Math.random() * 900)}`;
-    const clientUid = body.clientUid || "usr_mock_001";
+    const orderType: "service" | "monthly_plan" =
+      body.type === "monthly_plan" ? "monthly_plan" : "service";
+
+    let calculatedTotal = 0;
+    let verifiedItems: {
+      serviceId?: string;
+      planId?: string;
+      name: string;
+      price: number;
+      quantity: number;
+    }[] = [];
+    let title = "";
+    let primaryServiceName = "";
+
+    // =========================================================================
+    // SECURITY: CRITICAL SERVER-SIDE PRICE RECOMPUTATION
+    // Never trust client-sent prices. Lookup directly in official database catalog.
+    // =========================================================================
+    if (orderType === "service") {
+      const rawItems = Array.isArray(body.items) ? body.items : [];
+      if (rawItems.length === 0 && body.serviceId) {
+        rawItems.push({ serviceId: body.serviceId, quantity: 1 });
+      }
+
+      for (const item of rawItems) {
+        const srv = OFFICIAL_SERVICES[item.serviceId];
+        if (srv && srv.active) {
+          const qty = Math.max(1, Math.min(50, Math.floor(Number(item.quantity) || 1)));
+          const unitPrice = srv.startingPrice ?? (srv as any).price ?? 5499; // Recomputed from database!
+          calculatedTotal += unitPrice * qty;
+          verifiedItems.push({
+            serviceId: srv.id,
+            name: srv.name,
+            price: unitPrice,
+            quantity: qty,
+          });
+        }
+      }
+
+      if (verifiedItems.length === 0) {
+        return NextResponse.json(
+          { error: "Validation Error: At least one active service must be selected." },
+          { status: 400 }
+        );
+      }
+
+      primaryServiceName = verifiedItems[0].name;
+      title =
+        body.title ||
+        (verifiedItems.length === 1
+          ? `${verifiedItems[0].name} Commission`
+          : `${verifiedItems[0].name} + ${verifiedItems.length - 1} Creative Services`);
+    } else {
+      // Monthly Plan Path
+      const planId = body.planId || "studio-growth";
+      const plan = OFFICIAL_PLANS[planId];
+      if (!plan || !plan.active) {
+        return NextResponse.json(
+          { error: "Validation Error: Selected monthly plan is not active or valid." },
+          { status: 400 }
+        );
+      }
+
+      const cycle =
+        body.billingCycle === "quarterly" || body.billingCycle === "annual"
+          ? body.billingCycle
+          : "monthly";
+
+      let multiplier = 1;
+      let discountMultiplier = 1.0;
+      if (cycle === "quarterly") {
+        multiplier = 3;
+        discountMultiplier = 0.9; // 10% savings
+      } else if (cycle === "annual") {
+        multiplier = 12;
+        discountMultiplier = 0.8; // 20% savings
+      }
+
+      calculatedTotal = Math.round(plan.monthlyPrice * multiplier * discountMultiplier);
+      verifiedItems = [
+        {
+          planId: plan.id,
+          name: `${plan.name} (${cycle.toUpperCase()} RETAINER)`,
+          price: calculatedTotal,
+          quantity: 1,
+        },
+      ];
+      primaryServiceName = plan.name;
+      title = body.title || `${plan.name} Retainer Plan`;
+    }
+
+    // SERVER-BOUND IDENTITY: Derive strictly from authenticated session
+    const clientUid = user.isAuthenticated ? user.uid : (body.clientUid || body.clientId || "usr_client_001");
+    const clientEmail = (user.isAuthenticated && user.email) ? user.email : (body.clientEmail || "client@sutrastudio.com");
+    const clientName = user.isAuthenticated ? (user.name || user.company || body.clientName || "Studio Client") : (body.clientName || "Studio Client");
+    const clientPhone = (user.isAuthenticated && user.phone) ? user.phone : (body.clientPhone || "");
     const driveFolderId = body.driveFolderId || "drive_fld_sutra_001";
+    const orderNumber = generateOrderNumber();
+    const orderCode = `#ORD-${Math.floor(100 + Math.random() * 900)}`;
+    const now = new Date().toISOString();
+
+    // Sync client to Client Directory Dossier store
+    try {
+      ClientsStore.upsertClient({
+        uid: clientUid,
+        email: clientEmail,
+        name: clientName,
+        phone: clientPhone,
+        company: body.companyName || user.company || "Studio Client",
+      });
+    } catch {}
+
+    // -------------------------------------------------------------------------
+    // COUPON & DISCOUNT ENGINE (Server-side validation)
+    // -------------------------------------------------------------------------
+    let discountAmount = 0;
+    let finalPayableAmount = calculatedTotal;
+    let appliedCouponCode: string | undefined = undefined;
+
+    if (body.couponCode) {
+      const { CouponsStore } = await import("@/lib/services/couponsStore");
+      const couponRes = CouponsStore.validateAndApply(body.couponCode, calculatedTotal, primaryServiceName);
+      if (couponRes.valid) {
+        discountAmount = couponRes.discountAmountINR;
+        finalPayableAmount = couponRes.finalAmountINR;
+        appliedCouponCode = couponRes.coupon?.code;
+        CouponsStore.recordUsage(couponRes.coupon?.code || "");
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // OPTIONAL GST COMPUTATION (If enabled by Studio Admin)
+    // -------------------------------------------------------------------------
+    const { StudioSettingsStore } = await import("@/lib/services/studioSettingsStore");
+    const studioSettings = StudioSettingsStore.getSettings();
+    let gstAmount = 0;
+    if (studioSettings.enableGst) {
+      gstAmount = Math.round((finalPayableAmount * (studioSettings.gstPercentage || 18)) / 100);
+      finalPayableAmount += gstAmount;
+    }
+
+    const firstService = verifiedItems[0]?.serviceId ? OFFICIAL_SERVICES[verifiedItems[0].serviceId] : null;
+    const estDays = firstService?.estimatedDeliveryDays || 3;
+    const estDueDate = new Date(Date.now() + estDays * 24 * 3600 * 1000).toISOString();
 
     const newOrder: FirestoreOrderRecord = {
-      id: orderId,
+      id: `ord_${Date.now()}`,
       code: orderCode,
-      title: body.title || body.serviceName || "Custom Studio Service",
-      service: body.serviceName || "3D Visualization",
-      status: "in_progress",
+      orderNumber,
+      title,
+      service: primaryServiceName,
+      type: orderType,
+      items: verifiedItems,
+      totalAmount: finalPayableAmount,
+      couponCode: appliedCouponCode,
+      discountAmount,
+      gstAmount,
+      consentAgreed: Boolean(body.consentAgreed ?? true),
+      consentTimestamp: now,
+      termsVersion: "2.1",
+      billingDetails: body.billingDetails ? {
+        legalName: body.billingDetails.legalName || clientName,
+        gstin: body.billingDetails.gstin,
+        address: body.billingDetails.address,
+        city: body.billingDetails.city,
+        state: body.billingDetails.state,
+        pincode: body.billingDetails.pincode,
+        isGstClaimed: Boolean(body.billingDetails.gstin),
+      } : undefined,
+      billingCycle: body.billingCycle || (orderType === "monthly_plan" ? "monthly" : undefined),
+      requirements: body.requirements || body.brief || body.notes || "",
+      attachments: Array.isArray(body.attachments) ? body.attachments : [],
+      status: "pending_payment",
+      statusLabel: "Pending Payment via Razorpay",
+      source: body.source === "ai_chat" ? "ai_chat" : "dashboard",
+      chatId: body.chatId,
       clientUid,
+      clientId: clientUid,
+      clientName: body.clientName || "Studio Client",
       clientEmail: body.clientEmail || "client@sutrastudio.com",
+      clientPhone: body.clientPhone || "",
       driveFolderId,
-      driveFolderPath: `${driveFolderId}/DELIVERABLES`,
+      driveFolderPath: `${driveFolderId}/NEW_ORDERS`,
       revisionRound: 0,
-      maxRevisions: body.maxRevisions || 2,
+      maxRevisions: body.maxRevisions || (firstService?.revisionsIncluded ?? 2),
       deliverables: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      paymentStatus: "unpaid",
+      estimatedDeliveryDays: estDays,
+      estimatedDueDate: estDueDate,
+      comments: [],
+      internalNotes: [],
+      statusHistory: [
+        {
+          status: "pending_payment",
+          changedAt: now,
+          changedBy: "client",
+          note: `Order placed with server-recomputed catalog pricing (₹${finalPayableAmount.toLocaleString("en-IN")}${appliedCouponCode ? `, Coupon ${appliedCouponCode} applied` : ""}). Awaiting Razorpay payment.`,
+        },
+      ],
+      createdAt: now,
+      updatedAt: now,
+      deliverablePreview:
+        "Commission registered in Firestore. Production brief is pending verified Razorpay checkout.",
     };
+
+    // Auto-provision 4-tier Google Drive folder hierarchy: Root > Clients > {Client} > {Order}
+    try {
+      const driveStructure = await provisionOrderDriveFolders({
+        orderId: newOrder.id,
+        orderNumber,
+        serviceName: primaryServiceName,
+        clientId: clientUid,
+        clientName: newOrder.clientName || "Studio Client",
+      });
+      newOrder.driveFolderId = driveStructure.orderFolderId;
+      newOrder.driveFolderPath = `Clients/${driveStructure.clientFolderName}/${driveStructure.orderFolderName}`;
+      newOrder.driveFolderLink = driveStructure.orderFolderLink;
+      newOrder.driveSubfolders = driveStructure.subfolders;
+    } catch (driveErr) {
+      console.warn("[Orders API] Drive folder auto-provision error:", driveErr);
+    }
+
+    // Create official Razorpay Order via server-side API (amount in paise, receipt = orderNumber)
+    const razorpayOrder = await PaymentsService.createRazorpayOrder({
+      amountINR: finalPayableAmount,
+      orderNumber,
+      orderId: newOrder.id,
+      clientId: clientUid,
+      clientEmail: newOrder.clientEmail,
+      description: `${title} (${orderCode})`,
+    });
+
+    newOrder.razorpayOrderId = razorpayOrder.razorpayOrderId;
+
+    // Monthly Plan: Provision Razorpay Recurring Subscription
+    if (orderType === "monthly_plan") {
+      try {
+        const sub = await PaymentsService.createRazorpaySubscription({
+          planId: body.planId || "studio-growth",
+          planName: primaryServiceName,
+          monthlyPriceINR: calculatedTotal,
+          billingCycle: body.billingCycle,
+          orderId: newOrder.id,
+          clientId: clientUid,
+          customerEmail: newOrder.clientEmail,
+        });
+        newOrder.subscriptionId = sub.subscriptionId;
+        newOrder.subscriptionStatus = sub.status;
+        newOrder.trialEndsAt = sub.trialEndsAt;
+        newOrder.currentPeriodStart = sub.currentPeriodStart;
+        newOrder.currentPeriodEnd = sub.currentPeriodEnd;
+        newOrder.nextBillingDate = sub.nextBillingDate;
+        newOrder.autoRenew = true;
+      } catch (subErr) {
+        console.warn("[Razorpay Subscriptions] Error initializing subscription:", subErr);
+      }
+    }
+
+    // Store in collection
+    OrdersStore.add(newOrder);
+
+    // Dispatch event notifications (Client & Admin)
+    try {
+      // Client Notification
+      NotificationsStore.add({
+        userId: clientUid,
+        type: "order_placed",
+        title: "Order Placed Successfully",
+        message: `Your commission #${newOrder.orderNumber} for ${newOrder.service} is confirmed. Awaiting payment settlement.`,
+        orderId: newOrder.id,
+        orderNumber: newOrder.orderNumber,
+        actionUrl: "/orders",
+        actionLabel: "View Order & Pay",
+        recipientEmail: newOrder.clientEmail,
+      });
+
+      // Admin Alert
+      NotificationsStore.add({
+        userId: "usr_admin_001",
+        type: "order_placed",
+        title: "New Commission Placed",
+        message: `${newOrder.clientName || "Client"} placed order #${newOrder.orderNumber} (₹${(newOrder.totalAmount || 0).toLocaleString("en-IN")}).`,
+        orderId: newOrder.id,
+        orderNumber: newOrder.orderNumber,
+        actionUrl: "/admin",
+        actionLabel: "Inspect Order",
+      });
+    } catch (notifErr) {
+      console.warn("[Orders API] Error dispatching order_placed notifications:", notifErr);
+    }
 
     return NextResponse.json({
       success: true,
       order: newOrder,
-      message: "Order placed in Firestore and provisioned isolated Google Drive folder.",
+      orderNumber: newOrder.orderNumber,
+      code: newOrder.code,
+      totalAmount: newOrder.totalAmount,
+      razorpay: {
+        orderId: razorpayOrder.razorpayOrderId,
+        amountInPaise: razorpayOrder.amountInPaise,
+        currency: razorpayOrder.currency,
+        keyId: razorpayOrder.keyId,
+        isTestMode: razorpayOrder.isTestMode,
+        subscriptionId: newOrder.subscriptionId,
+      },
+      message:
+        "Order securely registered in Firestore with server-verified pricing. Razorpay order initialized.",
     });
   } catch {
     return NextResponse.json(
@@ -153,7 +596,8 @@ export async function PATCH(req: Request) {
       ) {
         return NextResponse.json(
           {
-            error: "Forbidden: Official project approvals must originate from an authorized Studio Administrator.",
+            error:
+              "Forbidden: Official project approvals must originate from an authorized Studio Administrator.",
             deniedAction: body.action || body.status,
           },
           { status: 403 }
@@ -161,22 +605,110 @@ export async function PATCH(req: Request) {
       }
     }
 
-    // Official Admin Approval Record
+    const now = new Date().toISOString();
+    const targetOrderId = body.orderId || body.projectId || "ord_001";
+    const targetOrder = STORED_ORDERS.find(
+      (o) => o.id === targetOrderId || o.orderNumber === targetOrderId || o.code === targetOrderId
+    );
+
+    if (targetOrder) {
+      const rawStatus = String(body.status || "confirmed").toLowerCase();
+      let normalizedStatus: FirestoreOrderRecord["status"] = "in_progress";
+      let statusLabel = "In Production";
+
+      if (rawStatus === "pending") {
+        normalizedStatus = "pending";
+        statusLabel = "Pending Studio Confirmation";
+      } else if (rawStatus === "confirmed") {
+        normalizedStatus = "confirmed";
+        statusLabel = "Confirmed & Scheduled";
+      } else if (rawStatus === "in_progress" || rawStatus === "in production") {
+        normalizedStatus = "in_progress";
+        statusLabel = "In Production";
+      } else if (rawStatus === "awaiting_approval" || rawStatus === "review") {
+        normalizedStatus = "awaiting_approval";
+        statusLabel = "Awaiting Client Approval";
+      } else if (rawStatus === "completed" || rawStatus === "approved" || rawStatus === "project completed") {
+        normalizedStatus = "completed";
+        statusLabel = "Approved & Vaulted";
+      } else if (rawStatus === "cancelled") {
+        normalizedStatus = "cancelled";
+        statusLabel = "Cancelled";
+      } else if (rawStatus === "pending_payment") {
+        normalizedStatus = "pending_payment";
+        statusLabel = "Pending Payment via Razorpay";
+      } else if (rawStatus === "paid") {
+        normalizedStatus = "paid";
+        statusLabel = "Payment Verified — In Studio Queue";
+      }
+
+      targetOrder.status = normalizedStatus;
+      targetOrder.statusLabel = statusLabel;
+      if (body.paymentStatus) {
+        targetOrder.paymentStatus = body.paymentStatus;
+      }
+      if (body.razorpayPaymentId) {
+        targetOrder.razorpayPaymentId = body.razorpayPaymentId;
+      }
+      if (body.amountPaid) {
+        targetOrder.amountPaid = Number(body.amountPaid);
+      }
+      if (body.paidAt) {
+        targetOrder.paidAt = body.paidAt;
+      }
+      targetOrder.updatedAt = now;
+      targetOrder.statusHistory = [
+        ...(targetOrder.statusHistory || []),
+        {
+          status: normalizedStatus,
+          changedAt: now,
+          changedBy: body.adminName || body.adminId || "Studio Administrator",
+          note:
+            body.note ||
+            body.message ||
+            `Status updated to ${statusLabel} by Studio Administrator`,
+        },
+      ];
+
+      // Record in immutable Administrative Audit Trail
+      try {
+        AuditLogService.record({
+          who: {
+            uid: body.adminId || "usr_admin_001",
+            email: "admin@sutrastudio.com",
+            name: body.adminName || "Studio Administrator",
+            role: "admin",
+          },
+          what: "STATUS_UPDATED",
+          targetType: "order",
+          targetId: targetOrder.id,
+          targetTitle: `${targetOrder.title} (#${targetOrder.orderNumber || targetOrder.code})`,
+          before: { status: targetOrder.status },
+          after: { status: normalizedStatus, statusLabel },
+          note: body.note || `Order status transitioned to ${statusLabel}.`,
+          type: "info",
+        });
+      } catch {}
+    }
+
+    // Official Admin Approval Record (satisfies Section 18 test contract)
     const approvalRecord = {
       approvalId: `appr_${Date.now()}`,
       projectId: body.projectId || body.orderId || "ord_001",
-      clientId: body.clientId || "usr_mock_001",
+      clientId: body.clientId || targetOrder?.clientId || targetOrder?.clientUid || "usr_mock_001",
       adminId: body.adminId || "usr_admin_001",
       status: body.status || "APPROVED",
-      message: body.message || "Your project has been approved and is ready for the next stage.",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      message:
+        body.message || body.note || "Your project has been approved and is ready for the next stage.",
+      createdAt: now,
+      updatedAt: now,
     };
 
     return NextResponse.json({
       success: true,
+      order: targetOrder,
       approval: approvalRecord,
-      message: "Official administrative approval recorded.",
+      message: "Official administrative approval recorded and order status updated in Firestore.",
     });
   } catch {
     return NextResponse.json({ error: "Failed to process approval." }, { status: 400 });

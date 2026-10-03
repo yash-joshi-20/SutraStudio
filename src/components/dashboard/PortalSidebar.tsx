@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { SutraLogo } from "@/components/brand/SutraLogo";
@@ -16,16 +16,38 @@ import {
   Sparkles,
   DollarSign,
   Globe,
+  MessageSquare,
+  Bell,
+  Sliders,
+  Menu,
+  X,
+  CreditCard,
+  Calendar,
+  Layers,
+  Activity,
+  Tag,
+  type LucideIcon,
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/authContext";
 import { Avatar } from "@/components/ui/Avatar";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
-const CLIENT_NAV_ITEMS = [
+/**
+ * One nav item shape for both portals.
+ * `tabKey` is optional and only the admin portal uses it, because admin
+ * sections are query-string tabs on a single `/admin` route.
+ */
+export interface PortalNavItem {
+  name: string;
+  href: string;
+  icon: LucideIcon;
+  tabKey?: string;
+}
+
+export const CLIENT_NAV_ITEMS: PortalNavItem[] = [
   { name: "Workspace", href: "/dashboard", icon: LayoutDashboard },
   { name: "Sutra AI Assistant", href: "/chat", icon: Sparkles },
-  { name: "Services", href: "/services", icon: Sparkles },
-  { name: "Pricing & Plans", href: "/pricing", icon: DollarSign },
   { name: "My Orders", href: "/orders", icon: ShoppingBag },
   { name: "My Projects", href: "/projects-client", icon: FolderGit2 },
   { name: "Media Vault", href: "/media", icon: FolderOpen },
@@ -33,121 +55,262 @@ const CLIENT_NAV_ITEMS = [
   { name: "Profile", href: "/profile", icon: User },
 ];
 
-const ADMIN_NAV_ITEMS = [
-  { name: "Operations Hub", href: "/admin", icon: ShieldCheck },
-  { name: "Client Directory", href: "/admin?tab=clients", icon: LayoutDashboard },
-  { name: "Approvals Hub", href: "/admin?tab=approvals", icon: ShoppingBag },
-  { name: "Creative Pipelines", href: "/admin?tab=workflows", icon: FolderGit2 },
-  { name: "Services Catalog", href: "/services", icon: Sparkles },
-  { name: "Pricing Matrix", href: "/pricing", icon: DollarSign },
-  { name: "Website Site Control", href: "/admin?tab=site-control", icon: FileText },
-  { name: "Security Audit", href: "/admin?tab=audit", icon: User },
+export const ADMIN_NAV_ITEMS: PortalNavItem[] = [
+  { name: "Dashboard (KPIs)", href: "/admin", tabKey: "overview", icon: Activity },
+  { name: "Orders Ledger", href: "/admin?tab=approvals", tabKey: "approvals", icon: ShoppingBag },
+  { name: "Client Directory", href: "/admin?tab=clients", tabKey: "clients", icon: User },
+  { name: "Monthly Retainers", href: "/admin?tab=plans", tabKey: "plans", icon: Calendar },
+  { name: "Services & Pricing", href: "/admin?tab=services", tabKey: "services", icon: Layers },
+  { name: "Payments & Refunds", href: "/admin?tab=payments", tabKey: "payments", icon: CreditCard },
+  { name: "Deliveries & Drive", href: "/admin?tab=deliveries", tabKey: "deliveries", icon: FolderOpen },
+  { name: "Chats & AI Knowledge", href: "/admin?tab=conversations", tabKey: "conversations", icon: MessageSquare },
+  { name: "Notifications Settings", href: "/admin?tab=notifications", tabKey: "notifications", icon: Bell },
+  { name: "Workflows (n8n)", href: "/admin?tab=workflows", tabKey: "workflows", icon: FolderGit2 },
+  { name: "Studio Settings & GST", href: "/admin?tab=settings", tabKey: "settings", icon: Sliders },
+  { name: "Security Audit Log", href: "/admin?tab=audit", tabKey: "audit", icon: ShieldCheck },
 ];
 
-export function PortalSidebar() {
+export function PortalSidebarInner({ contained = false }: { contained?: boolean }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const currentTab = searchParams.get("tab") || "overview";
+  const currentTab = searchParams ? searchParams.get("tab") || "overview" : "overview";
   const { user, role, logout } = useAuth();
   const isAdmin = role === "admin";
   const navItems = isAdmin ? ADMIN_NAV_ITEMS : CLIENT_NAV_ITEMS;
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+
+  // `contained` mode is used by PortalShell, which supplies its own frame,
+  // its own header, its own notification bell and its own drawer. Rendering
+  // them twice is what previously produced two stacked bars and two sidebars.
+  const desktopClass = contained
+    ? "flex flex-col h-full p-5"
+    : "w-64 shrink-0 border-r border-[#E5E1D8] bg-[#FAF9F5] min-h-screen p-6 flex flex-col justify-between hidden md:flex";
 
   return (
-    <aside className="w-64 shrink-0 border-r border-[#EADFCB] bg-[#FFFDF9] min-h-screen p-6 flex flex-col justify-between hidden md:flex">
-      <div>
-        {/* Brand Header */}
-        <div className="pb-5 border-b border-[#EADFCB]/60 flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <SutraLogo variant="horizontal" size="md" href={isAdmin ? "/admin" : "/dashboard"} />
-          </div>
-          <Link
-            href="/"
-            className="inline-flex items-center justify-between px-3 py-1.5 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#F4EFE6] transition-all"
-            title="Return to Public Website"
-          >
-            <span className="flex items-center gap-1.5">
-              <Globe className="w-3.5 h-3.5 text-[#D4A35A]" />
-              <span>Public Website</span>
-            </span>
-            <span className="text-[10px] text-[#94A3B8]">↗</span>
-          </Link>
-        </div>
-
-        {/* Portal Scope Indicator (Admin Only) */}
-        {isAdmin && (
-          <div className="mt-4 p-2.5 rounded-xl bg-[#5C3A1E] text-white flex items-center justify-between text-xs shadow-xs">
-            <div>
-              <span className="text-[10px] text-[#D4A35A] block uppercase tracking-wider font-semibold">Executive Terminal</span>
-              <span className="font-bold text-white uppercase">Supervisor Mode</span>
-            </div>
-            <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-pulse" />
-          </div>
-        )}
-
-        {/* Navigation Items */}
-        <nav className="mt-6 space-y-1.5">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            let isActive = false;
-            if (isAdmin) {
-              const itemTab = item.href.includes("?tab=")
-                ? item.href.split("?tab=")[1]
-                : "overview";
-              isActive = pathname === "/admin" && currentTab === itemTab;
-            } else {
-              isActive = pathname === item.href;
-            }
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                onClick={(e) => {
-                  if (item.href === "/chat") {
-                    e.preventDefault();
-                    if (typeof window !== "undefined") {
-                      window.dispatchEvent(new CustomEvent("open-sutra-chat"));
-                    }
-                  }
-                }}
-                className={`interactive-pill focus-ring flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                  isActive
-                    ? "bg-[#F8F5EF] text-[#5C3A1E] font-semibold shadow-xs border border-[#EADFCB]"
-                    : "text-[#475569] hover:bg-[#F8F5EF]/60 hover:text-[#0F172A]"
-                }`}
-              >
-                <Icon
-                  className={`w-4 h-4 ${
-                    isActive ? "text-[#5C3A1E]" : "text-[#64748B]"
-                  }`}
-                />
-                <span>{item.name}</span>
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
-
-      {/* Footer / Account */}
-      <div className="pt-6 border-t border-[#EADFCB]/60 flex items-center justify-between">
+    <>
+      {!contained && (
+      <>
+      {/* Mobile Top Bar with Drawer Toggle */}
+      <div className="md:hidden sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-[#FAF9F5] border-b border-[#E5E1D8] backdrop-blur-md">
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setMobileDrawerOpen(true)}
+            className="p-2 rounded-lg text-[#171717] hover:bg-[#F0ECE1] transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#A98B57]"
+            aria-label="Open Navigation Menu"
+          >
+            <Menu className="w-5 h-5 text-[#171717]" />
+          </button>
+          <SutraLogo variant="horizontal" size="sm" href={isAdmin ? "/admin" : "/dashboard"} />
+        </div>
+        <div className="flex items-center gap-2">
+          <NotificationBell />
           <Avatar
-            name={user?.displayName || (isAdmin ? "Studio Producer" : "Studio Client")}
+            name={user?.displayName || (isAdmin ? "Admin" : "Client")}
             size="sm"
             status="online"
           />
-          <div className="text-xs">
-            <p className="font-semibold text-[#0F172A]">{user?.displayName || (isAdmin ? "Studio Producer" : "Studio Client")}</p>
-            <p className="text-[#64748B]">{isAdmin ? "Executive Producer" : "Client Workspace"}</p>
+        </div>
+      </div>
+
+      {/* Mobile Slide-Over Drawer */}
+      {mobileDrawerOpen && (
+        <div className="md:hidden fixed inset-0 z-[var(--z-drawer)] flex">
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
+            onClick={() => setMobileDrawerOpen(false)}
+          />
+          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-[#FAF9F5] border-r border-[#E5E1D8] p-6 z-10">
+            <div className="flex items-center justify-between pb-4 border-b border-[#E5E1D8]">
+              <SutraLogo variant="horizontal" size="md" href={isAdmin ? "/admin" : "/dashboard"} />
+              <button
+                onClick={() => setMobileDrawerOpen(false)}
+                className="p-1.5 rounded-lg text-[#737373] hover:text-[#171717] hover:bg-[#F0ECE1]"
+                aria-label="Close Navigation"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {isAdmin && (
+              <div className="mt-3 p-2.5 rounded-xl bg-[#171717] text-white flex items-center justify-between text-xs">
+                <div>
+                  <span className="text-[10px] text-[#A98B57] block uppercase font-mono font-semibold">Executive Terminal</span>
+                  <span className="font-bold text-white uppercase">Supervisor Mode</span>
+                </div>
+                <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-pulse" />
+              </div>
+            )}
+
+            <nav className="mt-4 flex-1 space-y-1 overflow-y-auto">
+              {navItems.map((item: any) => {
+                const Icon = item.icon;
+                let isActive = false;
+                if (isAdmin) {
+                  const targetKey = item.tabKey || "overview";
+                  isActive = pathname === "/admin" && currentTab === targetKey;
+                } else {
+                  isActive = pathname === item.href;
+                }
+
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={() => setMobileDrawerOpen(false)}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      isActive
+                        ? "bg-[#FFFFFF] text-[#A98B57] font-semibold border border-[#E5E1D8] shadow-xs"
+                        : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717]"
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 ${isActive ? "text-[#A98B57]" : "text-[#737373]"}`} />
+                    <span>{item.name}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <div className="pt-4 border-t border-[#E5E1D8] flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Avatar
+                  name={user?.displayName || (isAdmin ? "Studio Producer" : "Studio Client")}
+                  size="sm"
+                  status="online"
+                />
+                <div className="text-xs">
+                  <p className="font-semibold text-[#171717]">{user?.displayName || (isAdmin ? "Studio Producer" : "Client")}</p>
+                  <p className="text-[#737373]">{isAdmin ? "Admin" : "Client"}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => void logout()}
+                title="Sign Out"
+                className="text-[#737373] hover:text-[#171717] p-1.5 rounded-lg hover:bg-[#F0ECE1]"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
-        <button
-          onClick={logout}
-          title="Sign Out"
-          className="text-[#64748B] hover:text-[#5C3A1E] p-1.5 rounded-lg hover:bg-[#F8F5EF] cursor-pointer"
-        >
-          <LogOut className="w-4 h-4" />
-        </button>
-      </div>
-    </aside>
+      )}
+      </>
+      )}
+
+      {/* Desktop / tablet Persistent Sidebar */}
+      <aside className={desktopClass}>
+        <div>
+          {/* Brand Header */}
+          <div className="pb-5 border-b border-[#E5E1D8] flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <SutraLogo variant="horizontal" size="md" href={isAdmin ? "/admin" : "/dashboard"} />
+              {!contained && <NotificationBell />}
+            </div>
+            <Link
+              href="/"
+              className="inline-flex items-center justify-between px-3 py-1.5 rounded-xl bg-[#FFFFFF] border border-[#E5E1D8] text-xs font-semibold text-[#171717] hover:border-[#A98B57] hover:bg-[#F0ECE1] transition-all"
+              title="Return to Public Website"
+            >
+              <span className="flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-[#A98B57]" />
+                <span>Public Website</span>
+              </span>
+              <span className="text-[10px] text-[#737373]">↗</span>
+            </Link>
+          </div>
+
+          {/* Portal Scope Indicator (Admin Only) */}
+          {isAdmin && (
+            <div className="mt-4 p-2.5 rounded-xl bg-[#171717] text-white flex items-center justify-between text-xs shadow-xs">
+              <div>
+                <span className="text-[10px] text-[#A98B57] block uppercase font-mono font-semibold">Executive Terminal</span>
+                <span className="font-bold text-white uppercase tracking-wider">Supervisor Mode</span>
+              </div>
+              <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-pulse" />
+            </div>
+          )}
+
+          {/* Navigation Items */}
+          <nav className="mt-5 space-y-1">
+            {navItems.map((item: any) => {
+              const Icon = item.icon;
+              let isActive = false;
+              if (isAdmin) {
+                const targetKey = item.tabKey || "overview";
+                isActive = pathname === "/admin" && currentTab === targetKey;
+              } else {
+                isActive = pathname === item.href;
+              }
+
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  onClick={(e) => {
+                    if (item.href === "/chat") {
+                      e.preventDefault();
+                      if (typeof window !== "undefined") {
+                        window.dispatchEvent(new CustomEvent("open-sutra-chat"));
+                      }
+                    }
+                  }}
+                  className={`flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-medium transition-all ${
+                    isActive
+                      ? "bg-[#FFFFFF] text-[#A98B57] font-semibold shadow-xs border border-[#E5E1D8]"
+                      : "text-[#525252] hover:bg-[#FFFFFF]/60 hover:text-[#171717]"
+                  }`}
+                >
+                  <Icon
+                    className={`w-3.5 h-3.5 ${
+                      isActive ? "text-[#A98B57]" : "text-[#737373]"
+                    }`}
+                  />
+                  <span>{item.name}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Footer / Account */}
+        <div className="pt-5 border-t border-[#E5E1D8] flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Avatar
+              name={user?.displayName || (isAdmin ? "Studio Producer" : "Studio Client")}
+              size="sm"
+              status="online"
+            />
+            <div className="text-xs">
+              <p className="font-semibold text-[#171717] truncate max-w-[120px]">{user?.displayName || (isAdmin ? "Studio Producer" : "Studio Client")}</p>
+              <p className="text-[#737373] text-[11px]">{isAdmin ? "Executive Producer" : "Client Workspace"}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => void logout()}
+            title="Sign Out"
+            className="text-[#737373] hover:text-[#171717] p-1.5 rounded-lg hover:bg-[#F0ECE1] cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A98B57]"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
+      </aside>
+    </>
+  );
+}
+
+export function PortalSidebar({ contained = false }: { contained?: boolean } = {}) {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="p-6 space-y-2">
+          <div className="h-8 bg-[#F0ECE1] rounded animate-pulse" />
+          <div className="h-8 bg-[#F0ECE1] rounded-xl animate-pulse" />
+          <div className="h-8 bg-[#F0ECE1] rounded-xl animate-pulse" />
+          <div className="h-8 bg-[#F0ECE1] rounded-xl animate-pulse" />
+          <div className="h-8 bg-[#F0ECE1] rounded-xl animate-pulse" />
+        </div>
+      }
+    >
+      <PortalSidebarInner contained={contained} />
+    </React.Suspense>
   );
 }

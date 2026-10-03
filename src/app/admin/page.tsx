@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { PortalSidebar } from "@/components/dashboard/PortalSidebar";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Avatar } from "@/components/ui/Avatar";
+import { useAuth } from "@/lib/auth/authContext";
 import {
   ShieldAlert,
   Users,
@@ -42,8 +43,77 @@ import {
   Smartphone,
   Megaphone,
   Compass,
+  ShoppingBag,
+  DollarSign,
+  Filter,
+  ArrowUpDown,
+  Bell,
+  ChevronLeft,
+  ChevronRight,
+  MessageSquare,
+  Check,
+  CheckCheck,
+  AlertCircle,
+  FileText,
+  Calendar,
+  Loader2,
+  Paperclip,
+  Receipt,
+  UploadCloud,
+  Phone,
+  Mail,
+  Copy,
+  Plus,
+  UserCheck,
+  ThumbsUp,
+  ThumbsDown,
+  BookOpen,
+  HelpCircle,
+  Sliders,
+  Trash2,
+  Edit3,
+  Save,
+  Archive,
 } from "lucide-react";
 import { RouteGuard } from "@/components/auth/RouteGuard";
+import { OrderReceiptModal, ReceiptOrderData } from "@/components/orders/OrderReceiptModal";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { computeOrderProgress } from "@/lib/services/orderProgress";
+import type {
+  KnowledgeBaseEntry,
+  KnowledgeCategory,
+  FeedbackItem,
+  CommonQuestionInsight,
+  AiSettingsConfig,
+} from "@/lib/services/aiKnowledgeTypes";
+import { DEFAULT_SYSTEM_PROMPT } from "@/lib/services/aiKnowledgeTypes";
+import type { CatalogService, CatalogPlan } from "@/lib/services/catalogData";
+import { SEED_CATALOG_SERVICES, SEED_CATALOG_PLANS } from "@/lib/services/catalogData";
+import { json, jsonRaw, errorMessage } from "@/lib/api/client";
+
+/**
+ * Admin data access.
+ *
+ * Every knowledge-base, feedback and catalog operation goes through an
+ * admin-gated API route. The admin portal must never reach Firestore directly:
+ * the Admin SDK has no browser build, and every write needs a server-side
+ * authorisation and audit check.
+ */
+async function callAiConsole<T>(action: string, payload?: Record<string, unknown>): Promise<T> {
+  return jsonRaw<T>("/api/admin/ai-console", "POST", { action, payload });
+}
+
+async function fetchCatalog<T>(): Promise<T> {
+  return json<T>("/api/admin/catalog");
+}
+
+async function patchCatalog<T>(
+  kind: "service" | "plan",
+  id: string,
+  updates: Record<string, unknown>
+): Promise<T> {
+  return jsonRaw<T>("/api/admin/catalog", "PATCH", { kind, id, updates });
+}
 
 interface ClientRecord {
   id: string;
@@ -129,65 +199,229 @@ const AUDIT_LOGS = [
   { id: "log-5", event: "ORDER_CREATED", actor: "aarav@maisonaura.com", detail: "Order #ORD-008 created in Firestore: 4K Commercial Reel", time: "09:30:00 UTC", type: "success" },
 ];
 
-interface AdminChatSession {
+export interface AdminChatMessage {
+  id?: string;
+  sender: "client" | "ai" | "admin" | "note";
+  text: string;
+  time: string;
+  timestamp?: string;
+  workflow?: string;
+  orderDraft?: {
+    orderId?: string;
+    orderNumber?: string;
+    service?: string;
+    totalAmount?: number;
+    status?: string;
+    driveFolderId?: string;
+  };
+}
+
+export interface AdminChatSession {
   id: string;
+  clientId: string;
   clientName: string;
+  clientEmail: string;
+  clientPhone?: string;
   company: string;
   vaultId: string;
+  joinedDate?: string;
   mode: "ai" | "human";
   lastPrompt: string;
   workflowTag: string;
   lastTime: string;
-  messages: {
-    sender: "client" | "ai" | "admin" | "note";
-    text: string;
-    time: string;
-    workflow?: string;
-  }[];
+  unreadCount: number;
+  updatedAt?: string;
+  messages: AdminChatMessage[];
 }
 
 const INITIAL_ADMIN_SESSIONS: AdminChatSession[] = [
   {
     id: "cl-1",
+    clientId: "usr_mock_001",
     clientName: "Yash Joshi",
+    clientEmail: "yash@studioliving.com",
+    clientPhone: "+91 98200 45678",
     company: "Studio Living Architecture",
     vaultId: "drive_fld_sutra_001",
+    joinedDate: "August 2026",
     mode: "ai",
     lastPrompt: "Can we do 4K multi-angle lighting passes for our new catalog?",
     workflowTag: "3D Visualization (95% match)",
     lastTime: "5m ago",
+    unreadCount: 1,
     messages: [
-      { sender: "client", text: "Can we do 4K multi-angle lighting passes for our new catalog?", time: "10:20 AM" },
-      { sender: "ai", text: "I have classified your request under 3D Visualization pipeline. We can generate draft renders in 48 hours.", time: "10:21 AM", workflow: "3D Visualization (95% match)" },
+      {
+        sender: "client",
+        text: "Namaste team, we need a 4K spatial architectural visualization for the Luxury Living Pavilion Suite.",
+        time: "10:15 AM",
+      },
+      {
+        sender: "ai",
+        text: "Namaste Yash! 🙏 I have initiated the 3D Spatial Architecture pipeline. We have generated order draft #ORD-001 for ₹18,999.",
+        time: "10:16 AM",
+        workflow: "3D Visualization (95% match)",
+        orderDraft: {
+          orderId: "ord_001",
+          orderNumber: "ORD-001",
+          service: "3D Spatial Architecture",
+          totalAmount: 18999,
+          status: "in_progress",
+          driveFolderId: "drive_fld_sutra_001",
+        },
+      },
+      {
+        sender: "client",
+        text: "Can we do 4K multi-angle lighting passes for our new catalog?",
+        time: "10:20 AM",
+      },
+      {
+        sender: "ai",
+        text: "Yes, multi-angle dusk and midday lighting bakes are included in your 3D spatial deliverable package. Master render will sync to your Google Drive vault.",
+        time: "10:21 AM",
+        workflow: "3D Visualization (95% match)",
+      },
     ],
   },
   {
     id: "cl-2",
+    clientId: "usr_mock_002",
     clientName: "Aarav Singhania",
+    clientEmail: "aarav@maisonaura.com",
+    clientPhone: "+91 98111 23456",
     company: "Maison Aura Luxury Fragrances",
     vaultId: "drive_fld_maison_002",
+    joinedDate: "July 2026",
     mode: "human",
     lastPrompt: "ProRes master video ready for Google Drive vault export.",
     workflowTag: "Video Production",
     lastTime: "25m ago",
+    unreadCount: 0,
     messages: [
-      { sender: "client", text: "Can you confirm the color grading pass on the fragrance reel?", time: "09:45 AM" },
-      { sender: "admin", text: "Raghavan here: I've personally reviewed the color balance. ProRes master will be in your Drive vault by 2 PM.", time: "09:50 AM" },
-      { sender: "note", text: "Client requested warm golden highlights on the glass bottle refraction.", time: "09:52 AM" },
+      {
+        sender: "client",
+        text: "Can you confirm the color grading pass on the fragrance commercial reel?",
+        time: "09:45 AM",
+      },
+      {
+        sender: "admin",
+        text: "Raghavan here: I've personally reviewed the color balance. ProRes master will be in your Drive vault by 2 PM.",
+        time: "09:50 AM",
+      },
+      {
+        sender: "note",
+        text: "Client requested warm golden highlights on the glass bottle refraction.",
+        time: "09:52 AM",
+      },
+      {
+        sender: "ai",
+        text: "Commercial cinematic reel order #ORD-003 is currently undergoing Final Cut rendering.",
+        time: "09:55 AM",
+        orderDraft: {
+          orderId: "ord_003",
+          orderNumber: "ORD-003",
+          service: "Commercial Cinematic Reel",
+          totalAmount: 14999,
+          status: "awaiting_approval",
+          driveFolderId: "drive_fld_maison_002",
+        },
+      },
+    ],
+  },
+  {
+    id: "cl-3",
+    clientId: "usr_mock_003",
+    clientName: "Meera Patel",
+    clientEmail: "meera@zenithliving.in",
+    clientPhone: "+91 99200 88776",
+    company: "Zenith Spatial & Interiors",
+    vaultId: "drive_fld_zenith_003",
+    joinedDate: "September 2026",
+    mode: "ai",
+    lastPrompt: "Need photorealistic living room and terrace architectural renders.",
+    workflowTag: "Interior Design",
+    lastTime: "2h ago",
+    unreadCount: 0,
+    messages: [
+      {
+        sender: "client",
+        text: "Need photorealistic living room and terrace architectural renders for a penthouse.",
+        time: "08:15 AM",
+      },
+      {
+        sender: "ai",
+        text: "Sutra AI: Initialized Interior Design pipeline. Order #ORD-005 generated for ₹16,999.",
+        time: "08:16 AM",
+        workflow: "Interior Design (92% match)",
+        orderDraft: {
+          orderId: "ord_005",
+          orderNumber: "ORD-005",
+          service: "Interior Architectural Engine",
+          totalAmount: 16999,
+          status: "in_progress",
+          driveFolderId: "drive_fld_zenith_003",
+        },
+      },
+    ],
+  },
+  {
+    id: "cl-4",
+    clientId: "usr_mock_004",
+    clientName: "Karan Verma",
+    clientEmail: "growth@shrinaturals.com",
+    clientPhone: "+91 97110 33445",
+    company: "Shri Naturals D2C",
+    vaultId: "drive_fld_shri_004",
+    joinedDate: "September 2026",
+    mode: "ai",
+    lastPrompt: "Looking for high-converting Meta ads creative campaign.",
+    workflowTag: "Digital Marketing",
+    lastTime: "Yesterday",
+    unreadCount: 0,
+    messages: [
+      {
+        sender: "client",
+        text: "Looking for high-converting Meta ads creative campaign for our festive launch.",
+        time: "Yesterday 04:30 PM",
+      },
+      {
+        sender: "ai",
+        text: "Sutra AI: Meta Ads & Digital Marketing workflow active. Can provide 10 carousel hooks and 3 video creatives.",
+        time: "Yesterday 04:32 PM",
+        workflow: "Marketing (90% match)",
+      },
     ],
   },
   {
     id: "cl-5",
+    clientId: "usr_mock_005",
     clientName: "Devika Rao",
+    clientEmail: "devika@vedicresorts.com",
+    clientPhone: "+91 98450 11223",
     company: "Vedic Living Heritage Resorts",
     vaultId: "drive_fld_vedic_005",
+    joinedDate: "June 2026",
     mode: "ai",
     lastPrompt: "Need 360 VR virtual tour bake for our heritage pavilion",
     workflowTag: "360 VR Spatial",
     lastTime: "1h ago",
+    unreadCount: 2,
     messages: [
-      { sender: "client", text: "Need 360 VR virtual tour bake for our heritage pavilion", time: "09:10 AM" },
-      { sender: "ai", text: "Sutra AI: Initialized 360 View pipeline. Panoramas will be compiled for web and VR headsets.", time: "09:12 AM", workflow: "360 View (96% match)" },
+      {
+        sender: "client",
+        text: "Need 360 VR virtual tour bake for our heritage pavilion.",
+        time: "09:10 AM",
+      },
+      {
+        sender: "ai",
+        text: "Sutra AI: Initialized 360 View pipeline. Panoramas will be compiled for web and VR headsets.",
+        time: "09:12 AM",
+        workflow: "360 View (96% match)",
+      },
+      {
+        sender: "client",
+        text: "Please make sure the heritage courtyard lighting matches the sunset golden hour.",
+        time: "09:15 AM",
+      },
     ],
   },
 ];
@@ -313,39 +547,180 @@ export const STUDIO_WORKFLOW_ENGINES: StudioWorkflowEngine[] = [
   },
 ];
 
+export interface AdminOrderItem {
+  serviceId?: string;
+  planId?: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+export interface AdminOrderAttachment {
+  id?: string;
+  name: string;
+  url?: string;
+  driveFileId?: string;
+  size?: string;
+  mimeType?: string;
+}
+
+export interface AdminStatusHistoryItem {
+  status: string;
+  changedAt: string;
+  changedBy: string;
+  note?: string;
+}
+
+export interface AdminOrder {
+  id: string;
+  code: string;
+  orderNumber?: string;
+  title: string;
+  service: string;
+  status:
+    | "pending_payment"
+    | "paid"
+    | "brief_review"
+    | "in_production"
+    | "draft_delivered"
+    | "awaiting_approval"
+    | "revision_requested"
+    | "approved"
+    | "completed"
+    | "cancelled"
+    | "refunded"
+    | "on_hold"
+    | "closed"
+    | "expired"
+    | "pending"
+    | "confirmed"
+    | "delivered"
+    | "trial"
+    | "active"
+    | "in_progress";
+  statusLabel?: string;
+  clientUid?: string;
+  clientId?: string;
+  clientName?: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  type?: "service" | "monthly_plan";
+  items?: AdminOrderItem[];
+  totalAmount?: number;
+  billingCycle?: "monthly" | "quarterly" | "annual";
+  requirements?: string;
+  notes?: string;
+  attachments?: AdminOrderAttachment[];
+  source?: "dashboard" | "ai_chat";
+  chatId?: string;
+  deliverablePreview?: string;
+  deliverables?: {
+    driveFileId?: string;
+    filename: string;
+    checksum?: string;
+    fileSize?: string;
+    mimeType?: string;
+    previewUrl?: string;
+    version?: string;
+    category?: string;
+    uploadedAt?: string;
+  }[];
+  deliveredAt?: string;
+  assignedTo?: {
+    id: string;
+    name: string;
+    role: string;
+    assignedAt?: string;
+  };
+  estimatedDeliveryDays?: number;
+  estimatedDueDate?: string;
+  internalNotes?: Array<{
+    id: string;
+    author: string;
+    text: string;
+    createdAt: string;
+  }>;
+  comments?: Array<{
+    id: string;
+    sender: "client" | "admin" | "system";
+    authorName: string;
+    text: string;
+    attachmentUrl?: string;
+    attachmentName?: string;
+    createdAt: string;
+  }>;
+  driveFolderId?: string;
+  driveFolderPath?: string;
+  driveFolderLink?: string;
+  revisionRound?: number;
+  maxRevisions?: number;
+  createdAt: string;
+  updatedAt: string;
+  statusHistory?: AdminStatusHistoryItem[];
+  paymentStatus?: "unpaid" | "paid" | "failed" | "refunded";
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  amountPaid?: number;
+  paidAt?: string;
+  paymentMethod?: string;
+  failureReason?: string;
+  subscriptionId?: string;
+  subscriptionStatus?: string;
+  currentPeriodStart?: string;
+  currentPeriodEnd?: string;
+}
+
 type AdminTab =
   | "overview"
   | "clients"
   | "approvals"
+  | "orders"
+  | "plans"
+  | "services"
+  | "payments"
+  | "deliveries"
   | "conversations"
   | "workflows"
+  | "notifications"
+  | "settings"
   | "site-control"
   | "audit";
 
 function AdminHubContent() {
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const tabParam = searchParams.get("tab") as AdminTab;
+  const tabParam = searchParams.get("tab") as AdminTab | null;
 
-  const [activeTab, setActiveTab] = useState<AdminTab>(() => {
+  const normalizeTab = (tab: string | null): AdminTab => {
+    if (!tab || tab === "overview") return "overview";
+    if (tab === "orders") return "approvals";
+    if (tab === "settings") return "site-control";
     if (
-      tabParam &&
-      ["overview", "clients", "approvals", "conversations", "workflows", "site-control", "audit"].includes(tabParam)
+      [
+        "overview",
+        "clients",
+        "approvals",
+        "plans",
+        "services",
+        "payments",
+        "deliveries",
+        "conversations",
+        "workflows",
+        "notifications",
+        "site-control",
+        "audit",
+      ].includes(tab)
     ) {
-      return tabParam;
+      return tab as AdminTab;
     }
     return "overview";
-  });
+  };
+
+  const [activeTab, setActiveTab] = useState<AdminTab>(() => normalizeTab(tabParam));
 
   useEffect(() => {
-    if (
-      tabParam &&
-      ["overview", "clients", "approvals", "conversations", "workflows", "site-control", "audit"].includes(tabParam)
-    ) {
-      setActiveTab(tabParam);
-    } else if (!tabParam) {
-      setActiveTab("overview");
-    }
+    setActiveTab(normalizeTab(tabParam));
   }, [tabParam]);
 
   const handleTabChange = (tab: AdminTab) => {
@@ -359,6 +734,892 @@ function AdminHubContent() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [tierFilter, setTierFilter] = useState<string>("All");
+
+  // Real-Time Firebase Orders State
+  const [realOrders, setRealOrders] = useState<AdminOrder[]>([]);
+  const [isLoadingRealOrders, setIsLoadingRealOrders] = useState(true);
+  const [realOrdersError, setRealOrdersError] = useState<string | null>(null);
+  const [newOrderNotice, setNewOrderNotice] = useState<string | null>(null);
+  const prevOrdersCountRef = useRef<number | null>(null);
+
+  // Search, Filters, Sorting & Pagination
+  const [orderSearchQuery, setOrderSearchQuery] = useState("");
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
+  const [orderPaymentFilter, setOrderPaymentFilter] = useState<string>("all");
+  const [orderTypeFilter, setOrderTypeFilter] = useState<string>("all");
+  const [orderSourceFilter, setOrderSourceFilter] = useState<string>("all");
+  const [orderDateFilter, setOrderDateFilter] = useState<string>("all");
+  const [orderSortBy, setOrderSortBy] = useState<string>("date_desc");
+  const [orderCurrentPage, setOrderCurrentPage] = useState<number>(1);
+  const ORDERS_PER_PAGE = 6;
+
+  // Order Details & Status Transition Modal
+  const [inspectingAdminOrder, setInspectingAdminOrder] = useState<AdminOrder | null>(null);
+  const [adminOrderModalTab, setAdminOrderModalTab] = useState<"details" | "deliverables" | "internal" | "discussion">("details");
+  const [statusChangeTarget, setStatusChangeTarget] = useState<string>("");
+  const [statusChangeNote, setStatusChangeNote] = useState<string>("");
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState<boolean>(false);
+  const [isRefunding, setIsRefunding] = useState<boolean>(false);
+  const [adminReceiptOrder, setAdminReceiptOrder] = useState<ReceiptOrderData | null>(null);
+  const [isAdminReceiptOpen, setIsAdminReceiptOpen] = useState<boolean>(false);
+
+  // Delivery & Team Assignment State
+  const [deliveryFilename, setDeliveryFilename] = useState("");
+  const [deliveryPreviewUrl, setDeliveryPreviewUrl] = useState("");
+  const [deliveryNote, setDeliveryNote] = useState("");
+  const [deliveryCategory, setDeliveryCategory] = useState<"drafts" | "final_delivery" | "revisions">("final_delivery");
+  const [deliveryFile, setDeliveryFile] = useState<File | null>(null);
+  const [isDelivering, setIsDelivering] = useState(false);
+  const [isArchivingDrive, setIsArchivingDrive] = useState(false);
+  const [assignedMemberId, setAssignedMemberId] = useState("");
+
+  // Internal Notes & Discussion Comments State
+  const [adminOrderComments, setAdminOrderComments] = useState<any[]>([]);
+  const [isLoadingAdminComments, setIsLoadingAdminComments] = useState(false);
+  const [newAdminCommentText, setNewAdminCommentText] = useState("");
+  const [isPostingAdminComment, setIsPostingAdminComment] = useState(false);
+  const [newInternalNoteText, setNewInternalNoteText] = useState("");
+  const [isSavingInternalNote, setIsSavingInternalNote] = useState(false);
+
+  // Notifications & Cron Automation State
+  const [adminNotifSettings, setAdminNotifSettings] = useState({
+    monthlyReminderDays: [5, 1],
+    draftReviewReminderDays: 3,
+    unpaidReminderHours: 24,
+    dueDateWarningDays: 2,
+    emailNotificationsEnabled: true,
+    inAppNotificationsEnabled: true,
+    clientRemindersEnabled: true,
+    adminAlertsEnabled: true,
+    timezone: "Asia/Kolkata",
+    adminEmail: "admin@sutrastudio.com",
+    updatedAt: new Date().toISOString(),
+  });
+  const [isSavingNotifSettings, setIsSavingNotifSettings] = useState(false);
+  const [notifSettingsSuccess, setNotifSettingsSuccess] = useState<string | null>(null);
+
+  const [cronSimulateDate, setCronSimulateDate] = useState("");
+  const [cronDryRun, setCronDryRun] = useState(false);
+  const [isExecutingCron, setIsExecutingCron] = useState(false);
+  const [cronResult, setCronResult] = useState<any>(null);
+  const [cronNotice, setCronNotice] = useState<string | null>(null);
+
+  const [broadcastNotifs, setBroadcastNotifs] = useState<any[]>([]);
+
+  // Studio Team Members Registry
+  const STUDIO_TEAM_MEMBERS = [
+    { id: "tm_001", name: "Raghavan Sharma", role: "Executive Producer" },
+    { id: "tm_002", name: "Priya Mehta", role: "Senior 3D Visualizer" },
+    { id: "tm_003", name: "Devan Nair", role: "Brand Identity Lead" },
+    { id: "tm_004", name: "Kavita Rao", role: "Motion & Film Director" },
+    { id: "tm_005", name: "Arjun Swaminathan", role: "Spatial Architect" },
+  ];
+
+  // Fetch Firestore synchronized orders
+  const fetchRealOrders = useCallback(async (showLoadingSpinner = true) => {
+    if (showLoadingSpinner) setIsLoadingRealOrders(true);
+    setRealOrdersError(null);
+    try {
+      const res = await fetch("/api/orders", {
+        headers: {
+          "x-user-role": "admin",
+          "x-user-id": user?.uid || "usr_admin_001",
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to fetch orders");
+      }
+      const ordersList: AdminOrder[] = data.orders || [];
+      setRealOrders(ordersList);
+
+      if (prevOrdersCountRef.current !== null && ordersList.length > prevOrdersCountRef.current) {
+        const diff = ordersList.length - prevOrdersCountRef.current;
+        setNewOrderNotice(`✨ ${diff} new commission(s) synced in Firestore.`);
+      }
+      prevOrdersCountRef.current = ordersList.length;
+    } catch (err: any) {
+      setRealOrdersError(err.message || "Failed to load orders");
+    } finally {
+      setIsLoadingRealOrders(false);
+    }
+  }, [user?.uid]);
+
+  useEffect(() => {
+    fetchRealOrders(true);
+    const interval = setInterval(() => {
+      fetchRealOrders(false);
+    }, 10000);
+
+    const handleOrdersChanged = () => fetchRealOrders(false);
+    window.addEventListener("sutra_orders_changed", handleOrdersChanged);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("sutra_orders_changed", handleOrdersChanged);
+    };
+  }, [fetchRealOrders]);
+
+  // Fetch Admin Notification Settings & Broadcast Log
+  const fetchNotificationSettings = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/notification-settings", {
+        headers: { "x-user-role": "admin" },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.settings) setAdminNotifSettings(data.settings);
+      }
+    } catch {
+      // quiet fallback
+    }
+  }, []);
+
+  const fetchBroadcastNotifications = useCallback(async () => {
+    try {
+      const res = await fetch("/api/notifications?role=admin", {
+        headers: { "x-user-role": "admin", "x-user-id": "usr_admin_001" },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setBroadcastNotifs(data.notifications || []);
+      }
+    } catch {
+      // quiet fallback
+    }
+  }, []);
+
+  // Live Client Directory State
+  const [liveClients, setLiveClients] = useState<any[]>([]);
+  const [isLoadingLiveClients, setIsLoadingLiveClients] = useState(false);
+  const [selectedDossier, setSelectedDossier] = useState<any | null>(null);
+  const [newClientNote, setNewClientNote] = useState("");
+  const [isSubmittingClientNote, setIsSubmittingClientNote] = useState(false);
+  const [clientActionMessage, setClientActionMessage] = useState<string | null>(null);
+
+  // Live Audit Ledger State
+  const [liveAuditLogs, setLiveAuditLogs] = useState<any[]>([]);
+  const [isLoadingAuditLogs, setIsLoadingAuditLogs] = useState(false);
+  const [auditActionFilter, setAuditActionFilter] = useState("ALL");
+  const [auditSearchQuery, setAuditSearchQuery] = useState("");
+  const [selectedAuditLog, setSelectedAuditLog] = useState<any | null>(null);
+
+  const fetchLiveClients = useCallback(async () => {
+    setIsLoadingLiveClients(true);
+    try {
+      const res = await fetch("/api/admin/clients", {
+        headers: { "x-user-role": "admin" },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLiveClients(data.clients || []);
+      }
+    } catch {
+      // fallback
+    } finally {
+      setIsLoadingLiveClients(false);
+    }
+  }, []);
+
+  const fetchLiveAuditLogs = useCallback(async () => {
+    setIsLoadingAuditLogs(true);
+    try {
+      const res = await fetch("/api/audit-logs", {
+        headers: { "x-user-role": "admin" },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLiveAuditLogs(data.logs || []);
+      }
+    } catch {
+      // fallback
+    } finally {
+      setIsLoadingAuditLogs(false);
+    }
+  }, []);
+
+  const handleToggleClientStatus = async (clientId: string, currentStatus: string) => {
+    const nextStatus = currentStatus === "Active" ? "Disabled" : "Active";
+    setClientActionMessage(null);
+    try {
+      const res = await fetch("/api/admin/clients", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "x-user-role": "admin" },
+        body: JSON.stringify({
+          action: "toggle_status",
+          clientId,
+          status: nextStatus,
+          reason: `Account status updated to ${nextStatus} by Administrator`,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setClientActionMessage(`Account status switched to ${nextStatus}.`);
+        fetchLiveClients();
+        if (selectedDossier && (selectedDossier.profile.id === clientId || selectedDossier.profile.uid === clientId)) {
+          setSelectedDossier({
+            ...selectedDossier,
+            profile: { ...selectedDossier.profile, status: nextStatus },
+          });
+        }
+      }
+    } catch (err: any) {
+      alert("Failed to update client status: " + err.message);
+    }
+  };
+
+  const handleResendVerification = async (clientId: string) => {
+    setClientActionMessage(null);
+    try {
+      const res = await fetch("/api/admin/clients", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "x-user-role": "admin" },
+        body: JSON.stringify({
+          action: "resend_verification",
+          clientId,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setClientActionMessage(data.message || "Verification email dispatched.");
+      }
+    } catch (err: any) {
+      alert("Failed to dispatch verification: " + err.message);
+    }
+  };
+
+  const handleAddClientNote = async (clientId: string) => {
+    if (!newClientNote.trim()) return;
+    setIsSubmittingClientNote(true);
+    try {
+      const res = await fetch("/api/admin/clients", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "x-user-role": "admin" },
+        body: JSON.stringify({
+          action: "add_note",
+          clientId,
+          note: newClientNote.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.note) {
+        setNewClientNote("");
+        if (selectedDossier) {
+          setSelectedDossier({
+            ...selectedDossier,
+            profile: {
+              ...selectedDossier.profile,
+              adminNotes: [data.note, ...(selectedDossier.profile.adminNotes || [])],
+            },
+          });
+        }
+        fetchLiveClients();
+      }
+    } catch (err: any) {
+      alert("Failed to add admin note: " + err.message);
+    } finally {
+      setIsSubmittingClientNote(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotificationSettings();
+    fetchBroadcastNotifications();
+    fetchLiveClients();
+    fetchLiveAuditLogs();
+  }, [fetchNotificationSettings, fetchBroadcastNotifications, fetchLiveClients, fetchLiveAuditLogs]);
+
+  const handleSaveNotificationSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingNotifSettings(true);
+    setNotifSettingsSuccess(null);
+    try {
+      const res = await fetch("/api/admin/notification-settings", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-role": "admin",
+        },
+        body: JSON.stringify(adminNotifSettings),
+      });
+      if (res.ok) {
+        setNotifSettingsSuccess("Notification thresholds and automation preferences saved.");
+        setTimeout(() => setNotifSettingsSuccess(null), 4000);
+      }
+    } catch {
+      // fallback
+    } finally {
+      setIsSavingNotifSettings(false);
+    }
+  };
+
+  const handleExecuteScheduledCron = async () => {
+    setIsExecutingCron(true);
+    setCronNotice(null);
+    try {
+      const res = await fetch("/api/cron/notifications", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-role": "admin",
+        },
+        body: JSON.stringify({
+          simulateDate: cronSimulateDate || undefined,
+          dryRun: cronDryRun,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setCronResult(data);
+        setCronNotice(
+          `Evaluated ${data.evaluatedOrdersCount} orders: ${data.notificationsSent} notification(s) sent, ${data.skippedDuplicates} duplicate(s) skipped, ${data.statusTransitions} status transitions executed.`
+        );
+        fetchBroadcastNotifications();
+        fetchRealOrders(false);
+      } else {
+        setCronNotice(`Error executing scheduled job: ${data.error || "Unknown error"}`);
+      }
+    } catch (err: any) {
+      setCronNotice(`Execution failed: ${err.message}`);
+    } finally {
+      setIsExecutingCron(false);
+    }
+  };
+
+  // Load Admin Order Discussion Comments
+  const loadAdminOrderComments = useCallback(async (orderId: string) => {
+    setIsLoadingAdminComments(true);
+    try {
+      const res = await fetch(`/api/orders/comments?orderId=${encodeURIComponent(orderId)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setAdminOrderComments(data.comments || []);
+      }
+    } catch {
+      // safe fallback
+    } finally {
+      setIsLoadingAdminComments(false);
+    }
+  }, []);
+
+  // Sync comments and assignee when inspecting order changes
+  useEffect(() => {
+    if (inspectingAdminOrder?.id) {
+      loadAdminOrderComments(inspectingAdminOrder.id);
+      setAssignedMemberId(inspectingAdminOrder.assignedTo?.id || "");
+    }
+  }, [inspectingAdminOrder?.id, loadAdminOrderComments]);
+
+  // Post Admin Comment to Client
+  const handlePostAdminComment = async () => {
+    if (!inspectingAdminOrder || !newAdminCommentText.trim()) return;
+    setIsPostingAdminComment(true);
+    try {
+      const res = await fetch("/api/orders/comments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": user?.uid || "usr_admin_001",
+          "x-user-role": "admin",
+        },
+        body: JSON.stringify({
+          orderId: inspectingAdminOrder.id,
+          text: newAdminCommentText.trim(),
+          authorName: user?.displayName || "Raghavan Sharma (Studio Producer)",
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.comment) {
+          setAdminOrderComments((prev) => [...prev, data.comment]);
+        }
+        setNewAdminCommentText("");
+      }
+    } catch (err: any) {
+      alert(`Failed to post message: ${err.message}`);
+    } finally {
+      setIsPostingAdminComment(false);
+    }
+  };
+
+  // Add Private Internal Supervisor Note (Not visible to client)
+  const handleAddOrderPrivateNote = async () => {
+    if (!inspectingAdminOrder || !newInternalNoteText.trim()) return;
+    setIsSavingInternalNote(true);
+    try {
+      const res = await fetch("/api/orders/status", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-role": "admin",
+          "x-user-id": user?.uid || "usr_admin_001",
+        },
+        body: JSON.stringify({
+          orderId: inspectingAdminOrder.id,
+          internalNote: newInternalNoteText.trim(),
+          actorName: user?.displayName || "Raghavan Sharma (Lead Producer)",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to record internal note.");
+
+      const newNoteItem = {
+        id: `note_${Date.now()}`,
+        author: user?.displayName || "Raghavan Sharma (Lead Producer)",
+        text: newInternalNoteText.trim(),
+        createdAt: new Date().toISOString(),
+      };
+
+      setRealOrders((prev) =>
+        prev.map((o) =>
+          o.id === inspectingAdminOrder.id
+            ? {
+                ...o,
+                internalNotes: [...(o.internalNotes || []), newNoteItem],
+              }
+            : o
+        )
+      );
+      setInspectingAdminOrder((prev) =>
+        prev
+          ? {
+              ...prev,
+              internalNotes: [...(prev.internalNotes || []), newNoteItem],
+            }
+          : null
+      );
+      setNewInternalNoteText("");
+      setApprovalToast("Private internal note recorded.");
+      setTimeout(() => setApprovalToast(""), 3500);
+    } catch (err: any) {
+      alert(`Internal note error: ${err.message}`);
+    } finally {
+      setIsSavingInternalNote(false);
+    }
+  };
+
+  // Assign Order to Team Member
+  const handleAssignOrderTeamMember = async (memberId: string) => {
+    if (!inspectingAdminOrder) return;
+    setAssignedMemberId(memberId);
+    const matched = STUDIO_TEAM_MEMBERS.find((m) => m.id === memberId);
+    try {
+      const res = await fetch("/api/orders/status", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-role": "admin",
+          "x-user-id": user?.uid || "usr_admin_001",
+        },
+        body: JSON.stringify({
+          orderId: inspectingAdminOrder.id,
+          assignedTo: matched ? { id: matched.id, name: matched.name, role: matched.role } : null,
+          actorName: user?.displayName || "Raghavan Sharma (Lead Producer)",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update assignment.");
+
+      setRealOrders((prev) =>
+        prev.map((o) =>
+          o.id === inspectingAdminOrder.id
+            ? {
+                ...o,
+                assignedTo: matched
+                  ? { id: matched.id, name: matched.name, role: matched.role, assignedAt: new Date().toISOString() }
+                  : undefined,
+              }
+            : o
+        )
+      );
+      setInspectingAdminOrder((prev) =>
+        prev
+          ? {
+              ...prev,
+              assignedTo: matched
+                ? { id: matched.id, name: matched.name, role: matched.role, assignedAt: new Date().toISOString() }
+                : undefined,
+            }
+          : null
+      );
+      setApprovalToast(matched ? `Order assigned to ${matched.name} (${matched.role})` : "Order assignment cleared.");
+      setTimeout(() => setApprovalToast(""), 3500);
+    } catch (err: any) {
+      alert(`Assignment error: ${err.message}`);
+    }
+  };
+
+  // Admin Order Status Update function with server-side validation
+  const handleAdminUpdateOrderStatus = async (
+    orderId: string,
+    newStatus: string,
+    customNote?: string
+  ) => {
+    if (!orderId || !newStatus) return;
+    setIsUpdatingStatus(true);
+    try {
+      const noteToSend =
+        customNote?.trim() ||
+        statusChangeNote.trim() ||
+        `Status transitioned to ${newStatus} by Studio Administrator.`;
+
+      const res = await fetch("/api/orders/status", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-role": "admin",
+          "x-user-id": user?.uid || "usr_admin_001",
+        },
+        body: JSON.stringify({
+          orderId,
+          newStatus,
+          actorName: user?.displayName || "Raghavan Sharma (Lead Producer)",
+          note: noteToSend,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to update order status");
+      }
+
+      const updatedOrder = data.order;
+      setRealOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId || o.code === orderId || o.orderNumber === orderId
+            ? {
+                ...o,
+                status: newStatus as any,
+                statusLabel: updatedOrder?.statusLabel || newStatus.toUpperCase(),
+                updatedAt: new Date().toISOString(),
+                statusHistory: updatedOrder?.statusHistory || [
+                  ...(o.statusHistory || []),
+                  {
+                    status: newStatus,
+                    changedAt: new Date().toISOString(),
+                    changedBy: user?.displayName || "Lead Producer",
+                    note: noteToSend,
+                  },
+                ],
+              }
+            : o
+        )
+      );
+
+      if (
+        inspectingAdminOrder &&
+        (inspectingAdminOrder.id === orderId ||
+          inspectingAdminOrder.code === orderId ||
+          inspectingAdminOrder.orderNumber === orderId)
+      ) {
+        setInspectingAdminOrder((prev) =>
+          prev
+            ? {
+                ...prev,
+                status: newStatus as any,
+                statusLabel: updatedOrder?.statusLabel || newStatus.toUpperCase(),
+                updatedAt: new Date().toISOString(),
+                statusHistory: updatedOrder?.statusHistory || [
+                  ...(prev.statusHistory || []),
+                  {
+                    status: newStatus,
+                    changedAt: new Date().toISOString(),
+                    changedBy: user?.displayName || "Lead Producer",
+                    note: noteToSend,
+                  },
+                ],
+              }
+            : null
+        );
+      }
+
+      window.dispatchEvent(new Event("sutra_orders_changed"));
+      setApprovalToast(`Order status updated to ${newStatus.toUpperCase()}`);
+      setStatusChangeNote("");
+      setTimeout(() => setApprovalToast(""), 4500);
+    } catch (err: any) {
+      setApprovalToast(`Status update failed: ${err.message}`);
+      setTimeout(() => setApprovalToast(""), 4500);
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  // Final Result / Draft / Revision Delivery to Google Drive Vault
+  const handleDeliverFinalResult = async () => {
+    if (!inspectingAdminOrder) return;
+    setIsDelivering(true);
+    try {
+      if (deliveryFile) {
+        // Multipart direct upload to Google Drive Subfolder via backend proxy
+        const formData = new FormData();
+        formData.append("file", deliveryFile);
+        formData.append("orderId", inspectingAdminOrder.id);
+        formData.append("category", deliveryCategory);
+        formData.append("notes", deliveryNote.trim() || `Deliverable uploaded to ${deliveryCategory}`);
+        formData.append("uploaderName", user?.displayName || "Studio Producer");
+
+        const res = await fetch("/api/drive/upload", {
+          method: "POST",
+          headers: {
+            "x-user-role": "admin",
+            "x-user-id": user?.uid || "usr_admin_001",
+          },
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to upload deliverable to Google Drive.");
+        }
+
+        setApprovalToast(`Asset "${deliveryFile.name}" successfully vaulted to Drive subfolder (${deliveryCategory}).`);
+      } else {
+        // URL-based delivery record
+        const res = await fetch("/api/orders/deliver", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-user-role": "admin",
+            "x-user-id": user?.uid || "usr_admin_001",
+          },
+          body: JSON.stringify({
+            orderId: inspectingAdminOrder.id,
+            adminName: user?.displayName || "Raghavan Sharma (Lead Producer)",
+            deliverables: [
+              {
+                filename: deliveryFilename.trim() || `${inspectingAdminOrder.title || "Studio"}_Final_Master.zip`,
+                fileSize: "148 MB (Vault Asset)",
+                mimeType: "application/zip",
+                previewUrl: deliveryPreviewUrl.trim() || `https://drive.google.com/drive/folders/${inspectingAdminOrder.driveFolderId || "COMMISSIONS"}`,
+              },
+            ],
+            deliveryNote: deliveryNote.trim() || `Production master (${deliveryCategory}) verified and uploaded to client Google Drive vault.`,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to deliver result");
+        }
+
+        setApprovalToast(`Deliverables successfully registered for Order #${inspectingAdminOrder.orderNumber || inspectingAdminOrder.code}`);
+      }
+
+      setDeliveryFilename("");
+      setDeliveryPreviewUrl("");
+      setDeliveryNote("");
+      setDeliveryFile(null);
+      await fetchRealOrders(true);
+      window.dispatchEvent(new Event("sutra_orders_changed"));
+      setTimeout(() => setApprovalToast(""), 5000);
+    } catch (err: any) {
+      alert(`Delivery error: ${err.message}`);
+    } finally {
+      setIsDelivering(false);
+    }
+  };
+
+  // Google Drive Order Folder Archive Action
+  const handleArchiveDriveFolder = async (order: AdminOrder) => {
+    if (!window.confirm(`Archive Google Drive vault folder for order #${order.orderNumber || order.code}?`)) {
+      return;
+    }
+    setIsArchivingDrive(true);
+    try {
+      const res = await fetch("/api/drive/archive", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-role": "admin",
+          "x-user-id": user?.uid || "usr_admin_001",
+        },
+        body: JSON.stringify({
+          orderId: order.id,
+          folderId: order.driveFolderId,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to archive folder");
+      setApprovalToast(`Drive folder for ${order.code} successfully archived.`);
+      setTimeout(() => setApprovalToast(""), 4000);
+    } catch (err: any) {
+      alert(`Archive error: ${err.message}`);
+    } finally {
+      setIsArchivingDrive(false);
+    }
+  };
+
+  // Administrative Refund Action via Secure Razorpay Backend Function
+  const handleAdminRefundOrder = async (order: AdminOrder) => {
+    const defaultReason = "Administrative client commission refund";
+    const confirmPrompt = window.prompt(
+      `Enter refund reason to process a full refund of ₹${(order.totalAmount || 0).toLocaleString("en-IN")} via Razorpay:`,
+      defaultReason
+    );
+    if (!confirmPrompt) return;
+
+    setIsRefunding(true);
+    try {
+      const res = await fetch("/api/payments/refund", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-role": "admin",
+          "x-user-id": user?.uid || "usr_admin_001",
+        },
+        body: JSON.stringify({
+          orderId: order.id,
+          amountINR: order.totalAmount,
+          reason: confirmPrompt,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to process refund on server.");
+      }
+
+      setApprovalToast(`Refund processed successfully. Order status updated to cancelled & refunded.`);
+      setTimeout(() => setApprovalToast(""), 5000);
+
+      await fetchRealOrders(true);
+      if (inspectingAdminOrder?.id === order.id) {
+        setInspectingAdminOrder((prev) =>
+          prev ? { ...prev, paymentStatus: "refunded", status: "cancelled", statusLabel: "Cancelled & Refunded" } : null
+        );
+      }
+      window.dispatchEvent(new Event("sutra_orders_changed"));
+    } catch (err: any) {
+      alert(`Refund failed: ${err.message}`);
+    } finally {
+      setIsRefunding(false);
+    }
+  };
+
+  // Administrative Monthly Period Extension
+  const handleAdminExtendPeriod = async (order: AdminOrder) => {
+    const days = window.prompt("Enter number of days to extend client subscription period:", "30");
+    if (!days || isNaN(Number(days))) return;
+    const reason = window.prompt("Enter reason for manual extension (logged to audit history):", "Client goodwill extension");
+    if (!reason) return;
+
+    try {
+      const res = await fetch("/api/payments/extend-period", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-role": "admin",
+          "x-user-id": user?.uid || "usr_admin_001",
+        },
+        body: JSON.stringify({
+          orderId: order.id,
+          daysToAdd: Number(days),
+          reason,
+          adminName: user?.displayName || "Studio Supervisor",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to extend period");
+      setApprovalToast(data.message);
+      await fetchRealOrders(true);
+      setTimeout(() => setApprovalToast(""), 4500);
+    } catch (err: any) {
+      alert(`Period extension error: ${err.message}`);
+    }
+  };
+
+  // Filtered and Sorted Orders
+  const filteredAndSortedOrders = useMemo(() => {
+    let list = [...realOrders];
+
+    if (orderSearchQuery.trim()) {
+      const q = orderSearchQuery.toLowerCase().trim();
+      list = list.filter(
+        (o) =>
+          (o.code && o.code.toLowerCase().includes(q)) ||
+          (o.orderNumber && o.orderNumber.toLowerCase().includes(q)) ||
+          (o.clientName && o.clientName.toLowerCase().includes(q)) ||
+          (o.clientEmail && o.clientEmail.toLowerCase().includes(q)) ||
+          (o.service && o.service.toLowerCase().includes(q)) ||
+          (o.title && o.title.toLowerCase().includes(q)) ||
+          (o.razorpayPaymentId && o.razorpayPaymentId.toLowerCase().includes(q))
+      );
+    }
+
+    if (orderStatusFilter !== "all") {
+      list = list.filter((o) => {
+        if (orderStatusFilter === "in_progress") {
+          return o.status === "in_progress" || o.status === "awaiting_approval";
+        }
+        return o.status === orderStatusFilter;
+      });
+    }
+
+    // Payment Status Filter (Requirement 9: paid / unpaid / failed / refunded)
+    if (orderPaymentFilter !== "all") {
+      list = list.filter((o) => {
+        const pStatus = o.paymentStatus || (o.status === "pending_payment" ? "unpaid" : "paid");
+        if (orderPaymentFilter === "paid") return pStatus === "paid" || o.status === "paid";
+        if (orderPaymentFilter === "unpaid") return pStatus === "unpaid" || o.status === "pending_payment";
+        if (orderPaymentFilter === "failed") return pStatus === "failed";
+        if (orderPaymentFilter === "refunded") return pStatus === "refunded";
+        return true;
+      });
+    }
+
+    if (orderTypeFilter !== "all") {
+      list = list.filter((o) => (o.type || "service") === orderTypeFilter);
+    }
+
+    if (orderSourceFilter !== "all") {
+      list = list.filter((o) => (o.source || "dashboard") === orderSourceFilter);
+    }
+
+    if (orderDateFilter !== "all") {
+      const now = Date.now();
+      const oneDay = 24 * 60 * 60 * 1000;
+      list = list.filter((o) => {
+        const t = new Date(o.createdAt || o.updatedAt).getTime();
+        if (isNaN(t)) return true;
+        if (orderDateFilter === "today") return now - t <= oneDay;
+        if (orderDateFilter === "week") return now - t <= 7 * oneDay;
+        if (orderDateFilter === "month") return now - t <= 30 * oneDay;
+        return true;
+      });
+    }
+
+    list.sort((a, b) => {
+      if (orderSortBy === "date_desc") {
+        return new Date(b.createdAt || b.updatedAt).getTime() - new Date(a.createdAt || a.updatedAt).getTime();
+      }
+      if (orderSortBy === "date_asc") {
+        return new Date(a.createdAt || a.updatedAt).getTime() - new Date(b.createdAt || b.updatedAt).getTime();
+      }
+      if (orderSortBy === "amount_desc") {
+        return (b.totalAmount || 0) - (a.totalAmount || 0);
+      }
+      if (orderSortBy === "amount_asc") {
+        return (a.totalAmount || 0) - (b.totalAmount || 0);
+      }
+      if (orderSortBy === "status") {
+        return String(a.status).localeCompare(String(b.status));
+      }
+      return 0;
+    });
+
+    return list;
+  }, [realOrders, orderSearchQuery, orderStatusFilter, orderTypeFilter, orderSourceFilter, orderDateFilter, orderSortBy]);
+
+  const totalOrderPages = Math.max(1, Math.ceil(filteredAndSortedOrders.length / ORDERS_PER_PAGE));
+  const paginatedOrders = useMemo(() => {
+    const start = (orderCurrentPage - 1) * ORDERS_PER_PAGE;
+    return filteredAndSortedOrders.slice(start, start + ORDERS_PER_PAGE);
+  }, [filteredAndSortedOrders, orderCurrentPage]);
+
+  const pendingOrdersCount = useMemo(() => {
+    return realOrders.filter((o) => o.status === "pending").length;
+  }, [realOrders]);
   const [selectedClient, setSelectedClient] = useState<ClientRecord | null>(null);
 
   // Official Approvals Hub State
@@ -461,8 +1722,15 @@ function AdminHubContent() {
   const [sessions, setSessions] = useState<AdminChatSession[]>(INITIAL_ADMIN_SESSIONS);
   const [selectedSessionId, setSelectedSessionId] = useState<string>("cl-1");
   const [producerInput, setProducerInput] = useState("");
+  const [chatSearchQuery, setChatSearchQuery] = useState("");
+  const [chatFilter, setChatFilter] = useState<"all" | "unread" | "has_orders">("all");
+  const [chatDateFilter, setChatDateFilter] = useState<"all" | "today" | "week">("all");
+  const [mobileChatView, setMobileChatView] = useState<"list" | "chat" | "details">("list");
+  const [chatToast, setChatToast] = useState<string>("");
 
-  const currentSession = sessions.find((s) => s.id === selectedSessionId) || sessions[0];
+  const currentSession = useMemo(() => {
+    return sessions.find((s) => s.id === selectedSessionId) || sessions[0];
+  }, [sessions, selectedSessionId]);
 
   const handleToggleTakeover = (sessionId: string) => {
     setSessions((prev) =>
@@ -475,6 +1743,14 @@ function AdminHubContent() {
           : s
       )
     );
+  };
+
+  const handleMarkChatAsRead = (sessionId: string) => {
+    setSessions((prev) =>
+      prev.map((s) => (s.id === sessionId ? { ...s, unreadCount: 0 } : s))
+    );
+    setChatToast("Chat marked as read.");
+    setTimeout(() => setChatToast(""), 3000);
   };
 
   const handleSendProducerMessage = (textToSend?: string) => {
@@ -524,7 +1800,481 @@ function AdminHubContent() {
       )
     );
     setProducerInput("");
+    setChatToast("Internal producer note recorded (Private).");
+    setTimeout(() => setChatToast(""), 3000);
   };
+
+  const totalUnreadChats = useMemo(() => {
+    return sessions.reduce((acc, s) => acc + (s.unreadCount || 0), 0);
+  }, [sessions]);
+
+  const filteredChatSessions = useMemo(() => {
+    let list = [...sessions];
+
+    if (chatSearchQuery.trim()) {
+      const q = chatSearchQuery.toLowerCase().trim();
+      list = list.filter(
+        (s) =>
+          s.clientName.toLowerCase().includes(q) ||
+          s.company.toLowerCase().includes(q) ||
+          (s.clientEmail && s.clientEmail.toLowerCase().includes(q)) ||
+          s.lastPrompt.toLowerCase().includes(q) ||
+          s.messages.some((m) => m.text.toLowerCase().includes(q))
+      );
+    }
+
+    if (chatFilter === "unread") {
+      list = list.filter((s) => (s.unreadCount || 0) > 0);
+    } else if (chatFilter === "has_orders") {
+      list = list.filter((s) => {
+        const clientEmail = (s.clientEmail || "").toLowerCase();
+        const clientName = s.clientName.toLowerCase();
+        const hasOrderInReal = realOrders.some(
+          (o) =>
+            (o.clientEmail && o.clientEmail.toLowerCase() === clientEmail) ||
+            (o.clientName && o.clientName.toLowerCase().includes(clientName)) ||
+            o.clientId === s.clientId ||
+            o.clientId === s.id
+        );
+        const hasOrderInMessages = s.messages.some((m) => m.orderDraft || m.text.includes("#ORD-"));
+        return hasOrderInReal || hasOrderInMessages;
+      });
+    }
+
+    if (chatDateFilter === "today") {
+      list = list.filter(
+        (s) =>
+          s.lastTime.includes("m ago") ||
+          s.lastTime.includes("h ago") ||
+          s.lastTime.includes("AM") ||
+          s.lastTime.includes("PM") ||
+          s.lastTime === "Just now"
+      );
+    } else if (chatDateFilter === "week") {
+      list = list.filter((s) => !s.lastTime.includes("month"));
+    }
+
+    return list;
+  }, [sessions, chatSearchQuery, chatFilter, chatDateFilter, realOrders]);
+
+  const currentChatClient = useMemo(() => {
+    return (
+      CLIENTS_DATA.find(
+        (c) =>
+          c.id === currentSession?.id ||
+          c.email.toLowerCase() === (currentSession?.clientEmail || "").toLowerCase() ||
+          c.name.toLowerCase() === (currentSession?.clientName || "").toLowerCase()
+      ) || {
+        id: currentSession?.id || "cl-1",
+        name: currentSession?.clientName || "Client",
+        company: currentSession?.company || "Company",
+        email: currentSession?.clientEmail || "client@studio.com",
+        tier: "Enterprise" as const,
+        driveFolderId: currentSession?.vaultId || "drive_fld_sutra_001",
+        activeOrders: 1,
+        lifetimeVolume: "₹1,85,000",
+        status: "Active" as const,
+        lastActive: currentSession?.lastTime || "Recently",
+      }
+    );
+  }, [currentSession]);
+
+  const currentChatOrders = useMemo(() => {
+    if (!currentSession) return [];
+    const sessionEmail = (currentSession.clientEmail || "").toLowerCase();
+    const sessionName = currentSession.clientName.toLowerCase();
+    const sessionId = currentSession.clientId || currentSession.id;
+
+    const matched = realOrders.filter(
+      (o) =>
+        (o.clientEmail && o.clientEmail.toLowerCase() === sessionEmail) ||
+        (o.clientName && o.clientName.toLowerCase().includes(sessionName)) ||
+        o.clientId === sessionId
+    );
+
+    if (matched.length === 0) {
+      const drafts: AdminOrder[] = [];
+      currentSession.messages.forEach((m, idx) => {
+        if (m.orderDraft) {
+          drafts.push({
+            id: m.orderDraft.orderId || `ord_${idx + 1}`,
+            orderNumber: m.orderDraft.orderNumber || `ORD-00${idx + 1}`,
+            code: m.orderDraft.orderNumber || `ORD-00${idx + 1}`,
+            title: m.orderDraft.service || "Studio Commission",
+            service: m.orderDraft.service || "Studio Commission",
+            totalAmount: m.orderDraft.totalAmount || 18999,
+            status: (m.orderDraft.status as any) || "in_progress",
+            statusLabel: "In Production",
+            clientName: currentSession.clientName,
+            clientEmail: currentSession.clientEmail,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            driveFolderId: currentSession.vaultId,
+          });
+        }
+      });
+      return drafts;
+    }
+
+    return matched;
+  }, [currentSession, realOrders]);
+
+  // ==========================================================================
+  // STEP 7: AI IMPROVEMENT, KNOWLEDGE BASE & SYSTEM PROMPT STATE
+  // ==========================================================================
+  const [chatSubView, setChatSubView] = useState<"monitor" | "knowledge" | "common_questions" | "settings">("monitor");
+  const [knowledgeEntries, setKnowledgeEntries] = useState<KnowledgeBaseEntry[]>([]);
+  const [feedbackList, setFeedbackList] = useState<FeedbackItem[]>([]);
+  const [commonQuestions, setCommonQuestions] = useState<CommonQuestionInsight[]>([]);
+  const [aiSettings, setAiSettings] = useState<AiSettingsConfig>({
+    systemPrompt: DEFAULT_SYSTEM_PROMPT,
+    tone: "luxury_atelier",
+    defaultPrompt: DEFAULT_SYSTEM_PROMPT,
+    lastUpdated: new Date().toISOString(),
+    updatedBy: "Raghavan Sharma (Lead Producer)",
+  });
+
+  // Modals & Feedback Editor State
+  const [ratingModalMessage, setRatingModalMessage] = useState<{
+    chatId: string;
+    messageId: string;
+    userQuery?: string;
+    aiReply: string;
+    rating: "good" | "bad";
+  } | null>(null);
+  const [ratingCorrectionText, setRatingCorrectionText] = useState("");
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+
+  // Knowledge Base Editor Modal State
+  const [kbModalOpen, setKbModalOpen] = useState(false);
+  const [editingKbEntry, setEditingKbEntry] = useState<KnowledgeBaseEntry | null>(null);
+  const [kbTitle, setKbTitle] = useState("");
+  const [kbCategory, setKbCategory] = useState<KnowledgeCategory>("faq");
+  const [kbQuestion, setKbQuestion] = useState("");
+  const [kbAnswer, setKbAnswer] = useState("");
+  const [kbSearchQuery, setKbSearchQuery] = useState("");
+  const [kbCategoryFilter, setKbCategoryFilter] = useState("All");
+
+  // System Prompt & Tone Editor State
+  const [systemPromptDraft, setSystemPromptDraft] = useState(DEFAULT_SYSTEM_PROMPT);
+  const [systemToneDraft, setSystemToneDraft] = useState<AiSettingsConfig["tone"]>("luxury_atelier");
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  // STEP 12: DATA-DRIVEN SERVICES & PLANS CATALOG STATE
+  const [catalogServices, setCatalogServices] = useState<CatalogService[]>(SEED_CATALOG_SERVICES);
+  const [catalogPlans, setCatalogPlans] = useState<CatalogPlan[]>(SEED_CATALOG_PLANS);
+  const [catalogServiceFilter, setCatalogServiceFilter] = useState("All");
+  const [editingService, setEditingService] = useState<CatalogService | null>(null);
+  const [editingPlan, setEditingPlan] = useState<CatalogPlan | null>(null);
+  const [catalogSaveToast, setCatalogSaveToast] = useState("");
+  const [isSavingCatalog, setIsSavingCatalog] = useState(false);
+const [adminDataError, setAdminDataError] = useState("");
+
+  // Initial Fetch for Knowledge Base, AI Improvement data, and Service Catalogs
+  useEffect(() => {
+    async function loadAdminData() {
+      try {
+        const [kb, fb, cq, st, catalog] = await Promise.all([
+          callAiConsole<{ entries: KnowledgeBaseEntry[] }>("getKnowledgeEntries"),
+          callAiConsole<{ feedback: FeedbackItem[] }>("getFeedbackList"),
+          callAiConsole<{ questions: CommonQuestionInsight[] }>("getCommonQuestions"),
+          callAiConsole<{ settings: AiSettingsConfig }>("getAiSettings"),
+          fetchCatalog<{ services: CatalogService[]; plans: CatalogPlan[] }>(),
+        ]);
+        setKnowledgeEntries(kb.entries ?? []);
+        setFeedbackList(fb.feedback ?? []);
+        setCommonQuestions(cq.questions ?? []);
+        setAiSettings(st.settings);
+        setSystemPromptDraft(st.settings.systemPrompt);
+        setSystemToneDraft(st.settings.tone);
+        if (catalog.services?.length) setCatalogServices(catalog.services);
+        if (catalog.plans?.length) setCatalogPlans(catalog.plans);
+      } catch (err) {
+        setAdminDataError(errorMessage(err, "Could not load admin data."));
+      }
+    }
+    void loadAdminData();
+  }, []);
+
+  // Handler: Rate AI Reply (Good / Bad)
+  const handleRateAiReply = async (
+    chatId: string,
+    messageId: string,
+    rating: "good" | "bad",
+    aiReply: string,
+    userQuery?: string
+  ) => {
+    if (rating === "good") {
+      try {
+        const { feedback: saved } = await callAiConsole<{ feedback: FeedbackItem }>("saveFeedback", {
+          chatId,
+          messageId,
+          rating: "good",
+          userQuery,
+          aiReply,
+        });
+        if (saved) setFeedbackList((prev) => [saved, ...prev]);
+        setChatToast("AI reply marked as accurate (Good). Recorded.");
+        setTimeout(() => setChatToast(""), 3500);
+      } catch {
+        setChatToast("Feedback could not be recorded. Please retry.");
+        setTimeout(() => setChatToast(""), 3500);
+      }
+    } else {
+      // Open modal to capture correction
+      setRatingModalMessage({
+        chatId,
+        messageId,
+        userQuery,
+        aiReply,
+        rating: "bad",
+      });
+      setRatingCorrectionText("");
+    }
+  };
+
+  // Handler: Submit Feedback with Correction
+  const handleSubmitCorrectionFeedback = async () => {
+    if (!ratingModalMessage) return;
+    setIsSubmittingFeedback(true);
+    try {
+      const { feedback: saved } = await callAiConsole<{ feedback: FeedbackItem }>("saveFeedback", {
+        chatId: ratingModalMessage.chatId,
+        messageId: ratingModalMessage.messageId,
+        rating: "bad",
+        correctedAnswer: ratingCorrectionText,
+        userQuery: ratingModalMessage.userQuery,
+        aiReply: ratingModalMessage.aiReply,
+      });
+      if (saved) setFeedbackList((prev) => [saved, ...prev]);
+
+      // Refresh KB entries as the correction is incorporated
+      const { entries } = await callAiConsole<{ entries: KnowledgeBaseEntry[] }>("getKnowledgeEntries");
+      if (entries) setKnowledgeEntries(entries);
+
+      setChatToast(
+        ratingCorrectionText.trim()
+          ? "Correction saved and incorporated into the AI Knowledge Base."
+          : "AI reply marked as unsatisfactory (Bad)."
+      );
+      setRatingModalMessage(null);
+      setRatingCorrectionText("");
+      setTimeout(() => setChatToast(""), 4500);
+    } catch {
+      setChatToast("Correction could not be saved. Please retry.");
+      setRatingModalMessage(null);
+      setTimeout(() => setChatToast(""), 3500);
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
+  };
+
+  // Handler: One-Click Add to Knowledge Base from Chat Message
+  const handleOneClickAddToKnowledge = (question: string, answer: string, defaultTitle?: string) => {
+    setEditingKbEntry(null);
+    setKbTitle(defaultTitle || `Q&A: ${question.slice(0, 35)}...`);
+    setKbCategory("faq");
+    setKbQuestion(question);
+    setKbAnswer(answer);
+    setKbModalOpen(true);
+  };
+
+  // Handler: Save Knowledge Base Entry
+  const handleSaveKnowledgeEntrySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!kbTitle.trim() || !kbAnswer.trim()) return;
+
+    try {
+      if (editingKbEntry) {
+        const { entry: updated } = await callAiConsole<{ entry: KnowledgeBaseEntry | null }>(
+          "updateKnowledgeEntry",
+          {
+            id: editingKbEntry.id,
+            updates: {
+              title: kbTitle.trim(),
+              category: kbCategory,
+              question: kbQuestion.trim() || undefined,
+              answer: kbAnswer.trim(),
+            },
+          }
+        );
+        if (updated) {
+          setKnowledgeEntries((prev) => prev.map((k) => (k.id === updated.id ? updated : k)));
+        }
+        setChatToast(`Knowledge entry "${kbTitle}" successfully updated.`);
+      } else {
+        const { entry: added } = await callAiConsole<{ entry: KnowledgeBaseEntry }>("addKnowledgeEntry", {
+          title: kbTitle.trim(),
+          category: kbCategory,
+          question: kbQuestion.trim() || undefined,
+          answer: kbAnswer.trim(),
+          status: "active",
+        });
+        if (added) setKnowledgeEntries((prev) => [added, ...prev]);
+        setChatToast(`New Knowledge Base entry "${kbTitle}" published.`);
+      }
+      setKbModalOpen(false);
+      setEditingKbEntry(null);
+      setKbTitle("");
+      setKbQuestion("");
+      setKbAnswer("");
+      setTimeout(() => setChatToast(""), 4000);
+    } catch (err) {
+      setChatToast(errorMessage(err, "Failed to save knowledge entry."));
+      setTimeout(() => setChatToast(""), 4000);
+    }
+  };
+
+  // Handler: Delete Knowledge Entry
+  const handleDeleteKnowledge = async (id: string, title: string) => {
+    if (!window.confirm(`Are you sure you want to remove "${title}" from the AI Knowledge Base?`)) return;
+    try {
+      await callAiConsole("deleteKnowledgeEntry", { id });
+      setKnowledgeEntries((prev) => prev.filter((k) => k.id !== id));
+      setChatToast(`Knowledge entry "${title}" removed.`);
+    } catch (err) {
+      setChatToast(errorMessage(err, "Could not remove that entry."));
+    }
+    setTimeout(() => setChatToast(""), 3500);
+  };
+
+  // Handler: Save AI System Prompt & Tone Settings
+  const handleSaveAiSettingsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingSettings(true);
+    try {
+      const { settings: updated } = await callAiConsole<{ settings: AiSettingsConfig }>("updateAiSettings", {
+        settings: {
+          systemPrompt: systemPromptDraft,
+          tone: systemToneDraft,
+        },
+      });
+      if (updated) setAiSettings(updated);
+      setChatToast("AI System Prompt & Brand Tone successfully saved and active.");
+      setTimeout(() => setChatToast(""), 4000);
+    } catch (err) {
+      setChatToast(errorMessage(err, "Failed to save AI settings."));
+      setTimeout(() => setChatToast(""), 4000);
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
+  // Handler: Reset AI Settings to Default
+  const handleResetAiSettings = async () => {
+    if (!window.confirm("Reset AI System Prompt & Tone to official Sutra Studio defaults?")) return;
+    try {
+      const { settings: reset } = await callAiConsole<{ settings: AiSettingsConfig }>(
+        "resetAiSettingsToDefault"
+      );
+      if (!reset) return;
+      setAiSettings(reset);
+      setSystemPromptDraft(reset.systemPrompt);
+      setSystemToneDraft(reset.tone);
+      setChatToast("AI System Prompt reset to Sutra Studio master default.");
+    } catch (err) {
+      setChatToast(errorMessage(err, "Could not reset AI settings."));
+    }
+    setTimeout(() => setChatToast(""), 4000);
+  };
+
+  const handleUpdateServicePrice = async (serviceId: string, newPrice: number) => {
+    try {
+      const { service: updated } = await patchCatalog<{ service: CatalogService }>("service", serviceId, {
+        startingPrice: newPrice,
+      });
+      if (!updated) return;
+      setCatalogServices((prev) => prev.map((s) => (s.id === serviceId ? updated : s)));
+      setCatalogSaveToast(
+        `Service "${updated.name}" price updated to ₹${newPrice.toLocaleString("en-IN")}.`
+      );
+    } catch (err) {
+      setCatalogSaveToast(errorMessage(err, "Could not update that price."));
+    }
+    setTimeout(() => setCatalogSaveToast(""), 3500);
+  };
+
+  const handleToggleServiceActive = async (serviceId: string, active: boolean) => {
+    try {
+      const { service: updated } = await patchCatalog<{ service: CatalogService }>("service", serviceId, {
+        active,
+      });
+      if (!updated) return;
+      setCatalogServices((prev) => prev.map((s) => (s.id === serviceId ? updated : s)));
+      setCatalogSaveToast(`Service "${updated.name}" is now ${active ? "Active" : "Archived"}.`);
+    } catch (err) {
+      setCatalogSaveToast(errorMessage(err, "Could not change service visibility."));
+    }
+    setTimeout(() => setCatalogSaveToast(""), 3500);
+  };
+
+  const handleSaveServiceDetails = async (service: CatalogService) => {
+    setIsSavingCatalog(true);
+    try {
+      // Only the fields this screen owns are sent; the route rejects the rest.
+      const { service: updated } = await patchCatalog<{ service: CatalogService }>(
+        "service",
+        service.id,
+        {
+          startingPrice: service.startingPrice,
+          active: service.active,
+        }
+      );
+      if (updated) {
+        setCatalogServices((prev) => prev.map((s) => (s.id === service.id ? updated : s)));
+        setCatalogSaveToast(`Service "${service.name}" configuration saved.`);
+        setEditingService(null);
+        setTimeout(() => setCatalogSaveToast(""), 4000);
+      }
+    } catch (err) {
+      setCatalogSaveToast(errorMessage(err, "Could not save that service."));
+      setTimeout(() => setCatalogSaveToast(""), 4000);
+    } finally {
+      setIsSavingCatalog(false);
+    }
+  };
+
+  const handleSavePlanDetails = async (plan: CatalogPlan) => {
+    setIsSavingCatalog(true);
+    try {
+      const { plan: updated } = await patchCatalog<{ plan: CatalogPlan }>("plan", plan.id, {
+        price: plan.price,
+        monthlyPrice: plan.monthlyPrice,
+        quarterlyPrice: plan.quarterlyPrice,
+        annualPrice: plan.annualPrice,
+        active: plan.active,
+      });
+      if (updated) {
+        setCatalogPlans((prev) => prev.map((p) => (p.id === plan.id ? updated : p)));
+        setCatalogSaveToast(`Monthly Plan "${plan.name}" configuration saved.`);
+        setEditingPlan(null);
+        setTimeout(() => setCatalogSaveToast(""), 4000);
+      }
+    } catch (err) {
+      setCatalogSaveToast(errorMessage(err, "Could not save that plan."));
+      setTimeout(() => setCatalogSaveToast(""), 4000);
+    } finally {
+      setIsSavingCatalog(false);
+    }
+  };
+
+  // Filtered Knowledge Base Entries
+  const filteredKnowledgeEntries = useMemo(() => {
+    let list = [...knowledgeEntries];
+    if (kbCategoryFilter !== "All") {
+      list = list.filter((k) => k.category === kbCategoryFilter);
+    }
+    if (kbSearchQuery.trim()) {
+      const q = kbSearchQuery.toLowerCase().trim();
+      list = list.filter(
+        (k) =>
+          k.title.toLowerCase().includes(q) ||
+          (k.question && k.question.toLowerCase().includes(q)) ||
+          k.answer.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [knowledgeEntries, kbCategoryFilter, kbSearchQuery]);
 
   // 8 AI Workflow Engines State
   const [workflowFilter, setWorkflowFilter] = useState("All");
@@ -571,15 +2321,62 @@ function AdminHubContent() {
     }
   };
 
-  const filteredClients = CLIENTS_DATA.filter((client) => {
-    const matchesTier = tierFilter === "All" || client.tier === tierFilter;
-    const matchesSearch =
-      searchQuery === "" ||
-      client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      client.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      client.email.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesTier && matchesSearch;
-  });
+  const filteredClients = useMemo(() => {
+    if (liveClients.length > 0) {
+      return liveClients.filter((item) => {
+        const p = item.profile || item;
+        const matchesTier = tierFilter === "All" || p.tier === tierFilter;
+        const matchesSearch =
+          searchQuery === "" ||
+          p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.driveFolderId?.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesTier && matchesSearch;
+      });
+    }
+
+    return CLIENTS_DATA.filter((client) => {
+      const matchesTier = tierFilter === "All" || client.tier === tierFilter;
+      const matchesSearch =
+        searchQuery === "" ||
+        client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        client.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        client.email.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesTier && matchesSearch;
+    }).map((c) => ({
+      profile: {
+        id: c.id,
+        uid: c.id,
+        name: c.name,
+        company: c.company,
+        email: c.email,
+        phone: "+91 98765 43210",
+        tier: c.tier,
+        status: c.status,
+        emailVerified: true,
+        driveFolderId: c.driveFolderId,
+        driveFolderLink: `https://drive.google.com/drive/folders/${c.driveFolderId}`,
+        joinedDate: "August 2026",
+        lastActive: c.lastActive,
+        adminNotes: [],
+      },
+      orders: [],
+      activeOrdersCount: c.activeOrders,
+      completedOrdersCount: 1,
+      lifetimeVolumeFormatted: c.lifetimeVolume,
+      totalSpentINR: 185000,
+      activePlan: {
+        planName: "Studio Growth Retainer",
+        type: "active",
+        statusLabel: "Active Monthly Retainer",
+        daysRemaining: 18,
+        billingCycle: "monthly",
+      },
+      notificationsCount: 2,
+      driveFolderLink: `https://drive.google.com/drive/folders/${c.driveFolderId}`,
+    }));
+  }, [liveClients, tierFilter, searchQuery]);
 
   return (
     <RouteGuard requiredRole="admin">
@@ -602,12 +2399,13 @@ function AdminHubContent() {
               </p>
             </div>
 
-            {/* System Status Pills */}
+            {/* System Status Pills & Notification Bell */}
             <div className="flex items-center gap-2.5">
               <div className="flex items-center gap-2 bg-[#FFFDF9] border border-[#EADFCB] px-3.5 py-1.5 rounded-full text-xs text-[#2E7D4F] font-semibold shadow-xs">
                 <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-pulse" />
                 <span>Pipelines Operational</span>
               </div>
+              <NotificationBell />
             </div>
           </div>
 
@@ -616,7 +2414,16 @@ function AdminHubContent() {
             {[
               { id: "overview", label: "Operations Overview" },
               { id: "clients", label: `Client Directory (${CLIENTS_DATA.length})` },
-              { id: "approvals", label: `Approvals Hub (${approvalsList.length})` },
+              {
+                id: "approvals",
+                label: `Orders & Approvals (${realOrders.length > 0 ? realOrders.length : approvalsList.length})`,
+                badge: pendingOrdersCount > 0 ? `${pendingOrdersCount} New` : undefined,
+              },
+              {
+                id: "conversations",
+                label: `Client Chats (${sessions.length})`,
+                badge: totalUnreadChats > 0 ? `${totalUnreadChats} New` : undefined,
+              },
               { id: "workflows", label: "Creative Pipelines" },
               { id: "site-control", label: "Website Site Control" },
               { id: "audit", label: "Security & Audit Logs" },
@@ -625,13 +2432,18 @@ function AdminHubContent() {
                 key={tab.id}
                 type="button"
                 onClick={() => handleTabChange(tab.id as AdminTab)}
-                className={`px-4 py-2 rounded-xl text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
-                  activeTab === tab.id
+                className={`px-4 py-2 rounded-xl text-xs font-medium transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                  activeTab === tab.id || (tab.id === "approvals" && (activeTab as string) === "orders")
                     ? "bg-[#5C3A1E] text-white shadow-xs"
                     : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A]"
                 }`}
               >
-                {tab.label}
+                <span>{tab.label}</span>
+                {tab.badge && (
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[#D4A35A] text-[#171717] animate-pulse">
+                    {tab.badge}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -812,68 +2624,94 @@ function AdminHubContent() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#EADFCB]/60">
-                      {filteredClients.map((client) => (
-                        <tr
-                          key={client.id}
-                          className="hover:bg-[#FAF9F5]/60 transition-colors"
-                        >
-                          <td className="py-4 px-6">
-                            <div className="flex items-center gap-3">
-                              <Avatar name={client.name} size="sm" />
-                              <div>
-                                <p className="font-semibold text-[#0F172A]">{client.name}</p>
-                                <p className="text-[11px] text-[#64748B]">{client.company}</p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-4 px-4">
-                            <Badge
-                              variant={
-                                client.tier === "Enterprise"
-                                  ? "gold"
-                                  : client.tier === "Growth"
-                                  ? "progress"
-                                  : "neutral"
-                              }
-                              size="sm"
-                              showDot={false}
-                            >
-                              {client.tier}
-                            </Badge>
-                          </td>
-                          <td className="py-4 px-4 font-mono text-[11px] text-[#5C3A1E]">
-                            {client.driveFolderId}
-                          </td>
-                          <td className="py-4 px-4 font-semibold text-[#0F172A]">
-                            {client.activeOrders} Orders
-                          </td>
-                          <td className="py-4 px-4 font-serif font-bold text-[#5C3A1E]">
-                            {client.lifetimeVolume}
-                          </td>
-                          <td className="py-4 px-4">
-                            <span
-                              className={`text-[11px] font-semibold ${
-                                client.status === "Active"
-                                  ? "text-[#2E7D4F]"
-                                  : client.status === "Under Review"
-                                  ? "text-[#C2761A]"
-                                  : "text-[#64748B]"
-                              }`}
-                            >
-                              ● {client.status}
-                            </span>
-                          </td>
-                          <td className="py-4 px-6 text-right">
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => setSelectedClient(client)}
-                            >
-                              Inspect
-                            </Button>
+                      {filteredClients.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="py-12 text-center text-xs text-[#64748B]">
+                            No registered clients found in directory.
                           </td>
                         </tr>
-                      ))}
+                      ) : (
+                        filteredClients.map((dossier: any) => {
+                          const client = dossier.profile || dossier;
+                          return (
+                            <tr
+                              key={client.id || client.uid}
+                              className="hover:bg-[#FAF9F5]/60 transition-colors"
+                            >
+                              <td className="py-4 px-6">
+                                <div className="flex items-center gap-3">
+                                  <Avatar name={client.name} size="sm" />
+                                  <div>
+                                    <p className="font-semibold text-[#0F172A]">{client.name}</p>
+                                    <p className="text-[11px] text-[#64748B]">{client.company || client.email}</p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-4 px-4">
+                                <div className="space-y-1">
+                                  <Badge
+                                    variant={
+                                      client.tier === "Enterprise"
+                                        ? "gold"
+                                        : client.tier === "Growth"
+                                        ? "progress"
+                                        : "neutral"
+                                    }
+                                    size="sm"
+                                    showDot={false}
+                                  >
+                                    {client.tier || "Starter"}
+                                  </Badge>
+                                  {dossier.activePlan && (
+                                    <p className="text-[10px] text-[#5C3A1E] font-medium truncate max-w-[140px]">
+                                      {dossier.activePlan.type === "trial" ? "3-Day Trial" : "Retainer Active"}
+                                    </p>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="py-4 px-4">
+                                <a
+                                  href={dossier.driveFolderLink || `https://drive.google.com/drive/folders/${client.driveFolderId}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 font-mono text-[11px] text-[#5C3A1E] hover:underline"
+                                >
+                                  {client.driveFolderId?.slice(0, 14)}...
+                                  <ExternalLink className="w-3 h-3 text-[#94A3B8]" />
+                                </a>
+                              </td>
+                              <td className="py-4 px-4 font-semibold text-[#0F172A]">
+                                {dossier.activeOrdersCount ?? client.activeOrders ?? 0} Orders
+                              </td>
+                              <td className="py-4 px-4 font-serif font-bold text-[#5C3A1E]">
+                                {dossier.lifetimeVolumeFormatted || client.lifetimeVolume || "₹0"}
+                              </td>
+                              <td className="py-4 px-4">
+                                <span
+                                  className={`text-[11px] font-semibold ${
+                                    client.status === "Active"
+                                      ? "text-[#2E7D4F]"
+                                      : client.status === "Disabled"
+                                      ? "text-[#DC2626]"
+                                      : "text-[#C2761A]"
+                                  }`}
+                                >
+                                  ● {client.status || "Active"}
+                                </span>
+                              </td>
+                              <td className="py-4 px-6 text-right">
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => setSelectedDossier(dossier)}
+                                >
+                                  Inspect Dossier
+                                </Button>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -882,229 +2720,1376 @@ function AdminHubContent() {
           )}
 
           {/* ========================================================
-              TAB 3: CONVERSATIONS & HUMAN TAKEOVER
+              TAB 3: CLIENT CHATS & AI IMPROVEMENT ATELIER
               ======================================================== */}
           {activeTab === "conversations" && (
-            <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-xs overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[620px]">
-              {/* Left Column: Client Sessions List (4 Cols) */}
-              <div className="lg:col-span-4 border-b lg:border-b-0 lg:border-r border-[#EADFCB] bg-[#FAF9F5] flex flex-col">
-                <div className="p-4 border-b border-[#EADFCB]">
-                  <h3 className="font-serif font-semibold text-base text-[#0F172A]">
-                    Client AI Sessions ({sessions.length})
-                  </h3>
-                  <p className="text-[11px] text-[#64748B] mt-0.5">
-                    Live client conversations with Sutra AI router.
-                  </p>
+            <div className="space-y-6">
+              {/* Floating Chat Notification Toast */}
+              {chatToast && (
+                <div className="p-3.5 rounded-2xl bg-[#F0FDF4] border border-[#BBF7D0] text-[#166534] flex items-center justify-between text-xs animate-in fade-in duration-200 shadow-xs">
+                  <div className="flex items-center gap-2 font-medium">
+                    <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
+                    <span>{chatToast}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setChatToast("")}
+                    className="text-[11px] font-bold text-[#166534] hover:underline cursor-pointer"
+                  >
+                    Dismiss
+                  </button>
                 </div>
+              )}
 
-                <div className="divide-y divide-[#EADFCB]/60 overflow-y-auto flex-1">
-                  {sessions.map((sess) => {
-                    const isSelected = selectedSessionId === sess.id;
-                    const isTakenOver = sess.mode === "human";
+              {/* Sub-Navigation Pill Switcher Bar */}
+              <div className="flex items-center justify-between gap-4 flex-wrap pb-1">
+                <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] shadow-2xs overflow-x-auto no-scrollbar">
+                  {[
+                    { id: "monitor", label: "Live Chat Monitor", icon: MessageSquare, badge: totalUnreadChats > 0 ? `${totalUnreadChats} New` : undefined },
+                    { id: "knowledge", label: `AI Knowledge Base (${knowledgeEntries.length})`, icon: BookOpen },
+                    { id: "common_questions", label: `Common Questions (${commonQuestions.length})`, icon: HelpCircle },
+                    { id: "settings", label: "Tone & System Prompt", icon: Sliders },
+                  ].map((sub) => {
+                    const Icon = sub.icon;
+                    const isActive = chatSubView === sub.id;
                     return (
-                      <div
-                        key={sess.id}
-                        onClick={() => setSelectedSessionId(sess.id)}
-                        className={`p-4 transition-all cursor-pointer ${
-                          isSelected
-                            ? "bg-[#FFFDF9] border-l-4 border-l-[#5C3A1E]"
-                            : "hover:bg-[#FFFDF9]/60"
+                      <button
+                        key={sub.id}
+                        type="button"
+                        onClick={() => setChatSubView(sub.id as any)}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                          isActive
+                            ? "bg-[#5C3A1E] text-white shadow-xs"
+                            : "text-[#64748B] hover:text-[#0F172A] hover:bg-[#FFFFFF]"
                         }`}
                       >
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="font-semibold text-xs text-[#0F172A]">
-                            {sess.clientName}
+                        <Icon className={`w-3.5 h-3.5 ${isActive ? "text-[#D4A35A]" : "text-[#94A3B8]"}`} />
+                        <span>{sub.label}</span>
+                        {sub.badge && (
+                          <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-[#D4A35A] text-[#171717] animate-pulse">
+                            {sub.badge}
                           </span>
-                          <Badge
-                            variant={isTakenOver ? "completed" : "gold"}
-                            size="sm"
-                            showDot={true}
-                          >
-                            {isTakenOver ? "Producer Lead" : "AI Routing"}
-                          </Badge>
-                        </div>
-                        <p className="text-[11px] text-[#64748B] truncate font-medium">
-                          {sess.company}
-                        </p>
-                        <p className="text-[11px] text-[#475569] mt-1 line-clamp-2 italic">
-                          &quot;{sess.lastPrompt}&quot;
-                        </p>
-                        <span className="text-[10px] text-[#94A3B8] block mt-1.5 font-mono">
-                          {sess.workflowTag} • {sess.lastTime}
-                        </span>
-                      </div>
+                        )}
+                      </button>
                     );
                   })}
                 </div>
+
+                {chatSubView === "knowledge" && (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => {
+                      setEditingKbEntry(null);
+                      setKbTitle("");
+                      setKbCategory("faq");
+                      setKbQuestion("");
+                      setKbAnswer("");
+                      setKbModalOpen(true);
+                    }}
+                    leftIcon={<Plus className="w-3.5 h-3.5" />}
+                  >
+                    Add Knowledge Entry
+                  </Button>
+                )}
               </div>
 
-              {/* Right Column: Interactive Takeover Console (8 Cols) */}
-              <div className="lg:col-span-8 flex flex-col justify-between bg-[#FFFDF9]">
-                {/* Takeover Header */}
-                <div className="p-4 sm:p-5 border-b border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#FAF9F5]/50">
-                  <div className="flex items-center gap-3">
-                    <Avatar name={currentSession.clientName} size="md" status="online" />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-serif font-semibold text-base text-[#0F172A]">
-                          {currentSession.clientName}
-                        </h4>
-                        <span className="text-xs text-[#64748B]">({currentSession.company})</span>
+              {/* =========================================================
+                  SUB-VIEW 1: LIVE CHAT MONITOR (3-COLUMN REAL-TIME HUB)
+                  ========================================================= */}
+              {chatSubView === "monitor" && (
+                <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-xs overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[680px]">
+                  {/* LEFT PANEL: CLIENT CONVERSATIONS LIST (3 COLS DESKTOP) */}
+                  <div
+                    className={`lg:col-span-3 border-b lg:border-b-0 lg:border-r border-[#EADFCB] bg-[#FAF9F5] flex flex-col ${
+                      mobileChatView !== "list" ? "hidden lg:flex" : "flex"
+                    }`}
+                  >
+                    {/* Left Panel Header */}
+                    <div className="p-4 border-b border-[#EADFCB] bg-[#FFFDF9]/80 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <MessageSquare className="w-4 h-4 text-[#5C3A1E]" />
+                          <h3 className="font-serif font-semibold text-sm sm:text-base text-[#0F172A]">
+                            Client Chats
+                          </h3>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#EADFCB]/60 text-[#5C3A1E]">
+                          {filteredChatSessions.length} Active
+                        </span>
                       </div>
-                      <p className="text-[11px] text-[#94A3B8]">
-                        Vault ID: <span className="font-mono text-[#5C3A1E]">{currentSession.vaultId}</span> • Channel: {currentSession.mode === "human" ? "Direct Producer (Human Lead)" : "Autonomous Sutra AI"}
-                      </p>
+
+                      {/* Search Input */}
+                      <div className="relative flex items-center">
+                        <Search className="w-3.5 h-3.5 text-[#94A3B8] absolute left-3 pointer-events-none" />
+                        <input
+                          type="text"
+                          placeholder="Search client or message..."
+                          value={chatSearchQuery}
+                          onChange={(e) => setChatSearchQuery(e.target.value)}
+                          className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#D4A35A]"
+                        />
+                        {chatSearchQuery && (
+                          <button
+                            type="button"
+                            onClick={() => setChatSearchQuery("")}
+                            className="absolute right-2.5 text-[10px] text-[#94A3B8] hover:text-[#0F172A]"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Filter Pills & Date Selector */}
+                      <div className="space-y-2 pt-1">
+                        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                          {[
+                            { id: "all", label: `All (${sessions.length})` },
+                            {
+                              id: "unread",
+                              label: `Unread (${totalUnreadChats})`,
+                              badge: totalUnreadChats > 0,
+                            },
+                            { id: "has_orders", label: "Has Orders" },
+                          ].map((f) => (
+                            <button
+                              key={f.id}
+                              type="button"
+                              onClick={() => setChatFilter(f.id as any)}
+                              className={`px-2.5 py-1 rounded-full text-[10px] font-medium transition-all whitespace-nowrap cursor-pointer flex items-center gap-1 ${
+                                chatFilter === f.id
+                                  ? "bg-[#5C3A1E] text-white shadow-2xs"
+                                  : "bg-[#FFFFFF] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A]"
+                              }`}
+                            >
+                              <span>{f.label}</span>
+                              {f.badge && (
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#D4A35A] animate-pulse" />
+                              )}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Date Filter Dropdown */}
+                        <div className="flex items-center justify-between text-[10px] text-[#64748B] px-0.5">
+                          <span className="font-semibold uppercase tracking-wider">Timeframe:</span>
+                          <select
+                            value={chatDateFilter}
+                            onChange={(e) => setChatDateFilter(e.target.value as any)}
+                            className="bg-[#FFFFFF] border border-[#EADFCB] rounded-lg px-2 py-0.5 text-[10px] text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                          >
+                            <option value="all">All Dates</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Sessions Scrollable List */}
+                    <div className="divide-y divide-[#EADFCB]/60 overflow-y-auto flex-1 max-h-[580px]">
+                      {filteredChatSessions.length === 0 ? (
+                        <div className="p-8 text-center text-xs text-[#64748B]">
+                          <Bot className="w-6 h-6 text-[#94A3B8] mx-auto mb-2 opacity-50" />
+                          <p className="font-semibold text-[#0F172A]">No conversations found</p>
+                          <p className="text-[11px] mt-0.5">Try clearing filters or search query.</p>
+                        </div>
+                      ) : (
+                        filteredChatSessions.map((sess) => {
+                          const isSelected = selectedSessionId === sess.id;
+                          const isTakenOver = sess.mode === "human";
+                          const unread = sess.unreadCount || 0;
+                          const sessOrdersCount =
+                            realOrders.filter(
+                              (o) =>
+                                (o.clientEmail && o.clientEmail.toLowerCase() === (sess.clientEmail || "").toLowerCase()) ||
+                                (o.clientName && o.clientName.toLowerCase().includes(sess.clientName.toLowerCase())) ||
+                                o.clientId === sess.clientId ||
+                                o.clientId === sess.id
+                            ).length || (sess.messages.some((m) => m.orderDraft || m.text.includes("#ORD-")) ? 1 : 0);
+
+                          return (
+                            <div
+                              key={sess.id}
+                              onClick={() => {
+                                setSelectedSessionId(sess.id);
+                                setMobileChatView("chat");
+                              }}
+                              className={`p-3.5 transition-all cursor-pointer ${
+                                isSelected
+                                  ? "bg-[#FFFDF9] border-l-4 border-l-[#5C3A1E] shadow-2xs"
+                                  : "hover:bg-[#FFFDF9]/60"
+                              }`}
+                            >
+                              <div className="flex items-start justify-between gap-2 mb-1">
+                                <div className="flex items-center gap-2 truncate">
+                                  <Avatar name={sess.clientName} size="sm" status={unread > 0 ? "busy" : "online"} />
+                                  <div className="truncate">
+                                    <span className="font-semibold text-xs text-[#0F172A] block truncate">
+                                      {sess.clientName}
+                                    </span>
+                                    <span className="text-[10px] text-[#64748B] block truncate">
+                                      {sess.company}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="flex flex-col items-end shrink-0 gap-1">
+                                  <span className="text-[9px] text-[#94A3B8] font-mono whitespace-nowrap">
+                                    {sess.lastTime}
+                                  </span>
+                                  {unread > 0 && (
+                                    <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-[#D4A35A] text-[#171717] animate-pulse">
+                                      {unread} New
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Message Preview Snippet */}
+                              <p className="text-[11px] text-[#475569] mt-1.5 line-clamp-2 leading-relaxed">
+                                {sess.messages[sess.messages.length - 1]?.sender === "admin" && (
+                                  <span className="font-bold text-[#5C3A1E]">Producer: </span>
+                                )}
+                                {sess.messages[sess.messages.length - 1]?.sender === "note" && (
+                                  <span className="font-bold text-[#D97706]">🔒 Note: </span>
+                                )}
+                                &quot;{sess.lastPrompt}&quot;
+                              </p>
+
+                              {/* Bottom Badges: Orders & Workflow Tag */}
+                              <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-[#EADFCB]/40 text-[10px]">
+                                <span className="font-mono text-[#5C3A1E] inline-flex items-center gap-1 font-medium">
+                                  <ShoppingBag className="w-3 h-3 text-[#D4A35A]" />
+                                  <span>{sessOrdersCount} Orders</span>
+                                </span>
+                                <Badge
+                                  variant={isTakenOver ? "completed" : "gold"}
+                                  size="sm"
+                                  showDot={true}
+                                >
+                                  {isTakenOver ? "Producer" : "AI Routing"}
+                                </Badge>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
                   </div>
 
-                  {/* Mode Switcher Toggle */}
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant={currentSession.mode === "human" ? "secondary" : "primary"}
-                      size="sm"
-                      onClick={() => handleToggleTakeover(currentSession.id)}
-                      leftIcon={currentSession.mode === "human" ? <Bot className="w-3.5 h-3.5" /> : <ShieldAlert className="w-3.5 h-3.5" />}
-                    >
-                      {currentSession.mode === "human"
-                        ? "Release to AI Router"
-                        : "Take Over as Producer"}
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Message Stream */}
-                <div className="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1 max-h-[380px]">
-                  {currentSession.messages.map((m, idx) => {
-                    const isClient = m.sender === "client";
-                    const isAdmin = m.sender === "admin";
-                    const isNote = m.sender === "note";
-
-                    if (isNote) {
-                      return (
-                        <div
-                          key={idx}
-                          className="p-2.5 rounded-xl bg-[#FFFBEB] border border-[#FDE68A] text-xs text-[#92400E] flex items-center gap-2 max-w-lg mx-auto font-medium"
+                  {/* CENTER PANEL: REAL-TIME CHAT & INTERVENTION (5 COLS DESKTOP) */}
+                  <div
+                    className={`lg:col-span-5 border-b lg:border-b-0 lg:border-r border-[#EADFCB] flex flex-col justify-between bg-[#FFFDF9] ${
+                      mobileChatView !== "chat" ? "hidden lg:flex" : "flex"
+                    }`}
+                  >
+                    {/* Chat Stream Header */}
+                    <div className="p-3.5 sm:p-4 border-b border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#FAF9F5]/70">
+                      <div className="flex items-center gap-2.5">
+                        {/* Mobile Back to List Button */}
+                        <button
+                          type="button"
+                          onClick={() => setMobileChatView("list")}
+                          className="lg:hidden p-1.5 rounded-lg bg-[#FFFFFF] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:bg-[#F4EFE6] cursor-pointer"
+                          title="Back to Clients List"
                         >
-                          <Lock className="w-3.5 h-3.5 shrink-0 text-[#D97706]" />
-                          <span>[Studio Producer Note]: {m.text}</span>
-                        </div>
-                      );
-                    }
+                          ← Chats
+                        </button>
 
-                    return (
-                      <div
-                        key={idx}
-                        className={`flex gap-3 max-w-xl ${
-                          isAdmin
-                            ? "ml-auto flex-row-reverse"
-                            : isClient
-                            ? "mr-auto"
-                            : "mr-auto"
-                        }`}
-                      >
-                        <div className="shrink-0 pt-0.5">
-                          {isAdmin ? (
-                            <Avatar name="Raghavan Sharma" size="sm" status="online" />
-                          ) : isClient ? (
-                            <div className="w-7 h-7 rounded-full bg-[#5C3A1E] text-white flex items-center justify-center text-[10px] font-bold">
-                              C
-                            </div>
-                          ) : (
-                            <div className="w-7 h-7 rounded-full bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-center text-[10px] text-[#5C3A1E] font-bold">
-                              ✦
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="space-y-1">
-                          <div
-                            className={`p-3.5 rounded-2xl text-xs leading-relaxed ${
-                              isAdmin
-                                ? "bg-[#5C3A1E] text-white rounded-tr-none shadow-xs"
-                                : isClient
-                                ? "bg-[#F8F5EF] border border-[#EADFCB] text-[#0F172A] rounded-tl-none"
-                                : "bg-[#FAF9F5] border border-[#EADFCB] text-[#0F172A] rounded-tl-none"
-                            }`}
-                          >
-                            <p>{m.text}</p>
-                            {m.workflow && (
-                              <div className="mt-2 pt-2 border-t border-[#EADFCB]/60 text-[10px] font-semibold text-[#D4A35A] flex items-center gap-1">
-                                <Sparkles className="w-3 h-3" />
-                                <span>Classified: {m.workflow}</span>
-                              </div>
-                            )}
+                        <Avatar name={currentSession.clientName} size="md" status="online" />
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <h4 className="font-serif font-semibold text-sm sm:text-base text-[#0F172A]">
+                              {currentSession.clientName}
+                            </h4>
+                            <span className="text-[11px] text-[#64748B]">({currentSession.company})</span>
                           </div>
-                          <span className={`text-[9px] text-[#94A3B8] block ${isAdmin ? "text-right" : "text-left"}`}>
-                            {m.sender.toUpperCase()} • {m.time}
-                          </span>
+                          <p className="text-[10px] text-[#94A3B8] font-mono">
+                            Vault: <span className="text-[#5C3A1E] font-bold">{currentSession.vaultId}</span> • {currentSession.mode === "human" ? "Direct Producer Active" : "Autonomous AI Router"}
+                          </p>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
 
-                {/* Producer Dispatch Input */}
-                <div className="p-4 border-t border-[#EADFCB] bg-[#FAF9F5]/40 space-y-3">
-                  <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                    <span className="text-[10px] uppercase font-bold text-[#94A3B8] shrink-0">Quick Producer Replies:</span>
-                    {[
-                      "I am reviewing your 4K renders right now.",
-                      "Revision round 01 assigned to senior 3D lead.",
-                      "Google Drive vault files updated.",
-                    ].map((snippet, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => handleSendProducerMessage(snippet)}
-                        className="text-[11px] bg-[#FFFDF9] border border-[#EADFCB] text-[#5C3A1E] hover:border-[#D4A35A] px-2.5 py-1 rounded-full whitespace-nowrap shadow-2xs cursor-pointer"
+                      {/* Header Action Controls */}
+                      <div className="flex items-center gap-2">
+                        {/* Mark as Read Action */}
+                        {(currentSession.unreadCount || 0) > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => handleMarkChatAsRead(currentSession.id)}
+                            className="px-2.5 py-1 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-[11px] font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#FFFFFF] transition-all flex items-center gap-1 cursor-pointer"
+                            title="Mark this chat as read"
+                          >
+                            <CheckCheck className="w-3.5 h-3.5 text-[#2E7D4F]" />
+                            <span>Mark Read</span>
+                          </button>
+                        )}
+
+                        {/* Mode Toggle Button */}
+                        <Button
+                          variant={currentSession.mode === "human" ? "secondary" : "primary"}
+                          size="sm"
+                          onClick={() => handleToggleTakeover(currentSession.id)}
+                          leftIcon={
+                            currentSession.mode === "human" ? (
+                              <Bot className="w-3.5 h-3.5" />
+                            ) : (
+                              <ShieldAlert className="w-3.5 h-3.5" />
+                            )
+                          }
+                        >
+                          {currentSession.mode === "human" ? "Release AI" : "Take Over"}
+                        </Button>
+
+                        {/* Mobile Switch to Details Button */}
+                        <button
+                          type="button"
+                          onClick={() => setMobileChatView("details")}
+                          className="lg:hidden px-2.5 py-1 rounded-xl bg-[#5C3A1E] text-white text-xs font-semibold hover:bg-[#4A2E17] cursor-pointer"
+                        >
+                          Details ℹ️
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Message Stream Scroll Area */}
+                    <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1 max-h-[460px] min-h-[380px]">
+                      {currentSession.messages.map((m, idx) => {
+                        const isClient = m.sender === "client";
+                        const isAdmin = m.sender === "admin";
+                        const isNote = m.sender === "note";
+                        const isAi = m.sender === "ai";
+
+                        // Find preceding client query if this is an AI reply
+                        const precedingClientMessage = isAi
+                          ? currentSession.messages.slice(0, idx).reverse().find((prev) => prev.sender === "client")
+                          : undefined;
+
+                        // Internal Producer Private Note (Not visible to client)
+                        if (isNote) {
+                          return (
+                            <div
+                              key={idx}
+                              className="p-3 rounded-2xl bg-[#FFFBEB] border border-[#FDE68A] text-xs text-[#92400E] space-y-1 max-w-xl mx-auto shadow-2xs font-medium"
+                            >
+                              <div className="flex items-center justify-between text-[10px] uppercase font-bold text-[#D97706] pb-1 border-b border-[#FDE68A]/60">
+                                <span className="flex items-center gap-1">
+                                  <Lock className="w-3 h-3 text-[#D97706]" />
+                                  <span>Private Studio Producer Note</span>
+                                </span>
+                                <span className="font-mono text-[9px] text-[#B45309]">Not Visible to Client</span>
+                              </div>
+                              <p className="leading-relaxed text-[#78350F] pt-0.5">{m.text}</p>
+                              <span className="text-[9px] text-[#B45309] block text-right font-mono">{m.time}</span>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div
+                            key={idx}
+                            className={`flex gap-2.5 max-w-xl ${
+                              isAdmin ? "ml-auto flex-row-reverse" : "mr-auto"
+                            }`}
+                          >
+                            <div className="shrink-0 pt-0.5">
+                              {isAdmin ? (
+                                <Avatar name="Raghavan Sharma" size="sm" status="online" />
+                              ) : isClient ? (
+                                <div className="w-7 h-7 rounded-full bg-[#5C3A1E] text-white flex items-center justify-center text-[10px] font-bold shadow-2xs">
+                                  {currentSession.clientName.charAt(0).toUpperCase()}
+                                </div>
+                              ) : (
+                                <div className="w-7 h-7 rounded-full bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-center text-[10px] text-[#5C3A1E] font-bold shadow-2xs">
+                                  ✦
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="space-y-1.5 max-w-[85%]">
+                              {/* Message Bubble */}
+                              <div
+                                className={`p-3.5 rounded-2xl text-xs leading-relaxed ${
+                                  isAdmin
+                                    ? "bg-[#5C3A1E] text-white rounded-tr-none shadow-xs"
+                                    : isClient
+                                    ? "bg-[#F8F5EF] border border-[#EADFCB] text-[#0F172A] rounded-tl-none"
+                                    : "bg-[#FAF9F5] border border-[#EADFCB] text-[#0F172A] rounded-tl-none"
+                                }`}
+                              >
+                                {/* Role Label Header */}
+                                <div className="text-[9px] font-bold uppercase tracking-wider mb-1 opacity-75 flex items-center justify-between gap-2">
+                                  <span>
+                                    {isAdmin
+                                      ? "Studio Producer (Raghavan Sharma)"
+                                      : isClient
+                                      ? `Client (${currentSession.clientName})`
+                                      : "Sutra AI Assistant"}
+                                  </span>
+                                  <span className="font-mono">{m.time}</span>
+                                </div>
+
+                                <p className="whitespace-pre-line">{m.text}</p>
+
+                                {/* Workflow Tag */}
+                                {m.workflow && (
+                                  <div className="mt-2 pt-2 border-t border-[#EADFCB]/60 text-[10px] font-semibold text-[#D4A35A] flex items-center gap-1">
+                                    <Sparkles className="w-3 h-3" />
+                                    <span>Pipeline: {m.workflow}</span>
+                                  </div>
+                                )}
+
+                                {/* Embedded Order Card Inside Conversation */}
+                                {(m.orderDraft || m.text.includes("#ORD-")) && (
+                                  <div className="mt-3 p-3 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-[#0F172A] space-y-2 shadow-2xs">
+                                    <div className="flex items-center justify-between border-b border-[#EADFCB]/60 pb-1.5">
+                                      <span className="font-mono text-xs font-bold text-[#5C3A1E] flex items-center gap-1">
+                                        <ShoppingBag className="w-3.5 h-3.5 text-[#D4A35A]" />
+                                        <span>{m.orderDraft?.orderNumber || "#ORD-001"}</span>
+                                      </span>
+                                      <Badge variant="gold" size="sm">
+                                        {m.orderDraft?.status ? m.orderDraft.status.toUpperCase().replace("_", " ") : "COMMISSION ACTIVE"}
+                                      </Badge>
+                                    </div>
+                                    <div className="flex items-center justify-between text-xs">
+                                      <div>
+                                        <p className="font-semibold text-[#0F172A]">
+                                          {m.orderDraft?.service || "3D Spatial Architecture"}
+                                        </p>
+                                        <p className="text-[10px] text-[#64748B]">
+                                          Vault: {m.orderDraft?.driveFolderId || currentSession.vaultId}
+                                        </p>
+                                      </div>
+                                      <span className="font-serif font-bold text-sm text-[#5C3A1E]">
+                                        ₹{(m.orderDraft?.totalAmount || 18999).toLocaleString("en-IN")}
+                                      </span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const matchedOrder =
+                                          realOrders.find(
+                                            (o) =>
+                                              o.orderNumber === m.orderDraft?.orderNumber ||
+                                              o.code === m.orderDraft?.orderNumber ||
+                                              o.id === m.orderDraft?.orderId
+                                          ) || currentChatOrders[0];
+                                        if (matchedOrder) {
+                                          setInspectingAdminOrder(matchedOrder);
+                                        }
+                                      }}
+                                      className="w-full py-1 rounded-lg bg-[#FAF9F5] border border-[#EADFCB] text-[10px] font-semibold text-[#5C3A1E] hover:bg-[#5C3A1E] hover:text-white transition-all cursor-pointer flex items-center justify-center gap-1"
+                                    >
+                                      <Eye className="w-3 h-3" />
+                                      <span>Inspect Order Deliverables</span>
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* STEP 7: AI Feedback & Improvement Bar on AI Responses */}
+                              {isAi && (
+                                <div className="flex items-center justify-between pt-1 text-[10px] text-[#64748B] px-1">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-[9px] font-semibold uppercase text-[#94A3B8]">Rate Response:</span>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleRateAiReply(
+                                          currentSession.id,
+                                          m.id || `msg_ai_${idx}`,
+                                          "good",
+                                          m.text,
+                                          precedingClientMessage?.text
+                                        )
+                                      }
+                                      className="px-2 py-0.5 rounded-lg bg-[#FFFFFF] border border-[#EADFCB] hover:border-[#2E7D4F] hover:text-[#2E7D4F] text-[#64748B] transition-all flex items-center gap-1 cursor-pointer"
+                                      title="Mark accurate (Good)"
+                                    >
+                                      <ThumbsUp className="w-3 h-3" />
+                                      <span>Good</span>
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleRateAiReply(
+                                          currentSession.id,
+                                          m.id || `msg_ai_${idx}`,
+                                          "bad",
+                                          m.text,
+                                          precedingClientMessage?.text
+                                        )
+                                      }
+                                      className="px-2 py-0.5 rounded-lg bg-[#FFFFFF] border border-[#EADFCB] hover:border-[#DC2626] hover:text-[#DC2626] text-[#64748B] transition-all flex items-center gap-1 cursor-pointer"
+                                      title="Mark poor / provide better answer (Bad)"
+                                    >
+                                      <ThumbsDown className="w-3 h-3" />
+                                      <span>Bad / Correct</span>
+                                    </button>
+                                  </div>
+
+                                  {/* One-Click Add to Knowledge Base */}
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleOneClickAddToKnowledge(
+                                        precedingClientMessage?.text || currentSession.lastPrompt,
+                                        m.text,
+                                        `AI Rule: ${currentSession.workflowTag}`
+                                      )
+                                    }
+                                    className="px-2 py-0.5 rounded-lg bg-[#FAF9F5] border border-[#EADFCB] hover:border-[#D4A35A] text-[#5C3A1E] font-medium transition-all flex items-center gap-1 cursor-pointer"
+                                    title="Add this Q&A into AI Knowledge Base"
+                                  >
+                                    <BookOpen className="w-3 h-3 text-[#D4A35A]" />
+                                    <span>+ Add to KB</span>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Producer Message & Internal Note Input Bar */}
+                    <div className="p-3.5 border-t border-[#EADFCB] bg-[#FAF9F5]/60 space-y-2.5">
+                      {/* Quick Producer Snippet Pills */}
+                      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                        <span className="text-[9px] uppercase font-bold text-[#94A3B8] shrink-0">
+                          Quick Snippets:
+                        </span>
+                        {[
+                          "I am reviewing your 4K renders right now.",
+                          "Revision round 01 assigned to senior 3D lead.",
+                          "Google Drive vault files updated.",
+                          "Order confirmed. Moving into production pipeline.",
+                        ].map((snippet, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => handleSendProducerMessage(snippet)}
+                            className="text-[10px] bg-[#FFFDF9] border border-[#EADFCB] text-[#5C3A1E] hover:border-[#D4A35A] px-2.5 py-0.5 rounded-full whitespace-nowrap shadow-2xs cursor-pointer"
+                          >
+                            {snippet}
+                          </button>
+                        ))}
+                      </div>
+
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleSendProducerMessage(producerInput);
+                        }}
+                        className="flex items-center gap-2"
                       >
-                        {snippet}
-                      </button>
-                    ))}
+                        <input
+                          type="text"
+                          placeholder={
+                            currentSession.mode === "human"
+                              ? "Send message as Raghavan Sharma (Studio Producer)..."
+                              : "Take over chat to message client directly..."
+                          }
+                          value={producerInput}
+                          onChange={(e) => setProducerInput(e.target.value)}
+                          className="flex-1 bg-[#FFFFFF] border border-[#EADFCB] rounded-xl px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                        />
+
+                        {/* Post Private Internal Note Button */}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleAddInternalNote()}
+                          disabled={!producerInput.trim()}
+                          title="Post Internal Producer Note (Saved secretly, not sent to client)"
+                          leftIcon={<Lock className="w-3.5 h-3.5 text-[#A98B57]" />}
+                        >
+                          <span className="hidden sm:inline">Internal Note</span>
+                        </Button>
+
+                        {/* Send Admin Message Button */}
+                        <Button
+                          type="submit"
+                          variant="primary"
+                          size="sm"
+                          disabled={!producerInput.trim()}
+                          leftIcon={<Send className="w-3.5 h-3.5" />}
+                        >
+                          Send
+                        </Button>
+                      </form>
+                    </div>
                   </div>
 
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      handleSendProducerMessage(producerInput);
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <input
-                      type="text"
-                      placeholder={
-                        currentSession.mode === "human"
-                          ? "Send message as Raghavan Sharma (Principal Art Director)..."
-                          : "Take over session to message directly..."
-                      }
-                      value={producerInput}
-                      onChange={(e) => setProducerInput(e.target.value)}
-                      className="flex-1 bg-[#FFFFFF] border border-[#EADFCB] rounded-xl px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
-                    />
+                    {/* RIGHT PANEL: CLIENT PROFILE, ACTIVE PLAN & ORDERS HUB (4 COLS DESKTOP) */}
+                    <div
+                      className={`lg:col-span-4 bg-[#FAF9F5] flex flex-col p-4 sm:p-5 space-y-4 overflow-y-auto max-h-[680px] ${
+                        mobileChatView !== "details" ? "hidden lg:flex" : "flex"
+                      }`}
+                    >
+                      {/* Right Panel Header */}
+                      <div className="flex items-center justify-between pb-3 border-b border-[#EADFCB]">
+                        <div className="flex items-center gap-2">
+                          <UserCheck className="w-4 h-4 text-[#5C3A1E]" />
+                          <h3 className="font-serif font-semibold text-sm sm:text-base text-[#0F172A]">
+                            Client Intelligence
+                          </h3>
+                        </div>
+                        {/* Mobile Back to Chat Button */}
+                        <button
+                          type="button"
+                          onClick={() => setMobileChatView("chat")}
+                          className="lg:hidden p-1 rounded-lg bg-[#FFFFFF] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:bg-[#F4EFE6] cursor-pointer"
+                        >
+                          ← Back to Chat
+                        </button>
+                      </div>
+
+                      {/* Client Profile Card */}
+                      <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] space-y-3 shadow-2xs">
+                        <div className="flex items-center gap-3">
+                          <Avatar name={currentChatClient.name} size="md" status="online" />
+                          <div>
+                            <h4 className="font-serif font-bold text-sm text-[#0F172A]">
+                              {currentChatClient.name}
+                            </h4>
+                            <p className="text-xs text-[#64748B]">{currentChatClient.company}</p>
+                          </div>
+                          <Badge
+                            variant={currentChatClient.tier === "Enterprise" ? "gold" : "progress"}
+                            size="sm"
+                            className="ml-auto"
+                          >
+                            {currentChatClient.tier}
+                          </Badge>
+                        </div>
+
+                        <div className="space-y-1.5 pt-2 border-t border-[#EADFCB]/60 text-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[#64748B] flex items-center gap-1.5">
+                              <Mail className="w-3.5 h-3.5 text-[#94A3B8]" />
+                              <span>Email:</span>
+                            </span>
+                            <span className="font-medium text-[#0F172A] truncate max-w-[170px]">
+                              {currentChatClient.email}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[#64748B] flex items-center gap-1.5">
+                              <Phone className="w-3.5 h-3.5 text-[#94A3B8]" />
+                              <span>Phone:</span>
+                            </span>
+                            <span className="font-medium text-[#0F172A]">
+                              {currentSession.clientPhone || "+91 98200 45678"}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[#64748B] flex items-center gap-1.5">
+                              <Calendar className="w-3.5 h-3.5 text-[#94A3B8]" />
+                              <span>Member Since:</span>
+                            </span>
+                            <span className="font-medium text-[#0F172A]">
+                              {currentSession.joinedDate || "August 2026"}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between pt-1 border-t border-[#EADFCB]/40">
+                            <span className="text-[#64748B] flex items-center gap-1.5">
+                              <HardDrive className="w-3.5 h-3.5 text-[#5C3A1E]" />
+                              <span>Drive Vault:</span>
+                            </span>
+                            <a
+                              href={`https://drive.google.com/drive/folders/${currentChatClient.driveFolderId}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-mono text-[11px] font-bold text-[#5C3A1E] hover:text-[#A98B57] hover:underline flex items-center gap-1"
+                            >
+                              <span>{currentChatClient.driveFolderId}</span>
+                              <ExternalLink className="w-3 h-3 text-[#A98B57]" />
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* ACTIVE MONTHLY PLAN CARD */}
+                      {(() => {
+                        const activePlan = currentChatOrders.find(
+                          (o) =>
+                            o.type === "monthly_plan" ||
+                            o.status === "trial" ||
+                            o.status === "active" ||
+                            o.title?.toLowerCase().includes("retainer") ||
+                            o.service?.toLowerCase().includes("retainer")
+                        );
+
+                        return (
+                          <div className="p-3.5 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] space-y-2.5 shadow-2xs">
+                            <div className="flex items-center justify-between">
+                              <span className="font-serif font-bold text-xs text-[#0F172A] flex items-center gap-1.5">
+                                <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
+                                <span>Active Monthly Plan</span>
+                              </span>
+                              {activePlan ? (
+                                <Badge
+                                  variant={activePlan.status === "trial" ? "gold" : activePlan.status === "active" ? "completed" : "neutral"}
+                                  size="sm"
+                                >
+                                  {activePlan.status === "trial" ? "3-Day Free Trial" : activePlan.status === "active" ? "Active Retainer" : activePlan.status.toUpperCase()}
+                                </Badge>
+                              ) : (
+                                <span className="text-[10px] text-[#64748B] font-medium">No Active Plan</span>
+                              )}
+                            </div>
+
+                            {activePlan ? (
+                              <div className="space-y-1.5 text-xs">
+                                <div className="flex items-center justify-between">
+                                  <span className="font-semibold text-[#5C3A1E]">{activePlan.title || activePlan.service}</span>
+                                  <span className="font-serif font-bold text-[#5C3A1E]">
+                                    ₹{(activePlan.totalAmount || 12999).toLocaleString("en-IN")}/mo
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between text-[11px] text-[#64748B]">
+                                  <span>Billing Cycle:</span>
+                                  <span className="font-medium text-[#0F172A] uppercase">{activePlan.billingCycle || "Monthly"}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-[11px] text-[#64748B]">
+                                  <span>Period Window:</span>
+                                  <span className="font-mono text-[10px] text-[#0F172A]">
+                                    {activePlan.currentPeriodEnd
+                                      ? `Until ${new Date(activePlan.currentPeriodEnd).toLocaleDateString()}`
+                                      : activePlan.estimatedDueDate
+                                      ? `Until ${new Date(activePlan.estimatedDueDate).toLocaleDateString()}`
+                                      : "Next 30 Days"}
+                                  </span>
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-[11px] text-[#64748B] italic">
+                                Client currently commissions standalone single services.
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })()}
+
+                      {/* Client Orders Portfolio with Live Progress % & Payment Status */}
+                      <div className="space-y-3 flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-serif font-semibold text-xs text-[#0F172A] uppercase tracking-wider flex items-center gap-1.5">
+                            <ShoppingBag className="w-3.5 h-3.5 text-[#5C3A1E]" />
+                            <span>Client Orders ({currentChatOrders.length})</span>
+                          </h4>
+                          <span className="text-[11px] font-bold text-[#5C3A1E]">
+                            Total Spent: {currentChatClient.lifetimeVolume}
+                          </span>
+                        </div>
+
+                        {/* Orders List for this Client */}
+                        <div className="space-y-2.5">
+                          {currentChatOrders.length === 0 ? (
+                            <div className="p-4 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-center text-xs text-[#64748B]">
+                              No orders placed yet by this client.
+                            </div>
+                          ) : (
+                            currentChatOrders.map((order) => {
+                              const progress = computeOrderProgress(order);
+                              const isPaid = order.paymentStatus === "paid" || (order.status !== "pending_payment" && order.status !== "cancelled");
+
+                              return (
+                                <div
+                                  key={order.id || order.orderNumber}
+                                  className="p-3.5 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] space-y-2.5 shadow-2xs hover:border-[#D4A35A] transition-all"
+                                >
+                                  {/* Top Row: Order Number, Status Badge & Price */}
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div>
+                                      <div className="flex items-center gap-1.5 flex-wrap">
+                                        <span className="font-mono text-xs font-bold text-[#5C3A1E]">
+                                          {order.orderNumber || order.code || `#ORD-${order.id}`}
+                                        </span>
+                                        <Badge
+                                          variant={
+                                            order.status === "completed" || order.status === "approved"
+                                              ? "completed"
+                                              : order.status === "delivered"
+                                              ? "gold"
+                                              : order.status === "in_progress"
+                                              ? "progress"
+                                              : "neutral"
+                                          }
+                                          size="sm"
+                                        >
+                                          {order.statusLabel || order.status.toUpperCase().replace("_", " ")}
+                                        </Badge>
+                                        <span
+                                          className={`px-2 py-0.5 rounded-full text-[9px] font-semibold border ${
+                                            isPaid
+                                              ? "bg-[#EDF7F0] text-[#2E7D4F] border-[#2E7D4F]/20"
+                                              : "bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]"
+                                          }`}
+                                        >
+                                          {isPaid ? "Paid" : "Pending Payment"}
+                                        </span>
+                                      </div>
+                                      <p className="text-xs font-semibold text-[#0F172A] mt-1">
+                                        {order.title || order.service || "Studio Commission"}
+                                      </p>
+                                    </div>
+                                    <span className="font-serif font-bold text-xs text-[#5C3A1E] shrink-0">
+                                      ₹{(order.totalAmount || 0).toLocaleString("en-IN")}
+                                    </span>
+                                  </div>
+
+                                  {/* Progress Bar & Stage */}
+                                  <div className="space-y-1">
+                                    <div className="flex items-center justify-between text-[10px]">
+                                      <span className="font-medium text-[#64748B]">{progress.stageName}</span>
+                                      <span className="font-mono font-bold text-[#5C3A1E]">{progress.percentage}%</span>
+                                    </div>
+                                    <div className="w-full bg-[#EADFCB]/60 h-1.5 rounded-full overflow-hidden">
+                                      <div
+                                        className="bg-[#5C3A1E] h-full rounded-full transition-all duration-300"
+                                        style={{ width: `${progress.percentage}%` }}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Drive Link & Action Buttons */}
+                                  <div className="flex items-center justify-between pt-2 border-t border-[#EADFCB]/60 gap-2">
+                                    <a
+                                      href={order.driveFolderLink || `https://drive.google.com/drive/folders/${order.driveFolderId || currentChatClient.driveFolderId}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1 text-[10px] font-medium text-[#A98B57] hover:text-[#5C3A1E] hover:underline"
+                                    >
+                                      <HardDrive className="w-3 h-3" />
+                                      <span>Drive Vault</span>
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                    </a>
+
+                                    <div className="flex items-center gap-1.5">
+                                      <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        onClick={() => setInspectingAdminOrder(order)}
+                                        leftIcon={<Eye className="w-3 h-3" />}
+                                        className="text-[10px] py-1 h-7"
+                                      >
+                                        Inspect
+                                      </Button>
+
+                                      <select
+                                        value={order.status}
+                                        onChange={(e) => handleAdminUpdateOrderStatus(order.id, e.target.value)}
+                                        className="bg-[#FAF9F5] border border-[#EADFCB] rounded-lg px-2 py-1 text-[10px] font-semibold text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                                      >
+                                        <option value="pending_payment">Pending Payment</option>
+                                        <option value="paid">Paid</option>
+                                        <option value="in_production">In Production</option>
+                                        <option value="delivered">Delivered</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="cancelled">Cancelled</option>
+                                      </select>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                </div>
+              )}
+
+              {/* =========================================================
+                  SUB-VIEW 2: AI KNOWLEDGE BASE (EDITABLE RULES & Q&A)
+                  ========================================================= */}
+              {chatSubView === "knowledge" && (
+                <div className="space-y-6">
+                  {/* Search & Category Filter Bar */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                      {["All", "faq", "business_rules", "service_details", "tone_guidelines", "qa"].map((cat) => (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => setKbCategoryFilter(cat)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                            kbCategoryFilter === cat
+                              ? "bg-[#5C3A1E] text-white shadow-xs"
+                              : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A]"
+                          }`}
+                        >
+                          {cat === "All"
+                            ? "All Knowledge"
+                            : cat === "faq"
+                            ? "FAQ"
+                            : cat === "business_rules"
+                            ? "Business Rules"
+                            : cat === "service_details"
+                            ? "Service Details"
+                            : cat === "tone_guidelines"
+                            ? "Tone & Voice"
+                            : "Q&A Corrections"}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="relative flex items-center w-full sm:w-72">
+                      <Search className="w-4 h-4 text-[#94A3B8] absolute left-3.5 pointer-events-none" />
+                      <input
+                        type="text"
+                        placeholder="Search rules, questions, answers..."
+                        value={kbSearchQuery}
+                        onChange={(e) => setKbSearchQuery(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#D4A35A]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Knowledge Entries Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                    {filteredKnowledgeEntries.length === 0 ? (
+                      <div className="col-span-full p-12 text-center rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] text-[#64748B]">
+                        <BookOpen className="w-8 h-8 text-[#94A3B8] mx-auto mb-2 opacity-50" />
+                        <h4 className="font-serif font-bold text-sm text-[#0F172A]">No Knowledge Base Entries</h4>
+                        <p className="text-xs mt-1">Add a new rule or capture chat corrections to build studio intelligence.</p>
+                      </div>
+                    ) : (
+                      filteredKnowledgeEntries.map((entry) => (
+                        <div
+                          key={entry.id}
+                          className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-5 space-y-3 shadow-2xs hover:border-[#D4A35A] transition-all flex flex-col justify-between"
+                        >
+                          <div className="space-y-2.5">
+                            <div className="flex items-center justify-between gap-2">
+                              <Badge
+                                variant={
+                                  entry.category === "business_rules"
+                                    ? "gold"
+                                    : entry.category === "service_details"
+                                    ? "progress"
+                                    : "neutral"
+                                }
+                                size="sm"
+                              >
+                                {entry.category.replace("_", " ").toUpperCase()}
+                              </Badge>
+
+                              <span className="text-[10px] font-mono text-[#94A3B8]">
+                                {entry.source === "chat_correction" ? "From Chat Feedback" : "Admin Rule"}
+                              </span>
+                            </div>
+
+                            <h4 className="font-serif font-bold text-sm text-[#0F172A] leading-snug">
+                              {entry.title}
+                            </h4>
+
+                            {entry.question && (
+                              <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/60 text-xs text-[#5C3A1E] font-medium">
+                                <span className="text-[9px] uppercase font-bold text-[#94A3B8] block mb-0.5">Matched Question:</span>
+                                &quot;{entry.question}&quot;
+                              </div>
+                            )}
+
+                            <p className="text-xs text-[#475569] leading-relaxed line-clamp-4">
+                              {entry.answer}
+                            </p>
+                          </div>
+
+                          <div className="pt-3 border-t border-[#EADFCB]/60 flex items-center justify-between text-xs">
+                            <span className="text-[10px] text-[#2E7D4F] font-semibold flex items-center gap-1">
+                              <Check className="w-3 h-3 text-[#2E7D4F]" />
+                              <span>Active in Context</span>
+                            </span>
+
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingKbEntry(entry);
+                                  setKbTitle(entry.title);
+                                  setKbCategory(entry.category);
+                                  setKbQuestion(entry.question || "");
+                                  setKbAnswer(entry.answer);
+                                  setKbModalOpen(true);
+                                }}
+                                className="p-1.5 rounded-lg bg-[#FAF9F5] border border-[#EADFCB] text-[#5C3A1E] hover:bg-[#FFFFFF] cursor-pointer"
+                                title="Edit Knowledge Entry"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteKnowledge(entry.id, entry.title)}
+                                className="p-1.5 rounded-lg bg-[#FAF9F5] border border-[#EADFCB] text-[#DC2626] hover:bg-[#FEF2F2] cursor-pointer"
+                                title="Delete Knowledge Entry"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* =========================================================
+                  SUB-VIEW 3: COMMON QUESTIONS & LOW-RATED TOPICS
+                  ========================================================= */}
+              {chatSubView === "common_questions" && (
+                <div className="space-y-6">
+                  {/* Top Analytics Summary */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="p-5 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-2xs">
+                      <span className="text-[10px] uppercase font-bold text-[#64748B]">Total Inquiries Captured</span>
+                      <p className="font-serif text-2xl font-bold text-[#0F172A] mt-1">95 Questions</p>
+                      <span className="text-[11px] text-[#2E7D4F] font-medium">+18 this week</span>
+                    </div>
+
+                    <div className="p-5 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-2xs">
+                      <span className="text-[10px] uppercase font-bold text-[#64748B]">Grounding Accuracy</span>
+                      <p className="font-serif text-2xl font-bold text-[#2E7D4F] mt-1">92.4%</p>
+                      <span className="text-[11px] text-[#64748B]">Derived from Good ratings</span>
+                    </div>
+
+                    <div className="p-5 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-2xs">
+                      <span className="text-[10px] uppercase font-bold text-[#64748B]">Requires Improvement</span>
+                      <p className="font-serif text-2xl font-bold text-[#D97706] mt-1">2 Topics</p>
+                      <span className="text-[11px] text-[#D97706] font-medium">Flagged by Producer</span>
+                    </div>
+                  </div>
+
+                  {/* Common Questions & Unanswered View Table */}
+                  <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-xs overflow-hidden">
+                    <div className="p-5 border-b border-[#EADFCB] bg-[#FAF9F5]/80 flex items-center justify-between">
+                      <div>
+                        <h4 className="font-serif font-bold text-sm sm:text-base text-[#0F172A]">
+                          Most Frequently Asked Topics & Low-Rated Queries
+                        </h4>
+                        <p className="text-xs text-[#64748B] mt-0.5">
+                          Questions asked by clients during AI conversation requiring review or knowledge base inclusion.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="divide-y divide-[#EADFCB]/60">
+                      {commonQuestions.map((cq) => (
+                        <div key={cq.id} className="p-5 hover:bg-[#FAF9F5]/40 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4">
+                          <div className="space-y-1.5 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-serif font-bold text-sm text-[#0F172A]">{cq.topic}</span>
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#EADFCB]/60 text-[#5C3A1E]">
+                                {cq.frequency} Inquiries
+                              </span>
+                              <Badge
+                                variant={
+                                  cq.status === "answered"
+                                    ? "completed"
+                                    : cq.status === "needs_improvement"
+                                    ? "gold"
+                                    : "neutral"
+                                }
+                                size="sm"
+                              >
+                                {cq.status === "answered"
+                                  ? "Grounded"
+                                  : cq.status === "needs_improvement"
+                                  ? "Needs Improvement"
+                                  : "Unanswered"}
+                              </Badge>
+                            </div>
+
+                            <p className="text-xs text-[#475569] italic">
+                              Sample: &quot;{cq.querySample}&quot;
+                            </p>
+
+                            <p className="text-[11px] text-[#5C3A1E] font-medium">
+                              {cq.suggestedAction}
+                            </p>
+                          </div>
+
+                          <div className="shrink-0">
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() =>
+                                handleOneClickAddToKnowledge(
+                                  cq.querySample,
+                                  "",
+                                  `Rule: ${cq.topic}`
+                                )
+                              }
+                              leftIcon={<Plus className="w-3 h-3" />}
+                            >
+                              Add KB Rule
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* =========================================================
+                  SUB-VIEW 4: AI TONE & SYSTEM PROMPT CONFIGURATION
+                  ========================================================= */}
+              {chatSubView === "settings" && (
+                <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#EADFCB]">
+                    <div>
+                      <h4 className="font-serif font-bold text-lg sm:text-xl text-[#0F172A]">
+                        AI System Prompt & Brand Tone Setting
+                      </h4>
+                      <p className="text-xs text-[#64748B] mt-0.5">
+                        Admin-only control: customize the studio persona, tone guidelines, and behavioral constraints.
+                      </p>
+                    </div>
 
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleAddInternalNote()}
-                      title="Post Internal Producer Note (Not sent to client)"
+                      onClick={() => handleResetAiSettings()}
+                      leftIcon={<RotateCcw className="w-3.5 h-3.5 text-[#5C3A1E]" />}
                     >
-                      <Lock className="w-3.5 h-3.5 text-[#A98B57]" />
-                      <span className="hidden sm:inline">Note</span>
+                      Reset to Default
                     </Button>
+                  </div>
 
-                    <Button
-                      type="submit"
-                      variant="primary"
-                      size="sm"
-                      disabled={!producerInput.trim()}
-                      leftIcon={<Send className="w-3.5 h-3.5" />}
-                    >
-                      Send
-                    </Button>
+                  <form onSubmit={handleSaveAiSettingsSubmit} className="space-y-6">
+                    {/* Brand Tone Selector */}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-[#0F172A]">
+                        Studio Conversational Persona & Tone
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        {[
+                          { id: "luxury_atelier", title: "Luxury Atelier", desc: "Warm hospitality (Namaste 🙏), poetic sacred geometry, refined elegance." },
+                          { id: "technical", title: "Technical Architectural", desc: "Precise rendering specs, ACEScg color, 4K bakes, and SLAs." },
+                          { id: "concise", title: "Concise Business", desc: "High efficiency, brief summaries, rapid confirmation to payment." },
+                          { id: "formal", title: "Formal Enterprise", desc: "Corporate enterprise governance, strict NDA adherence, executive polish." },
+                        ].map((toneOpt) => (
+                          <div
+                            key={toneOpt.id}
+                            onClick={() => setSystemToneDraft(toneOpt.id as any)}
+                            className={`p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                              systemToneDraft === toneOpt.id
+                                ? "bg-[#FAF9F5] border-[#5C3A1E] shadow-2xs"
+                                : "bg-[#FFFFFF] border-[#EADFCB] hover:border-[#D4A35A]"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-serif font-bold text-xs text-[#0F172A]">{toneOpt.title}</span>
+                              {systemToneDraft === toneOpt.id && (
+                                <span className="w-2 h-2 rounded-full bg-[#5C3A1E]" />
+                              )}
+                            </div>
+                            <p className="text-[11px] text-[#64748B] leading-relaxed">{toneOpt.desc}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Master System Prompt Textarea */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-[#0F172A]">
+                          Master System Prompt
+                        </label>
+                        <span className="text-[10px] font-mono text-[#64748B]">
+                          {systemPromptDraft.length} characters • ~{Math.round(systemPromptDraft.length / 4)} tokens
+                        </span>
+                      </div>
+                      <textarea
+                        rows={12}
+                        value={systemPromptDraft}
+                        onChange={(e) => setSystemPromptDraft(e.target.value)}
+                        className="w-full font-mono text-xs p-4 rounded-2xl bg-[#FFFFFF] border border-[#EADFCB] text-[#0F172A] leading-relaxed focus:outline-none focus:border-[#D4A35A]"
+                        placeholder="Enter the system prompt instructions for Sutra AI..."
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2">
+                      <span className="text-[11px] text-[#64748B]">
+                        Last updated by <span className="font-bold text-[#0F172A]">{aiSettings.updatedBy}</span>
+                      </span>
+
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        size="md"
+                        disabled={isSavingSettings}
+                        leftIcon={<Save className="w-4 h-4" />}
+                      >
+                        {isSavingSettings ? "Saving Settings..." : "Save Active System Prompt"}
+                      </Button>
+                    </div>
                   </form>
                 </div>
-              </div>
+              )}
+
+              {/* =========================================================
+                  MODAL 1: AI CORRECTION & FEEDBACK CAPTURE
+                  ========================================================= */}
+              {ratingModalMessage && (
+                <Modal
+                  isOpen={true}
+                  onClose={() => setRatingModalMessage(null)}
+                  title="Improve AI Answer (Producer Feedback)"
+                  maxWidth="md"
+                >
+                  <div className="space-y-4">
+                    <p className="text-xs text-[#64748B]">
+                      Help Sutra AI learn by providing a superior answer. This correction will be saved in Firebase and immediately incorporated into the AI Knowledge Base for future client chats.
+                    </p>
+
+                    {ratingModalMessage.userQuery && (
+                      <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-xs">
+                        <span className="text-[9px] uppercase font-bold text-[#94A3B8] block mb-1">Client Asked:</span>
+                        <p className="text-[#0F172A] font-semibold">&quot;{ratingModalMessage.userQuery}&quot;</p>
+                      </div>
+                    )}
+
+                    <div className="p-3 rounded-xl bg-[#FEF2F2] border border-[#FECACA] text-xs text-[#991B1B]">
+                      <span className="text-[9px] uppercase font-bold text-[#DC2626] block mb-1">AI Replied (Poor / Inaccurate):</span>
+                      <p className="line-clamp-3">{ratingModalMessage.aiReply}</p>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-[#0F172A]">
+                        Write the Correct / Better Answer
+                      </label>
+                      <textarea
+                        rows={4}
+                        placeholder="Type the ideal answer according to studio rules, technical specs, or pricing..."
+                        value={ratingCorrectionText}
+                        onChange={(e) => setRatingCorrectionText(e.target.value)}
+                        className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#EADFCB]/60">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setRatingModalMessage(null)}
+                      >
+                        Cancel
+                      </Button>
+
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        disabled={isSubmittingFeedback}
+                        onClick={() => handleSubmitCorrectionFeedback()}
+                        leftIcon={<Save className="w-3.5 h-3.5" />}
+                      >
+                        {isSubmittingFeedback ? "Saving..." : "Save Correction & Add to KB"}
+                      </Button>
+                    </div>
+                  </div>
+                </Modal>
+              )}
+
+              {/* =========================================================
+                  MODAL 2: KNOWLEDGE BASE ENTRY EDITOR
+                  ========================================================= */}
+              {kbModalOpen && (
+                <Modal
+                  isOpen={true}
+                  onClose={() => setKbModalOpen(false)}
+                  title={editingKbEntry ? "Edit Knowledge Base Entry" : "Create New Knowledge Base Rule"}
+                  maxWidth="md"
+                >
+                  <form onSubmit={handleSaveKnowledgeEntrySubmit} className="space-y-4">
+                    <div className="space-y-1">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-[#0F172A]">
+                        Rule Title
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. 4K Spatial Render Deliverables & SLA"
+                        value={kbTitle}
+                        onChange={(e) => setKbTitle(e.target.value)}
+                        className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-[#0F172A]">
+                        Category
+                      </label>
+                      <select
+                        value={kbCategory}
+                        onChange={(e) => setKbCategory(e.target.value as KnowledgeCategory)}
+                        className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                      >
+                        <option value="faq">FAQ (Frequently Asked Questions)</option>
+                        <option value="business_rules">Business Rules & SLAs</option>
+                        <option value="service_details">Service Details & Formats</option>
+                        <option value="tone_guidelines">Brand Tone & Hospitality</option>
+                        <option value="qa">Direct Q&A Pair</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-[#0F172A]">
+                        Client Question (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. What is included in a 3D Spatial Architecture deliverable?"
+                        value={kbQuestion}
+                        onChange={(e) => setKbQuestion(e.target.value)}
+                        className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-[#0F172A]">
+                        Authoritative Knowledge Base Answer / Guidance
+                      </label>
+                      <textarea
+                        rows={5}
+                        required
+                        placeholder="Enter the official studio guideline, response, or business rule..."
+                        value={kbAnswer}
+                        onChange={(e) => setKbAnswer(e.target.value)}
+                        className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#EADFCB]/60">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setKbModalOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        size="sm"
+                        leftIcon={<Save className="w-3.5 h-3.5" />}
+                      >
+                        {editingKbEntry ? "Update Knowledge" : "Publish to AI"}
+                      </Button>
+                    </div>
+                  </form>
+                </Modal>
+              )}
             </div>
           )}
 
@@ -1346,43 +4331,159 @@ function AdminHubContent() {
               TAB 5: SECURITY AUDIT TRAIL
               ======================================================== */}
           {activeTab === "audit" && (
-            <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-6">
-              <div>
-                <h3 className="font-serif text-xl font-semibold text-[#0F172A]">
-                  Cryptographic Security & System Audit Trail
-                </h3>
-                <p className="text-xs text-[#64748B]">
-                  Immutable ledger of authentication events, Google Drive file synchronizations, and pipeline dispatches.
-                </p>
-              </div>
-
-              <div className="space-y-2.5 font-mono text-xs text-[#475569]">
-                {AUDIT_LOGS.map((log) => (
-                  <div
-                    key={log.id}
-                    className="p-3.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-2"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <span className="font-bold text-[#5C3A1E] text-[11px] px-2 py-0.5 rounded bg-[#F8F5EF] border border-[#EADFCB]">
-                        [{log.event}]
-                      </span>
-                      <span className="font-medium text-[#0F172A]">{log.detail}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-[11px] text-[#94A3B8] shrink-0">
-                      <span>{log.actor}</span>
-                      <span>• {log.time}</span>
-                    </div>
+            <div className="space-y-6">
+              <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="font-serif text-xl font-semibold text-[#0F172A]">
+                      Cryptographic Security & System Audit Trail
+                    </h3>
+                    <p className="text-xs text-[#64748B]">
+                      Immutable ledger of administrative actions, deliveries, status transitions, account toggles, and financial refunds.
+                    </p>
                   </div>
-                ))}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={fetchLiveAuditLogs}
+                      className="text-xs shrink-0"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${isLoadingAuditLogs ? "animate-spin" : ""}`} />
+                      Sync Ledger
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Filters & Search */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                    {[
+                      { id: "ALL", label: "All Actions" },
+                      { id: "ORDER_DELIVERED", label: "Deliveries" },
+                      { id: "STATUS_UPDATED", label: "Status" },
+                      { id: "CLIENT_STATUS_TOGGLED", label: "Account Control" },
+                      { id: "PAYMENT_REFUNDED", label: "Refunds" },
+                      { id: "CLIENT_NOTE_ADDED", label: "Notes" },
+                    ].map((f) => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => setAuditActionFilter(f.id)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
+                          auditActionFilter === f.id
+                            ? "bg-[#5C3A1E] text-white shadow-xs"
+                            : "bg-[#FAF9F5] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A]"
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="relative flex items-center w-full sm:w-64">
+                    <Search className="w-4 h-4 text-[#94A3B8] absolute left-3.5 pointer-events-none" />
+                    <input
+                      type="text"
+                      placeholder="Search actor, target, note..."
+                      value={auditSearchQuery}
+                      onChange={(e) => setAuditSearchQuery(e.target.value)}
+                      className="w-full pl-9 pr-4 py-1.5 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#D4A35A]"
+                    />
+                  </div>
+                </div>
+
+                {/* Audit Entries List */}
+                <div className="space-y-2.5 font-mono text-xs text-[#475569]">
+                  {(liveAuditLogs.length > 0 ? liveAuditLogs : AUDIT_LOGS)
+                    .filter((log: any) => {
+                      const action = log.what || log.event;
+                      const matchesAction = auditActionFilter === "ALL" || action === auditActionFilter;
+                      const q = auditSearchQuery.toLowerCase();
+                      const matchesSearch =
+                        !auditSearchQuery ||
+                        action?.toLowerCase().includes(q) ||
+                        log.targetId?.toLowerCase().includes(q) ||
+                        log.targetTitle?.toLowerCase().includes(q) ||
+                        log.note?.toLowerCase().includes(q) ||
+                        log.detail?.toLowerCase().includes(q) ||
+                        log.who?.email?.toLowerCase().includes(q) ||
+                        log.actor?.toLowerCase().includes(q);
+                      return matchesAction && matchesSearch;
+                    })
+                    .map((log: any) => {
+                      const action = log.what || log.event || "LOG_EVENT";
+                      const actor = log.who?.email || log.actor || "System";
+                      const timestamp = log.when ? new Date(log.when).toLocaleTimeString() : log.time;
+                      const dateStr = log.when ? new Date(log.when).toLocaleDateString() : "";
+                      const hasDiff = Boolean(log.before || log.after);
+
+                      return (
+                        <div
+                          key={log.id}
+                          className="p-3.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 hover:border-[#D4A35A] transition-colors"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5">
+                            <span className="font-bold text-[#5C3A1E] text-[11px] px-2 py-0.5 rounded bg-[#FFFDF9] border border-[#EADFCB] shrink-0 self-start sm:self-auto">
+                              [{action}]
+                            </span>
+                            <div>
+                              <span className="font-medium text-[#0F172A]">
+                                {log.note || log.detail || `${action} on target ${log.targetId}`}
+                              </span>
+                              {log.targetTitle && (
+                                <span className="text-[#64748B] text-[11px] ml-1">
+                                  — {log.targetTitle}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2.5 text-[11px] text-[#94A3B8] shrink-0 self-end sm:self-auto">
+                            <span className="font-semibold text-[#5C3A1E]">{actor}</span>
+                            <span>• {dateStr ? `${dateStr} ${timestamp}` : timestamp}</span>
+                            {hasDiff && (
+                              <button
+                                type="button"
+                                onClick={() => setSelectedAuditLog(log)}
+                                className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EADFCB]/60 text-[#5C3A1E] hover:bg-[#5C3A1E] hover:text-white transition-colors cursor-pointer"
+                              >
+                                View Diff
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
               </div>
             </div>
           )}
 
           {/* ========================================================
               TAB 6: OFFICIAL APPROVALS HUB
+          {/* ========================================================
+              TAB 6: OFFICIAL APPROVALS & CLIENT ORDERS HUB
               ======================================================== */}
-          {activeTab === "approvals" && (
+          {(activeTab === "approvals" || (activeTab as string) === "orders") && (
             <div className="space-y-8">
+              {/* New Order Alert Banner */}
+              {newOrderNotice && (
+                <div className="p-4 rounded-2xl bg-[#FFFBEB] border border-[#FDE68A] text-[#92400E] flex items-center justify-between text-xs font-semibold shadow-xs animate-in fade-in duration-300">
+                  <div className="flex items-center gap-2.5">
+                    <Bell className="w-4 h-4 text-[#D97706] animate-bounce shrink-0" />
+                    <span>{newOrderNotice}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setNewOrderNotice(null)}
+                    className="px-3 py-1 bg-white rounded-lg border border-[#FDE68A] hover:bg-[#FEF3C7] text-xs cursor-pointer transition-all"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              )}
+
               {approvalToast && (
                 <div className="p-4 rounded-2xl bg-[#F0FDF4] border border-[#BBF7D0] text-[#15803D] text-xs font-semibold flex items-center justify-between shadow-xs">
                   <span>✓ {approvalToast}</span>
@@ -1390,71 +4491,544 @@ function AdminHubContent() {
                 </div>
               )}
 
-              {/* Pending Approvals Review Queue */}
+              {/* Real Firebase Client Orders Registry */}
               <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-6">
-                <div>
-                  <h3 className="font-serif text-xl font-semibold text-[#0F172A]">
-                    Official Project & Deliverable Approvals Queue
-                  </h3>
-                  <p className="text-xs text-[#64748B] mt-1">
-                    All official approvals, rejections, and final deliveries must originate from an authorized administrator. Clients cannot issue binding approvals.
-                  </p>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#EADFCB]/60 pb-6">
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <h3 className="font-serif text-xl sm:text-2xl font-semibold text-[#0F172A]">
+                        Client Orders & Production Registry
+                      </h3>
+                      <Badge variant="gold" size="sm">
+                        {realOrders.length} Total Orders
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-[#64748B] mt-1">
+                      Real-time Firestore synchronized commissions. Filter by status, type, source, or date, inspect client specifications, access AI chat logs, and transition production states.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 shrink-0">
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[11px] text-[#2E7D4F] font-semibold">
+                      <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-pulse" />
+                      <span>Firestore Sync Active</span>
+                    </div>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => fetchRealOrders(false)}
+                      disabled={isLoadingRealOrders}
+                      leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isLoadingRealOrders ? "animate-spin" : ""}`} />}
+                      className="text-xs"
+                    >
+                      Refresh
+                    </Button>
+                  </div>
                 </div>
 
-                <div className="space-y-4">
-                  {approvalsList.length === 0 ? (
-                    <div className="p-8 text-center text-xs text-[#64748B] bg-[#FAF9F5] rounded-2xl border border-[#EADFCB]">
-                      All pending project deliverables have been reviewed and approved.
+                {/* Search & Multi-Filter Controls */}
+                <div className="space-y-3.5">
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                    {/* Search Input */}
+                    <div className="md:col-span-3 relative flex items-center">
+                      <Search className="w-4 h-4 text-[#94A3B8] absolute left-3.5 pointer-events-none" />
+                      <input
+                        type="text"
+                        placeholder="Search by order #, client, email, service..."
+                        value={orderSearchQuery}
+                        onChange={(e) => {
+                          setOrderSearchQuery(e.target.value);
+                          setOrderCurrentPage(1);
+                        }}
+                        className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#D4A35A]"
+                      />
                     </div>
-                  ) : (
-                    approvalsList.map((item) => (
-                      <div
-                        key={item.id}
-                        className="p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] hover:border-[#D4A35A] transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
-                      >
-                        <div className="space-y-1.5">
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-xs font-bold text-[#5C3A1E] px-2 py-0.5 rounded bg-[#F8F5EF] border border-[#EADFCB]">
-                              {item.code}
-                            </span>
-                            <span className="font-semibold text-sm text-[#0F172A]">{item.service}</span>
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFFBEB] text-[#B45309] font-medium border border-[#FDE68A]">
-                              {item.status}
-                            </span>
-                          </div>
-                          <p className="text-xs text-[#64748B]">
-                            Client: <strong className="text-[#0F172A]">{item.client}</strong> • Submitted: {item.submittedDate} • {item.round}
-                          </p>
-                          <p className="text-xs font-mono text-[#5C3A1E]">
-                            Deliverable: {item.deliverable}
-                          </p>
-                        </div>
 
-                        <div className="flex items-center gap-2 shrink-0">
+                    {/* Status Filter */}
+                    <div className="md:col-span-2">
+                      <select
+                        value={orderStatusFilter}
+                        onChange={(e) => {
+                          setOrderStatusFilter(e.target.value);
+                          setOrderCurrentPage(1);
+                        }}
+                        className="w-full px-3 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] cursor-pointer"
+                        title="Order Lifecycle Status"
+                      >
+                        <option value="all">All Stages</option>
+                        <option value="pending_payment">Pending Payment</option>
+                        <option value="paid">Paid (Awaiting Review)</option>
+                        <option value="brief_review">Brief Review & Kickoff</option>
+                        <option value="in_production">In Production</option>
+                        <option value="draft_delivered">Draft Delivered</option>
+                        <option value="revision_requested">Revision Requested</option>
+                        <option value="approved">Approved</option>
+                        <option value="completed">Completed & Vaulted</option>
+                        <option value="trial">Monthly Trial</option>
+                        <option value="active">Active Retainer</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="refunded">Refunded</option>
+                        <option value="on_hold">On Hold</option>
+                      </select>
+                    </div>
+
+                    {/* Payment Status Filter (Requirement 9) */}
+                    <div className="md:col-span-2">
+                      <select
+                        value={orderPaymentFilter}
+                        onChange={(e) => {
+                          setOrderPaymentFilter(e.target.value);
+                          setOrderCurrentPage(1);
+                        }}
+                        className="w-full px-3 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] cursor-pointer font-medium text-[#5C3A1E]"
+                        title="Razorpay Payment Status"
+                      >
+                        <option value="all">All Payments</option>
+                        <option value="paid">Paid via Razorpay</option>
+                        <option value="unpaid">Unpaid / Pending</option>
+                        <option value="failed">Failed</option>
+                        <option value="refunded">Refunded</option>
+                      </select>
+                    </div>
+
+                    {/* Type Filter */}
+                    <div className="md:col-span-2">
+                      <select
+                        value={orderTypeFilter}
+                        onChange={(e) => {
+                          setOrderTypeFilter(e.target.value);
+                          setOrderCurrentPage(1);
+                        }}
+                        className="w-full px-3 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] cursor-pointer"
+                      >
+                        <option value="all">All Types</option>
+                        <option value="service">Services</option>
+                        <option value="monthly_plan">Retainer Plans</option>
+                      </select>
+                    </div>
+
+                    {/* Source Filter */}
+                    <div className="md:col-span-1">
+                      <select
+                        value={orderSourceFilter}
+                        onChange={(e) => {
+                          setOrderSourceFilter(e.target.value);
+                          setOrderCurrentPage(1);
+                        }}
+                        className="w-full px-2 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] cursor-pointer"
+                        title="Source Channel"
+                      >
+                        <option value="all">All</option>
+                        <option value="dashboard">Web</option>
+                        <option value="ai_chat">AI</option>
+                      </select>
+                    </div>
+
+                    {/* Date Filter & Sort */}
+                    <div className="md:col-span-2 flex items-center gap-2">
+                      <select
+                        value={orderSortBy}
+                        onChange={(e) => setOrderSortBy(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] cursor-pointer"
+                        title="Sort Orders"
+                      >
+                        <option value="date_desc">Newest First</option>
+                        <option value="date_asc">Oldest First</option>
+                        <option value="amount_desc">Amount: High to Low</option>
+                        <option value="amount_asc">Amount: Low to High</option>
+                        <option value="status">Status</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Summary Bar */}
+                  <div className="flex flex-wrap items-center justify-between text-xs text-[#64748B] pt-1">
+                    <div className="flex items-center gap-3">
+                      <span>Showing <strong>{filteredAndSortedOrders.length}</strong> matching commissions</span>
+                      {orderSearchQuery && (
+                        <button
+                          type="button"
+                          onClick={() => setOrderSearchQuery("")}
+                          className="text-[#5C3A1E] hover:underline cursor-pointer"
+                        >
+                          Clear search
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-[11px]">
+                      <span className="px-2 py-0.5 rounded bg-[#FEF3C7] text-[#92400E] font-medium border border-[#FDE68A]">
+                        {realOrders.filter((o) => o.status === "pending_payment" || o.status === "pending").length} Pending
+                      </span>
+                      <span className="px-2 py-0.5 rounded bg-[#F0FDF4] text-[#15803D] font-medium border border-[#BBF7D0]">
+                        {realOrders.filter((o) => ["paid", "brief_review", "in_production", "draft_delivered", "revision_requested", "trial", "active", "in_progress"].includes(o.status)).length} Active
+                      </span>
+                      <span className="px-2 py-0.5 rounded bg-[#ECFDF5] text-[#065F46] font-medium border border-[#A7F3D0]">
+                        {realOrders.filter((o) => o.status === "completed" || o.status === "approved").length} Completed
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Orders Content: Table for Desktop, Cards for Mobile */}
+                {filteredAndSortedOrders.length === 0 ? (
+                  <div className="p-12 text-center text-xs text-[#64748B] bg-[#FAF9F5] rounded-2xl border border-[#EADFCB] space-y-2">
+                    <ShoppingBag className="w-8 h-8 text-[#A98B57] mx-auto opacity-60" />
+                    <p className="font-semibold text-[#0F172A]">No orders found</p>
+                    <p className="text-[11px] text-[#64748B]">
+                      Try adjusting your search criteria or filter options.
+                    </p>
+                    {(orderSearchQuery || orderStatusFilter !== "all" || orderTypeFilter !== "all" || orderSourceFilter !== "all") && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          setOrderSearchQuery("");
+                          setOrderStatusFilter("all");
+                          setOrderTypeFilter("all");
+                          setOrderSourceFilter("all");
+                          setOrderDateFilter("all");
+                        }}
+                        className="mt-2"
+                      >
+                        Reset All Filters
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    {/* Desktop View: Full Data Table */}
+                    <div className="hidden lg:block overflow-hidden rounded-2xl border border-[#EADFCB] bg-[#FFFFFF]">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-[#FAF9F5] border-b border-[#EADFCB] text-[10px] uppercase font-bold text-[#64748B] tracking-wider">
+                          <tr>
+                            <th className="py-3.5 px-4">Commission Code</th>
+                            <th className="py-3.5 px-4">Client</th>
+                            <th className="py-3.5 px-4">Service & Type</th>
+                            <th className="py-3.5 px-4">Amount</th>
+                            <th className="py-3.5 px-4">Payment</th>
+                            <th className="py-3.5 px-4">Lifecycle & Progress</th>
+                            <th className="py-3.5 px-4">SLA / Due</th>
+                            <th className="py-3.5 px-4 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#EADFCB]/60">
+                          {paginatedOrders.map((order) => {
+                            const isChat = order.source === "ai_chat";
+                            const itemsCount = order.items?.length || 1;
+                            const placedDate = order.createdAt
+                              ? new Date(order.createdAt).toLocaleDateString("en-IN", {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                })
+                              : "Recent";
+                            const progress = computeOrderProgress(order);
+
+                            return (
+                              <tr key={order.id} className="hover:bg-[#FAF9F5]/70 transition-colors">
+                                <td className="py-3.5 px-4">
+                                  <div className="space-y-1">
+                                    <span className="font-mono text-xs font-bold text-[#5C3A1E] block">
+                                      {order.code || order.orderNumber || `#${order.id}`}
+                                    </span>
+                                    <span
+                                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold border ${
+                                        isChat
+                                          ? "bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]"
+                                          : "bg-[#F8F5EF] text-[#64748B] border-[#EADFCB]"
+                                      }`}
+                                    >
+                                      {isChat ? (
+                                        <>
+                                          <Sparkles className="w-2.5 h-2.5 text-[#D4A35A]" />
+                                          <span>AI Chat</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <ShoppingBag className="w-2.5 h-2.5 text-[#5C3A1E]" />
+                                          <span>Dashboard</span>
+                                        </>
+                                      )}
+                                    </span>
+                                  </div>
+                                </td>
+
+                                <td className="py-3.5 px-4">
+                                  <div>
+                                    <p className="font-semibold text-[#0F172A]">
+                                      {order.clientName || "Studio Client"}
+                                    </p>
+                                    <p className="text-[11px] text-[#64748B] truncate max-w-[160px]">
+                                      {order.clientEmail || "client@sutrastudio.com"}
+                                    </p>
+                                    {order.assignedTo && (
+                                      <span className="inline-flex items-center gap-1 text-[10px] text-[#A98B57] font-medium mt-0.5">
+                                        <UserCheck className="w-2.5 h-2.5" />
+                                        <span>{order.assignedTo.name}</span>
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+
+                                <td className="py-3.5 px-4">
+                                  <div className="space-y-0.5">
+                                    <span className="font-medium text-[#0F172A] truncate max-w-[180px] block">
+                                      {order.title || order.service || "Creative Direction"}
+                                    </span>
+                                    <div className="flex items-center gap-2 text-[10px] text-[#64748B]">
+                                      <span className="capitalize">
+                                        {order.type === "monthly_plan" ? "Monthly Retainer" : "Individual Service"}
+                                      </span>
+                                      <span>•</span>
+                                      <span>{itemsCount} {itemsCount === 1 ? "Item" : "Items"}</span>
+                                    </div>
+                                  </div>
+                                </td>
+
+                                <td className="py-3.5 px-4 font-serif font-bold text-sm text-[#5C3A1E]">
+                                  ₹{(order.totalAmount || 0).toLocaleString("en-IN")}
+                                </td>
+
+                                <td className="py-3.5 px-4">
+                                  {order.paymentStatus === "paid" || order.status === "paid" ? (
+                                    <div className="space-y-0.5">
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0]">
+                                        <Check className="w-2.5 h-2.5 text-[#059669]" />
+                                        <span>Paid</span>
+                                      </span>
+                                      {order.razorpayPaymentId && (
+                                        <span className="block font-mono text-[9px] text-[#64748B] truncate max-w-[100px]" title={order.razorpayPaymentId}>
+                                          {order.razorpayPaymentId}
+                                        </span>
+                                      )}
+                                    </div>
+                                  ) : order.paymentStatus === "refunded" || order.status === "refunded" ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FAF5FF] text-[#6B21A8] border border-[#E9D5FF]">
+                                      Refunded
+                                    </span>
+                                  ) : order.paymentStatus === "failed" ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA]">
+                                      Failed
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FFFDF0] text-[#9A6700] border border-[#F1E0A6]">
+                                      Unpaid
+                                    </span>
+                                  )}
+                                </td>
+
+                                <td className="py-3.5 px-4">
+                                  <div className="space-y-1.5 min-w-[140px]">
+                                    <div className="flex items-center justify-between text-[11px]">
+                                      <span className="font-semibold text-[#0F172A] truncate max-w-[100px]">
+                                        {progress.stageName}
+                                      </span>
+                                      <span className="font-mono text-[10px] font-bold text-[#A98B57]">
+                                        {progress.percentage}%
+                                      </span>
+                                    </div>
+                                    <div className="w-full bg-[#EADFCB]/60 rounded-full h-1.5 overflow-hidden">
+                                      <div
+                                        className="h-full bg-gradient-to-r from-[#D4A35A] to-[#5C3A1E] rounded-full transition-all duration-500"
+                                        style={{ width: `${progress.percentage}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                </td>
+
+                                <td className="py-3.5 px-4 text-[#64748B] text-[11px]">
+                                  {order.estimatedDueDate ? (
+                                    <span className="inline-flex items-center gap-1 text-[#5C3A1E] font-medium">
+                                      <Calendar className="w-3 h-3 text-[#A98B57]" />
+                                      <span>{new Date(order.estimatedDueDate).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}</span>
+                                    </span>
+                                  ) : (
+                                    <span>{placedDate}</span>
+                                  )}
+                                </td>
+
+                                <td className="py-3.5 px-4 text-right">
+                                  <div className="flex items-center justify-end gap-1.5">
+                                    {(order.paymentStatus === "paid" || order.status === "paid") && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setAdminReceiptOrder(order as any);
+                                          setIsAdminReceiptOpen(true);
+                                        }}
+                                        className="p-1.5 rounded-lg border border-[#EADFCB] text-[#5C3A1E] hover:bg-[#FAF9F5] cursor-pointer"
+                                        title="View Official Receipt"
+                                      >
+                                        <Receipt className="w-3.5 h-3.5 text-[#A98B57]" />
+                                      </button>
+                                    )}
+                                    <Button
+                                      variant="secondary"
+                                      size="sm"
+                                      onClick={() => {
+                                        setInspectingAdminOrder(order);
+                                        setAdminOrderModalTab("details");
+                                        setStatusChangeTarget(order.status || "paid");
+                                        setStatusChangeNote("");
+                                      }}
+                                      className="text-xs"
+                                    >
+                                      Inspect & Manage
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile View: High-Density Responsive Cards */}
+                    <div className="block lg:hidden space-y-3.5">
+                      {paginatedOrders.map((order) => {
+                        const isChat = order.source === "ai_chat";
+                        const placedDate = order.createdAt
+                          ? new Date(order.createdAt).toLocaleDateString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })
+                          : "Recent";
+                        const progress = computeOrderProgress(order);
+
+                        return (
+                          <div
+                            key={order.id}
+                            className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#EADFCB] shadow-2xs space-y-3"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-xs font-bold text-[#5C3A1E]">
+                                  {order.code || order.orderNumber || `#${order.id}`}
+                                </span>
+                                <span
+                                  className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border ${
+                                    isChat
+                                      ? "bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]"
+                                      : "bg-[#F8F5EF] text-[#64748B] border-[#EADFCB]"
+                                  }`}
+                                >
+                                  {isChat ? "AI Chat" : "Dashboard"}
+                                </span>
+                              </div>
+                              <span className="text-[10px] text-[#94A3B8]">{placedDate}</span>
+                            </div>
+
+                            <div>
+                              <p className="font-semibold text-sm text-[#0F172A]">
+                                {order.title || order.service || "Creative Direction"}
+                              </p>
+                              <p className="text-xs text-[#64748B]">
+                                Client: <strong className="text-[#0F172A]">{order.clientName || "Studio Client"}</strong>
+                              </p>
+                              {order.assignedTo && (
+                                <p className="text-[11px] text-[#A98B57] font-medium flex items-center gap-1 mt-0.5">
+                                  <UserCheck className="w-3 h-3" />
+                                  <span>Assigned to: {order.assignedTo.name}</span>
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Mobile Progress Bar */}
+                            <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70 space-y-1.5">
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="font-semibold text-[#0F172A]">{progress.stageName}</span>
+                                <span className="font-mono font-bold text-[#A98B57]">{progress.percentage}%</span>
+                              </div>
+                              <div className="w-full bg-[#EADFCB] rounded-full h-1.5 overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-to-r from-[#D4A35A] to-[#5C3A1E] rounded-full"
+                                  style={{ width: `${progress.percentage}%` }}
+                                />
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between pt-2 border-t border-[#EADFCB]/60">
+                              <div className="space-y-0.5">
+                                <span className="text-[10px] text-[#94A3B8] block">Commission</span>
+                                <span className="font-serif font-bold text-base text-[#5C3A1E]">
+                                  ₹{(order.totalAmount || 0).toLocaleString("en-IN")}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-1.5">
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                                    order.paymentStatus === "paid"
+                                      ? "bg-[#ECFDF5] text-[#065F46]"
+                                      : order.paymentStatus === "refunded"
+                                      ? "bg-[#FAF5FF] text-[#6B21A8]"
+                                      : "bg-[#FEF3C7] text-[#92400E]"
+                                  }`}
+                                >
+                                  {order.paymentStatus ? order.paymentStatus.toUpperCase() : "UNPAID"}
+                                </span>
+
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => {
+                                    setInspectingAdminOrder(order);
+                                    setAdminOrderModalTab("details");
+                                    setStatusChangeTarget(order.status || "paid");
+                                    setStatusChangeNote("");
+                                  }}
+                                  className="text-xs py-1 px-2.5"
+                                >
+                                  Inspect & Manage
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Pagination Controls */}
+                    {totalOrderPages > 1 && (
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-[#EADFCB]/60 text-xs text-[#64748B]">
+                        <span>
+                          Page {orderCurrentPage} of {totalOrderPages} (
+                          {(orderCurrentPage - 1) * ORDERS_PER_PAGE + 1} -{" "}
+                          {Math.min(orderCurrentPage * ORDERS_PER_PAGE, filteredAndSortedOrders.length)} of{" "}
+                          {filteredAndSortedOrders.length} commissions)
+                        </span>
+
+                        <div className="flex items-center gap-2">
                           <Button
                             variant="secondary"
                             size="sm"
+                            disabled={orderCurrentPage === 1}
+                            onClick={() => setOrderCurrentPage((p) => Math.max(1, p - 1))}
+                            leftIcon={<ChevronLeft className="w-3.5 h-3.5" />}
                             className="text-xs"
-                            onClick={() => {
-                              setApprovalToast(`Revision request issued for ${item.client}. Feedback notification sent.`);
-                              setApprovalsList((prev) => prev.filter((i) => i.id !== item.id));
-                            }}
                           >
-                            Request Revision
+                            Previous
                           </Button>
+                          <span className="font-mono text-xs px-2 py-1 bg-[#FAF9F5] border border-[#EADFCB] rounded-lg">
+                            {orderCurrentPage}
+                          </span>
                           <Button
-                            variant="primary"
+                            variant="secondary"
                             size="sm"
+                            disabled={orderCurrentPage >= totalOrderPages}
+                            onClick={() => setOrderCurrentPage((p) => Math.min(totalOrderPages, p + 1))}
                             className="text-xs"
-                            onClick={() => handleIssueOfficialApproval(item.id, item.client)}
                           >
-                            Issue Official Approval
+                            <span>Next</span>
+                            <ChevronRight className="w-3.5 h-3.5 ml-1" />
                           </Button>
                         </div>
                       </div>
-                    ))
-                  )}
-                </div>
+                    )}
+                  </>
+                )}
               </div>
 
               {/* Immutable Approvals Ledger */}
@@ -1489,6 +5063,1224 @@ function AdminHubContent() {
                           <td className="py-3 text-[#5C3A1E]">{log.adminId}</td>
                         </tr>
                       ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Modal: Tabbed Order Inspection & Management Modal */}
+              {inspectingAdminOrder && (
+                <Modal
+                  isOpen={true}
+                  onClose={() => setInspectingAdminOrder(null)}
+                  title={`Commission Studio Hub: ${inspectingAdminOrder.code || inspectingAdminOrder.orderNumber || inspectingAdminOrder.id}`}
+                  maxWidth="xl"
+                >
+                  <div className="space-y-6 text-xs text-[#0F172A]">
+                    {/* Header Summary & Real-Time Progress Tracker */}
+                    <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-sm font-bold text-[#5C3A1E]">
+                              {inspectingAdminOrder.code || inspectingAdminOrder.orderNumber || inspectingAdminOrder.id}
+                            </span>
+                            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#FFFBEB] text-[#B45309] font-medium border border-[#FDE68A] uppercase">
+                              {inspectingAdminOrder.status}
+                            </span>
+                          </div>
+                          <h4 className="font-semibold text-sm text-[#0F172A] mt-1">
+                            {inspectingAdminOrder.title || inspectingAdminOrder.service || "Creative Direction"}
+                          </h4>
+                        </div>
+
+                        <div className="sm:text-right">
+                          <span className="text-[11px] text-[#64748B] block">Total Commission</span>
+                          <span className="font-serif font-bold text-xl text-[#5C3A1E]">
+                            ₹{(inspectingAdminOrder.totalAmount || 0).toLocaleString("en-IN")}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 100% Progress Bar */}
+                      {(() => {
+                        const p = computeOrderProgress(inspectingAdminOrder);
+                        return (
+                          <div className="p-3 rounded-xl bg-white border border-[#EADFCB] space-y-1.5">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-semibold text-[#0F172A] flex items-center gap-1.5">
+                                <Activity className="w-3.5 h-3.5 text-[#A98B57]" />
+                                <span>Current Phase: {p.stageName}</span>
+                              </span>
+                              <span className="font-mono font-bold text-[#A98B57]">{p.percentage}% Completed</span>
+                            </div>
+                            <div className="w-full bg-[#FAF9F5] border border-[#EADFCB]/80 rounded-full h-2 overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-[#D4A35A] to-[#5C3A1E] rounded-full transition-all duration-500"
+                                style={{ width: `${p.percentage}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    {/* 4 Modal Sub-Tabs */}
+                    <div className="flex items-center gap-1 border-b border-[#EADFCB] pb-1">
+                      {[
+                        { id: "details", label: "Scope & Brief", icon: FileText },
+                        { id: "deliverables", label: "Vault Deliverables", icon: HardDrive },
+                        { id: "internal", label: "Internal Notes & Team", icon: Lock },
+                        { id: "discussion", label: "Discussion & Timeline", icon: MessageSquare },
+                      ].map((tab) => {
+                        const Icon = tab.icon;
+                        const isActive = adminOrderModalTab === tab.id;
+                        return (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => setAdminOrderModalTab(tab.id as any)}
+                            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                              isActive
+                                ? "bg-[#5C3A1E] text-white shadow-2xs"
+                                : "text-[#64748B] hover:text-[#0F172A] hover:bg-[#FAF9F5]"
+                            }`}
+                          >
+                            <Icon className="w-3.5 h-3.5" />
+                            <span>{tab.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* TAB 1: DETAILS & SCOPE */}
+                    {adminOrderModalTab === "details" && (
+                      <div className="space-y-4">
+                        {/* Client Details */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#EADFCB] space-y-2">
+                            <span className="text-[10px] uppercase font-bold text-[#94A3B8] block">Client Contact</span>
+                            <div className="space-y-1">
+                              <p className="font-semibold text-sm text-[#0F172A]">
+                                {inspectingAdminOrder.clientName || "Studio Client"}
+                              </p>
+                              <p className="text-[#64748B] flex items-center gap-1.5">
+                                <span>Email:</span>
+                                <span className="font-mono text-[#0F172A]">
+                                  {inspectingAdminOrder.clientEmail || "client@sutrastudio.com"}
+                                </span>
+                              </p>
+                              {inspectingAdminOrder.clientPhone && (
+                                <p className="text-[#64748B] flex items-center gap-1.5">
+                                  <span>Phone:</span>
+                                  <span className="font-mono text-[#0F172A]">{inspectingAdminOrder.clientPhone}</span>
+                                </p>
+                              )}
+                              <p className="text-[#64748B] flex items-center gap-1.5 text-[11px]">
+                                <span>Client ID:</span>
+                                <span className="font-mono text-[#5C3A1E]">
+                                  {inspectingAdminOrder.clientId || inspectingAdminOrder.clientUid || "usr_mock_001"}
+                                </span>
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#EADFCB] space-y-2">
+                            <span className="text-[10px] uppercase font-bold text-[#94A3B8] block">Commission Profile</span>
+                            <div className="space-y-1.5 text-xs">
+                              <div className="flex justify-between">
+                                <span className="text-[#64748B]">Type:</span>
+                                <span className="font-semibold capitalize">{inspectingAdminOrder.type === "monthly_plan" ? "Monthly Retainer" : "Individual Service"}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-[#64748B]">Source:</span>
+                                <span className="font-semibold">{inspectingAdminOrder.source === "ai_chat" ? "AI Chat Assistant" : "Dashboard"}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-[#64748B]">Estimated SLA:</span>
+                                <span className="font-semibold">{inspectingAdminOrder.estimatedDeliveryDays || 5} Business Days</span>
+                              </div>
+                              {inspectingAdminOrder.estimatedDueDate && (
+                                <div className="flex justify-between">
+                                  <span className="text-[#64748B]">Target Due Date:</span>
+                                  <span className="font-semibold text-[#5C3A1E]">{new Date(inspectingAdminOrder.estimatedDueDate).toLocaleDateString("en-IN")}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Brief Requirements */}
+                        <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-1.5">
+                          <span className="text-[10px] uppercase font-bold text-[#94A3B8]">Client Brief & Instructions</span>
+                          <p className="text-xs text-[#0F172A] leading-relaxed whitespace-pre-wrap">
+                            {inspectingAdminOrder.requirements || inspectingAdminOrder.notes || "No special instructions provided."}
+                          </p>
+                        </div>
+
+                        {/* Scope Breakdown */}
+                        {inspectingAdminOrder.items && inspectingAdminOrder.items.length > 0 && (
+                          <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#EADFCB] space-y-2">
+                            <span className="text-[10px] uppercase font-bold text-[#94A3B8]">Scope Breakdown</span>
+                            <table className="w-full text-left text-xs">
+                              <thead className="bg-[#FAF9F5] border-b border-[#EADFCB] text-[10px] uppercase font-bold text-[#64748B]">
+                                <tr>
+                                  <th className="py-2 px-3">Item</th>
+                                  <th className="py-2 px-3">Price</th>
+                                  <th className="py-2 px-3">Qty</th>
+                                  <th className="py-2 px-3 text-right">Subtotal</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-[#EADFCB]/60">
+                                {inspectingAdminOrder.items.map((item, idx) => (
+                                  <tr key={idx}>
+                                    <td className="py-2 px-3 font-medium text-[#0F172A]">{item.name}</td>
+                                    <td className="py-2 px-3 font-mono text-[#64748B]">₹{item.price?.toLocaleString("en-IN")}</td>
+                                    <td className="py-2 px-3 font-mono">{item.quantity || 1}</td>
+                                    <td className="py-2 px-3 text-right font-serif font-bold text-[#5C3A1E]">
+                                      ₹{((item.price || 0) * (item.quantity || 1)).toLocaleString("en-IN")}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+
+                        {/* Payment Verification Box */}
+                        <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#EADFCB] space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] uppercase font-bold text-[#94A3B8]">Razorpay Settlement Verification</span>
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0]">
+                              <CheckCircle2 className="w-3 h-3" />
+                              <span>{inspectingAdminOrder.paymentStatus?.toUpperCase() || "PAID"}</span>
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                            <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70">
+                              <span className="text-[10px] text-[#94A3B8] font-bold block">Payment ID</span>
+                              <span className="font-mono text-[11px] font-semibold text-[#0F172A] break-all">
+                                {inspectingAdminOrder.razorpayPaymentId || "None"}
+                              </span>
+                            </div>
+                            <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70">
+                              <span className="text-[10px] text-[#94A3B8] font-bold block">Order ID</span>
+                              <span className="font-mono text-[11px] font-semibold text-[#64748B] break-all">
+                                {inspectingAdminOrder.razorpayOrderId || "None"}
+                              </span>
+                            </div>
+                            <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70">
+                              <span className="text-[10px] text-[#94A3B8] font-bold block">Amount Settled</span>
+                              <span className="font-serif font-bold text-xs text-[#5C3A1E]">
+                                ₹{(inspectingAdminOrder.amountPaid || inspectingAdminOrder.totalAmount || 0).toLocaleString("en-IN")}
+                              </span>
+                            </div>
+                            <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70">
+                              <span className="text-[10px] text-[#94A3B8] font-bold block">Timestamp</span>
+                              <span className="text-[11px] text-[#0F172A]">
+                                {inspectingAdminOrder.paidAt ? new Date(inspectingAdminOrder.paidAt).toLocaleDateString("en-IN") : "Recorded"}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#EADFCB]/60">
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => {
+                                setAdminReceiptOrder({
+                                  ...inspectingAdminOrder,
+                                  orderNumber: inspectingAdminOrder.orderNumber || inspectingAdminOrder.code || inspectingAdminOrder.id,
+                                });
+                                setIsAdminReceiptOpen(true);
+                              }}
+                              leftIcon={<Receipt className="w-3.5 h-3.5 text-[#5C3A1E]" />}
+                            >
+                              Official Receipt
+                            </Button>
+                            {(inspectingAdminOrder.paymentStatus === "paid" || inspectingAdminOrder.status === "paid") && (
+                              <button
+                                type="button"
+                                disabled={isRefunding}
+                                onClick={() => handleAdminRefundOrder(inspectingAdminOrder)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-200 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50 cursor-pointer transition-all"
+                              >
+                                {isRefunding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+                                <span>Issue Refund</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB 2: VAULT DELIVERABLES */}
+                    {adminOrderModalTab === "deliverables" && (
+                      <div className="space-y-4">
+                        <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#D4A35A]/50 space-y-3">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <HardDrive className="w-4 h-4 text-[#D4A35A]" />
+                              <h5 className="font-semibold text-xs uppercase tracking-wider text-[#5C3A1E]">
+                                Google Drive Vault Root
+                              </h5>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <a
+                                href={inspectingAdminOrder.driveFolderLink || `https://drive.google.com/drive/folders/${inspectingAdminOrder.driveFolderId || "COMMISSIONS"}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#F4EFE6] transition-all"
+                              >
+                                <span>Open Vault Folder</span>
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                              <button
+                                type="button"
+                                disabled={isArchivingDrive}
+                                onClick={() => handleArchiveDriveFolder(inspectingAdminOrder)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl border border-[#EADFCB] text-[11px] text-[#64748B] hover:text-[#DC2626] hover:border-red-200 transition-all cursor-pointer"
+                              >
+                                <Archive className="w-3 h-3" />
+                                <span>{isArchivingDrive ? "Archiving..." : "Archive"}</span>
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+                            <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70">
+                              <span className="text-[10px] text-[#94A3B8] font-bold block">01 Client Assets</span>
+                              <span className="font-semibold text-[#0F172A]">
+                                {Array.isArray(inspectingAdminOrder.attachments) ? inspectingAdminOrder.attachments.length : 0} Staged
+                              </span>
+                            </div>
+                            <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70">
+                              <span className="text-[10px] text-[#94A3B8] font-bold block">02 Drafts</span>
+                              <span className="font-semibold text-[#0F172A]">
+                                {Array.isArray(inspectingAdminOrder.deliverables)
+                                  ? inspectingAdminOrder.deliverables.filter((d: any) => d.category === "drafts").length
+                                  : 0} Version(s)
+                              </span>
+                            </div>
+                            <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70">
+                              <span className="text-[10px] text-[#94A3B8] font-bold block">03 Final Delivery</span>
+                              <span className="font-semibold text-[#0F172A]">
+                                {inspectingAdminOrder.status === "completed" || inspectingAdminOrder.status === "approved" ? "Master Vaulted" : "In Queue"}
+                              </span>
+                            </div>
+                            <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70">
+                              <span className="text-[10px] text-[#94A3B8] font-bold block">04 Revisions</span>
+                              <span className="font-semibold text-[#0F172A]">
+                                Round {inspectingAdminOrder.revisionRound || 0} / {inspectingAdminOrder.maxRevisions || 2}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Existing Deliverables List */}
+                        {Array.isArray(inspectingAdminOrder.deliverables) && inspectingAdminOrder.deliverables.length > 0 && (
+                          <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#EADFCB] space-y-2.5">
+                            <span className="text-[10px] uppercase font-bold text-[#94A3B8] block">Vaulted Deliverables (Versions)</span>
+                            {inspectingAdminOrder.deliverables.map((del: any, idx: number) => (
+                              <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/60 text-xs">
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-semibold text-[#0F172A]">{del.filename}</span>
+                                    <span className="px-1.5 py-0.5 rounded bg-white border border-[#EADFCB] text-[#5C3A1E] text-[10px] font-mono uppercase">
+                                      {del.version || "v1.0"}
+                                    </span>
+                                    {del.category && (
+                                      <span className="px-1.5 py-0.5 rounded bg-[#FAF9F5] text-[#64748B] text-[10px] font-mono">
+                                        {del.category}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="text-[10px] text-[#94A3B8] block mt-0.5">{del.fileSize || "100 MB"}</span>
+                                </div>
+                                {del.previewUrl && (
+                                  <a
+                                    href={del.previewUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-3 py-1 bg-white border border-[#EADFCB] rounded-lg text-[#5C3A1E] font-semibold text-xs hover:border-[#D4A35A]"
+                                  >
+                                    Download / View
+                                  </a>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Deliverable Upload Panel */}
+                        <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-3">
+                          <span className="text-[10px] uppercase font-bold text-[#94A3B8] block">Upload Production Deliverable</span>
+
+                          {/* Subfolder Category Switcher */}
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { id: "drafts", label: "02 Drafts" },
+                              { id: "final_delivery", label: "03 Final Delivery" },
+                              { id: "revisions", label: "04 Revisions" },
+                            ].map((cat) => (
+                              <button
+                                key={cat.id}
+                                type="button"
+                                onClick={() => setDeliveryCategory(cat.id as any)}
+                                className={`py-1.5 px-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                                  deliveryCategory === cat.id
+                                    ? "bg-[#5C3A1E] text-white border-[#5C3A1E] shadow-2xs"
+                                    : "bg-white text-[#64748B] border-[#EADFCB] hover:border-[#D4A35A]"
+                                }`}
+                              >
+                                {cat.label}
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-[11px] font-semibold text-[#64748B] block mb-1">
+                                Upload File to Drive (Direct / Proxy):
+                              </label>
+                              <input
+                                type="file"
+                                onChange={(e) => {
+                                  const f = e.target.files?.[0] || null;
+                                  setDeliveryFile(f);
+                                  if (f && !deliveryFilename) {
+                                    setDeliveryFilename(f.name);
+                                  }
+                                }}
+                                className="w-full text-[11px] text-[#64748B] file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#FFFFFF] file:text-[#5C3A1E] hover:file:bg-[#F4EFE6] cursor-pointer"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="text-[11px] font-semibold text-[#64748B] block mb-1">
+                                Or Drive Link / Master Filename:
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="e.g. Master_4K_Render.zip or https://drive.google.com/..."
+                                value={deliveryPreviewUrl || deliveryFilename}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  if (val.startsWith("http")) {
+                                    setDeliveryPreviewUrl(val);
+                                  } else {
+                                    setDeliveryFilename(val);
+                                  }
+                                }}
+                                className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="text-[11px] font-semibold text-[#64748B] block mb-1">Delivery Notes to Client:</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. Draft 1.0 ready for client review. Please inspect and approve or request revision."
+                              value={deliveryNote}
+                              onChange={(e) => setDeliveryNote(e.target.value)}
+                              className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                            />
+                          </div>
+
+                          <div className="flex justify-end pt-1">
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={handleDeliverFinalResult}
+                              isLoading={isDelivering}
+                              leftIcon={<Send className="w-3.5 h-3.5" />}
+                            >
+                              {deliveryCategory === "final_delivery"
+                                ? "Deliver Final Result (Move to Draft Delivered / Completed)"
+                                : `Vault Asset to ${deliveryCategory === "drafts" ? "02 Drafts" : "04 Revisions"}`}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB 3: INTERNAL NOTES & TEAM ASSIGNMENT */}
+                    {adminOrderModalTab === "internal" && (
+                      <div className="space-y-4">
+                        {/* Team Assignment */}
+                        <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#EADFCB] space-y-3">
+                          <span className="text-[10px] uppercase font-bold text-[#94A3B8] block">Team Specialist Assignment</span>
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                            <select
+                              value={assignedMemberId}
+                              onChange={(e) => handleAssignOrderTeamMember(e.target.value)}
+                              className="w-full sm:w-80 px-3 py-2 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] cursor-pointer"
+                            >
+                              <option value="">-- Unassigned (Studio General Queue) --</option>
+                              {STUDIO_TEAM_MEMBERS.map((tm) => (
+                                <option key={tm.id} value={tm.id}>
+                                  {tm.name} — {tm.role}
+                                </option>
+                              ))}
+                            </select>
+                            {inspectingAdminOrder.assignedTo && (
+                              <span className="text-xs text-[#2E7D4F] font-semibold flex items-center gap-1">
+                                <UserCheck className="w-3.5 h-3.5" />
+                                <span>Active Lead: {inspectingAdminOrder.assignedTo.name}</span>
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Private Supervisor Internal Notes Thread */}
+                        <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#D4A35A]/60 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Lock className="w-4 h-4 text-[#D4A35A]" />
+                              <h5 className="font-semibold text-xs uppercase tracking-wider text-[#5C3A1E]">
+                                Confidential Studio Internal Notes (Private to Admin)
+                              </h5>
+                            </div>
+                            <span className="text-[10px] text-[#94A3B8]">Never visible to client</span>
+                          </div>
+
+                          <div className="space-y-2 max-h-48 overflow-y-auto">
+                            {inspectingAdminOrder.internalNotes && inspectingAdminOrder.internalNotes.length > 0 ? (
+                              inspectingAdminOrder.internalNotes.map((note) => (
+                                <div key={note.id} className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70 space-y-1">
+                                  <div className="flex items-center justify-between text-[11px]">
+                                    <span className="font-semibold text-[#5C3A1E]">{note.author}</span>
+                                    <span className="text-[10px] text-[#94A3B8]">
+                                      {new Date(note.createdAt).toLocaleString("en-IN")}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-[#0F172A] leading-relaxed">{note.text}</p>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-xs text-[#64748B] italic py-2">
+                                No internal notes recorded yet. Add private instructions, SLA reminders, or technical notes below.
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="space-y-2 pt-2 border-t border-[#EADFCB]/60">
+                            <textarea
+                              rows={2}
+                              value={newInternalNoteText}
+                              onChange={(e) => setNewInternalNoteText(e.target.value)}
+                              placeholder="Add private note for the studio team..."
+                              className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                            />
+                            <div className="flex justify-end">
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={handleAddOrderPrivateNote}
+                                isLoading={isSavingInternalNote}
+                                disabled={!newInternalNoteText.trim()}
+                                leftIcon={<Lock className="w-3.5 h-3.5 text-[#5C3A1E]" />}
+                              >
+                                Save Private Note
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB 4: DISCUSSION & TIMELINE */}
+                    {adminOrderModalTab === "discussion" && (
+                      <div className="space-y-4">
+                        {/* Real-Time Order Discussion */}
+                        <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#EADFCB] space-y-3">
+                          <span className="text-[10px] uppercase font-bold text-[#94A3B8] block">Client / Studio Discussion Thread</span>
+
+                          <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+                            {adminOrderComments.length === 0 && !isLoadingAdminComments ? (
+                              <p className="text-xs text-[#64748B] italic py-2">No messages in this order thread yet.</p>
+                            ) : (
+                              adminOrderComments.map((comment) => {
+                                const isAdmin = comment.sender === "admin";
+                                return (
+                                  <div
+                                    key={comment.id}
+                                    className={`p-3 rounded-xl text-xs space-y-1 ${
+                                      isAdmin
+                                        ? "bg-[#FAF9F5] border border-[#EADFCB] ml-4"
+                                        : "bg-[#F0FDF4] border border-[#BBF7D0] mr-4"
+                                    }`}
+                                  >
+                                    <div className="flex items-center justify-between text-[11px]">
+                                      <span className="font-semibold text-[#0F172A]">
+                                        {comment.authorName} ({isAdmin ? "Studio Producer" : "Client"})
+                                      </span>
+                                      <span className="text-[10px] text-[#94A3B8]">
+                                        {new Date(comment.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-[#0F172A] leading-relaxed">{comment.text}</p>
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+
+                          <div className="space-y-2 pt-2 border-t border-[#EADFCB]/60">
+                            <textarea
+                              rows={2}
+                              value={newAdminCommentText}
+                              onChange={(e) => setNewAdminCommentText(e.target.value)}
+                              placeholder="Type a message to the client..."
+                              className="w-full px-3 py-2 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                            />
+                            <div className="flex justify-end">
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={handlePostAdminComment}
+                                isLoading={isPostingAdminComment}
+                                disabled={!newAdminCommentText.trim()}
+                                leftIcon={<Send className="w-3.5 h-3.5" />}
+                              >
+                                Send to Client
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Status History Timeline */}
+                        <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-2">
+                          <span className="text-[10px] uppercase font-bold text-[#94A3B8] block">Status Transition Audit History</span>
+                          <div className="space-y-2 max-h-48 overflow-y-auto">
+                            {inspectingAdminOrder.statusHistory && inspectingAdminOrder.statusHistory.length > 0 ? (
+                              inspectingAdminOrder.statusHistory.map((h, i) => (
+                                <div key={i} className="flex items-start gap-2.5 pb-2 border-b border-[#EADFCB]/50 last:border-b-0 last:pb-0">
+                                  <span className="w-2 h-2 rounded-full bg-[#5C3A1E] mt-1 shrink-0" />
+                                  <div className="flex-1 space-y-0.5 text-xs">
+                                    <div className="flex items-center justify-between">
+                                      <span className="font-semibold text-[#0F172A] uppercase">{h.status}</span>
+                                      <span className="text-[10px] text-[#94A3B8]">{new Date(h.changedAt).toLocaleString("en-IN")}</span>
+                                    </div>
+                                    <p className="text-[11px] text-[#64748B]">Updated by {h.changedBy}</p>
+                                    {h.note && <p className="text-[11px] text-[#475569] italic">&ldquo;{h.note}&rdquo;</p>}
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-xs text-[#64748B]">Initial status recorded at creation.</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Quick Status Transition Panel */}
+                    <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#D4A35A]/50 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Lock className="w-4 h-4 text-[#D4A35A]" />
+                        <h5 className="font-semibold text-xs uppercase tracking-wider text-[#5C3A1E]">
+                          Administrative Lifecycle State Transition
+                        </h5>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-[11px] font-semibold text-[#64748B] block mb-1.5">
+                            Target Lifecycle State:
+                          </label>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            {[
+                              { id: "pending_payment", label: "Pending Payment" },
+                              { id: "paid", label: "Paid" },
+                              { id: "brief_review", label: "Brief Review" },
+                              { id: "in_production", label: "In Production" },
+                              { id: "draft_delivered", label: "Draft Delivered" },
+                              { id: "revision_requested", label: "Revision Mode" },
+                              { id: "approved", label: "Approved" },
+                              { id: "completed", label: "Completed (100%)" },
+                              { id: "on_hold", label: "On Hold" },
+                              { id: "cancelled", label: "Cancelled" },
+                            ].map((st) => (
+                              <button
+                                key={st.id}
+                                type="button"
+                                onClick={() => setStatusChangeTarget(st.id)}
+                                className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all border cursor-pointer ${
+                                  statusChangeTarget === st.id
+                                    ? "bg-[#5C3A1E] text-white border-[#5C3A1E] shadow-2xs"
+                                    : "bg-white text-[#64748B] border-[#EADFCB] hover:border-[#D4A35A]"
+                                }`}
+                              >
+                                {st.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-semibold text-[#64748B] block mb-1">
+                            Status Update Note (Logged to audit trail & client):
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g., Brief approved by creative director, production initiated."
+                            value={statusChangeNote}
+                            onChange={(e) => setStatusChangeNote(e.target.value)}
+                            className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 pt-2">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setInspectingAdminOrder(null)}
+                            disabled={isUpdatingStatus}
+                          >
+                            Close
+                          </Button>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            disabled={isUpdatingStatus || !statusChangeTarget}
+                            onClick={() =>
+                              handleAdminUpdateOrderStatus(
+                                inspectingAdminOrder.id,
+                                statusChangeTarget,
+                                statusChangeNote
+                              )
+                            }
+                            leftIcon={isUpdatingStatus ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                          >
+                            {isUpdatingStatus ? "Updating..." : "Save State Transition"}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Modal>
+              )}
+            </div>
+          )}
+
+          {/* ========================================================
+              TAB: NOTIFICATIONS & AUTOMATION CRON SCHEDULER
+              ======================================================== */}
+          {activeTab === "notifications" && (
+            <div className="space-y-8 animate-in fade-in duration-200">
+              {/* Header Title Banner */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#EADFCB]/80 pb-5">
+                <div>
+                  <div className="flex items-center gap-2.5">
+                    <h2 className="font-serif text-2xl font-bold text-[#0F172A]">
+                      Notifications & Scheduled Jobs Hub
+                    </h2>
+                    <Badge variant="gold" size="sm">
+                      Firebase Cloud Functions v2
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-[#64748B] mt-1">
+                    Manage daily idempotent reminder schedules (Asia/Kolkata), date simulation testing, threshold configurations, and real-time dispatches.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2.5">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={fetchBroadcastNotifications}
+                    leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
+                  >
+                    Refresh Dispatches
+                  </Button>
+                </div>
+              </div>
+
+              {/* Execution Notice */}
+              {cronNotice && (
+                <div className="p-4 rounded-2xl bg-[#F0FDF4] border border-[#BBF7D0] text-[#15803D] text-xs font-semibold flex items-center justify-between shadow-xs">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
+                    <span>{cronNotice}</span>
+                  </div>
+                  <button
+                    onClick={() => setCronNotice(null)}
+                    className="text-[#15803D] hover:underline cursor-pointer ml-3 text-[11px]"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              )}
+
+              {notifSettingsSuccess && (
+                <div className="p-4 rounded-2xl bg-[#F0FDF4] border border-[#BBF7D0] text-[#15803D] text-xs font-semibold flex items-center justify-between shadow-xs">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
+                    <span>{notifSettingsSuccess}</span>
+                  </div>
+                  <button
+                    onClick={() => setNotifSettingsSuccess(null)}
+                    className="text-[#15803D] hover:underline cursor-pointer ml-3 text-[11px]"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              )}
+
+              {/* Main Two-Column Controls */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* 1. Daily Scheduler & Simulation Engine Card */}
+                <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-7 shadow-xs space-y-5 flex flex-col justify-between">
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-[#5C3A1E]" />
+                          <h3 className="font-serif font-bold text-base text-[#0F172A]">
+                            Daily Idempotent Scheduler
+                          </h3>
+                        </div>
+                        <p className="text-xs text-[#64748B] mt-0.5">
+                          Runs daily at <strong>09:00 AM IST (Asia/Kolkata)</strong>. Never sends duplicate notices for the same event key.
+                        </p>
+                      </div>
+
+                      <span className="px-2.5 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46] text-[10px] font-mono font-bold shrink-0">
+                        Active • 09:00 IST
+                      </span>
+                    </div>
+
+                    {/* Date Simulation Tool */}
+                    <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-[#0F172A] flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-[#D4A35A]" />
+                          <span>Date Simulation (Time-Travel Testing)</span>
+                        </label>
+                        <span className="text-[10px] font-mono text-[#94A3B8]">
+                          {cronSimulateDate ? `Simulating: ${cronSimulateDate}` : "Real Clock: Active"}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row items-center gap-2">
+                        <input
+                          type="date"
+                          value={cronSimulateDate}
+                          onChange={(e) => setCronSimulateDate(e.target.value)}
+                          className="w-full sm:w-auto flex-1 px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs font-mono text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                        />
+
+                        {cronSimulateDate && (
+                          <button
+                            type="button"
+                            onClick={() => setCronSimulateDate("")}
+                            className="text-xs text-[#DC2626] hover:underline px-2 cursor-pointer font-medium"
+                          >
+                            Reset
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Simulation Presets */}
+                      <div className="flex items-center gap-1.5 flex-wrap pt-1 text-[10px]">
+                        <span className="text-[#94A3B8] font-semibold mr-1">Quick Jumps:</span>
+                        <button
+                          type="button"
+                          onClick={() => setCronSimulateDate("")}
+                          className="px-2 py-1 rounded-md bg-white border border-[#EADFCB] hover:border-[#D4A35A] text-[#5C3A1E] font-mono cursor-pointer"
+                        >
+                          Today
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const d = new Date(Date.now() + 3 * 24 * 3600 * 1000);
+                            setCronSimulateDate(d.toISOString().split("T")[0]);
+                          }}
+                          className="px-2 py-1 rounded-md bg-white border border-[#EADFCB] hover:border-[#D4A35A] text-[#5C3A1E] font-mono cursor-pointer"
+                        >
+                          +3 Days (Drafts)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const d = new Date(Date.now() + 5 * 24 * 3600 * 1000);
+                            setCronSimulateDate(d.toISOString().split("T")[0]);
+                          }}
+                          className="px-2 py-1 rounded-md bg-white border border-[#EADFCB] hover:border-[#D4A35A] text-[#5C3A1E] font-mono cursor-pointer"
+                        >
+                          +5 Days (Retainer 5d)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const d = new Date(Date.now() + 30 * 24 * 3600 * 1000);
+                            setCronSimulateDate(d.toISOString().split("T")[0]);
+                          }}
+                          className="px-2 py-1 rounded-md bg-white border border-[#EADFCB] hover:border-[#D4A35A] text-[#5C3A1E] font-mono cursor-pointer"
+                        >
+                          +30 Days (Expiry/Closure)
+                        </button>
+                      </div>
+
+                      {/* Dry Run Checkbox */}
+                      <div className="pt-2 border-t border-[#EADFCB]/60 flex items-center justify-between">
+                        <label className="flex items-center gap-2 cursor-pointer text-xs text-[#0F172A]">
+                          <input
+                            type="checkbox"
+                            checked={cronDryRun}
+                            onChange={(e) => setCronDryRun(e.target.checked)}
+                            className="rounded text-[#5C3A1E] focus:ring-[#D4A35A]"
+                          />
+                          <span>Dry Run (Preview triggers without saving status transitions)</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Run Button */}
+                  <div className="pt-2">
+                    <Button
+                      variant="primary"
+                      size="md"
+                      onClick={handleExecuteScheduledCron}
+                      disabled={isExecutingCron}
+                      leftIcon={
+                        isExecutingCron ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Play className="w-4 h-4" />
+                        )
+                      }
+                      className="w-full justify-center min-h-[44px] shadow-sm font-semibold text-xs"
+                    >
+                      {isExecutingCron
+                        ? "Evaluating Scheduled Triggers..."
+                        : cronSimulateDate
+                        ? `Execute Scheduled Evaluation for ${cronSimulateDate}`
+                        : "Run Daily Lifecycle Evaluation Now"}
+                    </Button>
+                  </div>
+
+                  {/* Summary of Last Run */}
+                  {cronResult && (
+                    <div className="mt-4 p-4 rounded-2xl bg-[#FAF9F5] border border-[#D4A35A]/50 space-y-2.5 text-xs">
+                      <div className="flex items-center justify-between font-semibold text-[#5C3A1E]">
+                        <span>Last Execution Summary:</span>
+                        <span className="font-mono text-[10px] text-[#64748B]">
+                          {new Date(cronResult.timestamp).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div className="p-2 rounded-xl bg-white border border-[#EADFCB]">
+                          <span className="text-[10px] text-[#94A3B8] block">Dispatched</span>
+                          <span className="font-bold text-sm text-[#2E7D4F]">
+                            {cronResult.notificationsSent}
+                          </span>
+                        </div>
+                        <div className="p-2 rounded-xl bg-white border border-[#EADFCB]">
+                          <span className="text-[10px] text-[#94A3B8] block">Idempotent Skips</span>
+                          <span className="font-bold text-sm text-[#B45309]">
+                            {cronResult.skippedDuplicates}
+                          </span>
+                        </div>
+                        <div className="p-2 rounded-xl bg-white border border-[#EADFCB]">
+                          <span className="text-[10px] text-[#94A3B8] block">Auto Transitions</span>
+                          <span className="font-bold text-sm text-[#5C3A1E]">
+                            {cronResult.statusTransitions}
+                          </span>
+                        </div>
+                      </div>
+
+                      {cronResult.summary?.length > 0 && (
+                        <div className="mt-2 space-y-1 max-h-32 overflow-y-auto pr-1">
+                          {cronResult.summary.map((item: any, idx: number) => (
+                            <div
+                              key={idx}
+                              className="p-2 rounded-lg bg-white border border-[#EADFCB] flex items-center justify-between text-[11px]"
+                            >
+                              <span className="font-mono font-semibold text-[#5C3A1E]">
+                                #{item.orderNumber}
+                              </span>
+                              <span className="text-[#0F172A]">{item.action}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* 2. Configurable Thresholds & Settings Card */}
+                <form
+                  onSubmit={handleSaveNotificationSettings}
+                  className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-7 shadow-xs space-y-5 flex flex-col justify-between"
+                >
+                  <div className="space-y-4 text-xs">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <SlidersHorizontal className="w-4 h-4 text-[#5C3A1E]" />
+                        <h3 className="font-serif font-bold text-base text-[#0F172A]">
+                          Notification Thresholds & Rules
+                        </h3>
+                      </div>
+                      <Badge variant="neutral" size="sm">
+                        Firebase Stored
+                      </Badge>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Monthly Warning Days */}
+                      <div className="space-y-1">
+                        <label className="font-semibold text-[#0F172A] block">
+                          Monthly Expiry Reminders
+                        </label>
+                        <p className="text-[11px] text-[#64748B]">Days before cycle concludes:</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="px-2.5 py-1.5 rounded-lg bg-[#FAF9F5] border border-[#EADFCB] font-mono font-bold text-[#5C3A1E]">
+                            5 Days & 1 Day
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Draft Review Reminder */}
+                      <div className="space-y-1">
+                        <label className="font-semibold text-[#0F172A] block">
+                          Draft Review Nudge Window
+                        </label>
+                        <p className="text-[11px] text-[#64748B]">Days after upload without response:</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <input
+                            type="number"
+                            min="1"
+                            max="14"
+                            value={adminNotifSettings.draftReviewReminderDays}
+                            onChange={(e) =>
+                              setAdminNotifSettings({
+                                ...adminNotifSettings,
+                                draftReviewReminderDays: Number(e.target.value) || 3,
+                              })
+                            }
+                            className="w-20 px-2.5 py-1.5 rounded-lg bg-[#FAF9F5] border border-[#EADFCB] text-xs font-mono font-bold text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                          />
+                          <span className="text-[#64748B]">days</span>
+                        </div>
+                      </div>
+
+                      {/* Unpaid Order Reminder */}
+                      <div className="space-y-1">
+                        <label className="font-semibold text-[#0F172A] block">
+                          Unpaid Commission Reminder
+                        </label>
+                        <p className="text-[11px] text-[#64748B]">Hours after order creation:</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <input
+                            type="number"
+                            min="1"
+                            max="72"
+                            value={adminNotifSettings.unpaidReminderHours}
+                            onChange={(e) =>
+                              setAdminNotifSettings({
+                                ...adminNotifSettings,
+                                unpaidReminderHours: Number(e.target.value) || 24,
+                              })
+                            }
+                            className="w-20 px-2.5 py-1.5 rounded-lg bg-[#FAF9F5] border border-[#EADFCB] text-xs font-mono font-bold text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                          />
+                          <span className="text-[#64748B]">hours</span>
+                        </div>
+                      </div>
+
+                      {/* Due Date Warning */}
+                      <div className="space-y-1">
+                        <label className="font-semibold text-[#0F172A] block">
+                          SLA Due Date Alert
+                        </label>
+                        <p className="text-[11px] text-[#64748B]">Days before milestone SLA due:</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <input
+                            type="number"
+                            min="1"
+                            max="7"
+                            value={adminNotifSettings.dueDateWarningDays}
+                            onChange={(e) =>
+                              setAdminNotifSettings({
+                                ...adminNotifSettings,
+                                dueDateWarningDays: Number(e.target.value) || 2,
+                              })
+                            }
+                            className="w-20 px-2.5 py-1.5 rounded-lg bg-[#FAF9F5] border border-[#EADFCB] text-xs font-mono font-bold text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                          />
+                          <span className="text-[#64748B]">days</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Delivery Channels */}
+                    <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-3 mt-2">
+                      <span className="font-semibold text-xs text-[#0F172A] block">
+                        Delivery Channels & Gateways
+                      </span>
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={adminNotifSettings.inAppNotificationsEnabled}
+                            onChange={(e) =>
+                              setAdminNotifSettings({
+                                ...adminNotifSettings,
+                                inAppNotificationsEnabled: e.target.checked,
+                              })
+                            }
+                            className="rounded text-[#5C3A1E]"
+                          />
+                          <span>Real-Time In-App Bell</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={adminNotifSettings.emailNotificationsEnabled}
+                            onChange={(e) =>
+                              setAdminNotifSettings({
+                                ...adminNotifSettings,
+                                emailNotificationsEnabled: e.target.checked,
+                              })
+                            }
+                            className="rounded text-[#5C3A1E]"
+                          />
+                          <span>Email Dispatch (Resend/SMTP)</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={adminNotifSettings.clientRemindersEnabled}
+                            onChange={(e) =>
+                              setAdminNotifSettings({
+                                ...adminNotifSettings,
+                                clientRemindersEnabled: e.target.checked,
+                              })
+                            }
+                            className="rounded text-[#5C3A1E]"
+                          />
+                          <span>Client Lifecycle Alerts</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={adminNotifSettings.adminAlertsEnabled}
+                            onChange={(e) =>
+                              setAdminNotifSettings({
+                                ...adminNotifSettings,
+                                adminAlertsEnabled: e.target.checked,
+                              })
+                            }
+                            className="rounded text-[#5C3A1E]"
+                          />
+                          <span>Studio Supervisor Alerts</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      size="md"
+                      disabled={isSavingNotifSettings}
+                      leftIcon={<Check className="w-4 h-4" />}
+                      className="w-full justify-center min-h-[44px] shadow-sm font-semibold text-xs"
+                    >
+                      {isSavingNotifSettings ? "Saving Settings..." : "Save Notification Preferences"}
+                    </Button>
+                  </div>
+                </form>
+              </div>
+
+              {/* 3. Dispatched Notifications Audit Table */}
+              <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-7 shadow-xs space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EADFCB]/60 pb-4">
+                  <div>
+                    <h3 className="font-serif font-bold text-base text-[#0F172A]">
+                      Live Notification Dispatch Registry
+                    </h3>
+                    <p className="text-xs text-[#64748B]">
+                      Real-time log of in-app dispatches, scheduled alerts, and event triggers across clients and administrators.
+                    </p>
+                  </div>
+
+                  <span className="font-mono text-xs font-semibold text-[#5C3A1E] bg-[#FAF9F5] px-3 py-1 rounded-full border border-[#EADFCB]">
+                    {broadcastNotifs.length} Total Dispatches
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-[#EADFCB] text-[#94A3B8] font-mono text-[11px]">
+                        <th className="pb-3 font-semibold">Recipient</th>
+                        <th className="pb-3 font-semibold">Type</th>
+                        <th className="pb-3 font-semibold">Order</th>
+                        <th className="pb-3 font-semibold">Title & Details</th>
+                        <th className="pb-3 font-semibold">Timestamp</th>
+                        <th className="pb-3 font-semibold">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#EADFCB]/60">
+                      {broadcastNotifs.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="py-8 text-center text-[#94A3B8]">
+                            No notifications dispatched yet.
+                          </td>
+                        </tr>
+                      ) : (
+                        broadcastNotifs.slice(0, 20).map((n) => (
+                          <tr key={n.id} className="hover:bg-[#FAF9F5] transition-colors">
+                            <td className="py-3 pr-2">
+                              {n.userId === "usr_admin_001" || n.userId === "admin" ? (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#5C3A1E] text-white">
+                                  Studio Admin
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FAF9F5] text-[#5C3A1E] border border-[#EADFCB]">
+                                  Client ({n.userId.slice(0, 8)})
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3 pr-2 font-mono text-[11px] text-[#64748B]">
+                              {n.type}
+                            </td>
+                            <td className="py-3 pr-2 font-mono text-[11px] font-bold text-[#5C3A1E]">
+                              {n.orderNumber ? `#${n.orderNumber}` : "—"}
+                            </td>
+                            <td className="py-3 pr-2 max-w-xs">
+                              <span className="font-semibold text-[#0F172A] block">{n.title}</span>
+                              <span className="text-[#64748B] text-[11px] line-clamp-1">{n.message}</span>
+                            </td>
+                            <td className="py-3 pr-2 font-mono text-[10px] text-[#94A3B8]">
+                              {new Date(n.createdAt).toLocaleString("en-IN", {
+                                month: "short",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </td>
+                            <td className="py-3">
+                              {n.read ? (
+                                <span className="text-[#16A34A] font-semibold text-[10px]">Read</span>
+                              ) : (
+                                <span className="text-[#D4A35A] font-bold text-[10px]">Unread</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -1573,170 +6365,217 @@ function AdminHubContent() {
                   </div>
                 </div>
 
-                {/* Indian Rupee (₹ INR) Base Pricing Management */}
+                {/* STEP 12: ALL 12 DATA-DRIVEN STUDIO SERVICES CATALOG */}
                 <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-6">
-                  <div>
-                    <h3 className="font-serif text-xl font-semibold text-[#0F172A]">
-                      Creative Service Base Pricing (100% Indian Rupees — ₹ INR)
-                    </h3>
-                    <p className="text-xs text-[#64748B] mt-1">
-                      Update the starting investment figures displayed on public services and pricing pages.
-                    </p>
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#EADFCB]/60 pb-6">
+                    <div>
+                      <div className="flex items-center gap-2.5">
+                        <h3 className="font-serif text-xl sm:text-2xl font-semibold text-[#0F172A]">
+                          12 Studio Services Catalog (Data-Driven)
+                        </h3>
+                        <Badge variant="gold" size="sm">
+                          {catalogServices.length} Active Services
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-[#64748B] mt-1">
+                        All 12 studio capabilities driven from Firebase Firestore. Edit starting prices, delivery SLAs, workflow stages, and dynamic intake brief schemas in real time without code changes.
+                      </p>
+                    </div>
+
+                    {/* Category Filter */}
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                      {["All", "Creative", "Design", "Development", "Marketing", "Automation"].map((cat) => (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => setCatalogServiceFilter(cat)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors shrink-0 ${
+                            catalogServiceFilter === cat
+                              ? "bg-[#5C3A1E] text-white shadow-xs"
+                              : "bg-[#FAF9F5] text-[#64748B] hover:text-[#0F172A] border border-[#EADFCB]"
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-[#64748B]">Image Creation</label>
-                      <input
-                        type="text"
-                        value={siteContent.prices.image}
-                        onChange={(e) =>
-                          setSiteContent({
-                            ...siteContent,
-                            prices: { ...siteContent.prices, image: e.target.value },
-                          })
-                        }
-                        className="w-full px-3 py-2 rounded-lg border border-[#EADFCB] text-xs font-mono font-bold text-[#5C3A1E] bg-[#FAF9F5]"
-                      />
-                    </div>
+                  {/* 12 Services Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {catalogServices
+                      .filter(
+                        (s) =>
+                          catalogServiceFilter === "All" ||
+                          s.category === catalogServiceFilter
+                      )
+                      .map((srv) => (
+                        <div
+                          key={srv.id}
+                          className="p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col justify-between space-y-4 hover:border-[#D4A35A] transition-all group"
+                        >
+                          <div className="space-y-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-center gap-2.5">
+                                <span className="font-mono text-xs font-bold text-[#D4A35A] bg-white px-2 py-0.5 rounded border border-[#EADFCB]">
+                                  #{srv.sortIndex}
+                                </span>
+                                <span className="text-[10px] uppercase font-bold text-[#8C7355] bg-[#F8F5EF] px-2 py-0.5 rounded border border-[#EADFCB]">
+                                  {srv.category}
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleToggleServiceActive(srv.id, !srv.active)}
+                                className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold transition-all cursor-pointer ${
+                                  srv.active
+                                    ? "bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0]"
+                                    : "bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA]"
+                                }`}
+                              >
+                                {srv.active ? "Active" : "Archived"}
+                              </button>
+                            </div>
 
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-[#64748B]">Video Creation</label>
-                      <input
-                        type="text"
-                        value={siteContent.prices.video}
-                        onChange={(e) =>
-                          setSiteContent({
-                            ...siteContent,
-                            prices: { ...siteContent.prices, video: e.target.value },
-                          })
-                        }
-                        className="w-full px-3 py-2 rounded-lg border border-[#EADFCB] text-xs font-mono font-bold text-[#5C3A1E] bg-[#FAF9F5]"
-                      />
-                    </div>
+                            <div>
+                              <h4 className="font-serif font-semibold text-sm text-[#0F172A] group-hover:text-[#5C3A1E] transition-colors">
+                                {srv.name}
+                              </h4>
+                              <p className="text-[11px] text-[#A98B57] font-medium mt-0.5">
+                                {srv.tagline}
+                              </p>
+                              <p className="text-xs text-[#64748B] mt-2 line-clamp-2 leading-relaxed">
+                                {srv.shortDescription}
+                              </p>
+                            </div>
 
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-[#64748B]">3D Spatial Modeling</label>
-                      <input
-                        type="text"
-                        value={siteContent.prices.threeD}
-                        onChange={(e) =>
-                          setSiteContent({
-                            ...siteContent,
-                            prices: { ...siteContent.prices, threeD: e.target.value },
-                          })
-                        }
-                        className="w-full px-3 py-2 rounded-lg border border-[#EADFCB] text-xs font-mono font-bold text-[#5C3A1E] bg-[#FAF9F5]"
-                      />
-                    </div>
+                            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#EADFCB]/60 text-[11px] font-mono text-[#64748B]">
+                              <div>
+                                <span className="text-[#94A3B8] block text-[10px]">Starting Price:</span>
+                                <div className="flex items-center gap-1 mt-0.5">
+                                  <span className="text-xs font-bold text-[#5C3A1E]">₹</span>
+                                  <input
+                                    type="number"
+                                    value={srv.startingPrice}
+                                    onChange={(e) =>
+                                      handleUpdateServicePrice(srv.id, Number(e.target.value) || 0)
+                                    }
+                                    className="w-20 px-1.5 py-0.5 rounded border border-[#EADFCB] text-xs font-bold text-[#5C3A1E] bg-white focus:outline-none focus:border-[#D4A35A]"
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <span className="text-[#94A3B8] block text-[10px]">SLA / Revisions:</span>
+                                <span className="font-medium text-[#0F172A] block mt-1">
+                                  {srv.estimatedDeliveryDays}d • {srv.revisionsIncluded} revs
+                                </span>
+                              </div>
+                            </div>
 
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-[#64748B]">360 Virtual Tour</label>
-                      <input
-                        type="text"
-                        value={siteContent.prices.threeSixty}
-                        onChange={(e) =>
-                          setSiteContent({
-                            ...siteContent,
-                            prices: { ...siteContent.prices, threeSixty: e.target.value },
-                          })
-                        }
-                        className="w-full px-3 py-2 rounded-lg border border-[#EADFCB] text-xs font-mono font-bold text-[#5C3A1E] bg-[#FAF9F5]"
-                      />
-                    </div>
+                            <div className="text-[10px] text-[#64748B] flex items-center justify-between pt-1">
+                              <span>Brief Fields: <strong>{srv.briefSchema?.length || 0} fields</strong></span>
+                              <span>Stages: <strong>{srv.workflowStages?.length || 0} steps</strong></span>
+                            </div>
+                          </div>
 
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-[#64748B]">Interior Architecture</label>
-                      <input
-                        type="text"
-                        value={siteContent.prices.interior}
-                        onChange={(e) =>
-                          setSiteContent({
-                            ...siteContent,
-                            prices: { ...siteContent.prices, interior: e.target.value },
-                          })
-                        }
-                        className="w-full px-3 py-2 rounded-lg border border-[#EADFCB] text-xs font-mono font-bold text-[#5C3A1E] bg-[#FAF9F5]"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-[#64748B]">Digital Marketing</label>
-                      <input
-                        type="text"
-                        value={siteContent.prices.marketing}
-                        onChange={(e) =>
-                          setSiteContent({
-                            ...siteContent,
-                            prices: { ...siteContent.prices, marketing: e.target.value },
-                          })
-                        }
-                        className="w-full px-3 py-2 rounded-lg border border-[#EADFCB] text-xs font-mono font-bold text-[#5C3A1E] bg-[#FAF9F5]"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-[#64748B]">Website Development</label>
-                      <input
-                        type="text"
-                        value={siteContent.prices.website}
-                        onChange={(e) =>
-                          setSiteContent({
-                            ...siteContent,
-                            prices: { ...siteContent.prices, website: e.target.value },
-                          })
-                        }
-                        className="w-full px-3 py-2 rounded-lg border border-[#EADFCB] text-xs font-mono font-bold text-[#5C3A1E] bg-[#FAF9F5]"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-[#64748B]">Mobile App Platform</label>
-                      <input
-                        type="text"
-                        value={siteContent.prices.app}
-                        onChange={(e) =>
-                          setSiteContent({
-                            ...siteContent,
-                            prices: { ...siteContent.prices, app: e.target.value },
-                          })
-                        }
-                        className="w-full px-3 py-2 rounded-lg border border-[#EADFCB] text-xs font-mono font-bold text-[#5C3A1E] bg-[#FAF9F5]"
-                      />
-                    </div>
+                          <div className="pt-2 border-t border-[#EADFCB]/60">
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => setEditingService({ ...srv })}
+                              leftIcon={<Edit3 className="w-3.5 h-3.5 text-[#5C3A1E]" />}
+                              className="w-full text-xs"
+                            >
+                              Edit Brief Schema & Workflow
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
                   </div>
                 </div>
 
-                {/* Package Configuration */}
+                {/* STEP 12: MONTHLY SUBSCRIPTION PLANS MANAGEMENT */}
                 <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-6">
-                  <div>
-                    <h3 className="font-serif text-xl font-semibold text-[#0F172A]">
-                      Commission Packages (Free Trials Strictly Prohibited)
-                    </h3>
-                    <p className="text-xs text-[#64748B] mt-1">
-                      Manage client tiers and deliverables. Per business directives, zero free trial packages are active.
-                    </p>
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#EADFCB]/60 pb-6">
+                    <div>
+                      <div className="flex items-center gap-2.5">
+                        <h3 className="font-serif text-xl sm:text-2xl font-semibold text-[#0F172A]">
+                          Monthly Subscription Retainer Packages
+                        </h3>
+                        <Badge variant="gold" size="sm">
+                          3 Tiers (3-Day Free Trial Default)
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-[#64748B] mt-1">
+                        Configure monthly, quarterly, and annual subscription tiers, deliverables/credits quota, features, and Razorpay Plan IDs.
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {siteContent.packages.map((pkg, idx) => (
-                      <div key={pkg.name} className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="font-semibold text-xs text-[#0F172A]">{pkg.name}</span>
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#ECFDF5] text-[#065F46] font-bold">
-                            Active
-                          </span>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    {catalogPlans.map((pln) => (
+                      <div
+                        key={pln.id}
+                        className="p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col justify-between space-y-4 hover:border-[#D4A35A] transition-all"
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="font-serif font-bold text-base text-[#0F172A]">
+                              {pln.name}
+                            </span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#ECFDF5] text-[#065F46] font-bold border border-[#A7F3D0]">
+                              Active
+                            </span>
+                          </div>
+
+                          <div className="p-3 rounded-xl bg-white border border-[#EADFCB]">
+                            <span className="text-[10px] uppercase font-bold text-[#94A3B8] block">Monthly Price:</span>
+                            <div className="flex items-baseline gap-1 mt-0.5">
+                              <span className="font-serif font-bold text-xl text-[#5C3A1E]">
+                                ₹{pln.price.toLocaleString("en-IN")}
+                              </span>
+                              <span className="text-xs text-[#64748B]">/ month</span>
+                            </div>
+                            <span className="text-[10px] text-[#A98B57] block mt-1">
+                              Quarterly: ₹{pln.quarterlyPrice.toLocaleString("en-IN")} • Annual: ₹{pln.annualPrice.toLocaleString("en-IN")}
+                            </span>
+                          </div>
+
+                          <div className="space-y-1.5 text-xs text-[#64748B]">
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span>Free Trial Days:</span>
+                              <span className="font-bold text-[#0F172A]">{pln.freeTrialDays} Days</span>
+                            </div>
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span>Razorpay Plan ID:</span>
+                              <span className="font-mono text-[#5C3A1E] font-medium">{pln.razorpayPlanId}</span>
+                            </div>
+                          </div>
+
+                          <div className="pt-2 border-t border-[#EADFCB]/60 space-y-1">
+                            <span className="text-[10px] uppercase font-bold text-[#94A3B8] block">Included Features:</span>
+                            {pln.features.slice(0, 3).map((f, i) => (
+                              <div key={i} className="flex items-start gap-1.5 text-[11px] text-[#0F172A]">
+                                <Check className="w-3 h-3 text-[#16A34A] shrink-0 mt-0.5" />
+                                <span className="line-clamp-1">{f}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                        <input
-                          type="text"
-                          value={pkg.price}
-                          onChange={(e) => {
-                            const updated = [...siteContent.packages];
-                            updated[idx].price = e.target.value;
-                            setSiteContent({ ...siteContent, packages: updated });
-                          }}
-                          className="w-full px-3 py-1.5 rounded-lg border border-[#EADFCB] text-xs font-mono font-bold text-[#5C3A1E] bg-[#FFFDF9]"
-                        />
+
+                        <div className="pt-2 border-t border-[#EADFCB]/60">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setEditingPlan({ ...pln })}
+                            leftIcon={<Edit3 className="w-3.5 h-3.5 text-[#5C3A1E]" />}
+                            className="w-full text-xs"
+                          >
+                            Edit Plan & Credits Quota
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1755,62 +6594,739 @@ function AdminHubContent() {
                   </Button>
                 </div>
               </form>
+              {/* Toast for catalog updates */}
+              {catalogSaveToast && (
+                <div className="p-4 rounded-2xl bg-[#F0FDF4] border border-[#BBF7D0] text-[#15803D] text-xs font-semibold flex items-center justify-between shadow-xs">
+                  <span>✓ {catalogSaveToast}</span>
+                  <button onClick={() => setCatalogSaveToast("")} className="hover:underline cursor-pointer">Dismiss</button>
+                </div>
+              )}
             </div>
+          )}
+
+          {/* =========================================================
+              MODAL: EDIT SERVICE BRIEF SCHEMA & WORKFLOW
+              ========================================================= */}
+          {editingService && (
+            <Modal
+              isOpen={true}
+              onClose={() => setEditingService(null)}
+              title={`Edit Service: ${editingService.name}`}
+              description="Configure pricing, delivery SLA, workflow stages, and dynamic brief questionnaire schema."
+              maxWidth="xl"
+            >
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSaveServiceDetails(editingService);
+                }}
+                className="space-y-6 text-xs"
+              >
+                {/* Basic Details */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-[#0F172A] block mb-1">
+                      Service Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editingService.name}
+                      onChange={(e) =>
+                        setEditingService({ ...editingService, name: e.target.value })
+                      }
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-[#0F172A] block mb-1">
+                      Starting Price (₹ INR)
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      value={editingService.startingPrice}
+                      onChange={(e) =>
+                        setEditingService({
+                          ...editingService,
+                          startingPrice: Number(e.target.value) || 0,
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs font-mono font-bold text-[#5C3A1E] focus:outline-none focus:border-[#D4A35A]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-[#0F172A] block mb-1">
+                      Est. Delivery SLA (Days)
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      value={editingService.estimatedDeliveryDays}
+                      onChange={(e) =>
+                        setEditingService({
+                          ...editingService,
+                          estimatedDeliveryDays: Number(e.target.value) || 1,
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs font-mono text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-[#0F172A] block mb-1">
+                    Short Editorial Description
+                  </label>
+                  <textarea
+                    rows={2}
+                    required
+                    value={editingService.shortDescription}
+                    onChange={(e) =>
+                      setEditingService({
+                        ...editingService,
+                        shortDescription: e.target.value,
+                      })
+                    }
+                    className="w-full p-3 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                  />
+                </div>
+
+                {/* Workflow Stages */}
+                <div className="space-y-2 p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB]">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#5C3A1E] block">
+                    Workflow Stages (Step 16 Pipeline Stages)
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {editingService.workflowStages.map((stage, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-[#EADFCB] text-xs font-medium text-[#0F172A]"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#5C3A1E]" />
+                        <span>{stage}</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Dynamic Brief Questionnaire Schema */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-[#0F172A]">
+                        Dynamic Intake Brief Schema ({editingService.briefSchema?.length || 0} Questions)
+                      </h4>
+                      <p className="text-[11px] text-[#64748B]">
+                        Form fields presented to client when commissioning this service.
+                      </p>
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => {
+                        const newKey = `custom_${Date.now().toString(36)}`;
+                        setEditingService({
+                          ...editingService,
+                          briefSchema: [
+                            ...editingService.briefSchema,
+                            {
+                              key: newKey,
+                              label: "New Question Label",
+                              type: "text",
+                              required: false,
+                              helpText: "Provide guidance for the client",
+                            },
+                          ],
+                        });
+                      }}
+                      leftIcon={<Plus className="w-3.5 h-3.5" />}
+                    >
+                      Add Question Field
+                    </Button>
+                  </div>
+
+                  <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                    {editingService.briefSchema.map((field, fIdx) => (
+                      <div
+                        key={field.key || fIdx}
+                        className="p-3.5 rounded-xl bg-white border border-[#EADFCB] space-y-2"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <input
+                            type="text"
+                            value={field.label}
+                            onChange={(e) => {
+                              const updatedSchema = [...editingService.briefSchema];
+                              updatedSchema[fIdx].label = e.target.value;
+                              setEditingService({
+                                ...editingService,
+                                briefSchema: updatedSchema,
+                              });
+                            }}
+                            placeholder="Question Label"
+                            className="flex-1 font-semibold text-xs text-[#0F172A] border-b border-transparent focus:border-[#D4A35A] focus:outline-none"
+                          />
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <select
+                              value={field.type}
+                              onChange={(e) => {
+                                const updatedSchema = [...editingService.briefSchema];
+                                updatedSchema[fIdx].type = e.target.value as any;
+                                setEditingService({
+                                  ...editingService,
+                                  briefSchema: updatedSchema,
+                                });
+                              }}
+                              className="px-2 py-1 rounded-lg bg-[#FAF9F5] border border-[#EADFCB] text-[11px] font-mono text-[#5C3A1E]"
+                            >
+                              <option value="text">Text</option>
+                              <option value="textarea">Textarea</option>
+                              <option value="select">Select Dropdown</option>
+                              <option value="multiselect">Multiselect</option>
+                              <option value="number">Number</option>
+                              <option value="url">URL</option>
+                              <option value="date">Date</option>
+                              <option value="file">File Attachment</option>
+                            </select>
+
+                            <label className="flex items-center gap-1 text-[11px] text-[#64748B] cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={field.required}
+                                onChange={(e) => {
+                                  const updatedSchema = [...editingService.briefSchema];
+                                  updatedSchema[fIdx].required = e.target.checked;
+                                  setEditingService({
+                                    ...editingService,
+                                    briefSchema: updatedSchema,
+                                  });
+                                }}
+                                className="rounded text-[#5C3A1E]"
+                              />
+                              <span>Req</span>
+                            </label>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updatedSchema = editingService.briefSchema.filter(
+                                  (_, idx) => idx !== fIdx
+                                );
+                                setEditingService({
+                                  ...editingService,
+                                  briefSchema: updatedSchema,
+                                });
+                              }}
+                              className="p-1 text-[#94A3B8] hover:text-[#DC2626] transition-colors"
+                              title="Delete Question"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <input
+                          type="text"
+                          value={field.helpText || ""}
+                          onChange={(e) => {
+                            const updatedSchema = [...editingService.briefSchema];
+                            updatedSchema[fIdx].helpText = e.target.value;
+                            setEditingService({
+                              ...editingService,
+                              briefSchema: updatedSchema,
+                            });
+                          }}
+                          placeholder="Help text hint for client..."
+                          className="w-full text-[11px] text-[#64748B] bg-[#FAF9F5] px-2.5 py-1 rounded border border-[#EADFCB]/60 focus:outline-none"
+                        />
+
+                        {(field.type === "select" || field.type === "multiselect") && (
+                          <div className="pt-1">
+                            <span className="text-[10px] text-[#94A3B8] block mb-0.5">
+                              Options (comma-separated):
+                            </span>
+                            <input
+                              type="text"
+                              value={field.options?.join(", ") || ""}
+                              onChange={(e) => {
+                                const updatedSchema = [...editingService.briefSchema];
+                                updatedSchema[fIdx].options = e.target.value
+                                  .split(",")
+                                  .map((s) => s.trim())
+                                  .filter(Boolean);
+                                setEditingService({
+                                  ...editingService,
+                                  briefSchema: updatedSchema,
+                                });
+                              }}
+                              placeholder="Option 1, Option 2, Option 3..."
+                              className="w-full text-[11px] font-mono text-[#0F172A] bg-[#FAF9F5] px-2.5 py-1 rounded border border-[#EADFCB]/60 focus:outline-none"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Modal Action Buttons */}
+                <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-[#EADFCB]/60">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setEditingService(null)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="sm"
+                    disabled={isSavingCatalog}
+                    leftIcon={<Save className="w-3.5 h-3.5" />}
+                  >
+                    {isSavingCatalog ? "Saving..." : "Save Service Configuration"}
+                  </Button>
+                </div>
+              </form>
+            </Modal>
+          )}
+
+          {/* =========================================================
+              MODAL: EDIT MONTHLY RETAINER PLAN
+              ========================================================= */}
+          {editingPlan && (
+            <Modal
+              isOpen={true}
+              onClose={() => setEditingPlan(null)}
+              title={`Edit Retainer Plan: ${editingPlan.name}`}
+              description="Configure monthly investment, duration discounts, free trial window, and Razorpay Plan ID."
+              maxWidth="md"
+            >
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSavePlanDetails(editingPlan);
+                }}
+                className="space-y-4 text-xs"
+              >
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-[#0F172A] block mb-1">
+                    Plan Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editingPlan.name}
+                    onChange={(e) => setEditingPlan({ ...editingPlan, name: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-[#0F172A] block mb-1">
+                      Monthly Price (₹ INR)
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      value={editingPlan.price}
+                      onChange={(e) => {
+                        const mPrice = Number(e.target.value) || 0;
+                        setEditingPlan({
+                          ...editingPlan,
+                          price: mPrice,
+                          monthlyPrice: mPrice,
+                          quarterlyPrice: Math.round(mPrice * 3 * 0.95),
+                          annualPrice: Math.round(mPrice * 12 * 0.85),
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs font-mono font-bold text-[#5C3A1E] focus:outline-none focus:border-[#D4A35A]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-[#0F172A] block mb-1">
+                      Free Trial Days (Default: 3)
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      value={editingPlan.freeTrialDays}
+                      onChange={(e) =>
+                        setEditingPlan({
+                          ...editingPlan,
+                          freeTrialDays: Number(e.target.value) || 0,
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs font-mono text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-[#0F172A] block mb-1">
+                    Razorpay Live Plan ID
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editingPlan.razorpayPlanId}
+                    onChange={(e) =>
+                      setEditingPlan({
+                        ...editingPlan,
+                        razorpayPlanId: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs font-mono text-[#5C3A1E] focus:outline-none focus:border-[#D4A35A]"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#EADFCB]/60">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setEditingPlan(null)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="sm"
+                    disabled={isSavingCatalog}
+                    leftIcon={<Save className="w-3.5 h-3.5" />}
+                  >
+                    {isSavingCatalog ? "Saving..." : "Save Plan Configuration"}
+                  </Button>
+                </div>
+              </form>
+            </Modal>
           )}
         </main>
 
         <MobileBottomNav />
 
-        {/* Client Detail Drawer / Modal */}
+        {/* Unified Client Dossier & Executive Control Modal */}
         <Modal
-          isOpen={!!selectedClient}
-          onClose={() => setSelectedClient(null)}
-          title={selectedClient?.name || "Client Dossier"}
-          description={`${selectedClient?.company} • Tier: ${selectedClient?.tier}`}
-          maxWidth="md"
+          isOpen={Boolean(selectedDossier || selectedClient)}
+          onClose={() => {
+            setSelectedDossier(null);
+            setSelectedClient(null);
+          }}
+          title={
+            selectedDossier?.profile?.name ||
+            selectedClient?.name ||
+            "Client Dossier"
+          }
+          description={`${
+            selectedDossier?.profile?.company || selectedClient?.company
+          } • Tier: ${selectedDossier?.profile?.tier || selectedClient?.tier || "Starter"}`}
+          maxWidth="lg"
         >
-          {selectedClient && (
-            <div className="space-y-5 text-xs">
-              <div className="p-4 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-[#64748B]">Email:</span>
-                  <span className="font-semibold text-[#0F172A]">{selectedClient.email}</span>
+          {(() => {
+            const dossier = selectedDossier;
+            const profile = dossier?.profile || selectedClient;
+            if (!profile) return null;
+
+            return (
+              <div className="space-y-6 text-xs text-[#0F172A]">
+                {/* Status Bar */}
+                <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB]">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                        profile.status === "Active"
+                          ? "bg-[#DCFCE7] text-[#166534]"
+                          : profile.status === "Disabled"
+                          ? "bg-[#FEE2E2] text-[#991B1B]"
+                          : "bg-[#FEF3C7] text-[#92400E]"
+                      }`}
+                    >
+                      ● {profile.status || "Active"}
+                    </span>
+                    <span className="text-[#64748B] text-[11px]">
+                      {profile.emailVerified ? "✓ Email Verified" : "⚠️ Email Unverified"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleToggleClientStatus(profile.id || profile.uid, profile.status || "Active")}
+                      className="text-[11px] h-7 px-2.5"
+                    >
+                      {profile.status === "Active" ? "Disable Account" : "Enable Account"}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleResendVerification(profile.id || profile.uid)}
+                      className="text-[11px] h-7 px-2.5"
+                    >
+                      Resend Verification
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-[#64748B]">Google Drive Vault:</span>
-                  <span className="font-mono text-[#5C3A1E] font-semibold">{selectedClient.driveFolderId}</span>
+
+                {/* 2-Column Info Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Contact & Drive */}
+                  <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-2.5">
+                    <h4 className="font-serif font-bold text-[#5C3A1E] text-xs uppercase tracking-wider">
+                      Contact & Storage Vault
+                    </h4>
+                    <div className="space-y-1.5 text-[11px]">
+                      <div className="flex justify-between">
+                        <span className="text-[#64748B]">Work Email:</span>
+                        <span className="font-semibold text-[#0F172A]">{profile.email}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#64748B]">Phone Number:</span>
+                        <span className="font-semibold text-[#0F172A]">{profile.phone || "+91 98765 43210"}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#64748B]">Member Since:</span>
+                        <span className="text-[#0F172A]">{profile.joinedDate || "August 2026"}</span>
+                      </div>
+                      <div className="pt-2 border-t border-[#EADFCB]/60 flex items-center justify-between">
+                        <span className="text-[#64748B]">Drive Vault:</span>
+                        <a
+                          href={dossier?.driveFolderLink || `https://drive.google.com/drive/folders/${profile.driveFolderId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 font-mono text-[#5C3A1E] font-bold hover:underline"
+                        >
+                          Open in Google Drive ↗
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Subscription & Lifetime Spend */}
+                  <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-2.5">
+                    <h4 className="font-serif font-bold text-[#5C3A1E] text-xs uppercase tracking-wider">
+                      Active Subscription & Revenue
+                    </h4>
+                    <div className="space-y-1.5 text-[11px]">
+                      <div className="flex justify-between">
+                        <span className="text-[#64748B]">Lifetime Revenue:</span>
+                        <span className="font-serif font-bold text-[#5C3A1E] text-xs">
+                          {dossier?.lifetimeVolumeFormatted || profile.lifetimeVolume || "₹0"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#64748B]">Active Orders:</span>
+                        <span className="font-bold text-[#0F172A]">
+                          {dossier?.activeOrdersCount ?? profile.activeOrders ?? 0} In Progress
+                        </span>
+                      </div>
+                      {dossier?.activePlan ? (
+                        <div className="p-2 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] space-y-1 mt-1">
+                          <div className="flex justify-between font-semibold text-[#5C3A1E]">
+                            <span>{dossier.activePlan.planName}</span>
+                            <span>{dossier.activePlan.daysRemaining} days left</span>
+                          </div>
+                          <p className="text-[10px] text-[#64748B]">{dossier.activePlan.statusLabel}</p>
+                        </div>
+                      ) : (
+                        <div className="p-2 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-[10px] text-[#64748B]">
+                          No active monthly retainer plan. Individual orders active.
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-[#64748B]">Active Orders:</span>
-                  <span className="font-bold text-[#0F172A]">{selectedClient.activeOrders} Orders</span>
+
+                {/* Orders Overview */}
+                {dossier?.orders && dossier.orders.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-serif font-bold text-[#5C3A1E] text-xs uppercase tracking-wider">
+                      Client Orders ({dossier.orders.length})
+                    </h4>
+                    <div className="max-h-36 overflow-y-auto space-y-1.5 scrollbar-thin">
+                      {dossier.orders.map((o: any) => (
+                        <div
+                          key={o.id}
+                          className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/60 flex items-center justify-between text-[11px]"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-[#5C3A1E]">{o.orderNumber || o.code}</span>
+                            <span className="font-medium text-[#0F172A]">{o.title || o.service}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-serif font-bold text-[#0F172A]">
+                              ₹{(o.amountPaid || o.totalAmount || 0).toLocaleString("en-IN")}
+                            </span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] font-semibold text-[#5C3A1E]">
+                              {o.status}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Private Admin Notes Notebook */}
+                <div className="space-y-3 pt-2 border-t border-[#EADFCB]/60">
+                  <h4 className="font-serif font-bold text-[#5C3A1E] text-xs uppercase tracking-wider">
+                    Private Admin Notebook (Confidential)
+                  </h4>
+
+                  {/* Add Note Input */}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="Add private note for studio team..."
+                      value={newClientNote}
+                      onChange={(e) => setNewClientNote(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddClientNote(profile.id || profile.uid);
+                        }
+                      }}
+                      className="flex-1 px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#D4A35A]"
+                    />
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleAddClientNote(profile.id || profile.uid)}
+                      disabled={isSubmittingClientNote || !newClientNote.trim()}
+                      className="text-xs shrink-0"
+                    >
+                      {isSubmittingClientNote ? "Saving..." : "Add Note"}
+                    </Button>
+                  </div>
+
+                  {/* Existing Notes List */}
+                  <div className="max-h-28 overflow-y-auto space-y-1.5 scrollbar-thin">
+                    {profile.adminNotes && profile.adminNotes.length > 0 ? (
+                      profile.adminNotes.map((note: any) => (
+                        <div
+                          key={note.id}
+                          className="p-2 rounded-xl bg-[#FFFDF9] border border-[#EADFCB]/60 text-[11px] space-y-0.5"
+                        >
+                          <div className="flex justify-between text-[10px] text-[#94A3B8]">
+                            <span className="font-semibold text-[#5C3A1E]">{note.authorName}</span>
+                            <span>{new Date(note.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          <p className="text-[#0F172A]">{note.text}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-[11px] text-[#94A3B8] italic">No private admin notes recorded yet.</p>
+                    )}
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-[#64748B]">Total Volume:</span>
-                  <span className="font-serif font-bold text-[#5C3A1E] text-sm">{selectedClient.lifetimeVolume}</span>
+
+                {/* Footer Controls */}
+                <div className="flex items-center justify-between pt-4 border-t border-[#EADFCB]/60">
+                  <Link
+                    href={`/chat?client=${encodeURIComponent(profile.email || profile.name)}`}
+                    onClick={() => {
+                      setSelectedDossier(null);
+                      setSelectedClient(null);
+                    }}
+                  >
+                    <Button variant="secondary" size="sm" className="gap-1.5">
+                      <MessageSquare className="w-3.5 h-3.5 text-[#D4A35A]" />
+                      Open Chat Thread
+                    </Button>
+                  </Link>
+
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedDossier(null);
+                      setSelectedClient(null);
+                    }}
+                  >
+                    Close Dossier
+                  </Button>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-[#64748B]">Last Studio Activity:</span>
-                  <span className="text-[#0F172A]">{selectedClient.lastActive}</span>
+              </div>
+            );
+          })()}
+        </Modal>
+
+        {/* Audit Log Diff Inspection Modal */}
+        {selectedAuditLog && (
+          <Modal
+            isOpen={true}
+            onClose={() => setSelectedAuditLog(null)}
+            title={`Audit Event: ${selectedAuditLog.what || selectedAuditLog.event}`}
+            description={`Actor: ${selectedAuditLog.who?.email || selectedAuditLog.actor} • ${selectedAuditLog.when || selectedAuditLog.time}`}
+            maxWidth="md"
+          >
+            <div className="space-y-4 text-xs">
+              <div className="p-3.5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-2">
+                <div className="flex justify-between font-mono text-[11px]">
+                  <span className="text-[#64748B]">Target:</span>
+                  <span className="font-bold text-[#5C3A1E]">{selectedAuditLog.targetId}</span>
+                </div>
+                {selectedAuditLog.targetTitle && (
+                  <div className="flex justify-between text-[11px]">
+                    <span className="text-[#64748B]">Title:</span>
+                    <span className="font-medium text-[#0F172A]">{selectedAuditLog.targetTitle}</span>
+                  </div>
+                )}
+                {selectedAuditLog.note && (
+                  <div className="text-[11px] text-[#0F172A] pt-1 border-t border-[#EADFCB]/60">
+                    <span className="font-semibold text-[#64748B]">Note: </span>
+                    {selectedAuditLog.note}
+                  </div>
+                )}
+              </div>
+
+              {/* State Diff Comparison */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-xl bg-[#FEE2E2]/40 border border-[#FECACA] space-y-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#991B1B] block">
+                    Before State
+                  </span>
+                  <pre className="font-mono text-[10px] text-[#7F1D1D] overflow-x-auto p-1 bg-white/60 rounded max-h-32 scrollbar-none">
+                    {JSON.stringify(selectedAuditLog.before || { status: "initial" }, null, 2)}
+                  </pre>
+                </div>
+
+                <div className="p-3 rounded-xl bg-[#DCFCE7]/40 border border-[#BBF7D0] space-y-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#166534] block">
+                    After State
+                  </span>
+                  <pre className="font-mono text-[10px] text-[#14532D] overflow-x-auto p-1 bg-white/60 rounded max-h-32 scrollbar-none">
+                    {JSON.stringify(selectedAuditLog.after || { status: "updated" }, null, 2)}
+                  </pre>
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSelectedClient(null)}
-                >
-                  Close
+              <div className="flex justify-end pt-2">
+                <Button variant="secondary" size="sm" onClick={() => setSelectedAuditLog(null)}>
+                  Close Inspector
                 </Button>
-                <Link href="/chat">
-                  <Button variant="primary" size="sm" withArrow>
-                    Message Client
-                  </Button>
-                </Link>
               </div>
             </div>
-          )}
-        </Modal>
+          </Modal>
+        )}
+
+        {/* Global Admin Order Receipt & Tax Invoice Modal */}
+        <OrderReceiptModal
+          order={adminReceiptOrder}
+          isOpen={isAdminReceiptOpen}
+          onClose={() => setIsAdminReceiptOpen(false)}
+        />
       </div>
     </RouteGuard>
   );

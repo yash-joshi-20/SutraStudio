@@ -12,8 +12,11 @@
   --saffron: #D4A35A;
   --saffron-hover: #B98A3E;
   --saffron-subtle: #FDF9F0;
+  --brass: #A98B57;
+  --surface-alt: #FAF9F5;
   --brown: #5C3A1E;
   --brown-hover: #4A2E17;
+  --charcoal: #171717;
   --status-progress: #C2761A;
   --status-completed: #2E7D4F;
   --status-review: #3B6FB6;
@@ -25,6 +28,31 @@
   --sar: env(safe-area-inset-right, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
   --sal: env(safe-area-inset-left, 0px);
+
+  /* ---------------------------------------------------------------
+     LAYERING SCALE
+     One source of truth. Every fixed overlay MUST use these.
+     Tailwind has no z-45 / z-70 / z-80 utility, so those classes were
+     silently dead and left modals, toasts and the chat launcher with no
+     stacking context at all. Use `z-[var(--z-modal)]` etc.
+     --------------------------------------------------------------- */
+  --z-base: 0;
+  --z-content: 10;
+  --z-nav: 40;         /* bottom navigation */
+  --z-launcher: 45;    /* floating chat launcher (above nav, below sheets) */
+  --z-dropdown: 50;
+  --z-drawer: 60;
+  --z-modal: 70;
+  --z-toast: 80;       /* toasts always readable, never blocked */
+
+  /* ---------------------------------------------------------------
+     CHROME OFFSETS
+     Fixed chrome (bottom nav) overlaps page content unless content
+     reserves space. Portal pages add `pb-[var(--nav-space)]`.
+     --------------------------------------------------------------- */
+  --nav-h: 60px;
+  --nav-space: calc(var(--nav-h) + var(--sab));
+  --launcher-size: 56px;
 
   /* Fluid Typography Clamps */
   --text-fluid-hero: clamp(2rem, 5vw + 1rem, 3.75rem);
@@ -224,4 +252,118 @@ textarea:focus-visible {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* SUTRA STUDIO — Universal Layering Scale Tokens */
+.z-base { z-index: var(--z-base) !important; }
+.z-content { z-index: var(--z-content) !important; }
+.z-nav { z-index: var(--z-nav) !important; }
+.z-launcher { z-index: var(--z-launcher) !important; }
+.z-dropdown { z-index: var(--z-dropdown) !important; }
+.z-drawer { z-index: var(--z-drawer) !important; }
+.z-modal { z-index: var(--z-modal) !important; }
+.z-toast { z-index: var(--z-toast) !important; }
+
+/* ---------------------------------------------------------------
+   FIXED-CHROME SAFETY
+   Pages rendered inside a portal shell must not hide their last
+   row of content behind the bottom navigation or the chat launcher.
+   --------------------------------------------------------------- */
+
+/* Reserve room for the mobile bottom navigation. No-op on desktop. */
+@layer components {
+  .pb-nav-safe { padding-bottom: var(--nav-space); }
+  @media (min-width: 768px) {
+    .pb-nav-safe { padding-bottom: 0; }
+  }
+
+  /* Reserve room for the floating chat launcher on the trailing edge. */
+  .pr-launcher-safe { padding-right: calc(var(--launcher-size) + 1rem); }
+  @media (min-width: 640px) {
+    .pr-launcher-safe { padding-right: 0; }
+  }
+}
+
+/* Horizontal-scroll container for wide tables on small screens. */
+.table-scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+/* Long identifiers (order codes, tokens) must wrap, never overflow. */
+.break-anywhere {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Respect the visual viewport when the on-screen keyboard is open. */
+.kb-safe {
+  padding-bottom: env(keyboard-inset-bottom, 0px);
+}
+
+/* ---------------------------------------------------------------
+   FORM PRIMITIVES
+   --------------------------------------------------------------- */
+.field-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 0.375rem;
+}
+
+.field-control {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.9375rem;
+  color: var(--foreground);
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field-control::placeholder { color: var(--muted-light); }
+
+.field-control:hover:not(:disabled) { border-color: var(--saffron); }
+
+.field-control:focus {
+  outline: none;
+  border-color: var(--saffron);
+  box-shadow: 0 0 0 3px rgba(212, 163, 90, 0.28);
+}
+
+.field-control:disabled {
+  background: var(--background);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.field-control[aria-invalid="true"] {
+  border-color: var(--status-error);
+}
+
+.field-control[aria-invalid="true"]:focus {
+  box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.2);
+}
+
+.field-helper {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.3125rem;
+  line-height: 1.45;
+}
+
+.field-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--status-error);
+  margin-top: 0.3125rem;
+  line-height: 1.45;
+}
+
 

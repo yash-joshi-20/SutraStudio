@@ -48,10 +48,12 @@ export function Footer() {
     { label: "Billing & Invoices", href: "/invoices" },
   ];
 
+  // Deliberately no admin entry here: the admin portal must not be advertised
+// on the public footer. It is only reachable by an account that already
+// carries the role:"admin" custom claim.
   const operationLinks = [
     { label: "Sutra AI Assistant", href: "/chat" },
     { label: "Account Profile", href: "/profile" },
-    { label: "Admin Hub", href: "/admin" },
     { label: "Offline Mode", href: "/offline" },
   ];
 

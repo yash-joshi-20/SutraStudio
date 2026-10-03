@@ -21,6 +21,60 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: "/service-plans",
+        destination: "/orders",
+        permanent: false,
+      },
+      {
+        source: "/packages",
+        destination: "/orders",
+        permanent: false,
+      },
+      {
+        source: "/plans",
+        destination: "/orders",
+        permanent: false,
+      },
+      {
+        source: "/order-plans",
+        destination: "/orders",
+        permanent: false,
+      },
+      {
+        source: "/pricing-plans",
+        destination: "/orders",
+        permanent: false,
+      },
+      {
+        source: "/client-plans",
+        destination: "/orders",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/services",
+        destination: "/orders",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/pricing",
+        destination: "/orders",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/packages",
+        destination: "/orders",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/plans",
+        destination: "/orders",
+        permanent: false,
+      },
+    ];
+  },
   async rewrites() {
     return [
       {

@@ -30,5 +30,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "mobile", "SUTRA_STUDIO_UI_MASTER_PROMPT_PACK"]
+  "exclude": ["node_modules", "mobile", "functions", "SUTRA_STUDIO_UI_MASTER_PROMPT_PACK"]
 }

@@ -57,7 +57,7 @@ interface OrderItem {
 }
 
 export default function ClientDashboardPage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [viewMode, setViewMode] = useState<"orders" | "commission" | "zero_state">("orders");
   const isZeroState = viewMode === "zero_state";
 
@@ -270,7 +270,7 @@ export default function ClientDashboardPage() {
                   STUDIO CLIENT PIPELINE
                 </span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#EADFCB]/60 text-[#5C3A1E] font-medium">
-                  Vault ID: {user?.driveFolderId || "drive_fld_sutra_001"}
+                  Vault ID: {profile?.driveFolderId || "Not provisioned"}
                 </span>
               </div>
               <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-[#0F172A] mt-1">
@@ -336,15 +336,9 @@ export default function ClientDashboardPage() {
                 </Button>
               </Link>
 
-              <Link href="/services">
-                <Button variant="secondary" size="sm" leftIcon={<Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />}>
-                  Services
-                </Button>
-              </Link>
-
-              <Link href="/pricing">
-                <Button variant="secondary" size="sm" leftIcon={<DollarSign className="w-3.5 h-3.5 text-[#5C3A1E]" />}>
-                  Pricing
+              <Link href="/orders">
+                <Button variant="primary" size="sm" leftIcon={<Plus className="w-3.5 h-3.5" />} className="min-h-[44px]">
+                  New Order
                 </Button>
               </Link>
             </div>
@@ -805,10 +799,10 @@ export default function ClientDashboardPage() {
                       </p>
                     </div>
                     <Link
-                      href="/services"
+                      href="/orders"
                       className="text-xs font-semibold text-[#5C3A1E] hover:underline inline-flex items-center gap-1"
                     >
-                      <span>Explore all 12 Services</span>
+                      <span>Commission in My Orders</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>

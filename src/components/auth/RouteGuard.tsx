@@ -1,10 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
-import { useAuth, UserRole } from "@/lib/auth/authContext";
+import { useRouter, usePathname } from "next/navigation";
+import { useAuth } from "@/lib/auth/authContext";
 import { Button } from "@/components/ui/Button";
-import { SutraLogo } from "@/components/brand/SutraLogo";
 import { ShieldAlert, Lock, ArrowRight } from "lucide-react";
 
 interface RouteGuardProps {
@@ -16,7 +16,20 @@ export function RouteGuard({
   children,
   requiredRole = "client",
 }: RouteGuardProps) {
-  const { isAuthenticated, role, isLoading, loginAs } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+  const { isAuthenticated, role, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        const targetLogin = requiredRole === "admin" ? "/admin/login" : "/login";
+        router.push(`${targetLogin}?returnTo=${encodeURIComponent(pathname || "/")}`);
+      } else if (requiredRole === "admin" && role !== "admin") {
+        router.push(`/admin/login?returnTo=${encodeURIComponent(pathname || "/admin")}`);
+      }
+    }
+  }, [isLoading, isAuthenticated, role, requiredRole, pathname, router]);
 
   if (isLoading) {
     return (
@@ -26,8 +39,9 @@ export function RouteGuard({
     );
   }
 
-  // Not authenticated
+  // Not authenticated fallback
   if (!isAuthenticated) {
+    const loginHref = requiredRole === "admin" ? "/admin/login" : "/login";
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F5EF] p-4 text-[#0F172A]">
         <div className="w-full max-w-md rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-warm p-8 text-center space-y-6">
@@ -40,13 +54,18 @@ export function RouteGuard({
               Protected Studio Portal
             </h2>
             <p className="text-xs text-[#64748B] leading-relaxed">
-              Authentication is required to view your orders, deliverables, and
-              private studio media storage.
+              Authentication is required to view your orders, deliverables, and private studio media storage.
             </p>
           </div>
 
           <div className="space-y-3 pt-2">
-            <Button variant="primary" size="md" className="w-full" withArrow href="/login">
+            <Button
+              variant="primary"
+              size="md"
+              className="w-full"
+              withArrow
+              href={`${loginHref}?returnTo=${encodeURIComponent(pathname || "/")}`}
+            >
               Sign In to Continue
             </Button>
 
@@ -73,7 +92,7 @@ export function RouteGuard({
               403 — Access Restricted
             </h2>
             <p className="text-xs text-[#64748B] leading-relaxed">
-              You do not have authorization to view this internal resource. Please return to your private studio workspace.
+              Administrative clearance required for Executive Operations. Please sign in with your administrative credentials.
             </p>
           </div>
 
@@ -81,10 +100,10 @@ export function RouteGuard({
             <Button
               variant="primary"
               size="md"
-              className="w-full"
-              onClick={() => loginAs("admin")}
+              className="w-full !bg-[#171717] hover:!bg-[#262626] !text-[#FAF9F5]"
+              href={`/admin/login?returnTo=${encodeURIComponent(pathname || "/admin")}`}
             >
-              Sign In as Studio Administrator
+              Sign In to Executive Terminal
             </Button>
 
             <Button
@@ -93,7 +112,7 @@ export function RouteGuard({
               className="w-full"
               href="/dashboard"
             >
-              Return to Workspace
+              Return to Client Workspace
             </Button>
 
             <Link href="/" className="block text-xs text-[#64748B] hover:underline">

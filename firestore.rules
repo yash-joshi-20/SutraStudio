@@ -1,0 +1,423 @@
+rules_version = '2';
+
+/* ============================================================================
+   SUTRA STUDIO — Firestore Security Rules
+   ---------------------------------------------------------------------------
+   Design rules
+   • DENY BY DEFAULT. Every match must satisfy an explicit allow.
+   • Admin authority comes ONLY from the `role` custom claim on the verified
+     ID token. It can never come from a document field — otherwise a client
+     could grant itself admin by writing its own profile.
+   • A client may read/write ONLY its own uid-scoped documents.
+   • Server-owned economic fields (price, plan, payment, status, role) are
+     write-protected: clients may create documents with them absent, but can
+     never change them afterwards.
+   • Admin-only collections are unreachable from the client SDK entirely.
+   ========================================================================== */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /* ---------------- helpers ---------------- */
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && request.auth.token.role == 'admin';
+    }
+
+    function isSelf(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isStaff() {
+      // `staff` is a narrower claim than `admin`; it still requires a claim.
+      return isSignedIn() && request.auth.token.role in ['admin', 'staff'];
+    }
+
+    /* ---------------- users (profiles) ---------------- */
+
+    match /users/{uid} {
+      allow get: if isSelf(uid) || isAdmin();
+      allow list: if isAdmin();
+
+      // Create: only right after sign-up, with a safe role, and no money fields.
+      allow create: if isSelf(uid)
+        && (!('role' in request.resource.data) || request.resource.data.role == 'client')
+        && request.resource.data.email == request.auth.token.email
+        && !('status' in request.resource.data)
+        && !('profileCompleteness' in request.resource.data);
+
+      // Update: own document only, and only whitelisted fields may differ.
+      allow update: if isSelf(uid)
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.emailVerified == resource.data.emailVerified
+        && request.resource.data.profileCompleteness == resource.data.profileCompleteness
+        && request.resource.data.driveFolderId == resource.data.driveFolderId
+        && request.resource.data.acceptedTermsAt == resource.data.acceptedTermsAt
+        && request.resource.data.acceptedPrivacyAt == resource.data.acceptedPrivacyAt
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.diff('billing').affectedKeys().hasOnly([
+             'legalName', 'gstin', 'addressLine1', 'addressLine2',
+             'city', 'state', 'postalCode', 'country'
+           ])
+        && request.resource.data.diff('socialLinks').affectedKeys().hasOnly([
+             'instagram', 'facebook', 'linkedin', 'x', 'youtube', 'pinterest', 'threads'
+           ])
+        && request.resource.data.diff('referenceLinks').affectedKeys().hasOnly(['referenceLinks'])
+        && request.resource.data.diff('brandColors').affectedKeys().hasOnly(['brandColors'])
+        && request.resource.data.diff('gstEnabled').affectedKeys().hasOnly(['gstEnabled'])
+        && request.resource.data.diff('defaultBrandKitId').affectedKeys().hasOnly(['defaultBrandKitId'])
+        && request.resource.data.diff('locale').affectedKeys().hasOnly(['locale'])
+        && request.resource.data.diff('timezone').affectedKeys().hasOnly(['timezone'])
+        && request.resource.data.diff('marketingOptIn').affectedKeys().hasOnly(['marketingOptIn'])
+        && request.resource.data.diff('displayName').affectedKeys().hasOnly(['displayName'])
+        && request.resource.data.diff('phone').affectedKeys().hasOnly(['phone'])
+        && request.resource.data.diff('companyName').affectedKeys().hasOnly(['companyName'])
+        && request.resource.data.diff('website').affectedKeys().hasOnly(['website'])
+        && request.resource.data.diff('industry').affectedKeys().hasOnly(['industry'])
+        && request.resource.data.diff('onboardingComplete').affectedKeys().hasOnly(['onboardingComplete']);
+
+      allow delete: if isAdmin();
+    }
+
+    /* ---------------- brand kits ---------------- */
+
+    match /brandKits/{kitId} {
+      allow get, list: if isAdmin()
+        || (isSignedIn() && resource.data.clientId == request.auth.uid)
+        || (isSignedIn() && request.query.filters.size() > 0
+            && request.query.filters[0].field == 'clientId'
+            && request.query.filters[0].value == request.auth.uid);
+
+      allow create: if isSignedIn()
+        && request.resource.data.clientId == request.auth.uid
+        && !('isDefault' in request.resource.data);
+
+      allow update: if isAdmin()
+        || (isSignedIn() && resource.data.clientId == request.auth.uid
+            && request.resource.data.clientId == resource.data.clientId
+            && request.resource.data.createdAt == resource.data.createdAt);
+
+      allow delete: if isAdmin()
+        || (isSignedIn() && resource.data.clientId == request.auth.uid);
+    }
+
+    /* ---------------- orders ---------------- */
+
+    match /orders/{orderId} {
+      allow get: if isAdmin() || (isSignedIn() && resource.data.clientId == request.auth.uid);
+
+      allow list: if isAdmin()
+        || (isSignedIn() && request.query.filters.size() > 0
+            && request.query.filters[0].field == 'clientId'
+            && request.query.filters[0].value == request.auth.uid);
+
+      // A client may create a draft order but must never set the money or the
+      // lifecycle state. Those are stamped by the server after verification.
+      allow create: if isSignedIn()
+        && request.resource.data.clientId == request.auth.uid
+        && request.resource.data.status == 'draft'
+        && !('amountPaise' in request.resource.data)
+        && !('totalRupees' in request.resource.data)
+        && !('paid' in request.resource.data)
+        && !('paymentStatus' in request.resource.data)
+        && !('orderCode' in request.resource.data);
+
+      // Clients may only edit their own draft's brief fields.
+      allow update: if isAdmin()
+        || (isSignedIn() && resource.data.clientId == request.auth.uid
+            && resource.data.status == 'draft'
+            && request.resource.data.diff('status').affectedKeys().hasOnly(['status'])
+            && request.resource.data.diff('totalRupees').affectedKeys().hasOnly(['totalRupees'])
+            && request.resource.data.diff('amountPaise').affectedKeys().hasOnly(['amountPaise'])
+            && request.resource.data.diff('paymentStatus').affectedKeys().hasOnly(['paymentStatus'])
+            && request.resource.data.diff('paid').affectedKeys().hasOnly(['paid'])
+            && request.resource.data.diff('clientId').affectedKeys().hasOnly(['clientId'])
+            && request.resource.data.diff('orderCode').affectedKeys().hasOnly(['orderCode'])
+            && request.resource.data.diff('progress').affectedKeys().hasOnly(['progress']));
+
+      allow delete: if isAdmin();
+    }
+
+    /* ---------------- order drafts (repeat orders, abandoned flows) ------ */
+
+    match /orderDrafts/{draftId} {
+      allow get, list: if isAdmin()
+        || (isSignedIn() && resource.data.clientId == request.auth.uid);
+
+      allow create: if isSignedIn() && request.resource.data.clientId == request.auth.uid;
+
+      allow update: if isSignedIn()
+        && resource.data.clientId == request.auth.uid
+        && request.resource.data.diff('quote').affectedKeys().hasOnly(['quote']);
+
+      allow delete: if isSignedIn() && resource.data.clientId == request.auth.uid;
+    }
+
+    /* ---------------- payments (ids and status only) ---------------- */
+
+    match /payments/{paymentId} {
+      allow get, list: if isAdmin()
+        || (isSignedIn() && resource.data.clientId == request.auth.uid);
+      // Write access is server-only. No card or UPI data is ever stored here.
+      allow create, update, delete: if false;
+    }
+
+    /* ---------------- subscriptions ---------------- */
+
+    match /subscriptions/{subId} {
+      allow get, list: if isAdmin()
+        || (isSignedIn() && resource.data.clientId == request.auth.uid);
+      allow create, update, delete: if false;
+    }
+
+    /* ---------------- consents (written by the server at signup) -------- */
+
+    match /consents/{consentId} {
+      allow get: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow list: if isAdmin()
+        || (isSignedIn() && request.query.filters.size() > 0
+            && request.query.filters[0].field == 'uid'
+            && request.query.filters[0].value == request.auth.uid);
+      allow create, update, delete: if false;
+    }
+
+    /* ---------------- notifications ---------------- */
+
+    match /notifications/{notificationId} {
+      allow get, list: if isAdmin()
+        || (isSignedIn() && resource.data.recipientId == request.auth.uid);
+      // Only the read/unread flag is client-writable.
+      allow update: if isSignedIn()
+        && resource.data.recipientId == request.auth.uid
+        && request.resource.data.diff('read').affectedKeys().hasOnly(['read'])
+        && request.resource.data.diff('readAt').affectedKeys().hasOnly(['readAt']);
+      allow create, delete: if false;
+    }
+
+    /* ---------------- notification preferences ---------------- */
+
+    match /notificationPrefs/{uid} {
+      allow get, write: if isSelf(uid) || isAdmin();
+    }
+
+    /* ---------------- device tokens (web push) ---------------- */
+
+    match /deviceTokens/{tokenId} {
+      allow get: if isSelf(resource.data.uid) || isAdmin();
+      allow list: if isAdmin()
+        || (isSignedIn() && request.query.filters.size() > 0
+            && request.query.filters[0].field == 'uid'
+            && request.query.filters[0].value == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    /* ---------------- chats ---------------- */
+
+    match /chats/{chatId} {
+      allow get, list: if isAdmin()
+        || (isSignedIn() && resource.data.clientId == request.auth.uid)
+        || (isSignedIn() && resource.data.adminId == request.auth.uid);
+      allow create: if isSignedIn()
+        && request.resource.data.clientId == request.auth.uid;
+      allow update: if isAdmin()
+        || (isSignedIn() && resource.data.clientId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    match /chats/{chatId}/messages/{messageId} {
+      allow get: if isAdmin()
+        || (isSignedIn() && get(/databases/$(database)/documents/chats/$(chatId)).data.clientId == request.auth.uid);
+      allow create: if isSignedIn()
+        && get(/databases/$(database)/documents/chats/$(chatId)).data.clientId == request.auth.uid
+        && request.resource.data.authorId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    /* ---------------- audit logs ---------------- */
+
+    match /auditLogs/{logId} {
+      allow get, list: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
+    /* ---------------- media vault ---------------- */
+
+    match /mediaFiles/{fileId} {
+      allow get, list: if isAdmin()
+        || (isSignedIn() && resource.data.clientId == request.auth.uid);
+      allow create: if isSignedIn()
+        && request.resource.data.clientId == request.auth.uid
+        && !('status' in request.resource.data);
+      allow update: if isSignedIn()
+        && resource.data.clientId == request.auth.uid
+        && request.resource.data.diff('clientId').affectedKeys().hasOnly(['clientId'])
+        && request.resource.data.diff('favourite').affectedKeys().hasOnly(['favourite'])
+        && request.resource.data.diff('folderId').affectedKeys().hasOnly(['folderId'])
+        && request.resource.data.diff('tags').affectedKeys().hasOnly(['tags']);
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.clientId == request.auth.uid);
+    }
+
+    match /mediaFolders/{folderId} {
+      allow get, list: if isAdmin()
+        || (isSignedIn() && resource.data.clientId == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.clientId == request.auth.uid;
+      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.clientId == request.auth.uid);
+    }
+
+    /* ---------------- generated outputs & quality ---------------- */
+
+    match /generatedOutputs/{outputId} {
+      allow get, list: if isAdmin()
+        || (isSignedIn() && resource.data.clientId == request.auth.uid);
+      allow write: if false;
+    }
+
+    match /qualityChecks/{checkId} {
+      allow get, list: if isAdmin()
+        || (isSignedIn() && resource.data.clientId == request.auth.uid);
+      allow write: if false;
+    }
+
+    match /revisionRequests/{revId} {
+      allow get, list: if isAdmin()
+        || (isSignedIn() && resource.data.clientId == request.auth.uid);
+      allow create: if isSignedIn()
+        && request.resource.data.clientId == request.auth.uid
+        && !('status' in request.resource.data);
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    /* ---------------- prompt templates (admin-only editor) ---------------- */
+
+    match /promptTemplates/{templateId} {
+      allow read: if isAdmin() || isStaff();
+      allow write: if isAdmin();
+    }
+
+    /* ---------------- daily engine ---------------- */
+
+    match /dailyPlans/{planId} {
+      allow get, list: if isAdmin()
+        || (isSignedIn() && resource.data.clientId == request.auth.uid);
+      allow write: if false;
+    }
+
+    match /contentCalendar/{entryId} {
+      allow get, list: if isAdmin()
+        || (isSignedIn() && resource.data.clientId == request.auth.uid);
+      // Clients may only propose a change to their own upcoming topic.
+      allow update: if isSignedIn()
+        && resource.data.clientId == request.auth.uid
+        && request.resource.data.diff('topic').affectedKeys().hasOnly(['topic'])
+        && request.resource.data.diff('clientNote').affectedKeys().hasOnly(['clientNote'])
+        && request.resource.data.diff('status').affectedKeys().hasOnly(['status']);
+      allow create, delete: if false;
+    }
+
+    match /topicHistory/{topicId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.clientId == request.auth.uid);
+      allow write: if false;
+    }
+
+    /* ---------------- custom projects (Website / App / Automation) ------- */
+
+    match /customProjects/{projectId} {
+      allow get: if isAdmin() || (isSignedIn() && resource.data.clientId == request.auth.uid);
+      allow list: if isAdmin()
+        || (isSignedIn() && request.query.filters.size() > 0
+            && request.query.filters[0].field == 'clientId'
+            && request.query.filters[0].value == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.clientId == request.auth.uid;
+      allow update: if isAdmin()
+        || (isSignedIn() && resource.data.clientId == request.auth.uid
+            && request.resource.data.diff('clientId').affectedKeys().hasOnly(['clientId'])
+            && request.resource.data.diff('quote').affectedKeys().hasOnly(['quote'])
+            && request.resource.data.diff('scope').affectedKeys().hasOnly(['scope'])
+            && request.resource.data.diff('status').affectedKeys().hasOnly(['status'])
+            && request.resource.data.diff('estimate').affectedKeys().hasOnly(['estimate'])
+            && request.resource.data.diff('milestones').affectedKeys().hasOnly(['milestones'])
+            && request.resource.data.diff('clientNote').affectedKeys().hasOnly(['clientNote']));
+      allow delete: if isAdmin();
+    }
+
+    match /customProjects/{projectId}/messages/{messageId} {
+      allow get: if isAdmin()
+        || (isSignedIn()
+            && get(/databases/$(database)/documents/customProjects/$(projectId)).data.clientId
+               == request.auth.uid);
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    /* ---------------- quotes ---------------- */
+
+    match /quotes/{quoteId} {
+      allow get: if isAdmin() || (isSignedIn() && resource.data.clientId == request.auth.uid);
+      allow list: if isAdmin()
+        || (isSignedIn() && request.query.filters.size() > 0
+            && request.query.filters[0].field == 'clientId'
+            && request.query.filters[0].value == request.auth.uid);
+      // A client may accept or decline, never re-price.
+      allow update: if isAdmin()
+        || (isSignedIn() && resource.data.clientId == request.auth.uid
+            && request.resource.data.diff('totalRupees').affectedKeys().hasOnly(['totalRupees'])
+            && request.resource.data.diff('lines').affectedKeys().hasOnly(['lines'])
+            && request.resource.data.diff('status').affectedKeys().hasOnly(['status'])
+            && request.resource.data.diff('acceptedAt').affectedKeys().hasOnly(['acceptedAt']));
+      allow create, delete: if false;
+    }
+
+    /* ---------------- catalog (read-only from the client) ---------------- */
+
+    match /services/{serviceId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /plans/{planId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    /* ---------------- coupons ---------------- */
+
+    match /coupons/{couponId} {
+      allow read: if isAdmin();
+      // Redemption is server-side so a client cannot self-apply a discount.
+      allow create, update, delete: if false;
+    }
+
+    /* ---------------- shared reference data ---------------- */
+
+    match /studioConfig/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /knowledgeBase/{docId} {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+
+    match /feedback/{feedbackId} {
+      allow create: if isSignedIn()
+        && request.resource.data.clientId == request.auth.uid;
+      allow read, update, delete: if isAdmin();
+    }
+
+    /* Anything not matched above is denied. */
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

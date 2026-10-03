@@ -1,0 +1,455 @@
+{
+  "services": [
+    {
+      "id": "3d-modeling",
+      "title": "3D Spatial Architecture",
+      "category": "Spatial",
+      "price": 9499,
+      "unit": "per view / room",
+      "turnaround": "48-72h",
+      "format": "4K DCI (EXR / PNG / GLB)",
+      "revisions": 2,
+      "deliverables": [
+        "4K Render Passes",
+        "GLTF/GLB Web Embed",
+        "Lighting Presets"
+      ],
+      "active": true,
+      "updatedAt": "2026-10-01T00:00:00.000Z"
+    },
+    {
+      "id": "cinematic-reel",
+      "title": "Commercial Video Reel",
+      "category": "Cinematic",
+      "price": 14999,
+      "unit": "per 30-60s reel",
+      "turnaround": "72-96h",
+      "format": "4K ProRes 422 HQ / MP4",
+      "revisions": 2,
+      "deliverables": [
+        "Color Graded Master",
+        "Spatial Audio Mix",
+        "Vertical 9:16 Cuts"
+      ],
+      "active": true,
+      "updatedAt": "2026-10-01T00:00:00.000Z"
+    },
+    {
+      "id": "virtual-tour",
+      "title": "360 VR Virtual Tour",
+      "category": "Interactive",
+      "price": 18499,
+      "unit": "per property",
+      "turnaround": "3-5 days",
+      "format": "8K HDR Sphere / WebXR",
+      "revisions": 2,
+      "deliverables": [
+        "Interactive Web Walkthrough",
+        "Floor Plan Navigation",
+        "Offline Bundle"
+      ],
+      "active": true,
+      "updatedAt": "2026-10-01T00:00:00.000Z"
+    },
+    {
+      "id": "interior-rendering",
+      "title": "Architectural Interior Visuals",
+      "category": "Spatial",
+      "price": 8499,
+      "unit": "per scene",
+      "turnaround": "48h",
+      "format": "4K ACEScg pipeline",
+      "revisions": 2,
+      "deliverables": [
+        "Day/Dusk/Night passes",
+        "Material Closeups",
+        "High-res Stills"
+      ],
+      "active": true,
+      "updatedAt": "2026-10-01T00:00:00.000Z"
+    },
+    {
+      "id": "web-dev",
+      "title": "Bespoke Web Application",
+      "category": "Digital",
+      "price": 34999,
+      "unit": "per application",
+      "turnaround": "7-10 days",
+      "format": "Next.js / TypeScript / Tailwind",
+      "revisions": 3,
+      "deliverables": [
+        "Responsive Web App",
+        "Firebase Backend",
+        "SEO & Performance Setup"
+      ],
+      "active": true,
+      "updatedAt": "2026-10-01T00:00:00.000Z"
+    },
+    {
+      "id": "meta-ads",
+      "title": "Meta Ads Performance Pack",
+      "category": "Marketing",
+      "price": 11999,
+      "unit": "per 5 variations",
+      "turnaround": "48h",
+      "format": "1:1, 4:5, 9:16 Motion Assets",
+      "revisions": 2,
+      "deliverables": [
+        "Motion Graphics Ad Assets",
+        "Copy Variations",
+        "A/B Testing Bundle"
+      ],
+      "active": true,
+      "updatedAt": "2026-10-01T00:00:00.000Z"
+    },
+    {
+      "id": "brand-identity",
+      "title": "Brand Identity Genesis",
+      "category": "Branding",
+      "price": 9999,
+      "unit": "per brand system",
+      "turnaround": "3-5 days",
+      "format": "Vector AI / PDF / SVG",
+      "revisions": 2,
+      "deliverables": [
+        "Sacred Mark Vector",
+        "Typography Specs",
+        "Brand Guidelines V2"
+      ],
+      "active": true,
+      "updatedAt": "2026-10-01T00:00:00.000Z"
+    },
+    {
+      "id": "motion-design",
+      "title": "Motion Identity & Kinetic Typography",
+      "category": "Motion",
+      "price": 12999,
+      "unit": "per motion suite",
+      "turnaround": "48-72h",
+      "format": "Lottie / MP4 / Alpha WebM",
+      "revisions": 2,
+      "deliverables": [
+        "Logo Sting Reveal",
+        "UI Kinetic Components",
+        "Video Overlays"
+      ],
+      "active": true,
+      "updatedAt": "2026-10-01T00:00:00.000Z"
+    }
+  ],
+  "plans": [
+    {
+      "id": "studio-starter",
+      "name": "Atelier Starter Retainer",
+      "tier": "Starter",
+      "monthlyPrice": 24999,
+      "quarterlyPrice": 71249,
+      "annualPrice": 254999,
+      "deliverablesCount": 4,
+      "features": [
+        "4 High-End 4K Deliverables per month",
+        "Dedicated Google Drive Media Vault",
+        "48h Fast SLA Turnaround",
+        "2 Revision rounds per deliverable",
+        "Direct AI Concierge with Studio Support"
+      ],
+      "active": true
+    },
+    {
+      "id": "studio-growth",
+      "name": "Atelier Growth Retainer",
+      "tier": "Growth",
+      "monthlyPrice": 49999,
+      "quarterlyPrice": 142499,
+      "annualPrice": 509999,
+      "deliverablesCount": 10,
+      "features": [
+        "10 Premium Multi-Discipline Deliverables",
+        "Priority 24h Production Queue",
+        "Dedicated Executive Producer Assignment",
+        "Full 3D, Video & Web Application Scope",
+        "Google Drive Real-Time Vault Mirroring"
+      ],
+      "active": true
+    },
+    {
+      "id": "studio-enterprise",
+      "name": "Bespoke Enterprise Atelier",
+      "tier": "Enterprise",
+      "monthlyPrice": 99999,
+      "quarterlyPrice": 284999,
+      "annualPrice": 1019999,
+      "deliverablesCount": 25,
+      "features": [
+        "Unlimited Priority Creative Pipeline",
+        "Same-Day Production Turnaround",
+        "Dedicated Creative Director & Tech Team",
+        "Custom Custom Engine Workflows",
+        "Enterprise SLA & NDA Protection"
+      ],
+      "active": true
+    }
+  ],
+  "clients": [
+    {
+      "id": "cl-1",
+      "uid": "usr_mock_001",
+      "name": "Yash Joshi",
+      "company": "Studio Living Architecture",
+      "email": "yash@studioliving.com",
+      "phone": "+91 98765 43210",
+      "tier": "Enterprise",
+      "driveFolderId": "drive_fld_sutra_001",
+      "driveFolderPath": "drive_fld_sutra_001/MASTER_VAULT",
+      "status": "Active",
+      "activeOrders": 2,
+      "lifetimeVolume": "₹1,85,000",
+      "createdAt": "2026-08-01T00:00:00.000Z"
+    },
+    {
+      "id": "cl-2",
+      "uid": "usr_mock_002",
+      "name": "Aarav Singhania",
+      "company": "Maison Aura Luxury Fragrances",
+      "email": "aarav@maisonaura.com",
+      "phone": "+91 98765 43211",
+      "tier": "Enterprise",
+      "driveFolderId": "drive_fld_maison_002",
+      "driveFolderPath": "drive_fld_maison_002/MASTER_VAULT",
+      "status": "Active",
+      "activeOrders": 1,
+      "lifetimeVolume": "₹3,40,000",
+      "createdAt": "2026-08-15T00:00:00.000Z"
+    },
+    {
+      "id": "cl-3",
+      "uid": "usr_mock_003",
+      "name": "Vikramaditya Oberoi",
+      "company": "Zenith Living Resorts",
+      "email": "vikram@zenithliving.com",
+      "phone": "+91 98765 43212",
+      "tier": "Growth",
+      "driveFolderId": "drive_fld_zenith_003",
+      "driveFolderPath": "drive_fld_zenith_003/MASTER_VAULT",
+      "status": "Active",
+      "activeOrders": 1,
+      "lifetimeVolume": "₹95,000",
+      "createdAt": "2026-09-01T00:00:00.000Z"
+    }
+  ],
+  "orders": [
+    {
+      "id": "ord_001",
+      "code": "#ORD-001",
+      "orderNumber": "ORD-2026-0001",
+      "title": "3D Spatial Architecture — Luxury Living Suite",
+      "service": "3D Visualization",
+      "type": "service",
+      "items": [
+        {
+          "serviceId": "3d-modeling",
+          "name": "3D Spatial Architecture",
+          "price": 9499,
+          "quantity": 1
+        }
+      ],
+      "totalAmount": 9499,
+      "status": "awaiting_approval",
+      "statusLabel": "Awaiting Client Approval",
+      "source": "dashboard",
+      "deliverablePreview": "4K Render Pass 02 with warm teak wood materials and diffused sunlight.",
+      "clientUid": "usr_mock_001",
+      "clientId": "usr_mock_001",
+      "clientName": "Yash Joshi",
+      "clientEmail": "yash@studioliving.com",
+      "clientPhone": "+91 98765 43210",
+      "driveFolderId": "drive_fld_sutra_001",
+      "driveFolderPath": "drive_fld_sutra_001/3D_RENDERS",
+      "revisionRound": 1,
+      "maxRevisions": 2,
+      "paymentStatus": "paid",
+      "razorpayOrderId": "order_mock_001",
+      "razorpayPaymentId": "pay_live_sutra_001",
+      "amountPaid": 9499,
+      "paidAt": "2026-09-28T10:05:00.000Z",
+      "paymentMethod": "razorpay_upi",
+      "deliverables": [
+        {
+          "driveFileId": "drive_55a120ef_sutra",
+          "filename": "Pavilion_Villa_Baked_Model.gltf",
+          "checksum": "sha256:7c9921e54f01f0987a...",
+          "fileSize": "42.1 MB",
+          "mimeType": "model/gltf+json"
+        }
+      ],
+      "statusHistory": [
+        {
+          "status": "pending_payment",
+          "changedAt": "2026-09-28T10:00:00.000Z",
+          "changedBy": "client",
+          "note": "Commission created via Client Portal"
+        },
+        {
+          "status": "paid",
+          "changedAt": "2026-09-28T10:05:00.000Z",
+          "changedBy": "system",
+          "note": "Payment verified via Razorpay (pay_live_sutra_001)"
+        },
+        {
+          "status": "in_progress",
+          "changedAt": "2026-09-28T11:00:00.000Z",
+          "changedBy": "admin",
+          "note": "3D Modeling pipeline initialized in Unreal Engine 5.4"
+        },
+        {
+          "status": "delivered",
+          "changedAt": "2026-09-28T17:30:00.000Z",
+          "changedBy": "admin",
+          "note": "Initial 4K renders and GLTF models synced to Google Drive Vault"
+        }
+      ],
+      "createdAt": "2026-09-28T10:00:00.000Z",
+      "updatedAt": "2026-09-28T17:30:00.000Z"
+    },
+    {
+      "id": "ord_002",
+      "code": "#ORD-002",
+      "orderNumber": "ORD-2026-0002",
+      "title": "Commercial Video Reel — Zenith Horizon 4K",
+      "service": "Cinematic Video",
+      "type": "service",
+      "items": [
+        {
+          "serviceId": "cinematic-reel",
+          "name": "Commercial Video Reel",
+          "price": 14999,
+          "quantity": 1
+        }
+      ],
+      "totalAmount": 14999,
+      "status": "in_progress",
+      "statusLabel": "In Production",
+      "source": "dashboard",
+      "deliverablePreview": "Rough cut color graded in DaVinci Resolve with spatial audio passes.",
+      "clientUid": "usr_mock_001",
+      "clientId": "usr_mock_001",
+      "clientName": "Yash Joshi",
+      "clientEmail": "yash@studioliving.com",
+      "driveFolderId": "drive_fld_sutra_001",
+      "driveFolderPath": "drive_fld_sutra_001/VIDEO_MASTERS",
+      "revisionRound": 0,
+      "maxRevisions": 2,
+      "paymentStatus": "paid",
+      "razorpayOrderId": "order_mock_002",
+      "razorpayPaymentId": "pay_live_sutra_002",
+      "amountPaid": 14999,
+      "paidAt": "2026-09-29T11:50:00.000Z",
+      "deliverables": [],
+      "statusHistory": [
+        {
+          "status": "pending_payment",
+          "changedAt": "2026-09-29T11:45:00.000Z",
+          "changedBy": "client",
+          "note": "Commission created via Client Portal"
+        },
+        {
+          "status": "paid",
+          "changedAt": "2026-09-29T11:50:00.000Z",
+          "changedBy": "system",
+          "note": "Payment verified via Razorpay (pay_live_sutra_002)"
+        },
+        {
+          "status": "in_progress",
+          "changedAt": "2026-09-29T14:00:00.000Z",
+          "changedBy": "admin",
+          "note": "Footage ingested into Studio DaVinci Resolve cloud station"
+        }
+      ],
+      "createdAt": "2026-09-29T11:45:00.000Z",
+      "updatedAt": "2026-09-29T14:00:00.000Z"
+    }
+  ],
+  "knowledgeBase": [
+    {
+      "id": "kb_001",
+      "title": "4K Spatial Render Deliverables & SLA",
+      "category": "service_details",
+      "question": "What is included in a 3D Spatial Architecture deliverable?",
+      "answer": "Each 3D Spatial Architecture commission includes 4K ultra-high resolution renders (ProRes / EXR / PNG), baked GLTF/GLB models for web embedding, 2 lighting passes (Midday & Golden Hour), and 2 revision rounds with 48h turnaround.",
+      "status": "active",
+      "source": "admin_manual",
+      "createdAt": "2026-09-15T10:00:00.000Z",
+      "updatedAt": "2026-09-15T10:00:00.000Z"
+    },
+    {
+      "id": "kb_002",
+      "title": "Client Google Drive Vault Protocol",
+      "category": "business_rules",
+      "question": "How are final renders and assets delivered to clients?",
+      "answer": "All production masters, project archives, videos, and 3D files are encrypted and automatically mirrored to the client's dedicated Google Drive Vault folder (e.g. drive_fld_sutra_001). Direct access links are accessible in Media Vault.",
+      "status": "active",
+      "source": "admin_manual",
+      "createdAt": "2026-09-16T11:30:00.000Z",
+      "updatedAt": "2026-09-16T11:30:00.000Z"
+    },
+    {
+      "id": "kb_003",
+      "title": "Payment Terms & Razorpay Workflow",
+      "category": "business_rules",
+      "question": "What payment options are available and when does production start?",
+      "answer": "Commissions require upfront payment via Razorpay Checkout (UPI, Cards, NetBanking, Corporate). Once payment status transitions to 'paid', the order enters active production queue.",
+      "status": "active",
+      "source": "admin_manual",
+      "createdAt": "2026-09-18T14:00:00.000Z",
+      "updatedAt": "2026-09-18T14:00:00.000Z"
+    }
+  ],
+  "ai_settings": [
+    {
+      "id": "global_config",
+      "systemPrompt": "You are Sutra AI, the intelligent concierge and creative technology consultant for SUTRA STUDIO—an elite bespoke atelier blending timeless Indian aesthetic harmony with state-of-the-art computational workflows. Tone: Luxurious, refined, hospitable ('Namaste 🙏'). Never invent prices. Always refer strictly to official pricing.",
+      "tone": "luxury_atelier",
+      "defaultPrompt": "You are Sutra AI, the intelligent concierge and creative technology consultant for SUTRA STUDIO.",
+      "lastUpdated": "2026-10-02T19:33:23.222Z",
+      "updatedBy": "Raghavan Sharma (Lead Producer)"
+    }
+  ],
+  "media_assets": [
+    {
+      "id": "asset_001",
+      "name": "Aura_Noir_4K_Final_Render_01.png",
+      "driveFileId": "drive_09a823bf_sutra",
+      "folder": "3D_RENDERS",
+      "type": "image",
+      "size": "18.4 MB",
+      "dimensions": "3840 x 2160 (4K UHD)",
+      "format": "PNG",
+      "checksum": "sha256:8f4b23c91e0a2938475610293847561029384756102938475610293847561029",
+      "updatedAt": "2026-09-28T14:20:00.000Z"
+    },
+    {
+      "id": "asset_002",
+      "name": "Zenith_Commercial_Reel_1080p.mp4",
+      "driveFileId": "drive_89c314de_sutra",
+      "folder": "VIDEO_MASTERS",
+      "type": "video",
+      "size": "142.8 MB",
+      "dimensions": "1920 x 1080 (ProRes Master)",
+      "format": "MP4 / H.265",
+      "checksum": "sha256:3d1e9912ba44556677889900aabbccddeeff00112233445566778899aabbccdd",
+      "updatedAt": "2026-09-29T16:45:00.000Z"
+    },
+    {
+      "id": "asset_003",
+      "name": "Pavilion_Villa_Baked_Model.gltf",
+      "driveFileId": "drive_55a120ef_sutra",
+      "folder": "3D_RENDERS",
+      "type": "3d",
+      "size": "42.1 MB",
+      "dimensions": "Polygons: 184,000 | Baked Textures: 4K",
+      "format": "GLTF / GLB",
+      "checksum": "sha256:7c9921e54f01f0987a1234567890abcdef1234567890abcdef1234567890abcdef",
+      "updatedAt": "2026-09-28T17:15:00.000Z"
+    }
+  ]
+}

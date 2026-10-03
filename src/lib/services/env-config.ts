@@ -41,7 +41,7 @@ export function getSutraConfig(): SutraEnvConfig {
   const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || "";
 
   return {
-    appUrl: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001",
+    appUrl: process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudio.com",
     isProduction: process.env.NODE_ENV === "production",
     firebase: {
       apiKey,

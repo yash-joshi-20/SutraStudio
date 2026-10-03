@@ -1,22 +1,32 @@
 import { NextResponse } from "next/server";
+import { getAuthenticatedUser } from "@/lib/auth/serverAuth";
+import { AuditLogService } from "@/lib/services/auditLogService";
 
-const logs: any[] = [];
-
-export async function GET() {
-  return NextResponse.json({ logs: logs.slice(-100) });
-}
-
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const now = new Date().toISOString();
-    logs.push({
-      id: `log_${Date.now()}`,
-      ...body,
-      timestamp: body.timestamp || now,
-    });
-    return NextResponse.json({ success: true });
-  } catch (e) {
-    return NextResponse.json({ error: 'Failed' }, { status: 400 });
+export async function GET(req: Request) {
+  const user = await getAuthenticatedUser(req);
+  if (!user.isAdmin && user.role !== "admin") {
+    return NextResponse.json(
+      { error: "Unauthorized: Administrative privileges required to inspect audit logs." },
+      { status: 403 }
+    );
   }
+
+  const url = new URL(req.url);
+  const targetType = url.searchParams.get("targetType") || undefined;
+  const targetId = url.searchParams.get("targetId") || undefined;
+  const action = url.searchParams.get("action") || undefined;
+  const query = url.searchParams.get("query") || undefined;
+
+  const logs = AuditLogService.filter({
+    targetType,
+    targetId,
+    action,
+    query,
+  });
+
+  return NextResponse.json({
+    success: true,
+    totalCount: logs.length,
+    logs,
+  });
 }

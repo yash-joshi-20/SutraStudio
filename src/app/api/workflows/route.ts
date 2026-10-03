@@ -30,12 +30,11 @@ export async function GET(req: Request) {
     supportedEngines: VALID_WORKFLOW_ENGINES,
     isolationEnforced: true,
     n8nPipelines: [
-      "synapse-master-orchestrator",
-      "synapse-client-intake-chat",
-      "synapse-trend-research-engine",
-      "synapse-brand-banner-generator",
-      "synapse-video-reels-pipeline",
-      "synapse-meta-ads-automation",
+      "W1_order_fulfillment_router",
+      "W2_approval_and_publish",
+      "W3_monthly_plan_content",
+      "W4_error_handler",
+      "W5_agency_daily_autopost",
     ],
   });
 }
@@ -63,21 +62,12 @@ export async function POST(req: Request) {
       );
     }
 
-    // Map workflowType to specific n8n pipeline
-    let n8nWorkflowId:
-      | "synapse-master-orchestrator"
-      | "synapse-brand-banner-generator"
-      | "synapse-video-reels-pipeline"
-      | "synapse-meta-ads-automation"
-      | "synapse-trend-research-engine" = "synapse-master-orchestrator";
-
-    if (workflowType === "image") n8nWorkflowId = "synapse-brand-banner-generator";
-    else if (workflowType === "video") n8nWorkflowId = "synapse-video-reels-pipeline";
-    else if (workflowType === "marketing") n8nWorkflowId = "synapse-meta-ads-automation";
+    const n8nWorkflowId = "W1_order_fulfillment_router";
 
     const n8nResult = await N8nAutomationService.dispatchWorkflow({
       workflowId: n8nWorkflowId,
       orderId: orderId || `ORD-${Date.now()}`,
+      service: workflowType,
       niche,
       plan: plan || "starter",
       services: [workflowType],
@@ -98,15 +88,16 @@ export async function POST(req: Request) {
       containerIsolation: "Strict sandbox - single worker dispatched",
       status: n8nResult.status,
       action: action || "dispatch",
-      n8nOutput: n8nResult.output,
-      message: n8nResult.message,
-      targetStorage: "Google Drive Client Folder",
       timestamp: new Date().toISOString(),
+      governance: "Sutra Studio Workflow Orchestrator v2.0",
     });
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to dispatch workflow. Malformed request payload." },
-      { status: 400 }
+      {
+        error: "Internal workflow isolation dispatch failure.",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
     );
   }
 }

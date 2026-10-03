@@ -69,104 +69,55 @@ export default function ClientFormPage() {
 
   // Step 1: Company
   const [company, setCompany] = useState<CompanyInfo>({
-    name: "Shri Ram Tech",
-    tagline: "Pioneering AI & Cloud Transformation Solutions",
-    description: "Shri Ram Tech delivers enterprise-grade AI chatbots, computational intelligence, and high-performance full-stack web platforms for high-growth businesses.",
-    about: "Founded with a vision of ethical and high-impact technology, Shri Ram Tech helps global enterprises modernize workflows, integrate intelligent knowledge bases, and scale digital operations.",
-    industry: "Information Technology & Artificial Intelligence",
-    foundedYear: "2022",
-    companySize: "50-100 Employees",
-    websiteUrl: "https://shriramtech.com",
-    logoUrl: "/brand/LOGO/LOGO-1.png",
+    name: "",
+    tagline: "",
+    description: "",
+    about: "",
+    industry: "",
+    foundedYear: "",
+    companySize: "",
+    websiteUrl: "",
+    logoUrl: "",
   });
 
   // Step 2: Services
-  const [services, setServices] = useState<ServiceItem[]>([
-    {
-      id: "srv-1",
-      name: "Enterprise AI Chatbots & RAG",
-      shortDescription: "Secure, verified multi-tenant knowledge retrieval assistants.",
-      detailedDescription: "Custom-trained AI agents grounded exclusively in approved company documentation with strict multi-tenant access control and zero hallucination safeguards.",
-      features: ["Knowledge Base Vector Search", "Admin Review & Approval Gate", "Lead Capture Integration", "24/7 Multi-Channel Deployment"],
-      startingPrice: "₹14,999",
-      ctaText: "Deploy AI Chatbot",
-    },
-  ]);
+  const [services, setServices] = useState<ServiceItem[]>([]);
 
   // Step 3: Products
-  const [products, setProducts] = useState<ProductItem[]>([
-    {
-      id: "prd-1",
-      name: "RamBot Enterprise Hub",
-      description: "Autonomous customer inquiry and lead routing engine with instant human handoff.",
-      features: ["Real-Time RAG Retrieval", "Instant Human Handoff", "Admin Knowledge Sync"],
-      price: "₹12,499 / mo",
-      productUrl: "https://shriramtech.com/products/rambot",
-    },
-  ]);
+  const [products, setProducts] = useState<ProductItem[]>([]);
 
   // Step 4: Pricing Plans
-  const [pricingPlans, setPricingPlans] = useState<PricingPlanItem[]>([
-    {
-      id: "plan-1",
-      name: "Startup Tier",
-      category: "Cloud Assistant",
-      price: "₹5,999",
-      billingPeriod: "monthly",
-      description: "Essential AI assistant grounded in single-tenant verified knowledge base.",
-      features: ["Up to 5,000 inquiries/mo", "50 Approved Knowledge Chunks", "Email Lead Alerts", "Standard Support"],
-      ctaText: "Choose Startup",
-      isPopular: false,
-    },
-    {
-      id: "plan-2",
-      name: "Growth Enterprise",
-      category: "Full Atelier Suite",
-      price: "₹12,999",
-      billingPeriod: "monthly",
-      description: "Unlimited knowledge vectorization with custom human-handoff pipelines.",
-      features: ["Unlimited Inquiries", "Instant Live Human Takeover", "Document Vector Processing", "Dedicated Account Lead"],
-      ctaText: "Select Growth",
-      isPopular: true,
-    },
-  ]);
+  const [pricingPlans, setPricingPlans] = useState<PricingPlanItem[]>([]);
 
   // Step 5: FAQs
-  const [faqs, setFaqs] = useState<FAQItem[]>([
-    {
-      id: "faq-1",
-      question: "How does the Shri Ram Tech AI Chatbot ensure data accuracy?",
-      answer: "Our chatbot is strictly grounded in an Admin-Approved Knowledge Base. It only retrieves and presents information that has been reviewed, approved, and published by authorized administrators, completely eliminating hallucinations.",
-      category: "AI & Security",
-    },
-  ]);
+  const [faqs, setFaqs] = useState<FAQItem[]>([]);
 
   // Step 6: Contact
   const [contact, setContact] = useState<ContactInfo>({
-    email: "contact@shriramtech.com",
-    phone: "+91 98765 43210",
-    whatsapp: "+91 98765 43210",
-    address: "Tech Heritage Park, Sector 62",
-    city: "Noida",
-    state: "Uttar Pradesh",
+    email: "",
+    phone: "",
+    whatsapp: "",
+    address: "",
+    city: "",
+    state: "",
     country: "India",
-    businessHours: "Monday - Saturday: 9:00 AM - 7:00 PM IST",
-    googleMapsUrl: "https://maps.google.com",
-    contactPageUrl: "https://shriramtech.com/contact",
+    businessHours: "Monday - Saturday: 9:30 AM - 7:00 PM IST",
+    googleMapsUrl: "",
+    contactPageUrl: "",
     socialMedia: {
-      linkedin: "https://linkedin.com/company/shriramtech",
-      twitter: "https://twitter.com/shriramtech",
+      linkedin: "",
+      twitter: "",
     },
   });
 
   // Step 7: Policies
   const [policies, setPolicies] = useState<PoliciesInfo>({
-    termsAndConditions: "Services are provisioned under verified enterprise SLAs with guaranteed response times.",
-    privacyPolicy: "Shri Ram Tech respects client confidentiality. All submitted business data is encrypted at rest and in transit.",
-    refundPolicy: "Full refund within 14 days of project commencement if initial milestones are unmet.",
-    shippingPolicy: "Digital deliverables are synchronized immediately to the client vault.",
-    cancellationPolicy: "Subscriptions may be canceled with 30 days written notice.",
-    customInformation: "Custom enterprise integrations available upon request.",
+    termsAndConditions: "",
+    privacyPolicy: "",
+    refundPolicy: "",
+    shippingPolicy: "",
+    cancellationPolicy: "",
+    customInformation: "",
   });
 
   // Step 8: Documents

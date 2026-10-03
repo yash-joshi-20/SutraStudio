@@ -35,11 +35,11 @@ const PUBLIC_NAV_LINKS: NavLinkItem[] = [
 ];
 
 const CLIENT_NAV_LINKS: NavLinkItem[] = [
-  { name: "Services", href: "/services" },
-  { name: "Pricing", href: "/pricing" },
+  { name: "Workspace", href: "/dashboard" },
   { name: "My Orders", href: "/orders" },
   { name: "My Projects", href: "/projects-client" },
-  { name: "Mobile App", href: "/mobile-app" },
+  { name: "Media Vault", href: "/media" },
+  { name: "Invoices", href: "/invoices" },
 ];
 
 const ADMIN_NAV_LINKS: NavLinkItem[] = [
@@ -314,7 +314,7 @@ export function Navbar() {
                       size="md"
                       onClick={() => {
                         setMobileMenuOpen(false);
-                        logout();
+                        void logout();
                       }}
                       className="w-full text-[#64748B] min-h-[44px]"
                     >
