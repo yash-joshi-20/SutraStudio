@@ -49,6 +49,7 @@ import { openRazorpayCheckout } from "@/lib/services/razorpayClient";
 import { OrderReceiptModal, ReceiptOrderData } from "@/components/orders/OrderReceiptModal";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { computeOrderProgress, type OrderProgressInfo } from "@/lib/services/orderProgress";
+import { uploadFileToDrive } from "@/lib/drive/useDriveUpload";
 
 // Unified Order Item representing both legacy and modern Firestore orders
 interface OrderItem {
@@ -218,6 +219,14 @@ export default function OrdersPage() {
   });
   const [driveLink, setDriveLink] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<{ name: string; size: string }[]>([]);
+  // Real File objects behind the staged list. Kept OUT of `uploadedFiles` so
+  // cloud-draft JSON never tries to serialise a Blob (STEP 30: briefs land in
+  // the order's "01 Client Assets" folder via a browser → Drive session).
+  const [stagedFileBlobs, setStagedFileBlobs] = useState<File[]>([]);
+  const [stagedUploadStatus, setStagedUploadStatus] = useState<
+    Record<string, { phase: string; percent: number; error?: string; driveFileId?: string }>
+  >({});
+  const [isUploadingAttachments, setIsUploadingAttachments] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(true);
 
   // Draft Management State
@@ -680,20 +689,77 @@ export default function OrdersPage() {
     setIsNewOrderOpen(true);
   };
 
-  // Mock file attachment handler with size check
+  // Stage brief attachments for upload once the order exists on the server
   const handleAddFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      const newItems = Array.from(files).map((f) => ({
+      const list = Array.from(files);
+      const newItems = list.map((f) => ({
         name: f.name,
         size: `${(f.size / (1024 * 1024)).toFixed(1)} MB`,
       }));
       setUploadedFiles((prev) => [...prev, ...newItems]);
+      setStagedFileBlobs((prev) => [...prev, ...list]);
     }
+    // Allow the same file to be picked again after a failed upload.
+    e.target.value = "";
   };
 
   const handleRemoveFile = (index: number) => {
+    const target = uploadedFiles[index];
     setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+    setStagedFileBlobs((prev) => {
+      if (!target || prev.length === 0) return prev;
+      const matchAt = prev.findIndex(
+        (f) => f.name === target.name && `${(f.size / (1024 * 1024)).toFixed(1)} MB` === target.size
+      );
+      return matchAt === -1 ? prev : prev.filter((_, i) => i !== matchAt);
+    });
+  };
+
+  /**
+   * Push staged brief attachments into the order's "01 Client Assets" folder.
+   * Runs right after the order exists and BEFORE Razorpay opens, so a rejected
+   * file is reported instead of silently dropped. Briefs are capped at 50 MB
+   * each / 200 MB total by DEFAULT_CONTENT_POLICY, so this is seconds of work.
+   * Returns an error message, or null when everything landed.
+   */
+  const uploadStagedAttachments = async (orderId: string): Promise<string | null> => {
+    if (stagedFileBlobs.length === 0) return null;
+    setIsUploadingAttachments(true);
+    try {
+      for (const meta of uploadedFiles) {
+        const key = `${meta.name}::${meta.size}`;
+        if (stagedUploadStatus[key]?.driveFileId) continue;
+
+        const blob = stagedFileBlobs.find(
+          (f) => f.name === meta.name && `${(f.size / (1024 * 1024)).toFixed(1)} MB` === meta.size
+        );
+        if (!blob) continue;
+
+        setStagedUploadStatus((s) => ({ ...s, [key]: { phase: "opening", percent: 0 } }));
+        try {
+          const file = await uploadFileToDrive(blob, {
+            orderId,
+            kind: "client_assets",
+            notes: `Client brief attachment for ${commissionTitle.trim() || "new commission"}`,
+            onProgress: (p) =>
+              setStagedUploadStatus((s) => ({ ...s, [key]: { phase: p.phase, percent: p.percent } })),
+          });
+          setStagedUploadStatus((s) => ({
+            ...s,
+            [key]: { phase: "done", percent: 100, driveFileId: file.driveFileId },
+          }));
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : "Upload failed.";
+          setStagedUploadStatus((s) => ({ ...s, [key]: { phase: "error", percent: 0, error: message } }));
+          return message;
+        }
+      }
+      return null;
+    } finally {
+      setIsUploadingAttachments(false);
+    }
   };
 
   // Submit New Order with DOUBLE-SUBMIT PROTECTION & SERVER PRICE RECOMPUTATION
@@ -813,6 +879,18 @@ export default function OrdersPage() {
       };
 
       setOrders((prev) => [newOrderCreated, ...prev.filter((o) => o.id !== newOrderCreated.id)]);
+
+      // STEP 30: land the staged briefs in the order's Drive folder now that it
+      // has a real id. A rejected file must not cancel the order, but it must
+      // be reported rather than silently dropped.
+      if (stagedFileBlobs.length > 0) {
+        const attachmentError = await uploadStagedAttachments(data.order.id);
+        if (attachmentError) {
+          setSubmitError(
+            `Order registered, but an attachment could not be uploaded: ${attachmentError} You can re-send it from the order page.`
+          );
+        }
+      }
 
       // Open Razorpay Branded Checkout Modal
       if (data.razorpay && data.razorpay.orderId) {
@@ -2482,26 +2560,54 @@ export default function OrdersPage() {
                       Staged Attachments ({uploadedFiles.length})
                     </span>
                     <div className="space-y-1.5">
-                      {uploadedFiles.map((file, i) => (
-                        <div
-                          key={i}
-                          className="p-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] flex items-center justify-between text-xs"
-                        >
-                          <div className="flex items-center gap-2">
-                            <FileText className="w-4 h-4 text-[#A98B57] shrink-0" />
-                            <span className="font-semibold text-[#0F172A]">{file.name}</span>
-                            <span className="text-[10px] text-[#94A3B8]">({file.size})</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveFile(i)}
-                            className="text-xs text-[#DC2626] hover:underline cursor-pointer"
+                      {uploadedFiles.map((file, i) => {
+                        const status = stagedUploadStatus[`${file.name}::${file.size}`];
+                        return (
+                          <div
+                            key={i}
+                            className="p-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] flex items-center justify-between text-xs gap-2"
                           >
-                            Remove
-                          </button>
-                        </div>
-                      ))}
+                            <div className="flex items-center gap-2 min-w-0">
+                              <FileText className="w-4 h-4 text-[#A98B57] shrink-0" />
+                              <span className="font-semibold text-[#0F172A] truncate">{file.name}</span>
+                              <span className="text-[10px] text-[#94A3B8] shrink-0">({file.size})</span>
+                              {status && (
+                                <span
+                                  className={`text-[10px] font-bold shrink-0 ${
+                                    status.phase === "done"
+                                      ? "text-[#15803D]"
+                                      : status.phase === "error"
+                                        ? "text-[#DC2626]"
+                                        : "text-[#A98B57]"
+                                  }`}
+                                >
+                                  {status.phase === "done"
+                                    ? "In Drive"
+                                    : status.phase === "error"
+                                      ? "Failed"
+                                      : `${status.percent}%`}
+                                </span>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFile(i)}
+                              className="text-xs text-[#DC2626] hover:underline cursor-pointer shrink-0"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
+                    {Object.values(stagedUploadStatus).some((s) => s.error) && (
+                      <p className="text-[11px] text-[#DC2626]">
+                        {Object.values(stagedUploadStatus)
+                          .map((s) => s.error)
+                          .filter(Boolean)
+                          .join(" ")}
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -2693,7 +2799,9 @@ export default function OrdersPage() {
                     <span>Vault Sync: Google Drive Encrypted</span>
                     <span>
                       {uploadedFiles.length > 0
-                        ? `${uploadedFiles.length} file(s) staged`
+                        ? isUploadingAttachments
+                          ? `Uploading ${uploadedFiles.length} file(s) → Google Drive…`
+                          : `${uploadedFiles.length} file(s) staged`
                         : driveLink
                         ? "External Drive link attached"
                         : "No reference files"}

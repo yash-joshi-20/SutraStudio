@@ -4,6 +4,10 @@
  * Boots the real Web SDK from NEXT_PUBLIC_* values only.
  * If configuration is incomplete the app degrades to an explicit
  * "not configured" state instead of pretending to be signed in.
+ *
+ * STEP 30: Firebase provides Authentication and Firestore ONLY. Object
+ * storage lives in Google Drive — there is no Storage SDK here and no
+ * Cloud Functions at all (no Blaze plan required).
  */
 
 "use client";
@@ -11,7 +15,6 @@
 import { getApps, initializeApp, type FirebaseApp } from "firebase/app";
 import { getAuth, browserLocalPersistence, browserSessionPersistence, setPersistence, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
-import { getStorage, type FirebaseStorage } from "firebase/storage";
 import {
   readPublicEnv,
   isEnvSet,
@@ -22,7 +25,6 @@ export interface FirebaseClientConfig {
   apiKey: string;
   authDomain: string;
   projectId: string;
-  storageBucket: string;
   messagingSenderId: string;
   appId: string;
 }
@@ -31,7 +33,6 @@ let app: FirebaseApp | null = null;
 let cached: {
   auth: Auth;
   db: Firestore;
-  storage: FirebaseStorage | null;
   config: FirebaseClientConfig;
 } | null = null;
 
@@ -60,7 +61,6 @@ export function getFirebaseClient() {
     apiKey: readPublicEnv("NEXT_PUBLIC_FIREBASE_API_KEY" as EnvKey),
     authDomain: readPublicEnv("NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN" as EnvKey),
     projectId: readPublicEnv("NEXT_PUBLIC_FIREBASE_PROJECT_ID" as EnvKey),
-    storageBucket: readPublicEnv("NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET" as EnvKey),
     messagingSenderId: readPublicEnv("NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID" as EnvKey),
     appId: readPublicEnv("NEXT_PUBLIC_FIREBASE_APP_ID" as EnvKey),
   };
@@ -70,7 +70,6 @@ export function getFirebaseClient() {
   cached = {
     auth: getAuth(app),
     db: getFirestore(app),
-    storage: config.storageBucket ? getStorage(app) : null,
     config,
   };
   return cached;
@@ -82,10 +81,6 @@ export function getFirebaseAuth(): Auth {
 
 export function getFirebaseDb(): Firestore {
   return getFirebaseClient().db;
-}
-
-export function getFirebaseStorage(): FirebaseStorage | null {
-  return getFirebaseClient().storage;
 }
 
 /** "Keep me signed in" → local persistence, otherwise session-only. */

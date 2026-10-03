@@ -28,8 +28,8 @@ Principles: Firebase = system of record for **metadata and references**; Google 
 | Motion | **GSAP + ScrollTrigger** (hero, parallax, counters, 360° scrub); **Framer Motion** (route/modal/wizard/list transitions). Minimal, light, reduced-motion aware |
 | UI primitives | shadcn/ui (Radix), Lucide icons |
 | Forms | React Hook Form + Zod |
-| Auth/DB | Firebase Auth, Firestore, Firebase Admin SDK (server), Cloud Functions (optional, for triggers) |
-| Files | Google Drive API v3 (server-side OAuth/service account) |
+| Auth/DB | Firebase Auth, Firestore, Firebase Admin SDK (server). **No Cloud Functions** — triggers/schedules run through n8n or external cron against `/api/cron/*` (Spark plan only, no Blaze) |
+| Files | Google Drive API v3 via **OAuth refresh token** (`drive.file` scope). **No Firebase Storage.** A service account has no quota on a personal 5 TB Drive, so it must be an OAuth refresh token; browser → Drive direct resumable upload for large files |
 | Workflows | n8n (TBC: existing instance/workflows) |
 | AI | Provider abstraction (see §9) — TBC existing providers |
 | 3D/360 | react-three-fiber/drei, image-sequence or Pannellum viewer (lazy) |

@@ -1,21 +1,68 @@
 /**
- * SUTRA STUDIO — Google Drive Service & Vault Integration
- * 
- * Secure Backend Google Drive API Integration:
- * - Google Cloud Service Account authentication using native Node.js crypto (RSA-SHA256 JWT)
- * - Automatic folder provisioning: Root > Clients > {clientName-clientId} > {orderNumber-serviceName} >
- *     • "01 Client Assets"
- *     • "02 Drafts"
- *     • "03 Final Delivery"
- *     • "04 Revisions"
- * - Resumable & multipart upload stream proxy (browser never sees service account credentials)
- * - Strict non-public access: Files served via short-lived authenticated stream/download proxy
- * - External Google Drive link verification & accessibility hints
- * - Resilient fallback mode when live GCP credentials are not yet configured in local environment
+ * SUTRA STUDIO — Google Drive Storage Service (Server Only)
+ *
+ * STEP 30 architecture override: Drive is the ONLY object store. Firebase
+ * Storage and Cloud Functions are gone; every byte lives in the studio's
+ * 5 TB Google account.
+ *
+ *  - Auth: OAuth **refresh token** exchanged server-side for a short-lived
+ *    access token. Scope is the NARROW `drive.file` (files this app created
+ *    or opened) — not the full `drive` scope.
+ *  - The app provisions its own root folder, because a folder created by a
+ *    different app is invisible under `drive.file`.
+ *  - Folder contract:  Root > Clients > {clientName-uid} >
+ *                      {orderNumber-serviceName} > 01 Client Assets /
+ *                      02 Drafts / 03 Final / 04 Revisions
+ *                      Root > Monthly > YYYY-MM > date
+ *  - Uploads: the backend opens a resumable session; the BROWSER PUTs chunks
+ *    straight to Drive. File bytes never pass through a Next.js route.
+ *  - No fake success: every unconfigured path throws NotConfiguredError so the
+ *    API layer can answer an honest 503 instead of inventing IDs.
  */
 
-import crypto from "crypto";
+import "server-only";
+import { readEnv, isGoogleDriveConfigured } from "@/lib/config/env";
+import { NotConfiguredError } from "@/lib/firebase/admin";
+import { adminDb, serverTimestamp, fieldDelete } from "@/lib/firebase/admin";
+import type { DocumentSnapshot, QuerySnapshot, Query } from "firebase-admin/firestore";
+import {
+  DRIVE_CHUNK_BYTES,
+  DRIVE_CLIENTS_FOLDER,
+  DRIVE_MONTHLY_FOLDER,
+  DRIVE_ORDER_SUBFOLDERS,
+  DRIVE_ROOT_FOLDER_NAME,
+  DRIVE_CONFIG_DOC,
+  type DriveCategoryKey,
+} from "@/lib/config/driveStorage";
 
+const DRIVE_API = "https://www.googleapis.com/drive/v3";
+const DRIVE_UPLOAD_API = "https://www.googleapis.com/upload/drive/v3";
+const TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
+
+/** Narrow scope: only files this application created or opened. */
+export const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+
+const FOLDER_MIME = "application/vnd.google-apps.folder";
+const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
+
+/** Firestore snapshot → plain object. `data()` may be undefined on a deleted doc. */
+function fromSnap<T>(snap: DocumentSnapshot): T | null {
+  if (!snap.exists) return null;
+  return ({ id: snap.id, ...(snap.data() ?? {}) }) as T;
+}
+
+function fromQuery<T>(snap: QuerySnapshot): T[] {
+  return snap.docs.map((d) => ({ id: d.id, ...(d.data() ?? {}) }) as T);
+}
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+/**
+ * Legacy friendly keys kept stable because `orders/{id}.driveSubfolders` in
+ * Firestore and the admin order panel already read them.
+ */
 export interface DriveFolderStructure {
   rootFolderId: string;
   clientFolderId: string;
@@ -38,17 +85,36 @@ export interface DriveFileMetadata {
   size: number;
   mimeType: string;
   driveFolderId: string;
-  subfolderCategory: "client_assets" | "drafts" | "final_delivery" | "revisions";
+  subfolderCategory: DriveCategoryKey;
   webViewLink?: string;
   webContentLink?: string;
   uploadedAt: string;
-  uploadedBy: {
-    uid: string;
-    name: string;
-    role: "client" | "admin" | "producer";
-  };
+  uploadedBy: { uid: string; name: string; role: "client" | "admin" | "producer" };
   version?: number;
   notes?: string;
+}
+
+/** Firestore record — METADATA ONLY. Never file bytes. */
+export interface DriveFileRecord {
+  driveFileId: string;
+  folderId: string;
+  name: string;
+  mimeType: string;
+  size: number;
+  kind: DriveCategoryKey;
+  orderId?: string;
+  clientId: string;
+  version: number;
+  createdAt: string;
+  shareState: "private" | "shared";
+  sharePermissionId?: string;
+  sharedAt?: string;
+  webViewLink?: string;
+  uploadedByUid?: string;
+  uploadedByName?: string;
+  uploadedByRole?: "client" | "admin" | "producer";
+  state?: "active" | "trashed";
+  trashedAt?: string;
 }
 
 export interface DriveLinkValidationResult {
@@ -60,199 +126,311 @@ export interface DriveLinkValidationResult {
   sharingInstructions?: string;
 }
 
-// Token cache to avoid unnecessary OAuth exchanges
-let cachedAccessToken: { token: string; expiresAt: number } | null = null;
-
-/**
- * Normalizes PEM private key strings formatted with escaped newlines or literal newlines
- */
-function normalizePrivateKey(key: string): string {
-  if (!key) return "";
-  let clean = key.trim();
-  if (clean.includes("\\n")) {
-    clean = clean.replace(/\\n/g, "\n");
-  }
-  const pemStart = ["-----", "BEGIN", "PRIVATE", "KEY", "-----"].join(" ");
-  const pemEnd = ["-----", "END", "PRIVATE", "KEY", "-----"].join(" ");
-  if (!clean.includes(pemStart)) {
-    clean = `${pemStart}\n${clean}\n${pemEnd}`;
-  }
-  return clean;
+export interface ResumableUploadSession {
+  uploadUri: string;
+  /** Short-lived, `drive.file`-scoped bearer token for the chunk PUTs. */
+  accessToken: string;
+  expiresAt: number;
+  expiresAtIso: string;
+  maxBytes: number;
+  chunkBytes: number;
 }
 
-/**
- * Returns Google Service Account credentials from environment
- */
-export function getGoogleDriveCredentials() {
-  const email =
-    process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL ||
-    process.env.GOOGLE_DRIVE_CLIENT_EMAIL ||
-    "";
-  const privateKeyRaw =
-    process.env.GOOGLE_PRIVATE_KEY ||
-    process.env.GOOGLE_DRIVE_PRIVATE_KEY ||
-    "";
-  const rootFolderId =
-    process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID ||
-    "drive_root_sutra_studio_vault";
+export interface DriveUsageReport {
+  usedBytes: number;
+  totalBytes: number;
+  percent: number;
+  level: "ok" | "warning" | "critical";
+  message: string;
+  perClient: Array<{ clientId: string; bytes: number; files: number }>;
+}
 
-  const isConfigured = Boolean(email && privateKeyRaw && privateKeyRaw.length > 50);
+export interface DrivePermissionSnapshot {
+  fileId: string;
+  shareState: "private" | "shared";
+  permissionId?: string;
+  shareUrl?: string;
+  sharedAt?: string;
+  permissions: Array<{ id: string; type: string; role: string }>;
+}
+
+// ---------------------------------------------------------------------------
+// Credentials & token
+// ---------------------------------------------------------------------------
+
+export interface DriveOAuthConfig {
+  clientId: string;
+  clientSecret: string;
+  refreshToken: string;
+  rootFolderId: string;
+  isConfigured: boolean;
+  missingKeys: string[];
+}
+
+export function getDriveOAuthConfig(): DriveOAuthConfig {
+  const clientId = readEnv("GOOGLE_DRIVE_CLIENT_ID");
+  const clientSecret = readEnv("GOOGLE_DRIVE_CLIENT_SECRET");
+  const refreshToken = readEnv("GOOGLE_DRIVE_REFRESH_TOKEN");
+  const rootFolderId = readEnv("GOOGLE_DRIVE_ROOT_FOLDER_ID");
+
+  const missingKeys: string[] = [];
+  if (!clientId) missingKeys.push("GOOGLE_DRIVE_CLIENT_ID");
+  if (!clientSecret) missingKeys.push("GOOGLE_DRIVE_CLIENT_SECRET");
+  if (!refreshToken) missingKeys.push("GOOGLE_DRIVE_REFRESH_TOKEN");
 
   return {
-    email,
-    privateKey: normalizePrivateKey(privateKeyRaw),
+    clientId,
+    clientSecret,
+    refreshToken,
     rootFolderId,
-    isConfigured,
+    isConfigured: isGoogleDriveConfigured(),
+    missingKeys,
   };
 }
 
+export function driveConfigured(): boolean {
+  return getDriveOAuthConfig().isConfigured;
+}
+
+function requireDrive(): DriveOAuthConfig {
+  const cfg = getDriveOAuthConfig();
+  if (!cfg.isConfigured) {
+    throw new NotConfiguredError("Google Drive", cfg.missingKeys);
+  }
+  return cfg;
+}
+
+let cachedToken: { token: string; expiresAtMs: number } | null = null;
+
 /**
- * Obtains a Google OAuth2 access token for Drive API using native JWT assertion
+ * Exchanges the refresh token for an access token. Cached until 60 s before
+ * expiry. `force` is used after a 401 so a revoked/rotated token re-negotiates.
  */
-export async function getGoogleDriveAccessToken(): Promise<string | null> {
-  const creds = getGoogleDriveCredentials();
-  if (!creds.isConfigured) {
-    return null;
+export async function getDriveAccessToken(force = false): Promise<string> {
+  const cfg = requireDrive();
+  const now = Date.now();
+  if (!force && cachedToken && cachedToken.expiresAtMs > now + 60_000) {
+    return cachedToken.token;
   }
 
-  const now = Math.floor(Date.now() / 1000);
-  if (cachedAccessToken && cachedAccessToken.expiresAt > now + 60) {
-    return cachedAccessToken.token;
+  const res = await fetch(TOKEN_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "refresh_token",
+      client_id: cfg.clientId,
+      client_secret: cfg.clientSecret,
+      refresh_token: cfg.refreshToken,
+    }).toString(),
+  });
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(
+      `Google Drive token exchange failed (${res.status}). ` +
+        `Check GOOGLE_DRIVE_CLIENT_ID / GOOGLE_DRIVE_CLIENT_SECRET / GOOGLE_DRIVE_REFRESH_TOKEN. ${detail.slice(0, 200)}`
+    );
   }
 
-  try {
-    // 1. Build JWT Header
-    const header = {
-      alg: "RS256",
-      typ: "JWT",
-    };
-
-    // 2. Build JWT Claim Set
-    const claimSet = {
-      iss: creds.email,
-      scope: "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.file",
-      aud: "https://oauth2.googleapis.com/token",
-      exp: now + 3600,
-      iat: now,
-    };
-
-    const encodeBase64Url = (obj: any) =>
-      Buffer.from(JSON.stringify(obj))
-        .toString("base64")
-        .replace(/=/g, "")
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_");
-
-    const unsignedToken = `${encodeBase64Url(header)}.${encodeBase64Url(claimSet)}`;
-
-    // 3. Sign using Node.js crypto
-    const signer = crypto.createSign("RSA-SHA256");
-    signer.update(unsignedToken);
-    const signature = signer.sign(creds.privateKey, "base64url");
-
-    const jwtAssertion = `${unsignedToken}.${signature}`;
-
-    // 4. Request Access Token from Google OAuth2 endpoint
-    const response = await fetch("https://oauth2.googleapis.com/token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({
-        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-        assertion: jwtAssertion,
-      }).toString(),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.warn("[GoogleDriveService] OAuth2 Token Error:", errText);
-      return null;
-    }
-
-    const data = await response.json();
-    cachedAccessToken = {
-      token: data.access_token,
-      expiresAt: now + (data.expires_in || 3600),
-    };
-
-    return data.access_token;
-  } catch (error) {
-    console.warn("[GoogleDriveService] Failed to generate OAuth token:", error);
-    return null;
+  const data = (await res.json()) as { access_token?: string; expires_in?: number };
+  if (!data.access_token) {
+    throw new Error("Google Drive token exchange returned no access_token.");
   }
+
+  cachedToken = {
+    token: data.access_token,
+    expiresAtMs: now + (data.expires_in ?? 3600) * 1000,
+  };
+  return data.access_token;
+}
+
+function invalidateTokenCache(): void {
+  cachedToken = null;
+}
+
+// ---------------------------------------------------------------------------
+// Retry / backoff transport
+// ---------------------------------------------------------------------------
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function isReplayableBody(body: BodyInit | null | undefined): boolean {
+  if (body == null) return true;
+  if (typeof body === "string") return true;
+  if (body instanceof ArrayBuffer || ArrayBuffer.isView(body as ArrayBufferView)) return true;
+  if (body instanceof URLSearchParams) return true;
+  return false;
 }
 
 /**
- * Creates or retrieves a folder on Google Drive
+ * Drive request with exponential backoff + jitter on 429/5xx and transport
+ * failures, and a single transparent re-auth on 401.
  */
-async function getOrCreateDriveFolder(
-  accessToken: string,
-  folderName: string,
-  parentFolderId?: string
-): Promise<{ id: string; webViewLink?: string }> {
-  try {
-    // 1. Check if folder already exists
-    let query = `mimeType = 'application/vnd.google-apps.folder' and name = '${folderName.replace(/'/g, "\\'")}' and trashed = false`;
-    if (parentFolderId && parentFolderId !== "root") {
-      query += ` and '${parentFolderId}' in parents`;
+async function driveFetch(
+  input: string,
+  init: RequestInit = {},
+  opts: { allowReauth?: boolean } = {}
+): Promise<Response> {
+  const allowReauth = opts.allowReauth ?? true;
+  const maxAttempts = 4;
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const headers = new Headers(init.headers);
+    if (!headers.has("Authorization")) {
+      headers.set("Authorization", `Bearer ${await getDriveAccessToken(attempt > 0)}`);
     }
 
-    const searchUrl = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(
-      query
-    )}&fields=files(id,name,webViewLink)&pageSize=1`;
+    try {
+      const res = await fetch(input, { ...init, headers });
 
-    const searchRes = await fetch(searchUrl, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-
-    if (searchRes.ok) {
-      const data = await searchRes.json();
-      if (data.files && data.files.length > 0) {
-        return {
-          id: data.files[0].id,
-          webViewLink: data.files[0].webViewLink,
-        };
+      if (res.status === 401 && allowReauth) {
+        invalidateTokenCache();
+        headers.set("Authorization", `Bearer ${await getDriveAccessToken(true)}`);
+        const retry = await fetch(input, { ...init, headers });
+        if (retry.status !== 401) return retry;
+        const text = await retry.text().catch(() => "");
+        throw new Error(`Google Drive rejected the credentials (401). ${text.slice(0, 200)}`);
       }
+
+      if (RETRYABLE_STATUS.has(res.status) && attempt < maxAttempts - 1) {
+        const retryAfter = Number(res.headers.get("retry-after"));
+        const base = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : 2 ** attempt * 400;
+        await sleep(base + Math.floor(Math.random() * 250));
+        continue;
+      }
+
+      return res;
+    } catch (err) {
+      lastError = err;
+      if (err instanceof Error && err.message.includes("(401)")) throw err;
+      if (attempt >= maxAttempts - 1 || !isReplayableBody(init.body)) break;
+      await sleep(2 ** attempt * 400 + Math.floor(Math.random() * 250));
     }
-
-    // 2. Create folder if not found
-    const createRes = await fetch("https://www.googleapis.com/drive/v3/files?fields=id,name,webViewLink", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: folderName,
-        mimeType: "application/vnd.google-apps.folder",
-        parents: parentFolderId && parentFolderId !== "root" ? [parentFolderId] : undefined,
-      }),
-    });
-
-    if (!createRes.ok) {
-      const err = await createRes.text();
-      throw new Error(`Drive folder creation failed: ${err}`);
-    }
-
-    const newFolder = await createRes.json();
-    return {
-      id: newFolder.id,
-      webViewLink: newFolder.webViewLink || `https://drive.google.com/drive/folders/${newFolder.id}`,
-    };
-  } catch (error) {
-    console.error("[GoogleDriveService] Error in getOrCreateDriveFolder:", error);
-    throw error;
   }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Google Drive request failed after retries.");
+}
+
+async function driveJson<T>(url: string, init: RequestInit = {}, opts?: { allowReauth?: boolean }): Promise<T> {
+  const res = await driveFetch(url, init, opts);
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Google Drive API ${res.status} for ${new URL(url).pathname}. ${text.slice(0, 300)}`);
+  }
+  return (await res.json()) as T;
+}
+
+// ---------------------------------------------------------------------------
+// Root folder resolution
+// ---------------------------------------------------------------------------
+
+export interface DriveFileLite {
+  id: string;
+  name?: string;
+  webViewLink?: string;
+  size?: string;
+  mimeType?: string;
+  parents?: string[];
+  trashed?: boolean;
+}
+
+function escapeQuery(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
 
 /**
- * Fully provisions the 4-tier studio folder hierarchy for an order:
- * Root > Clients > {clientName-clientId} > {orderNumber-serviceName} >
- *   - "01 Client Assets"
- *   - "02 Drafts"
- *   - "03 Final Delivery"
- *   - "04 Revisions"
+ * Returns the app's root folder, creating and persisting it on first use.
+ *
+ * Under `drive.file` a folder the studio created by hand in another app is
+ * invisible, so we verify the configured ID and fall back to creating our own.
+ */
+export async function resolveRootFolderId(): Promise<string> {
+  requireDrive();
+
+  const store = adminDb();
+  const cached = await store.doc(DRIVE_CONFIG_DOC).get().catch(() => null);
+  const cachedId = cached?.exists ? (cached.data() as { rootFolderId?: string })?.rootFolderId : "";
+  if (cachedId) {
+    const ok = await folderExists(cachedId).catch(() => false);
+    if (ok) return cachedId;
+  }
+
+  const configured = readEnv("GOOGLE_DRIVE_ROOT_FOLDER_ID");
+  if (configured) {
+    const usable = await folderExists(configured).catch(() => false);
+    if (usable) {
+      await store.doc(DRIVE_CONFIG_DOC).set(
+        { rootFolderId: configured, source: "env", updatedAt: serverTimestamp() },
+        { merge: true }
+      );
+      return configured;
+    }
+  }
+
+  const created = await createFolder(DRIVE_ROOT_FOLDER_NAME);
+  await store.doc(DRIVE_CONFIG_DOC).set(
+    {
+      rootFolderId: created.id,
+      source: "created_by_app",
+      note: "Created by the app because drive.file scope cannot see folders made elsewhere.",
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
+  return created.id;
+}
+
+async function folderExists(folderId: string): Promise<boolean> {
+  const res = await driveFetch(
+    `${DRIVE_API}/files/${encodeURIComponent(folderId)}?fields=id,mimeType,trashed`
+  );
+  if (!res.ok) return false;
+  const data = (await res.json()) as { mimeType?: string; trashed?: boolean };
+  return data.mimeType === FOLDER_MIME && !data.trashed;
+}
+
+async function findChildFolder(parentId: string, name: string): Promise<DriveFileLite | null> {
+  const q = `name = '${escapeQuery(name)}' and mimeType = '${FOLDER_MIME}' and '${escapeQuery(parentId)}' in parents and trashed = false`;
+  const url = `${DRIVE_API}/files?q=${encodeURIComponent(q)}&fields=files(id,name,webViewLink)&pageSize=1`;
+  const data = await driveJson<{ files?: DriveFileLite[] }>(url);
+  return data.files?.[0] ?? null;
+}
+
+async function createFolder(name: string, parentId?: string): Promise<DriveFileLite> {
+  const body: Record<string, unknown> = { name, mimeType: FOLDER_MIME };
+  if (parentId) body.parents = [parentId];
+  const created = await driveJson<DriveFileLite>(
+    `${DRIVE_API}/files?fields=id,name,webViewLink`,
+    { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
+  );
+  return { ...created, webViewLink: created.webViewLink ?? folderLink(created.id) };
+}
+
+export function folderLink(folderId: string): string {
+  return `https://drive.google.com/drive/folders/${folderId}`;
+}
+
+async function getOrCreateChildFolder(parentId: string, name: string): Promise<DriveFileLite> {
+  const existing = await findChildFolder(parentId, name);
+  if (existing) return { ...existing, webViewLink: existing.webViewLink ?? folderLink(existing.id) };
+  return createFolder(name, parentId);
+}
+
+// ---------------------------------------------------------------------------
+// Folder provisioning
+// ---------------------------------------------------------------------------
+
+function sanitizePart(value: string, fallback: string): string {
+  const clean = (value || "").replace(/[^a-zA-Z0-9 _-]/g, "").trim();
+  return clean || fallback;
+}
+
+/**
+ * Root > Clients > {clientName-uid} > {orderNumber-serviceName} > 4 subfolders.
+ * Idempotent: re-running returns the existing folders.
  */
 export async function provisionOrderDriveFolders(params: {
   orderId: string;
@@ -262,269 +440,456 @@ export async function provisionOrderDriveFolders(params: {
   clientName: string;
 }): Promise<DriveFolderStructure> {
   const { orderId, orderNumber, serviceName, clientId, clientName } = params;
-  const token = await getGoogleDriveAccessToken();
-  const creds = getGoogleDriveCredentials();
+  requireDrive();
 
-  // Sanitize folder names
-  const cleanClientName = (clientName || "Client").replace(/[^a-zA-Z0-9 _-]/g, "").trim() || "Client";
-  const cleanServiceName = (serviceName || "Commission").replace(/[^a-zA-Z0-9 _-]/g, "").trim() || "Commission";
-  const cleanOrderNumber = (orderNumber || orderId.slice(0, 8)).replace(/[^a-zA-Z0-9_-]/g, "");
+  const clientFolderTitle = `${sanitizePart(clientName, "Client")}-${clientId.slice(0, 10)}`;
+  const orderFolderTitle = `${sanitizePart(
+    orderNumber || orderId.slice(0, 8),
+    orderId.slice(0, 8)
+  )}-${sanitizePart(serviceName, "Commission")}`;
 
-  const clientFolderTitle = `${cleanClientName}-${clientId.slice(0, 10)}`;
-  const orderFolderTitle = `${cleanOrderNumber}-${cleanServiceName}`;
+  const rootId = await resolveRootFolderId();
+  const clients = await getOrCreateChildFolder(rootId, DRIVE_CLIENTS_FOLDER);
+  const clientFolder = await getOrCreateChildFolder(clients.id, clientFolderTitle);
+  const orderFolder = await getOrCreateChildFolder(clientFolder.id, orderFolderTitle);
 
-  if (!token) {
-    // Resilient simulated structure for local / test environments
-    const mockClientFolderId = `drive_fld_client_${clientId.slice(0, 8)}`;
-    const mockOrderFolderId = `drive_fld_ord_${orderId.slice(0, 8)}`;
-    return {
-      rootFolderId: creds.rootFolderId,
-      clientFolderId: mockClientFolderId,
-      clientFolderName: clientFolderTitle,
-      orderFolderId: mockOrderFolderId,
-      orderFolderName: orderFolderTitle,
-      orderFolderLink: `https://drive.google.com/drive/folders/${mockOrderFolderId}`,
-      subfolders: {
-        clientAssets: {
-          id: `${mockOrderFolderId}_01_assets`,
-          name: "01 Client Assets",
-          link: `https://drive.google.com/drive/folders/${mockOrderFolderId}_01_assets`,
-        },
-        drafts: {
-          id: `${mockOrderFolderId}_02_drafts`,
-          name: "02 Drafts",
-          link: `https://drive.google.com/drive/folders/${mockOrderFolderId}_02_drafts`,
-        },
-        finalDelivery: {
-          id: `${mockOrderFolderId}_03_final`,
-          name: "03 Final Delivery",
-          link: `https://drive.google.com/drive/folders/${mockOrderFolderId}_03_final`,
-        },
-        revisions: {
-          id: `${mockOrderFolderId}_04_revisions`,
-          name: "04 Revisions",
-          link: `https://drive.google.com/drive/folders/${mockOrderFolderId}_04_revisions`,
-        },
-      },
-      createdAt: new Date().toISOString(),
-    };
-  }
+  const [assetsSpec, draftsSpec, finalSpec, revisionsSpec] = DRIVE_ORDER_SUBFOLDERS;
+  const [assets, drafts, finals, revisions] = await Promise.all(
+    DRIVE_ORDER_SUBFOLDERS.map((spec) => getOrCreateChildFolder(orderFolder.id, spec.name))
+  );
 
-  try {
-    // 1. Ensure Clients container under Root
-    const clientsContainer = await getOrCreateDriveFolder(token, "Clients", creds.rootFolderId);
+  const entry = (folder: DriveFileLite, name: string) => ({
+    id: folder.id,
+    name,
+    link: folder.webViewLink ?? folderLink(folder.id),
+  });
 
-    // 2. Ensure Client folder
-    const clientFolder = await getOrCreateDriveFolder(token, clientFolderTitle, clientsContainer.id);
+  return {
+    rootFolderId: rootId,
+    clientFolderId: clientFolder.id,
+    clientFolderName: clientFolderTitle,
+    orderFolderId: orderFolder.id,
+    orderFolderName: orderFolderTitle,
+    orderFolderLink: orderFolder.webViewLink ?? folderLink(orderFolder.id),
+    subfolders: {
+      clientAssets: entry(assets, assetsSpec.name),
+      drafts: entry(drafts, draftsSpec.name),
+      finalDelivery: entry(finals, finalSpec.name),
+      revisions: entry(revisions, revisionsSpec.name),
+    },
+    createdAt: new Date().toISOString(),
+  };
+}
 
-    // 3. Ensure Order folder
-    const orderFolder = await getOrCreateDriveFolder(token, orderFolderTitle, clientFolder.id);
+/** Root > Monthly > YYYY-MM > date  — used by the daily/monthly-plan jobs. */
+export async function provisionMonthlyPlanFolder(dateIso: string): Promise<{
+  monthFolderId: string;
+  dateFolderId: string;
+  month: string;
+  date: string;
+  link: string;
+}> {
+  requireDrive();
+  // Accept either a bare YYYY-MM-DD or a full ISO timestamp; the DAY is taken
+  // from the string itself so a client-side calendar date is never shifted by UTC.
+  const dayMatch = dateIso.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!dayMatch) throw new Error("Invalid date for monthly plan folder. Expected YYYY-MM-DD.");
+  const [, year, monthPart, dayPart] = dayMatch;
+  const month = `${year}-${monthPart}`;
+  const date = `${year}-${monthPart}-${dayPart}`;
 
-    // 4. Create standard 4 subfolders
-    const [subAssets, subDrafts, subFinal, subRevisions] = await Promise.all([
-      getOrCreateDriveFolder(token, "01 Client Assets", orderFolder.id),
-      getOrCreateDriveFolder(token, "02 Drafts", orderFolder.id),
-      getOrCreateDriveFolder(token, "03 Final Delivery", orderFolder.id),
-      getOrCreateDriveFolder(token, "04 Revisions", orderFolder.id),
-    ]);
+  const rootId = await resolveRootFolderId();
+  const monthly = await getOrCreateChildFolder(rootId, DRIVE_MONTHLY_FOLDER);
+  const monthFolder = await getOrCreateChildFolder(monthly.id, month);
+  const dateFolder = await getOrCreateChildFolder(monthFolder.id, date);
 
-    return {
-      rootFolderId: creds.rootFolderId,
-      clientFolderId: clientFolder.id,
-      clientFolderName: clientFolderTitle,
-      orderFolderId: orderFolder.id,
-      orderFolderName: orderFolderTitle,
-      orderFolderLink: orderFolder.webViewLink || `https://drive.google.com/drive/folders/${orderFolder.id}`,
-      subfolders: {
-        clientAssets: { id: subAssets.id, name: "01 Client Assets", link: subAssets.webViewLink },
-        drafts: { id: subDrafts.id, name: "02 Drafts", link: subDrafts.webViewLink },
-        finalDelivery: { id: subFinal.id, name: "03 Final Delivery", link: subFinal.webViewLink },
-        revisions: { id: subRevisions.id, name: "04 Revisions", link: subRevisions.webViewLink },
-      },
-      createdAt: new Date().toISOString(),
-    };
-  } catch (error) {
-    console.error("[GoogleDriveService] Provisioning failed:", error);
-    // Graceful fallback structure
-    const fallbackId = `drive_fld_${orderId.slice(0, 8)}`;
-    return {
-      rootFolderId: creds.rootFolderId,
-      clientFolderId: `drive_fld_${clientId.slice(0, 8)}`,
-      clientFolderName: clientFolderTitle,
-      orderFolderId: fallbackId,
-      orderFolderName: orderFolderTitle,
-      orderFolderLink: `https://drive.google.com/drive/folders/${fallbackId}`,
-      subfolders: {
-        clientAssets: { id: `${fallbackId}_assets`, name: "01 Client Assets" },
-        drafts: { id: `${fallbackId}_drafts`, name: "02 Drafts" },
-        finalDelivery: { id: `${fallbackId}_final`, name: "03 Final Delivery" },
-        revisions: { id: `${fallbackId}_revisions`, name: "04 Revisions" },
-      },
-      createdAt: new Date().toISOString(),
-    };
-  }
+  return {
+    monthFolderId: monthFolder.id,
+    dateFolderId: dateFolder.id,
+    month,
+    date,
+    link: dateFolder.webViewLink ?? folderLink(dateFolder.id),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Resumable upload — browser writes to Drive directly
+// ---------------------------------------------------------------------------
+
+export interface CreateUploadSessionParams {
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  parentId: string;
+  /** Firestore kind / subfolder category. */
+  kind: DriveCategoryKey;
+  description?: string;
+  appProperties?: Record<string, string>;
 }
 
 /**
- * Uploads a file directly to the targeted Google Drive subfolder using multipart stream
+ * Opens a Drive resumable upload session. The returned URI is sent to the
+ * browser, which PUTs the chunks itself — the file body never touches Next.js.
  */
-export async function uploadFileToDrive(params: {
-  folderId: string;
-  fileName: string;
-  mimeType: string;
-  buffer: Buffer;
-  subfolderCategory: "client_assets" | "drafts" | "final_delivery" | "revisions";
-  uploadedBy: {
-    uid: string;
-    name: string;
-    role: "client" | "admin" | "producer";
+export async function createResumableUploadSession(
+  params: CreateUploadSessionParams
+): Promise<ResumableUploadSession> {
+  requireDrive();
+  const token = await getDriveAccessToken();
+
+  const metadata: Record<string, unknown> = {
+    name: params.fileName,
+    parents: [params.parentId],
+    description: params.description ?? `Sutra Studio — ${params.kind}`,
+    appProperties: { ...params.appProperties, sutraManaged: "true" },
   };
-  version?: number;
-  notes?: string;
-}): Promise<DriveFileMetadata> {
-  const { folderId, fileName, mimeType, buffer, subfolderCategory, uploadedBy, version, notes } = params;
-  const token = await getGoogleDriveAccessToken();
 
-  if (!token) {
-    // Resilient simulated upload for local testing
-    const mockFileId = `drive_file_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-    return {
-      id: mockFileId,
-      name: fileName,
-      size: buffer.length,
-      mimeType: mimeType || "application/octet-stream",
-      driveFolderId: folderId,
-      subfolderCategory,
-      webViewLink: `/api/drive/file/${mockFileId}`,
-      webContentLink: `/api/drive/file/${mockFileId}?download=true`,
-      uploadedAt: new Date().toISOString(),
-      uploadedBy,
-      version: version || 1,
-      notes,
-    };
-  }
-
-  try {
-    const boundary = "-------SutraStudioBoundary" + Date.now();
-    const metadata = {
-      name: fileName,
-      parents: [folderId],
-      description: notes || `Sutra Studio Deliverable (${subfolderCategory})`,
-    };
-
-    const multipartRequestBody = Buffer.concat([
-      Buffer.from(
-        `--${boundary}\r\n` +
-          `Content-Type: application/json; charset=UTF-8\r\n\r\n` +
-          JSON.stringify(metadata) +
-          `\r\n` +
-          `--${boundary}\r\n` +
-          `Content-Type: ${mimeType || "application/octet-stream"}\r\n\r\n`
-      ),
-      buffer,
-      Buffer.from(`\r\n--${boundary}--`),
-    ]);
-
-    const uploadUrl =
-      "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,size,mimeType,webViewLink,webContentLink";
-
-    const uploadRes = await fetch(uploadUrl, {
+  const res = await fetch(
+    `${DRIVE_UPLOAD_API}/files?uploadType=resumable&fields=id,name,size,mimeType,webViewLink`,
+    {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": `multipart/related; boundary=${boundary}`,
-        "Content-Length": String(multipartRequestBody.length),
+        "Content-Type": "application/json; charset=UTF-8",
+        "X-Upload-Content-Type": params.mimeType || "application/octet-stream",
+        "X-Upload-Content-Length": String(params.sizeBytes),
       },
-      body: multipartRequestBody,
-    });
-
-    if (!uploadRes.ok) {
-      const errText = await uploadRes.text();
-      throw new Error(`Drive file upload error: ${errText}`);
+      body: JSON.stringify(metadata),
     }
+  );
 
-    const driveFile = await uploadRes.json();
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Drive refused to open a resumable session (${res.status}). ${text.slice(0, 300)}`);
+  }
 
-    return {
-      id: driveFile.id,
-      name: driveFile.name || fileName,
-      size: Number(driveFile.size) || buffer.length,
-      mimeType: driveFile.mimeType || mimeType,
-      driveFolderId: folderId,
-      subfolderCategory,
-      webViewLink: `/api/drive/file/${driveFile.id}`,
-      webContentLink: `/api/drive/file/${driveFile.id}?download=true`,
-      uploadedAt: new Date().toISOString(),
-      uploadedBy,
-      version: version || 1,
-      notes,
-    };
-  } catch (error) {
-    console.error("[GoogleDriveService] File upload failed:", error);
-    throw error;
+  const uploadUri = res.headers.get("location");
+  if (!uploadUri) throw new Error("Drive returned no resumable session URI.");
+
+  // Access tokens live ~3600 s; back off one minute so the browser renews early.
+  const expiresAt = Date.now() + 3500 * 1000;
+  return {
+    uploadUri,
+    accessToken: token,
+    expiresAt,
+    expiresAtIso: new Date(expiresAt).toISOString(),
+    maxBytes: params.sizeBytes,
+    chunkBytes: DRIVE_CHUNK_BYTES,
+  };
+}
+
+/** Fresh token for a browser that is still chunking after the first expired. */
+export async function mintUploadToken(): Promise<{ accessToken: string; expiresAt: number }> {
+  const token = await getDriveAccessToken();
+  return { accessToken: token, expiresAt: Date.now() + 3500 * 1000 };
+}
+
+export async function getFileMetadata(fileId: string): Promise<DriveFileLite> {
+  return driveJson<DriveFileLite>(
+    `${DRIVE_API}/files/${encodeURIComponent(fileId)}?fields=id,name,size,mimeType,webViewLink,parents,trashed`
+  );
+}
+
+/** True when the Drive file still exists and is not in the trash. */
+export async function fileExists(fileId: string): Promise<boolean> {
+  const res = await driveFetch(
+    `${DRIVE_API}/files/${encodeURIComponent(fileId)}?fields=id,trashed`
+  );
+  if (!res.ok) return false;
+  const data = (await res.json()) as { trashed?: boolean };
+  return !data.trashed;
+}
+
+// ---------------------------------------------------------------------------
+// Firestore metadata records (STEP 30: metadata only, never bytes)
+// ---------------------------------------------------------------------------
+
+export const DRIVE_FILES_COLLECTION = "drive_files";
+
+export async function saveFileRecord(
+  input: Partial<DriveFileRecord> & { driveFileId: string }
+): Promise<DriveFileRecord> {
+  const store = adminDb();
+  const ref = store.collection(DRIVE_FILES_COLLECTION).doc(input.driveFileId);
+  const payload: Record<string, unknown> = {
+    driveFileId: input.driveFileId,
+    folderId: input.folderId ?? "",
+    name: input.name ?? "untitled",
+    mimeType: input.mimeType ?? "application/octet-stream",
+    size: Number(input.size) || 0,
+    kind: input.kind ?? "client_assets",
+    clientId: input.clientId ?? "",
+    orderId: input.orderId ?? "",
+    version: Number(input.version) || 1,
+    shareState: input.shareState ?? "private",
+    state: input.state ?? "active",
+    webViewLink: input.webViewLink ?? "",
+    uploadedByUid: input.uploadedByUid ?? "",
+    uploadedByName: input.uploadedByName ?? "",
+    uploadedByRole: input.uploadedByRole ?? "client",
+    createdAt: input.createdAt ?? new Date().toISOString(),
+    updatedAt: serverTimestamp(),
+  };
+  if (input.sharePermissionId) payload.sharePermissionId = input.sharePermissionId;
+  if (input.sharedAt) payload.sharedAt = input.sharedAt;
+
+  await ref.set(payload, { merge: true });
+  return payload as unknown as DriveFileRecord;
+}
+
+export async function getFileRecord(fileId: string): Promise<DriveFileRecord | null> {
+  const snap = await adminDb().collection(DRIVE_FILES_COLLECTION).doc(fileId).get();
+  return fromSnap<DriveFileRecord>(snap);
+}
+
+export async function listFileRecords(filter: {
+  clientId?: string;
+  orderId?: string;
+  kinds?: DriveCategoryKey[];
+  limit?: number;
+}): Promise<DriveFileRecord[]> {
+  const store = adminDb();
+  let q: Query = store.collection(DRIVE_FILES_COLLECTION);
+  if (filter.clientId) q = q.where("clientId", "==", filter.clientId);
+  if (filter.orderId) q = q.where("orderId", "==", filter.orderId);
+  if (filter.kinds?.length) q = q.where("kind", "in", filter.kinds.slice(0, 10));
+  q = q.orderBy("createdAt", "desc").limit(filter.limit ?? 100);
+  return fromQuery<DriveFileRecord>(await q.get());
+}
+
+// ---------------------------------------------------------------------------
+// Sharing — one file at a time, never a folder, never by default
+// ---------------------------------------------------------------------------
+
+export async function shareFile(fileId: string): Promise<DrivePermissionSnapshot> {
+  requireDrive();
+  const created = await driveJson<{ id: string }>(
+    `${DRIVE_API}/files/${encodeURIComponent(fileId)}/permissions?fields=id`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role: "reader", type: "anyone" }),
+    }
+  );
+
+  const meta = await getFileMetadata(fileId);
+  const sharedAt = new Date().toISOString();
+
+  const record = await getFileRecord(fileId);
+  await saveFileRecord({
+    driveFileId: fileId,
+    folderId: record?.folderId ?? "",
+    name: record?.name ?? meta.name,
+    mimeType: record?.mimeType ?? meta.mimeType ?? "application/octet-stream",
+    size: Number(record?.size ?? meta.size ?? 0),
+    kind: record?.kind ?? "client_assets",
+    clientId: record?.clientId ?? "",
+    orderId: record?.orderId ?? "",
+    version: record?.version ?? 1,
+    shareState: "shared",
+    sharePermissionId: created.id,
+    sharedAt,
+    webViewLink: meta.webViewLink ?? "",
+    createdAt: record?.createdAt ?? sharedAt,
+  });
+
+  return {
+    fileId,
+    shareState: "shared",
+    permissionId: created.id,
+    shareUrl: meta.webViewLink ?? `https://drive.google.com/file/d/${fileId}/view`,
+    sharedAt,
+    permissions: [{ id: created.id, type: "anyone", role: "reader" }],
+  };
+}
+
+export async function revokeFileShare(fileId: string): Promise<DrivePermissionSnapshot> {
+  requireDrive();
+  const record = await getFileRecord(fileId);
+  const permissionId = record?.sharePermissionId;
+
+  const perms = await driveJson<{ permissions?: Array<{ id: string; type: string; role: string }> }>(
+    `${DRIVE_API}/files/${encodeURIComponent(fileId)}?fields=permissions(id,type,role)`
+  );
+
+  const anyone = (perms.permissions ?? []).filter((p) => p.type === "anyone");
+  const target = permissionId ? anyone.find((p) => p.id === permissionId) : anyone[0];
+
+  if (target) {
+    const res = await driveFetch(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}/permissions/${encodeURIComponent(target.id)}`,
+      { method: "DELETE" }
+    );
+    if (!res.ok && res.status !== 404) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`Drive refused to revoke sharing (${res.status}). ${text.slice(0, 200)}`);
+    }
+  }
+
+  await adminDb()
+    .collection(DRIVE_FILES_COLLECTION)
+    .doc(fileId)
+    .set(
+      {
+        shareState: "private",
+        sharePermissionId: fieldDelete(),
+        sharedAt: fieldDelete(),
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+  const remaining = await driveJson<{ permissions?: Array<{ id: string; type: string; role: string }> }>(
+    `${DRIVE_API}/files/${encodeURIComponent(fileId)}?fields=permissions(id,type,role)`
+  );
+
+  return {
+    fileId,
+    shareState: "private",
+    permissions: remaining.permissions ?? [],
+  };
+}
+
+export async function getFileShareState(fileId: string): Promise<DrivePermissionSnapshot> {
+  const record = await getFileRecord(fileId);
+  const perms = await driveJson<{ permissions?: Array<{ id: string; type: string; role: string }> }>(
+    `${DRIVE_API}/files/${encodeURIComponent(fileId)}?fields=permissions(id,type,role)`
+  ).catch(() => ({ permissions: [] }));
+
+  const anyone = (perms.permissions ?? []).find((p) => p.type === "anyone");
+  const shared = record?.shareState === "shared" || Boolean(anyone);
+
+  return {
+    fileId,
+    shareState: shared ? "shared" : "private",
+    permissionId: anyone?.id ?? record?.sharePermissionId,
+    shareUrl: record?.webViewLink || `https://drive.google.com/file/d/${fileId}/view`,
+    sharedAt: record?.sharedAt,
+    permissions: perms.permissions ?? [],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Download / preview
+// ---------------------------------------------------------------------------
+
+export interface DriveDownloadResult {
+  stream: ReadableStream | null;
+  status: number;
+  headers: Headers;
+}
+
+/** Streams file bytes from Drive, honouring Range for resumable downloads. */
+export async function openDriveDownload(
+  fileId: string,
+  range?: string
+): Promise<DriveDownloadResult | null> {
+  requireDrive();
+  const headers: Record<string, string> = {};
+  if (range) headers.Range = range;
+
+  const res = await driveFetch(`${DRIVE_API}/files/${encodeURIComponent(fileId)}?alt=media`, { headers });
+  if (!res.ok) return null;
+
+  return { stream: res.body, status: res.status, headers: res.headers };
+}
+
+/** Google Doc/Sheet etc. cannot be downloaded as bytes; report the export need. */
+export function isGoogleNative(mimeType: string | undefined): boolean {
+  return (mimeType ?? "").startsWith("application/vnd.google-apps.");
+}
+
+// ---------------------------------------------------------------------------
+// Quota
+// ---------------------------------------------------------------------------
+
+export async function getDriveUsage(): Promise<DriveUsageReport> {
+  requireDrive();
+  const about = await driveJson<{ storageQuota?: { usage?: string; limit?: string } }>(
+    `${DRIVE_API}/about?fields=storageQuota(usage,limit)`
+  );
+
+  const usedBytes = Number(about.storageQuota?.usage ?? 0);
+  const totalBytes = Number(about.storageQuota?.limit ?? 0) || 0;
+
+  const { quotaBand, DRIVE_ACCOUNT_QUOTA_BYTES } = await import("@/lib/config/driveStorage");
+  const band = quotaBand(usedBytes, totalBytes || DRIVE_ACCOUNT_QUOTA_BYTES);
+
+  const perClient = await perClientUsage();
+
+  return {
+    usedBytes,
+    totalBytes: totalBytes || DRIVE_ACCOUNT_QUOTA_BYTES,
+    percent: band.percent,
+    level: band.level,
+    message: band.message,
+    perClient,
+  };
+}
+
+async function perClientUsage(): Promise<Array<{ clientId: string; bytes: number; files: number }>> {
+  // Filter in code rather than a `state == active` query so records written
+  // before the `state` field existed still count toward the rollup.
+  const snap = await adminDb().collection(DRIVE_FILES_COLLECTION).get();
+
+  const map = new Map<string, { clientId: string; bytes: number; files: number }>();
+  for (const doc of snap.docs) {
+    const row = fromSnap<DriveFileRecord>(doc);
+    if (!row || row.state === "trashed" || !row.clientId) continue;
+    const bucket = map.get(row.clientId) ?? { clientId: row.clientId, bytes: 0, files: 0 };
+    bucket.bytes += Number(row.size) || 0;
+    bucket.files += 1;
+    map.set(row.clientId, bucket);
+  }
+  return [...map.values()].sort((a, b) => b.bytes - a.bytes);
+}
+
+// ---------------------------------------------------------------------------
+// Retention / lifecycle
+// ---------------------------------------------------------------------------
+
+export async function trashDriveFile(fileId: string): Promise<void> {
+  const res = await driveFetch(`${DRIVE_API}/files/${encodeURIComponent(fileId)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ trashed: true }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Drive trash failed (${res.status}) for ${fileId}. ${text.slice(0, 200)}`);
   }
 }
 
-/**
- * Downloads a file stream from Google Drive for authorized streaming proxy
- */
-export async function downloadDriveFileStream(
-  fileId: string
-): Promise<{ stream: ReadableStream | null; buffer?: Buffer; metadata: { name: string; mimeType: string; size: number } } | null> {
-  const token = await getGoogleDriveAccessToken();
-
-  if (!token) {
-    // Return sample buffer in test/local mode
-    const sampleText = Buffer.from(`Sutra Studio Vault Secure Deliverable [File: ${fileId}]`);
-    return {
-      stream: null,
-      buffer: sampleText,
-      metadata: {
-        name: `deliverable_${fileId}.bin`,
-        mimeType: "application/octet-stream",
-        size: sampleText.length,
-      },
-    };
+/** Archives by tagging the folder description AND trashing it when asked. */
+export async function archiveOrderFolder(
+  folderId: string,
+  options: { trash?: boolean } = {}
+): Promise<{ success: boolean; message: string }> {
+  const at = new Date().toISOString();
+  const res = await driveFetch(`${DRIVE_API}/files/${encodeURIComponent(folderId)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      description: `[ARCHIVED] Sutra Studio Order Vault — Archived on ${at}`,
+      ...(options.trash ? { trashed: true } : {}),
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    return { success: false, message: `Drive archive failed (${res.status}). ${text.slice(0, 200)}` };
   }
-
-  try {
-    // 1. Get file metadata
-    const metaRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?fields=id,name,mimeType,size`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (!metaRes.ok) {
-      return null;
-    }
-
-    const meta = await metaRes.json();
-
-    // 2. Fetch media stream
-    const mediaRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (!mediaRes.ok) {
-      return null;
-    }
-
-    return {
-      stream: mediaRes.body,
-      metadata: {
-        name: meta.name || `file_${fileId}`,
-        mimeType: meta.mimeType || "application/octet-stream",
-        size: Number(meta.size) || 0,
-      },
-    };
-  } catch (error) {
-    console.error("[GoogleDriveService] Download stream error:", error);
-    return null;
-  }
+  return { success: true, message: `Folder ${folderId} archived in the studio vault.` };
 }
 
-/**
- * Validates an external Google Drive URL and checks permissions
- */
+/** Account-deletion policy: move a client's whole folder to Drive's trash. */
+export async function trashClientFolder(clientFolderId: string): Promise<{ success: boolean; message: string }> {
+  return archiveOrderFolder(clientFolderId, { trash: true });
+}
+
+// ---------------------------------------------------------------------------
+// External link validation (pure, no network)
+// ---------------------------------------------------------------------------
+
 export function validateExternalDriveLink(rawUrl: string): DriveLinkValidationResult {
   if (!rawUrl || typeof rawUrl !== "string") {
     return {
@@ -537,11 +902,11 @@ export function validateExternalDriveLink(rawUrl: string): DriveLinkValidationRe
 
   const clean = rawUrl.trim();
 
-  // Pattern checks for Google Drive folder or file
   const folderMatch = clean.match(/drive\.google\.com\/drive\/(?:folders|u\/\d+\/folders)\/([a-zA-Z0-9_-]+)/);
-  const fileMatch = clean.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/) ||
-                     clean.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/) ||
-                     clean.match(/docs\.google\.com\/(?:document|spreadsheets|presentation)\/d\/([a-zA-Z0-9_-]+)/);
+  const fileMatch =
+    clean.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/) ||
+    clean.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/) ||
+    clean.match(/docs\.google\.com\/(?:document|spreadsheets|presentation)\/d\/([a-zA-Z0-9_-]+)/);
 
   if (folderMatch) {
     return {
@@ -562,12 +927,17 @@ export function validateExternalDriveLink(rawUrl: string): DriveLinkValidationRe
       resourceId: fileMatch[1],
       isAccessible: true,
       message: "Valid Google Drive file link detected.",
-      sharingInstructions:
-        "Please ensure the file sharing setting is set to 'Anyone with the link can view'.",
+      sharingInstructions: "Please ensure the file sharing setting is set to 'Anyone with the link can view'.",
     };
   }
 
-  if (clean.startsWith("https://") && (clean.includes("dropbox.com") || clean.includes("wetransfer.com") || clean.includes("box.com") || clean.includes("onedrive.live.com"))) {
+  if (
+    clean.startsWith("https://") &&
+    (clean.includes("dropbox.com") ||
+      clean.includes("wetransfer.com") ||
+      clean.includes("box.com") ||
+      clean.includes("onedrive.live.com"))
+  ) {
     return {
       isValid: true,
       type: "unknown",
@@ -585,35 +955,4 @@ export function validateExternalDriveLink(rawUrl: string): DriveLinkValidationRe
     sharingInstructions:
       "Open your folder in Google Drive > Click 'Share' > Under General Access choose 'Anyone with the link' > Copy Link.",
   };
-}
-
-/**
- * Archives an order folder (updates metadata description and moves/tags it)
- */
-export async function archiveOrderFolder(folderId: string): Promise<{ success: boolean; message: string }> {
-  const token = await getGoogleDriveAccessToken();
-  if (!token) {
-    return { success: true, message: `Folder ${folderId} marked as archived.` };
-  }
-
-  try {
-    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${folderId}`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        description: `[ARCHIVED] Sutra Studio Order Vault — Archived on ${new Date().toISOString()}`,
-      }),
-    });
-
-    if (!res.ok) {
-      return { success: false, message: "Drive archive API error" };
-    }
-
-    return { success: true, message: `Folder ${folderId} successfully marked as archived in studio vault.` };
-  } catch (error: any) {
-    return { success: false, message: error.message || "Failed to archive folder" };
-  }
 }

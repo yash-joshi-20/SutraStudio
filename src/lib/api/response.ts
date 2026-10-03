@@ -55,6 +55,28 @@ export const notConfigured = (integration: string, missingKeys: string[] = []) =
   );
 
 /**
+ * Map a thrown value onto a correct status code. No internal message or stack
+ * ever reaches the client. Exported so streaming routes, which cannot use
+ * `guarded()` because they return a plain `Response`, share the same rules.
+ */
+export function mapApiError(err: unknown): NextResponse {
+  if (isNotConfigured(err)) {
+    const e = err as NotConfiguredError;
+    return notConfigured(e.integration, e.missingKeys);
+  }
+  if (err instanceof AuthRequiredError) return unauthorized(err.message);
+  if (err instanceof ForbiddenError) return forbidden(err.message);
+
+  const message = err instanceof Error ? err.message : "Unexpected server error.";
+  // Only surface messages we authored; never raw provider/SDK text.
+  if (/must be one of|is required|Invalid|invalid|exceeds|must be a|must contain|too long/i.test(message)) {
+    return badRequest(message);
+  }
+  console.error("[api] unhandled error:", message);
+  return fail(500, "Something went wrong on our side. Please try again.", "INTERNAL");
+}
+
+/**
  * Wrap a handler so every failure mode maps to a correct status code and no
  * internal message or stack ever reaches the client.
  */
@@ -62,20 +84,7 @@ export async function guarded(handler: () => Promise<NextResponse>): Promise<Nex
   try {
     return await handler();
   } catch (err) {
-    if (isNotConfigured(err)) {
-      const e = err as NotConfiguredError;
-      return notConfigured(e.integration, e.missingKeys);
-    }
-    if (err instanceof AuthRequiredError) return unauthorized(err.message);
-    if (err instanceof ForbiddenError) return forbidden(err.message);
-
-    const message = err instanceof Error ? err.message : "Unexpected server error.";
-    // Only surface messages we authored; never raw provider/SDK text.
-    if (/must be one of|is required|Invalid|invalid|exceeds|must be a|must contain|too long/i.test(message)) {
-      return badRequest(message);
-    }
-    console.error("[api] unhandled error:", message);
-    return fail(500, "Something went wrong on our side. Please try again.", "INTERNAL");
+    return mapApiError(err);
   }
 }
 

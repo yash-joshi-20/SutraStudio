@@ -90,6 +90,7 @@ import { DEFAULT_SYSTEM_PROMPT } from "@/lib/services/aiKnowledgeTypes";
 import type { CatalogService, CatalogPlan } from "@/lib/services/catalogData";
 import { SEED_CATALOG_SERVICES, SEED_CATALOG_PLANS } from "@/lib/services/catalogData";
 import { json, jsonRaw, errorMessage } from "@/lib/api/client";
+import { uploadFileToDrive, type DriveUploadResult, type DriveUploadProgress } from "@/lib/drive/useDriveUpload";
 
 /**
  * Admin data access.
@@ -770,6 +771,7 @@ function AdminHubContent() {
   const [deliveryCategory, setDeliveryCategory] = useState<"drafts" | "final_delivery" | "revisions">("final_delivery");
   const [deliveryFile, setDeliveryFile] = useState<File | null>(null);
   const [isDelivering, setIsDelivering] = useState(false);
+  const [deliveryProgress, setDeliveryProgress] = useState<DriveUploadProgress | null>(null);
   const [isArchivingDrive, setIsArchivingDrive] = useState(false);
   const [assignedMemberId, setAssignedMemberId] = useState("");
 
@@ -1345,66 +1347,74 @@ function AdminHubContent() {
     }
   };
 
-  // Final Result / Draft / Revision Delivery to Google Drive Vault
+  // Final Result / Draft / Revision Delivery → Google Drive (STEP 30)
+  // The browser PUTs the bytes straight to Drive through a resumable session;
+  // no file body passes through a Next.js route, so multi-GB masters are safe.
+  // Auth comes from the admin's session cookie — never from spoofable headers.
   const handleDeliverFinalResult = async () => {
     if (!inspectingAdminOrder) return;
     setIsDelivering(true);
+    setDeliveryProgress(null);
     try {
+      const orderId = inspectingAdminOrder.id;
+      const orderLabel = inspectingAdminOrder.orderNumber || inspectingAdminOrder.code;
+      const folderLink = inspectingAdminOrder.driveFolderId
+        ? `https://drive.google.com/drive/folders/${inspectingAdminOrder.driveFolderId}`
+        : "";
+
+      let uploaded: DriveUploadResult | null = null;
       if (deliveryFile) {
-        // Multipart direct upload to Google Drive Subfolder via backend proxy
-        const formData = new FormData();
-        formData.append("file", deliveryFile);
-        formData.append("orderId", inspectingAdminOrder.id);
-        formData.append("category", deliveryCategory);
-        formData.append("notes", deliveryNote.trim() || `Deliverable uploaded to ${deliveryCategory}`);
-        formData.append("uploaderName", user?.displayName || "Studio Producer");
-
-        const res = await fetch("/api/drive/upload", {
-          method: "POST",
-          headers: {
-            "x-user-role": "admin",
-            "x-user-id": user?.uid || "usr_admin_001",
-          },
-          body: formData,
+        uploaded = await uploadFileToDrive(deliveryFile, {
+          orderId,
+          kind: deliveryCategory,
+          notes: deliveryNote.trim() || `Deliverable uploaded to ${deliveryCategory}`,
+          onProgress: (p) => setDeliveryProgress(p),
         });
-
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || "Failed to upload deliverable to Google Drive.");
-        }
-
-        setApprovalToast(`Asset "${deliveryFile.name}" successfully vaulted to Drive subfolder (${deliveryCategory}).`);
-      } else {
-        // URL-based delivery record
-        const res = await fetch("/api/orders/deliver", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-user-role": "admin",
-            "x-user-id": user?.uid || "usr_admin_001",
-          },
-          body: JSON.stringify({
-            orderId: inspectingAdminOrder.id,
-            adminName: user?.displayName || "Raghavan Sharma (Lead Producer)",
-            deliverables: [
-              {
-                filename: deliveryFilename.trim() || `${inspectingAdminOrder.title || "Studio"}_Final_Master.zip`,
-                fileSize: "148 MB (Vault Asset)",
-                mimeType: "application/zip",
-                previewUrl: deliveryPreviewUrl.trim() || `https://drive.google.com/drive/folders/${inspectingAdminOrder.driveFolderId || "COMMISSIONS"}`,
-              },
-            ],
-            deliveryNote: deliveryNote.trim() || `Production master (${deliveryCategory}) verified and uploaded to client Google Drive vault.`,
-          }),
-        });
-
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || "Failed to deliver result");
-        }
-
-        setApprovalToast(`Deliverables successfully registered for Order #${inspectingAdminOrder.orderNumber || inspectingAdminOrder.code}`);
       }
+
+      const typedLink = deliveryPreviewUrl.trim();
+      const typedName = deliveryFilename.trim();
+      const deliverables = uploaded
+        ? [
+            {
+              filename: uploaded.name,
+              fileSize: `${(uploaded.size / 1024 ** 2).toFixed(1)} MB`,
+              mimeType: uploaded.mimeType,
+              previewUrl: uploaded.downloadUrl,
+            },
+          ]
+        : typedLink || typedName
+          ? [
+              {
+                filename: typedName || "Studio_Deliverable",
+                fileSize: "Vault Asset",
+                mimeType: "application/octet-stream",
+                previewUrl: typedLink || folderLink,
+              },
+            ]
+          : [];
+
+      const res = await fetch("/api/orders/deliver", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId,
+          adminName: user?.displayName || "Studio Producer",
+          deliverables,
+          deliveryNote:
+            deliveryNote.trim() ||
+            `Production master (${deliveryCategory}) verified and uploaded to the client Drive folder.`,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}) as Record<string, unknown>);
+      if (!res.ok) throw new Error((data.error as string) || "Failed to register the delivery on the order.");
+
+      setApprovalToast(
+        uploaded
+          ? `Asset "${uploaded.name}" vaulted to Drive and registered for Order #${orderLabel}.`
+          : `Deliverables registered for Order #${orderLabel}.`
+      );
 
       setDeliveryFilename("");
       setDeliveryPreviewUrl("");
@@ -1417,6 +1427,7 @@ function AdminHubContent() {
       alert(`Delivery error: ${err.message}`);
     } finally {
       setIsDelivering(false);
+      setDeliveryProgress(null);
     }
   };
 
@@ -5442,7 +5453,7 @@ const [adminDataError, setAdminDataError] = useState("");
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                               <label className="text-[11px] font-semibold text-[#64748B] block mb-1">
-                                Upload File to Drive (Direct / Proxy):
+                                Upload File (browser → Drive, up to 2 GB):
                               </label>
                               <input
                                 type="file"
@@ -5488,6 +5499,29 @@ const [adminDataError, setAdminDataError] = useState("");
                               className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
                             />
                           </div>
+
+                          {deliveryProgress && deliveryProgress.phase !== "done" && (
+                            <div>
+                              <div className="flex items-center justify-between text-[10px] font-semibold text-[#64748B] mb-1">
+                                <span className="uppercase tracking-wide">
+                                  {deliveryProgress.phase === "opening"
+                                    ? "Opening Drive session…"
+                                    : deliveryProgress.phase === "validating"
+                                      ? "Checking file…"
+                                      : deliveryProgress.phase === "finalising"
+                                        ? "Registering metadata…"
+                                        : `Uploading chunk ${deliveryProgress.chunkIndex} / ${deliveryProgress.chunkCount}`}
+                                </span>
+                                <span>{deliveryProgress.percent}%</span>
+                              </div>
+                              <div className="h-1.5 w-full rounded-full bg-[#EADFCB] overflow-hidden">
+                                <div
+                                  className="h-full rounded-full bg-[#A98B57] transition-all duration-200"
+                                  style={{ width: `${deliveryProgress.percent}%` }}
+                                />
+                              </div>
+                            </div>
+                          )}
 
                           <div className="flex justify-end pt-1">
                             <Button
@@ -5779,7 +5813,7 @@ const [adminDataError, setAdminDataError] = useState("");
                       Notifications & Scheduled Jobs Hub
                     </h2>
                     <Badge variant="gold" size="sm">
-                      Firebase Cloud Functions v2
+                      n8n / External Cron
                     </Badge>
                   </div>
                   <p className="text-xs text-[#64748B] mt-1">

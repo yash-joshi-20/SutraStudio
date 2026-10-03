@@ -52,10 +52,13 @@ if (fs.existsSync(envExamplePath)) {
     "NEXT_PUBLIC_FIREBASE_API_KEY",
     "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
     "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
-    "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET",
     "FIREBASE_CLIENT_EMAIL",
+    // STEP 30: media lives in Google Drive via OAuth refresh token, not
+    // Firebase Storage. These three are the whole contract.
+    "GOOGLE_DRIVE_CLIENT_ID",
+    "GOOGLE_DRIVE_CLIENT_SECRET",
+    "GOOGLE_DRIVE_REFRESH_TOKEN",
     "GOOGLE_DRIVE_ROOT_FOLDER_ID",
-    "GOOGLE_DRIVE_CLIENT_EMAIL",
   ];
 
   for (const envVar of requiredEnvVars) {

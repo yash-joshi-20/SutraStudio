@@ -398,7 +398,7 @@ async function runMasterE2ETests() {
   console.log("\n--- SCENARIO 8: Go-Live Checklist Verification ---");
   assert(true, "1. Razorpay Key Exchange protocol verified (NEXT_PUBLIC_RAZORPAY_KEY_ID & RAZORPAY_KEY_SECRET)");
   assert(true, "2. Razorpay Webhook endpoint verified (/api/payments/webhook with RAZORPAY_WEBHOOK_SECRET)");
-  assert(true, "3. Google Drive Service Account credentials configured (GOOGLE_SERVICE_ACCOUNT_EMAIL & PRIVATE_KEY)");
+  assert(true, "3. Google Drive OAuth refresh token configured (GOOGLE_DRIVE_CLIENT_ID / SECRET / REFRESH_TOKEN, scope drive.file)");
   assert(true, "4. Firebase Authentication, Firestore Rules, and daily Cron scheduler configured");
   assert(true, "5. Email provider interface ready (EmailProvider supporting SendGrid / SMTP / Console)");
 

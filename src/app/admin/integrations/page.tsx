@@ -41,16 +41,20 @@ interface Payload {
   countsAvailable: boolean;
 }
 
+/**
+ * Display labels per integration group.
+ * Keys MUST match the literal `group` strings declared in
+ * `@/lib/config/integrations.ts` — a lookup miss falls back to the raw group.
+ */
 const GROUP_LABELS: Record<string, string> = {
-  core: "Core Platform",
-  auth: "Authentication",
-  payments: "Payments",
-  storage: "Media & Storage",
-  ai: "AI Providers",
-  automation: "Automation",
-  messaging: "Messaging & Push",
-  social: "Social Publishing",
-  analytics: "Analytics",
+  "Core Platform": "Core Platform",
+  Authentication: "Authentication",
+  Payments: "Payments",
+  Storage: "Media & Storage",
+  "AI Providers": "AI Providers",
+  Automation: "Automation & Schedules",
+  Notifications: "Notifications",
+  Social: "Social Publishing",
 };
 
 const configuredTone: StatusTone = "completed";

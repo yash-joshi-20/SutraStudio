@@ -1,69 +1,49 @@
 import { NextResponse } from "next/server";
 import { ScheduledNotificationEngine } from "@/lib/services/scheduledNotificationEngine";
+import { authorizeScheduledCall } from "@/lib/api/cronAuth";
 
-export async function GET(req: Request) {
+export const dynamic = "force-dynamic";
+
+/**
+ * Daily / on-demand scheduled job: order lifecycle, trial expiry, 5-day and
+ * 1-day reminder windows. Invoked by n8n or an external cron with
+ * `Authorization: Bearer <N8N_WEBHOOK_SECRET>` (or CRON_SECRET / an admin
+ * session for the Admin "Run now" button).
+ */
+async function run(req: Request, input: { simulateDate?: string; dryRun?: boolean; orderId?: string }) {
+  if (!(await authorizeScheduledCall(req))) {
+    return NextResponse.json({ error: "Unauthorized scheduled execution." }, { status: 401 });
+  }
+
   try {
-    const { searchParams } = new URL(req.url);
-    const simulateDate = searchParams.get("simulateDate") || undefined;
-    const dryRun = searchParams.get("dryRun") === "true";
-    const orderId = searchParams.get("orderId") || undefined;
-
-    // Verify CRON_SECRET or Admin header if specified in production
-    const authHeader = req.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET;
-    const userRole = req.headers.get("x-user-role");
-
-    if (cronSecret && cronSecret !== "mock_secret" && authHeader !== `Bearer ${cronSecret}` && userRole !== "admin") {
-      return NextResponse.json({ error: "Unauthorized cron execution." }, { status: 401 });
-    }
-
-    const result = await ScheduledNotificationEngine.runDailyJob({
-      simulateDate,
-      dryRun,
-      orderId,
-    });
-
-    return NextResponse.json({
-      timestamp: new Date().toISOString(),
-      ...result,
-    });
-  } catch (err: any) {
+    const result = await ScheduledNotificationEngine.runDailyJob(input);
+    return NextResponse.json({ timestamp: new Date().toISOString(), ...result });
+  } catch (err) {
     return NextResponse.json(
-      { error: "Failed to execute scheduled notification job.", details: err.message },
+      { error: "Failed to execute scheduled notification job.", details: err instanceof Error ? err.message : String(err) },
       { status: 500 }
     );
   }
 }
 
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  return run(req, {
+    simulateDate: searchParams.get("simulateDate") ?? undefined,
+    dryRun: searchParams.get("dryRun") === "true",
+    orderId: searchParams.get("orderId") ?? undefined,
+  });
+}
+
 export async function POST(req: Request) {
-  try {
-    const body = await req.json().catch(() => ({}));
-    const simulateDate = body.simulateDate || undefined;
-    const dryRun = body.dryRun === true;
-    const orderId = body.orderId || undefined;
-
-    const authHeader = req.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET;
-    const userRole = req.headers.get("x-user-role");
-
-    if (cronSecret && cronSecret !== "mock_secret" && authHeader !== `Bearer ${cronSecret}` && userRole !== "admin") {
-      return NextResponse.json({ error: "Unauthorized cron execution." }, { status: 401 });
-    }
-
-    const result = await ScheduledNotificationEngine.runDailyJob({
-      simulateDate,
-      dryRun,
-      orderId,
-    });
-
-    return NextResponse.json({
-      timestamp: new Date().toISOString(),
-      ...result,
-    });
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "Failed to execute scheduled notification job.", details: err.message },
-      { status: 500 }
-    );
-  }
+  const body = (await req.json().catch(() => ({}))) as {
+    simulateDate?: string;
+    dryRun?: boolean;
+    orderId?: string;
+  };
+  return run(req, {
+    simulateDate: body.simulateDate,
+    dryRun: body.dryRun === true,
+    orderId: body.orderId,
+  });
 }

@@ -334,6 +334,7 @@ export const ALLOWED_STATUS_TRANSITIONS: Record<string, string[]> = {
 
 export { computeOrderProgress } from "@/lib/services/orderProgress";
 export type { OrderProgressInfo } from "@/lib/services/orderProgress";
+export type { FirestoreOrderRecord, OrderDeliverableItem } from "@/app/api/orders/route";
 
 export class OrdersStore {
   public static getAll(): FirestoreOrderRecord[] {

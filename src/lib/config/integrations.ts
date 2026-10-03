@@ -74,18 +74,18 @@ const DEFINITIONS: IntegrationDefinition[] = [
     id: "firebase-client",
     name: "Firebase Web Client",
     group: "Core Platform",
-    description: "Client SDK used in the browser for Auth, Firestore and Storage.",
+    description: "Client SDK used in the browser for Auth and Firestore only. Object storage lives in Google Drive.",
     requirements: [
       { key: "NEXT_PUBLIC_FIREBASE_API_KEY" },
       { key: "NEXT_PUBLIC_FIREBASE_PROJECT_ID" },
       { key: "NEXT_PUBLIC_FIREBASE_APP_ID" },
       { key: "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN" },
-      { key: "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET" },
     ],
     ready: isFirebaseClientConfigured,
     manualSteps: [
       "Firebase console → Project settings → General → Your apps → Web app.",
       "Copy the web config values into the NEXT_PUBLIC_FIREBASE_* keys.",
+      "No Storage bucket and no Cloud Functions are needed — the Spark (free) plan is sufficient.",
     ],
   },
   {
@@ -130,7 +130,8 @@ const DEFINITIONS: IntegrationDefinition[] = [
     id: "google-drive",
     name: "Google Drive Storage",
     group: "Storage",
-    description: "Per-client and per-order Drive folders for logos, references and deliverables.",
+    description:
+      "The studio's 5 TB Drive holds every image, video, 3D file, panorama, deliverable and client upload. Firestore keeps metadata only.",
     requirements: [
       { key: "GOOGLE_DRIVE_CLIENT_ID" },
       { key: "GOOGLE_DRIVE_CLIENT_SECRET" },
@@ -139,11 +140,13 @@ const DEFINITIONS: IntegrationDefinition[] = [
     ],
     ready: isGoogleDriveConfigured,
     manualSteps: [
-      "Enable the Google Drive API in the Cloud project linked to your Firebase project.",
-      "OAuth consent screen → add yourself as a test user → scope https://www.googleapis.com/auth/drive.",
-      "Create an OAuth client (Web application) and complete the refresh-token flow once.",
-      "Share the destination folder with the OAuth account, then put its ID in GOOGLE_DRIVE_ROOT_FOLDER_ID.",
-      "Note: a service account has no storage quota on personal Drive. Use this OAuth flow, or a Shared Drive on Google Workspace.",
+      "Google Cloud console → APIs & Services → enable the Google Drive API.",
+      "OAuth consent screen → External → add your Google account as a test user.",
+      "Credentials → Create OAuth client ID → Web application → add http://localhost:3000/api/auth/drive as an authorised redirect URI.",
+      "Scope requested: https://www.googleapis.com/auth/drive.file (files this app created only — NOT full drive access).",
+      "Generate a refresh token once and set GOOGLE_DRIVE_CLIENT_ID / CLIENT_SECRET / REFRESH_TOKEN.",
+      "GOOGLE_DRIVE_ROOT_FOLDER_ID may stay empty: under drive.file a hand-made folder is invisible, so the app creates its own root on first use and records the id in studio_config/drive.",
+      "Note: a service account has NO quota on a personal Drive — that is why this uses an OAuth refresh token instead.",
     ],
   },
   {
