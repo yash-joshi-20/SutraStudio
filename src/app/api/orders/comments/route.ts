@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { OrdersStore } from "@/lib/services/ordersStore";
 import { adminDb } from "@/lib/firebase/admin";
+import { requestRole, requestUid } from "@/lib/auth/requestRole";
 
 export async function GET(req: Request) {
   try {
@@ -28,8 +29,8 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const callerId = req.headers.get("x-user-id") || "usr_client_001";
-    const callerRole = (req.headers.get("x-user-role") || "client") as "admin" | "client";
+    const callerId = await requestUid(req);
+    const callerRole = await requestRole(req);
     const body = await req.json();
 
     const { orderId, text, authorName, attachmentUrl, attachmentName } = body;

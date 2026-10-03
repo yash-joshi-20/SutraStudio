@@ -347,8 +347,6 @@ export function FloatingChatModal() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-user-id": user?.uid || "usr_mock_001",
-          "x-user-role": user?.role || "client",
         },
         body: JSON.stringify({
           message: text,

@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { archiveOrderFolder } from "@/lib/services/googleDriveService";
 import { adminDb } from "@/lib/firebase/admin";
+import { requestRole } from "@/lib/auth/requestRole";
 
 export async function POST(req: Request) {
   try {
-    const userRole = req.headers.get("x-user-role");
+    const userRole = await requestRole(req);
     if (userRole !== "admin") {
       return NextResponse.json({ error: "Unauthorized. Admin clearance required." }, { status: 403 });
     }

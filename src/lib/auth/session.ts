@@ -17,7 +17,10 @@ import { adminAuth, adminDb, isFirebaseAdminReady, serverTimestamp } from "@/lib
 import type { DecodedIdToken } from "firebase-admin/auth";
 
 export const SESSION_COOKIE = "__session";
+/** Step 1.5 — the admin portal has its own cookie and a 12-hour lifetime. */
+export const SESSION_COOKIE_ADMIN = "sutra_admin_session";
 export const SESSION_COOKIE_LEGACY = "sutra_user";
+export const ADMIN_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 
 const FIVE_DAYS_MS = 5 * 24 * 60 * 60 * 1000;
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
@@ -35,6 +38,11 @@ export interface SessionUser {
 
 export interface SessionCookieOptions {
   rememberMe: boolean;
+  /**
+   * Explicit lifetime override. The admin portal uses 12 hours (Step 1.5)
+   * instead of the client's 5/30-day window.
+   */
+  ttlMs?: number;
 }
 
 export class AuthRequiredError extends Error {
@@ -63,7 +71,12 @@ export async function createSessionCookie(
   idToken: string,
   options: SessionCookieOptions
 ): Promise<{ cookie: string; maxAge: number }> {
-  const maxAge = options.rememberMe ? THIRTY_DAYS_MS : FIVE_DAYS_MS;
+  const maxAge =
+    typeof options.ttlMs === "number" && options.ttlMs > 0
+      ? options.ttlMs
+      : options.rememberMe
+        ? THIRTY_DAYS_MS
+        : FIVE_DAYS_MS;
   const cookie = await adminAuth().createSessionCookie(idToken, { expiresIn: maxAge });
   return { cookie, maxAge };
 }
@@ -102,7 +115,10 @@ export async function decodeSession(
 
 function toSessionUser(decoded: DecodedIdToken): SessionUser {
   const rawRole = decoded.role;
-  const role: AccountRole = rawRole === "admin" ? "admin" : "client";
+  // `superAdmin` is written by scripts/bootstrap-super-admin.ts (Step 1.4);
+  // `admin` is kept so accounts provisioned by set-admin-claim.ts still work.
+  // Either one maps to the app-wide "admin" role every route already checks.
+  const role: AccountRole = rawRole === "admin" || rawRole === "superAdmin" ? "admin" : "client";
   return {
     uid: decoded.uid,
     email: decoded.email ?? "",
@@ -116,7 +132,8 @@ function toSessionUser(decoded: DecodedIdToken): SessionUser {
 /** Read + verify the current session. Returns null for guests. */
 export async function getSessionUser(opts: { checkRevoked?: boolean } = {}): Promise<SessionUser | null> {
   const store = await cookies();
-  return decodeSession(store.get(SESSION_COOKIE)?.value, opts);
+  const value = store.get(SESSION_COOKIE_ADMIN)?.value ?? store.get(SESSION_COOKIE)?.value;
+  return decodeSession(value, opts);
 }
 
 export async function requireUser(opts: { checkRevoked?: boolean } = {}): Promise<SessionUser> {
@@ -125,8 +142,19 @@ export async function requireUser(opts: { checkRevoked?: boolean } = {}): Promis
   return user;
 }
 
+/**
+ * Step 1.5 / rule 13. The admin portal is gated by ITS OWN cookie, so a plain
+ * client session — even one carrying an admin claim — cannot satisfy an admin
+ * route. The caller must have gone through /api/auth/admin-login, which is
+ * where the allowlist, verification, staff-claim and fresh-auth checks live.
+ */
 export async function requireAdmin(): Promise<SessionUser> {
-  const user = await requireUser();
+  const store = await cookies();
+  const adminCookie = store.get(SESSION_COOKIE_ADMIN)?.value;
+  if (!adminCookie) throw new AuthRequiredError("Please sign in to the studio console.");
+
+  const user = await decodeSession(adminCookie, { checkRevoked: true });
+  if (!user) throw new AuthRequiredError("Please sign in to the studio console.");
   if (user.role !== "admin") {
     throw new ForbiddenError("Administrator clearance is required for this action.");
   }
@@ -144,7 +172,7 @@ export async function setUserRole(uid: string, role: AccountRole): Promise<void>
 export async function getUserRole(uid: string): Promise<AccountRole | null> {
   const user = await adminAuth().getUser(uid);
   const role = user.customClaims?.role;
-  return role === "admin" ? "admin" : role === "client" ? "client" : null;
+  return role === "admin" || role === "superAdmin" ? "admin" : role === "client" ? "client" : null;
 }
 
 export async function revokeSessions(uid: string): Promise<void> {

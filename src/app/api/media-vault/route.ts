@@ -5,11 +5,12 @@
 
 import { NextResponse } from "next/server";
 import { MediaVaultStore, type MediaSearchParams } from "@/lib/services/mediaVault";
+import { requestUid } from "@/lib/auth/requestRole";
 
 // GET /api/media-vault — Search/list files
 export async function GET(req: Request) {
   try {
-    const clientUid = req.headers.get("x-user-id");
+    const clientUid = await requestUid(req);
     if (!clientUid) {
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     }
@@ -56,7 +57,7 @@ export async function GET(req: Request) {
 // POST /api/media-vault — Actions on files
 export async function POST(req: Request) {
   try {
-    const clientUid = req.headers.get("x-user-id");
+    const clientUid = await requestUid(req);
     if (!clientUid) {
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     }

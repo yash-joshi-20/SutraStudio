@@ -6,12 +6,13 @@
 
 import { NextResponse } from "next/server";
 import { BrandKitStore, type BrandKitCreateInput } from "@/lib/services/brandKitStore";
+import { requestUid } from "@/lib/auth/requestRole";
 
 // GET /api/brand-kits — List brand kits for authenticated client
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const clientUid = req.headers.get("x-user-id");
+    const clientUid = await requestUid(req);
 
     if (!clientUid) {
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });
@@ -36,7 +37,7 @@ export async function GET(req: Request) {
 // POST /api/brand-kits — Create a new brand kit
 export async function POST(req: Request) {
   try {
-    const clientUid = req.headers.get("x-user-id");
+    const clientUid = await requestUid(req);
     if (!clientUid) {
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     }
@@ -91,7 +92,7 @@ export async function POST(req: Request) {
 // PUT /api/brand-kits — Update a brand kit
 export async function PUT(req: Request) {
   try {
-    const clientUid = req.headers.get("x-user-id");
+    const clientUid = await requestUid(req);
     if (!clientUid) {
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     }
@@ -115,7 +116,7 @@ export async function PUT(req: Request) {
 // DELETE /api/brand-kits — Delete a brand kit
 export async function DELETE(req: Request) {
   try {
-    const clientUid = req.headers.get("x-user-id");
+    const clientUid = await requestUid(req);
     if (!clientUid) {
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     }

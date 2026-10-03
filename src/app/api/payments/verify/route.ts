@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { PaymentsService, UtrVerificationRequest } from "@/lib/services/payments";
 import { OrdersStore } from "@/lib/services/ordersStore";
+import { requestRole, requestUid } from "@/lib/auth/requestRole";
 
 export interface RazorpayVerifyRequestBody {
   orderId?: string;
@@ -15,8 +16,8 @@ export interface RazorpayVerifyRequestBody {
 
 export async function POST(req: Request) {
   try {
-    const callerUid = req.headers.get("x-user-id");
-    const callerRole = req.headers.get("x-user-role");
+    const callerUid = await requestUid(req);
+    const callerRole = await requestRole(req);
     const body = (await req.json()) as RazorpayVerifyRequestBody;
 
     // =========================================================================

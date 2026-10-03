@@ -20,6 +20,11 @@ import {
   SESSION_COOKIE,
 } from "@/lib/auth/session";
 import { badRequest, clientIp, guarded, notConfigured, ok, sameOrigin } from "@/lib/api/response";
+import {
+  GENERIC_AUTH_FAILURE,
+  GENERIC_AUTH_FAILURE_CODE,
+  isAdminAllowedEmail,
+} from "@/lib/auth/adminAccess";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const PHONE_RE = /^[+\d][\d\s\-()]{6,19}$/;
@@ -91,6 +96,15 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "The signed-in email does not match the form.", code: "EMAIL_MISMATCH" },
         { status: 400 }
+      );
+    }
+
+    // Step 1.9 / rule 13: the allowlist never appears in the public sign-up
+    // flow. Rejected with the same credential error the sign-in path uses.
+    if (isAdminAllowedEmail(email)) {
+      return NextResponse.json(
+        { error: GENERIC_AUTH_FAILURE, code: GENERIC_AUTH_FAILURE_CODE },
+        { status: 401 }
       );
     }
 

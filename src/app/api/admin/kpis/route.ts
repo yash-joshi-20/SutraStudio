@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { OrdersStore } from "@/lib/services/ordersStore";
 import { QuotesStore } from "@/lib/services/quotesStore";
 import { ClientsStore } from "@/lib/services/clientsStore";
+import { requestRole } from "@/lib/auth/requestRole";
 
 export async function GET(req: Request) {
-  const userRole = req.headers.get("x-user-role");
+  const userRole = await requestRole(req);
   if (userRole === "client") {
     return NextResponse.json({ error: "Forbidden: Admin clearance required." }, { status: 403 });
   }

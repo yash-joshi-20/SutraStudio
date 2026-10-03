@@ -93,6 +93,22 @@ import { json, jsonRaw, errorMessage } from "@/lib/api/client";
 import { uploadFileToDrive, type DriveUploadResult, type DriveUploadProgress } from "@/lib/drive/useDriveUpload";
 
 /**
+ * Step 1.6 — explain a rejected admin call instead of failing silently.
+ *
+ * `requireAdmin()` answers 401 when the admin portal's own httpOnly cookie is
+ * missing or expired, and `requireFreshAdminReauth()` answers 403 when the
+ * five-minute re-auth window has passed on a sensitive action. Both mean the
+ * same thing to a human: sign in again. Every other status keeps the server's
+ * own message.
+ */
+function adminActionError(status: number, fallback?: string): string {
+  if (status === 401 || status === 403) {
+    return "We could not confirm your identity. Please sign in again to continue.";
+  }
+  return fallback || "That action could not be completed. Please try again.";
+}
+
+/**
  * Admin data access.
  *
  * Every knowledge-base, feedback and catalog operation goes through an
@@ -824,8 +840,6 @@ function AdminHubContent() {
     try {
       const res = await fetch("/api/orders", {
         headers: {
-          "x-user-role": "admin",
-          "x-user-id": user?.uid || "usr_admin_001",
         },
       });
       const data = await res.json();
@@ -865,9 +879,7 @@ function AdminHubContent() {
   // Fetch Admin Notification Settings & Broadcast Log
   const fetchNotificationSettings = useCallback(async () => {
     try {
-      const res = await fetch("/api/admin/notification-settings", {
-        headers: { "x-user-role": "admin" },
-      });
+      const res = await fetch("/api/admin/notification-settings");
       if (res.ok) {
         const data = await res.json();
         if (data.settings) setAdminNotifSettings(data.settings);
@@ -879,9 +891,7 @@ function AdminHubContent() {
 
   const fetchBroadcastNotifications = useCallback(async () => {
     try {
-      const res = await fetch("/api/notifications?role=admin", {
-        headers: { "x-user-role": "admin", "x-user-id": "usr_admin_001" },
-      });
+      const res = await fetch("/api/notifications?role=admin");
       if (res.ok) {
         const data = await res.json();
         setBroadcastNotifs(data.notifications || []);
@@ -909,9 +919,7 @@ function AdminHubContent() {
   const fetchLiveClients = useCallback(async () => {
     setIsLoadingLiveClients(true);
     try {
-      const res = await fetch("/api/admin/clients", {
-        headers: { "x-user-role": "admin" },
-      });
+      const res = await fetch("/api/admin/clients");
       if (res.ok) {
         const data = await res.json();
         setLiveClients(data.clients || []);
@@ -926,9 +934,7 @@ function AdminHubContent() {
   const fetchLiveAuditLogs = useCallback(async () => {
     setIsLoadingAuditLogs(true);
     try {
-      const res = await fetch("/api/audit-logs", {
-        headers: { "x-user-role": "admin" },
-      });
+      const res = await fetch("/api/audit-logs");
       if (res.ok) {
         const data = await res.json();
         setLiveAuditLogs(data.logs || []);
@@ -946,7 +952,7 @@ function AdminHubContent() {
     try {
       const res = await fetch("/api/admin/clients", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "x-user-role": "admin" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "toggle_status",
           clientId,
@@ -954,7 +960,7 @@ function AdminHubContent() {
           reason: `Account status updated to ${nextStatus} by Administrator`,
         }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}) as any);
       if (res.ok) {
         setClientActionMessage(`Account status switched to ${nextStatus}.`);
         fetchLiveClients();
@@ -964,6 +970,8 @@ function AdminHubContent() {
             profile: { ...selectedDossier.profile, status: nextStatus },
           });
         }
+      } else {
+        setClientActionMessage(adminActionError(res.status, data?.error));
       }
     } catch (err: any) {
       alert("Failed to update client status: " + err.message);
@@ -975,15 +983,17 @@ function AdminHubContent() {
     try {
       const res = await fetch("/api/admin/clients", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "x-user-role": "admin" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "resend_verification",
           clientId,
         }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}) as any);
       if (res.ok) {
         setClientActionMessage(data.message || "Verification email dispatched.");
+      } else {
+        setClientActionMessage(adminActionError(res.status, data?.error));
       }
     } catch (err: any) {
       alert("Failed to dispatch verification: " + err.message);
@@ -996,14 +1006,14 @@ function AdminHubContent() {
     try {
       const res = await fetch("/api/admin/clients", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "x-user-role": "admin" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "add_note",
           clientId,
           note: newClientNote.trim(),
         }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}) as any);
       if (res.ok && data.note) {
         setNewClientNote("");
         if (selectedDossier) {
@@ -1016,6 +1026,8 @@ function AdminHubContent() {
           });
         }
         fetchLiveClients();
+      } else {
+        setClientActionMessage(adminActionError(res.status, data?.error));
       }
     } catch (err: any) {
       alert("Failed to add admin note: " + err.message);
@@ -1040,7 +1052,6 @@ function AdminHubContent() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "x-user-role": "admin",
         },
         body: JSON.stringify(adminNotifSettings),
       });
@@ -1063,7 +1074,6 @@ function AdminHubContent() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-user-role": "admin",
         },
         body: JSON.stringify({
           simulateDate: cronSimulateDate || undefined,
@@ -1121,8 +1131,6 @@ function AdminHubContent() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-user-id": user?.uid || "usr_admin_001",
-          "x-user-role": "admin",
         },
         body: JSON.stringify({
           orderId: inspectingAdminOrder.id,
@@ -1153,8 +1161,6 @@ function AdminHubContent() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-user-role": "admin",
-          "x-user-id": user?.uid || "usr_admin_001",
         },
         body: JSON.stringify({
           orderId: inspectingAdminOrder.id,
@@ -1210,8 +1216,6 @@ function AdminHubContent() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-user-role": "admin",
-          "x-user-id": user?.uid || "usr_admin_001",
         },
         body: JSON.stringify({
           orderId: inspectingAdminOrder.id,
@@ -1269,8 +1273,6 @@ function AdminHubContent() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-user-role": "admin",
-          "x-user-id": user?.uid || "usr_admin_001",
         },
         body: JSON.stringify({
           orderId,
@@ -1408,7 +1410,11 @@ function AdminHubContent() {
       });
 
       const data = await res.json().catch(() => ({}) as Record<string, unknown>);
-      if (!res.ok) throw new Error((data.error as string) || "Failed to register the delivery on the order.");
+      if (!res.ok) {
+        throw new Error(
+          adminActionError(res.status, (data.error as string) || "Failed to register the delivery on the order.")
+        );
+      }
 
       setApprovalToast(
         uploaded
@@ -1442,8 +1448,6 @@ function AdminHubContent() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-user-role": "admin",
-          "x-user-id": user?.uid || "usr_admin_001",
         },
         body: JSON.stringify({
           orderId: order.id,
@@ -1476,8 +1480,6 @@ function AdminHubContent() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-user-role": "admin",
-          "x-user-id": user?.uid || "usr_admin_001",
         },
         body: JSON.stringify({
           orderId: order.id,
@@ -1486,9 +1488,9 @@ function AdminHubContent() {
         }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}) as Record<string, unknown>);
       if (!res.ok) {
-        throw new Error(data.error || "Failed to process refund on server.");
+        throw new Error(adminActionError(res.status, (data.error as string) || "Failed to process refund on server."));
       }
 
       setApprovalToast(`Refund processed successfully. Order status updated to cancelled & refunded.`);
@@ -1520,8 +1522,6 @@ function AdminHubContent() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-user-role": "admin",
-          "x-user-id": user?.uid || "usr_admin_001",
         },
         body: JSON.stringify({
           orderId: order.id,
@@ -1673,7 +1673,7 @@ function AdminHubContent() {
     try {
       const res = await fetch("/api/orders", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "x-user-role": "admin" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           orderId,
           status: "APPROVED",

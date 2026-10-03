@@ -3,10 +3,11 @@ import { OrdersStore } from "@/lib/services/ordersStore";
 import { ClientsStore } from "@/lib/services/clientsStore";
 import { QuotesStore } from "@/lib/services/quotesStore";
 import { AuditLogService } from "@/lib/services/auditLogService";
+import { requestUid } from "@/lib/auth/requestRole";
 
 export async function GET(req: Request) {
   try {
-    const userId = req.headers.get("x-user-id");
+    const userId = await requestUid(req);
     const userEmail = req.headers.get("x-user-email");
 
     if (!userId && !userEmail) {

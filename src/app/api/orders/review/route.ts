@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { OrdersStore } from "@/lib/services/ordersStore";
 import { adminDb } from "@/lib/firebase/admin";
+import { requestUid } from "@/lib/auth/requestRole";
 
 export async function POST(req: Request) {
   try {
-    const callerId = req.headers.get("x-user-id") || "usr_mock_001";
+    const callerId = await requestUid(req);
+    if (!callerId) {
+      return NextResponse.json({ error: "Sign in to continue." }, { status: 401 });
+    }
     const body = await req.json();
     const { orderId, action, comment, clientName, annotationUrl } = body;
 

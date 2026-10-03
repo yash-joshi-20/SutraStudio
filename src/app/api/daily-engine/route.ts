@@ -6,11 +6,12 @@
 import { NextResponse } from "next/server";
 import { DailyPlanStore, ContentCalendarStore, generateWeeklyCalendar, checkPlanAlerts, processCarryForward } from "@/lib/services/dailyEngine";
 import { BrandKitStore } from "@/lib/services/brandKitStore";
+import { requestRole, requestUid } from "@/lib/auth/requestRole";
 
 export async function POST(req: Request) {
   try {
-    const clientUid = req.headers.get("x-user-id");
-    const userRole = req.headers.get("x-user-role");
+    const clientUid = await requestUid(req);
+    const userRole = await requestRole(req);
 
     if (!clientUid) {
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });

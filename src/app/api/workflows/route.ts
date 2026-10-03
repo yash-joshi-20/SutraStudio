@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { N8nAutomationService } from "@/lib/services/n8nService";
+import { requestRole } from "@/lib/auth/requestRole";
 
 const VALID_WORKFLOW_ENGINES = [
   "image",
@@ -15,7 +16,7 @@ const VALID_WORKFLOW_ENGINES = [
 type ValidWorkflowEngine = (typeof VALID_WORKFLOW_ENGINES)[number];
 
 export async function GET(req: Request) {
-  const userRole = req.headers.get("x-user-role");
+  const userRole = await requestRole(req);
   if (userRole === "client") {
     return NextResponse.json(
       { error: "Forbidden: Client accounts are strictly prohibited from inspecting internal workflow infrastructure." },
@@ -41,7 +42,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const userRole = req.headers.get("x-user-role");
+    const userRole = await requestRole(req);
     if (userRole === "client") {
       return NextResponse.json(
         { error: "Forbidden: Administrative clearance required to trigger executive workflow execution." },

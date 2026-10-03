@@ -196,6 +196,7 @@ import { NotificationsStore } from "@/lib/services/notificationsStore";
 import { getAuthenticatedUser } from "@/lib/auth/serverAuth";
 import { AuditLogService } from "@/lib/services/auditLogService";
 import { ClientsStore } from "@/lib/services/clientsStore";
+import { requestRole } from "@/lib/auth/requestRole";
 
 export async function GET(req: Request) {
   const user = await getAuthenticatedUser(req);
@@ -583,7 +584,7 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
-    const role = req.headers.get("x-user-role");
+    const role = await requestRole(req);
     const body = await req.json();
 
     // Client impersonation rejection

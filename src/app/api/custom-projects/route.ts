@@ -5,10 +5,11 @@
 
 import { NextResponse } from "next/server";
 import { CustomProjectStore, DEFAULT_MILESTONES, DEFAULT_HANDOVER_CHECKLIST, type CustomProject, type ProjectMilestone, type ChangeRequest } from "@/lib/services/customProjects";
+import { requestRole, requestUid } from "@/lib/auth/requestRole";
 
 export async function GET(req: Request) {
   try {
-    const clientUid = req.headers.get("x-user-id");
+    const clientUid = await requestUid(req);
     if (!clientUid) {
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     }
@@ -42,8 +43,8 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const clientUid = req.headers.get("x-user-id");
-    const userRole = req.headers.get("x-user-role");
+    const clientUid = await requestUid(req);
+    const userRole = await requestRole(req);
 
     if (!clientUid) {
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ChatToolsService, CreateCommissionDraftParams } from "@/lib/services/chatTools";
 import { AiKnowledgeService } from "@/lib/services/aiKnowledgeService";
 import { SEED_CATALOG_SERVICES } from "@/lib/services/serviceCatalog";
+import { requestRole, requestUid } from "@/lib/auth/requestRole";
 
 // In-memory rate limiter: 60 requests / minute per client/IP
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -120,8 +121,11 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const callerUid = req.headers.get("x-user-id") || "usr_mock_001";
-    const callerRole = req.headers.get("x-user-role") || "client";
+    const callerUid = await requestUid(req);
+    const callerRole = await requestRole(req);
+    if (!callerUid) {
+      return NextResponse.json({ error: "Sign in to continue." }, { status: 401 });
+    }
     const ip = req.headers.get("x-forwarded-for") || callerUid;
 
     // Rate Limiting

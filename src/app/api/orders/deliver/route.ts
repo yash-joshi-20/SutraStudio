@@ -1,18 +1,22 @@
 import { NextResponse } from "next/server";
 import { OrdersStore } from "@/lib/services/ordersStore";
 import { adminDb } from "@/lib/firebase/admin";
-import { getAuthenticatedUser } from "@/lib/auth/serverAuth";
+import { requireAdmin } from "@/lib/auth/session";
+import { mapApiError } from "@/lib/api/response";
 import { AuditLogService } from "@/lib/services/auditLogService";
 
 export async function POST(req: Request) {
+  // Step 1.5: releasing output to a client is an admin action and must run
+  // behind the admin portal's own cookie. Auth is resolved BEFORE the try so a
+  // rejected caller gets a 401/403 rather than a generic 500.
+  let user: Awaited<ReturnType<typeof requireAdmin>>;
   try {
-    const user = await getAuthenticatedUser(req);
-    if (!user.isAdmin && user.role !== "admin") {
-      return NextResponse.json(
-        { error: "Forbidden: Only authorized studio administrators can deliver project results." },
-        { status: 403 }
-      );
-    }
+    user = await requireAdmin();
+  } catch (err: unknown) {
+    return mapApiError(err);
+  }
+
+  try {
 
     const body = await req.json();
     const { orderId, deliverables, deliveryNote, adminName, isFinal } = body;
@@ -92,11 +96,12 @@ export async function POST(req: Request) {
       message: `${isFinal ? "Final deliverables" : "Draft deliverables"} successfully vaulted and released to client for order #${updated.orderNumber || updated.code}.`,
       order: updated,
     });
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: err.message || "Internal error processing delivery." },
-      { status: 500 }
-    );
+} catch {
+      // Never echo an internal message to the client.
+      return NextResponse.json(
+        { error: "We could not complete that delivery. Please try again." },
+        { status: 500 }
+      );
+    }
   }
-}
 

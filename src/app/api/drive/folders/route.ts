@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { provisionOrderDriveFolders } from "@/lib/services/googleDriveService";
 import { adminDb } from "@/lib/firebase/admin";
 import { OrdersStore } from "@/lib/services/ordersStore";
+import { requestRole, requestUid } from "@/lib/auth/requestRole";
 
 export async function POST(req: Request) {
   try {
-    const userId = req.headers.get("x-user-id");
-    const userRole = req.headers.get("x-user-role") || "client";
+    const userId = await requestUid(req);
+    const userRole = await requestRole(req);
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -1,20 +1,18 @@
 import { NextResponse } from "next/server";
 import { PaymentsService } from "@/lib/services/payments";
 import { OrdersStore } from "@/lib/services/ordersStore";
-import { getAuthenticatedUser } from "@/lib/auth/serverAuth";
+import { requireAdmin } from "@/lib/auth/session";
+import { requireFreshAdminReauth } from "@/lib/auth/adminAccess";
+import { guarded } from "@/lib/api/response";
 import { AuditLogService } from "@/lib/services/auditLogService";
 
 export async function POST(req: Request) {
-  try {
-    const user = await getAuthenticatedUser(req);
-
-    // Strict Administrative Clearance
-    if (!user.isAdmin && user.role !== "admin") {
-      return NextResponse.json(
-        { error: "Forbidden: Administrative clearance required to issue financial refunds." },
-        { status: 403 }
-      );
-    }
+  return guarded(async () => {
+    // Step 1.5: financial actions run behind the admin portal's own cookie,
+    // not a client session carrying an admin claim.
+    const user = await requireAdmin();
+    // Step 1.8: a refund needs a sign-in from the last 5 minutes.
+    await requireFreshAdminReauth();
 
     const body = await req.json();
     const { orderId, amountINR, reason } = body;
@@ -106,10 +104,5 @@ export async function POST(req: Request) {
       },
       { status: 200 }
     );
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to process refund", details: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
-    );
-  }
+  });
 }

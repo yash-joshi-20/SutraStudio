@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requestRole } from "@/lib/auth/requestRole";
 
 const campaigns: any[] = [];
 
@@ -8,7 +9,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const userRole = req.headers.get('x-user-role');
+    const userRole = await requestRole(req);
     if (userRole === 'client') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }

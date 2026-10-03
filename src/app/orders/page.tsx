@@ -279,8 +279,6 @@ export default function OrdersPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-user-id": user?.uid || "usr_mock_001",
-          "x-user-role": "client",
         },
         body: JSON.stringify({
           orderId: inspectingOrder.id,
@@ -573,7 +571,6 @@ export default function OrdersPage() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-user-id": clientUid,
           },
           body: JSON.stringify({
             clientUid,
@@ -814,8 +811,6 @@ export default function OrdersPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-user-id": user?.uid || "usr_mock_001",
-          "x-user-role": user?.role || "client",
         },
         body: JSON.stringify(payload),
       });
@@ -915,8 +910,6 @@ export default function OrdersPage() {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
-                  "x-user-id": user?.uid || "usr_mock_001",
-                  "x-user-role": user?.role || "client",
                 },
                 body: JSON.stringify({
                   orderId: data.order.id,
@@ -980,8 +973,6 @@ export default function OrdersPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-user-id": user?.uid || "usr_mock_001",
-          "x-user-role": user?.role || "client",
         },
         body: JSON.stringify({
           orderId: order.id,
@@ -1017,8 +1008,6 @@ export default function OrdersPage() {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                "x-user-id": user?.uid || "usr_mock_001",
-                "x-user-role": user?.role || "client",
               },
               body: JSON.stringify({
                 orderId: order.id,
@@ -1075,8 +1064,6 @@ export default function OrdersPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-user-id": user?.uid || "usr_mock_001",
-          "x-user-role": user?.role || "client",
         },
         body: JSON.stringify({
           orderId,
@@ -1113,8 +1100,6 @@ export default function OrdersPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-user-id": user?.uid || "usr_mock_001",
-          "x-user-role": user?.role || "client",
         },
         body: JSON.stringify({ orderId: order.id }),
       });
@@ -1140,8 +1125,6 @@ export default function OrdersPage() {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                "x-user-id": user?.uid || "usr_mock_001",
-                "x-user-role": user?.role || "client",
               },
               body: JSON.stringify({
                 orderId: order.id,
@@ -1174,8 +1157,6 @@ export default function OrdersPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-user-id": user?.uid || "usr_mock_001",
-          "x-user-role": "client",
         },
         body: JSON.stringify({
           orderId,
@@ -1236,8 +1217,6 @@ export default function OrdersPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-user-id": user?.uid || "usr_mock_001",
-          "x-user-role": "client",
         },
         body: JSON.stringify({
           orderId,

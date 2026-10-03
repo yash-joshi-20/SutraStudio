@@ -16,6 +16,12 @@ import {
 } from "@/lib/auth/session";
 import { badRequest, guarded, notConfigured, ok, sameOrigin } from "@/lib/api/response";
 import { safeReturnTo } from "@/app/api/auth/register/route";
+import {
+  GENERIC_AUTH_FAILURE,
+  GENERIC_AUTH_FAILURE_CODE,
+  isAdminAllowedEmail,
+  isStaffClaim,
+} from "@/lib/auth/adminAccess";
 
 interface LoginBody {
   idToken: string;
@@ -48,10 +54,19 @@ export async function POST(req: Request) {
       );
     }
 
-    // Anyone can sign in, but only an account carrying the admin custom claim
-    // is ever treated as an administrator.
+    // Step 1.9 / rule 13: a staff or allowlisted identity NEVER receives a client
+    // session. The response is byte-identical to a bad credential, so the
+    // client app cannot be used to discover who is on the admin allowlist.
     const claims = (await adminAuth().getUser(decoded.uid)).customClaims ?? {};
-    if (claims.role !== "client" && claims.role !== "admin") {
+    if (isAdminAllowedEmail(decoded.email) || isStaffClaim(claims)) {
+      return NextResponse.json(
+        { error: GENERIC_AUTH_FAILURE, code: GENERIC_AUTH_FAILURE_CODE },
+        { status: 401 }
+      );
+    }
+
+    // Anyone else can sign in; a missing/unknown role is normalised to client.
+    if (claims.role !== "client") {
       await setUserRole(decoded.uid, "client");
     }
     if (decoded.disabled) {
@@ -61,7 +76,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const freshToken = await adminAuth().createCustomToken(decoded.uid, { role: claims.role ?? "client" });
+    const freshToken = await adminAuth().createCustomToken(decoded.uid, { role: "client" });
     const refreshed = await adminAuth().verifyIdToken(freshToken);
 
     const { cookie, maxAge } = await createSessionCookie(refreshed.uid, {
@@ -75,7 +90,7 @@ export async function POST(req: Request) {
         uid: decoded.uid,
         email: decoded.email ?? "",
         displayName: typeof decoded.name === "string" ? decoded.name : "",
-        role: (claims.role as "client" | "admin") ?? "client",
+        role: "client" as const,
         emailVerified: Boolean(decoded.email_verified),
         picture: decoded.picture,
       },

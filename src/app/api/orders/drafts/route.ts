@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
+import { requestRole, requestUid } from "@/lib/auth/requestRole";
 
 export interface OrderDraftData {
   id?: string;
@@ -27,11 +28,29 @@ export interface OrderDraftData {
 // In-memory fallback for local dev / demo mode
 const IN_MEMORY_DRAFTS: Record<string, OrderDraftData> = {};
 
+/**
+ * The draft is keyed by uid. Only an authenticated admin may point the
+ * request at a *different* uid (`?clientUid=` / `body.clientUid`); a client
+ * always reads and writes their own. Without this, any signed-in account
+ * could open someone else's half-finished order brief.
+ */
+async function resolveTargetUid(
+  req: Request,
+  requested: string | null | undefined
+): Promise<string | null> {
+  const uid = await requestUid(req);
+  if (!uid) return null;
+  if (requested && (await requestRole(req)) === "admin") return requested;
+  return uid;
+}
+
 export async function GET(req: Request) {
   try {
-    const callerUid = req.headers.get("x-user-id") || "usr_mock_001";
     const url = new URL(req.url);
-    const clientUid = url.searchParams.get("clientUid") || callerUid;
+    const clientUid = await resolveTargetUid(req, url.searchParams.get("clientUid"));
+    if (!clientUid) {
+      return NextResponse.json({ error: "Sign in to continue." }, { status: 401 });
+    }
 
     // Try Firestore first if available
     try {
@@ -72,10 +91,12 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const callerUid = req.headers.get("x-user-id") || "usr_mock_001";
     const body = await req.json();
+    const clientUid = await resolveTargetUid(req, body.clientUid);
+    if (!clientUid) {
+      return NextResponse.json({ error: "Sign in to continue." }, { status: 401 });
+    }
 
-    const clientUid = body.clientUid || callerUid;
     const now = new Date().toISOString();
 
     const draftData: OrderDraftData = {
@@ -127,9 +148,11 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    const callerUid = req.headers.get("x-user-id") || "usr_mock_001";
     const url = new URL(req.url);
-    const clientUid = url.searchParams.get("clientUid") || callerUid;
+    const clientUid = await resolveTargetUid(req, url.searchParams.get("clientUid"));
+    if (!clientUid) {
+      return NextResponse.json({ error: "Sign in to continue." }, { status: 401 });
+    }
 
     try {
       const db = adminDb();

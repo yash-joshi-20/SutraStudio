@@ -8,12 +8,13 @@ import { OutputStore, researchTrends, buildCreativePrompt, DEFAULT_PROMPT_TEMPLA
 import { generateImage, generateVideo, generate3DModel, generate360Panorama } from "@/lib/services/outputProcessors";
 import { runAutomatedChecks, QualityGateStore } from "@/lib/services/qualityGate";
 import { BrandKitStore } from "@/lib/services/brandKitStore";
+import { requestRole, requestUid } from "@/lib/auth/requestRole";
 
 // POST /api/pipeline — Trigger a generation
 export async function POST(req: Request) {
   try {
-    const clientUid = req.headers.get("x-user-id");
-    const userRole = req.headers.get("x-user-role");
+    const clientUid = await requestUid(req);
+    const userRole = await requestRole(req);
 
     if (!clientUid) {
       return NextResponse.json({ error: "Authentication required." }, { status: 401 });

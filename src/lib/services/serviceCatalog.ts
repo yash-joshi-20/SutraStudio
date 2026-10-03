@@ -9,8 +9,7 @@
  * component, which is why server-only is asserted here.
  */
 
-// NOTE: Do NOT add "server-only" here — this module re-exports catalogData
-// which client pages need. The adminDb() calls are only reached in server context.
+import "server-only";
 import { adminDb } from "@/lib/firebase/admin";
 import {
   SEED_CATALOG_PLANS,

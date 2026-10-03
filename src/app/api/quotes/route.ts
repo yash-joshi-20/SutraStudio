@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { QuotesStore } from "@/lib/services/quotesStore";
 import { checkRateLimit, getClientIp } from "@/lib/security/rateLimiter";
 import { sanitizeInputText } from "@/lib/security/sanitize";
+import { requestRole, requestUid } from "@/lib/auth/requestRole";
 
 export async function GET(req: Request) {
-  const userRole = req.headers.get("x-user-role");
-  const userId = req.headers.get("x-user-id");
+  const userRole = await requestRole(req);
+  const userId = await requestUid(req);
   const all = QuotesStore.getAll();
 
   if (userRole === "admin") {
@@ -49,8 +50,8 @@ export async function POST(req: Request) {
       adminNotes,
     } = body;
 
-    const userRole = req.headers.get("x-user-role");
-    const userId = req.headers.get("x-user-id");
+    const userRole = await requestRole(req);
+    const userId = await requestUid(req);
 
     // Action A: Request Custom Quote (Client or Visitor)
     if (!action || action === "request") {

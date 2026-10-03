@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server";
-import { getAuthenticatedUser } from "@/lib/auth/serverAuth";
+import { requireAdmin } from "@/lib/auth/session";
+import { guarded } from "@/lib/api/response";
 import { AuditLogService } from "@/lib/services/auditLogService";
 
 export async function GET(req: Request) {
-  const user = await getAuthenticatedUser(req);
-  if (!user.isAdmin && user.role !== "admin") {
-    return NextResponse.json(
-      { error: "Unauthorized: Administrative privileges required to inspect audit logs." },
-      { status: 403 }
-    );
-  }
+  return guarded(async () => {
+    // Step 1.5 — the audit trail is readable only through the admin cookie.
+    await requireAdmin();
 
   const url = new URL(req.url);
   const targetType = url.searchParams.get("targetType") || undefined;
@@ -24,9 +21,10 @@ export async function GET(req: Request) {
     query,
   });
 
-  return NextResponse.json({
-    success: true,
-    totalCount: logs.length,
-    logs,
+return NextResponse.json({
+      success: true,
+      totalCount: logs.length,
+      logs,
+    });
   });
 }

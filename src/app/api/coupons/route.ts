@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { CouponsStore } from "@/lib/services/couponsStore";
 import { checkRateLimit, getClientIp } from "@/lib/security/rateLimiter";
+import { requestRole } from "@/lib/auth/requestRole";
 
 export async function GET(req: Request) {
-  const userRole = req.headers.get("x-user-role");
+  const userRole = await requestRole(req);
   const all = CouponsStore.getAll();
 
   if (userRole === "admin") {
@@ -40,7 +41,7 @@ export async function POST(req: Request) {
 
     // Action A: Create new coupon (Admin only)
     if (action === "create") {
-      const userRole = req.headers.get("x-user-role");
+      const userRole = await requestRole(req);
       if (userRole !== "admin") {
         return NextResponse.json({ error: "Forbidden: Admin access required." }, { status: 403 });
       }
@@ -86,7 +87,7 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const userRole = req.headers.get("x-user-role");
+  const userRole = await requestRole(req);
   if (userRole !== "admin") {
     return NextResponse.json({ error: "Forbidden: Admin access required." }, { status: 403 });
   }
@@ -101,7 +102,7 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const userRole = req.headers.get("x-user-role");
+  const userRole = await requestRole(req);
   if (userRole !== "admin") {
     return NextResponse.json({ error: "Forbidden: Admin access required." }, { status: 403 });
   }

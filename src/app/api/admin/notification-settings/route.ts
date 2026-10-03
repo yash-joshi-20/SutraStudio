@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { NotificationSettingsStore } from "@/lib/services/notificationSettingsStore";
+import { requestRole } from "@/lib/auth/requestRole";
 
 export async function GET(req: Request) {
   try {
-    const role = req.headers.get("x-user-role");
+    const role = await requestRole(req);
     if (role && role !== "admin") {
       return NextResponse.json({ error: "Unauthorized access to admin settings." }, { status: 403 });
     }
@@ -23,7 +24,7 @@ export async function GET(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
-    const role = req.headers.get("x-user-role");
+    const role = await requestRole(req);
     if (role && role !== "admin") {
       return NextResponse.json({ error: "Unauthorized access to update admin settings." }, { status: 403 });
     }

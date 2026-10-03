@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { OrdersStore } from "@/lib/services/ordersStore";
 import { adminDb } from "@/lib/firebase/admin";
+import { requestRole, requestUid } from "@/lib/auth/requestRole";
 
 export async function POST(req: Request) {
   try {
-    const callerRole = req.headers.get("x-user-role");
-    const callerUid = req.headers.get("x-user-id");
+    const callerRole = await requestRole(req);
+    const callerUid = await requestUid(req);
 
     if (callerRole !== "admin") {
       return NextResponse.json(

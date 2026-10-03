@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
 import { NotificationsStore } from "@/lib/services/notificationsStore";
+import { requestRole, requestUid } from "@/lib/auth/requestRole";
 
 export async function GET(req: Request) {
   try {
-    const { searchParams } = new URL(req.url);
-    const callerId = req.headers.get("x-user-id") || searchParams.get("userId") || "usr_mock_001";
-    const callerRole = req.headers.get("x-user-role") || searchParams.get("role") || "client";
-
+    const callerId = await requestUid(req);
+    const callerRole = await requestRole(req);
     const targetUserId = callerRole === "admin" ? "usr_admin_001" : callerId;
+    if (!targetUserId) {
+      return NextResponse.json({ error: "Sign in to continue." }, { status: 401 });
+    }
+
     const notifications = NotificationsStore.getAll(targetUserId);
     const unreadCount = NotificationsStore.getUnreadCount(targetUserId);
 
@@ -26,9 +29,12 @@ export async function GET(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
-    const callerId = req.headers.get("x-user-id") || "usr_mock_001";
-    const callerRole = req.headers.get("x-user-role") || "client";
+    const callerId = await requestUid(req);
+    const callerRole = await requestRole(req);
     const targetUserId = callerRole === "admin" ? "usr_admin_001" : callerId;
+    if (!targetUserId) {
+      return NextResponse.json({ error: "Sign in to continue." }, { status: 401 });
+    }
 
     const body = await req.json().catch(() => ({}));
 

@@ -48,8 +48,6 @@ export function NotificationBell({ className = "" }: { className?: string }) {
     try {
       const res = await fetch("/api/notifications", {
         headers: {
-          "x-user-id": user?.uid || (role === "admin" ? "usr_admin_001" : "usr_client_001"),
-          "x-user-role": role || "client",
         },
       });
       if (res.ok) {
@@ -104,8 +102,6 @@ export function NotificationBell({ className = "" }: { className?: string }) {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "x-user-id": user?.uid || (role === "admin" ? "usr_admin_001" : "usr_client_001"),
-          "x-user-role": role || "client",
         },
         body: JSON.stringify({ id }),
       });
@@ -125,8 +121,6 @@ export function NotificationBell({ className = "" }: { className?: string }) {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "x-user-id": user?.uid || (role === "admin" ? "usr_admin_001" : "usr_client_001"),
-          "x-user-role": role || "client",
         },
         body: JSON.stringify({ markAllAsRead: true }),
       });

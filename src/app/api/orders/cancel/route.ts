@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { OrdersStore } from "@/lib/services/ordersStore";
 import { sanitizeInputText } from "@/lib/security/sanitize";
+import { requestRole, requestUid } from "@/lib/auth/requestRole";
 
 export async function POST(req: Request) {
   try {
-    const userId = req.headers.get("x-user-id");
-    const userRole = req.headers.get("x-user-role");
+    const userId = await requestUid(req);
+    const userRole = await requestRole(req);
     const { orderId, reason } = await req.json();
 
     if (!orderId) {

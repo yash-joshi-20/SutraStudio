@@ -21,6 +21,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 const SESSION_COOKIE = "__session";
+/** Step 1.5 — admin portal has its own cookie; a client session never opens it. */
+const ADMIN_SESSION_COOKIE = "sutra_admin_session";
 const LEGACY_COOKIES = ["sutra_user", "sutra_role", "role"];
 
 const CLIENT_PROTECTED = [
@@ -46,6 +48,9 @@ export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const fullPath = pathname + search;
   const isSessionShaped = looksLikeFirebaseSession(request.cookies.get(SESSION_COOKIE)?.value);
+  const isAdminSessionShaped = looksLikeFirebaseSession(
+    request.cookies.get(ADMIN_SESSION_COOKIE)?.value
+  );
 
   // Strip the forgeable legacy cookies on the first navigation after upgrade.
   if (LEGACY_COOKIES.some((c) => request.cookies.get(c))) {
@@ -56,9 +61,9 @@ export function middleware(request: NextRequest) {
     return cleaned;
   }
 
-  // 1. Executive Terminal
+  // 1. Executive Terminal — needs the ADMIN cookie, not the client one.
   if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
-    if (!isSessionShaped) {
+    if (!isAdminSessionShaped) {
       const url = new URL("/admin/login", request.url);
       url.searchParams.set("returnTo", fullPath);
       return NextResponse.redirect(url);
@@ -81,7 +86,7 @@ export function middleware(request: NextRequest) {
   }
 
   const res = NextResponse.next();
-  res.headers.set("x-sutra-session-present", isSessionShaped ? "1" : "0");
+  res.headers.set("x-sutra-session-present", isSessionShaped || isAdminSessionShaped ? "1" : "0");
   return res;
 }
 
