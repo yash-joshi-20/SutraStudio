@@ -1,18 +1,31 @@
 /**
- * Admin → Integrations
+ * Admin → Integrations & Missing Keys Registry
  *
- * A read-only honesty panel. For every third-party service it shows whether the
- * server holds the keys it needs and, when it does not, exactly WHICH key names
- * are missing plus the manual steps to obtain them.
+ * A read-only honesty and integration control panel. For every third-party service
+ * it displays whether the server holds the keys it needs, exactly WHICH key names
+ * are missing, the priority tier, impacted features, and step-by-step instructions
+ * on where to obtain them.
  *
- * Secret values are never rendered here and never leave the server.
+ * HARD RULE: Secret values are NEVER rendered here and NEVER leave the server.
  */
 
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ShieldCheck, TriangleAlert, RefreshCw } from "lucide-react";
-import { json, errorMessage } from "@/lib/api/client";
+import {
+  ShieldCheck,
+  TriangleAlert,
+  RefreshCw,
+  ExternalLink,
+  Key,
+  AlertCircle,
+  Sparkles,
+  Layers,
+  ArrowRight,
+  CheckCircle2,
+  Lock,
+} from "lucide-react";
+import { json, jsonRaw, errorMessage } from "@/lib/api/client";
 import { StatusBadge, StatTile, type StatusTone } from "@/components/ui/Status";
 import { ErrorState, LoadingState } from "@/components/ui/States";
 
@@ -21,7 +34,10 @@ interface IntegrationStatus {
   name: string;
   group: string;
   description: string;
+  features: string[];
+  priority: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
   state: "configured" | "not configured";
+  whereToGet: string;
   missingKeys: string[];
   presentKeys: string[];
   manualSteps: string[];
@@ -35,36 +51,46 @@ interface Counts {
 }
 
 interface Payload {
-  summary: { total: number; configured: number; missing: number; criticalMissing: string[] };
+  summary: {
+    total: number;
+    configured: number;
+    missing: number;
+    criticalMissing: string[];
+    highMissing?: string[];
+    allMissingKeys?: string[];
+  };
   integrations: IntegrationStatus[];
   counts: Counts;
   countsAvailable: boolean;
+  firestoreRegistry?: Record<string, unknown>[];
 }
 
-/**
- * Display labels per integration group.
- * Keys MUST match the literal `group` strings declared in
- * `@/lib/config/integrations.ts` — a lookup miss falls back to the raw group.
- */
 const GROUP_LABELS: Record<string, string> = {
-  "Core Platform": "Core Platform",
-  Authentication: "Authentication",
-  Payments: "Payments",
-  Storage: "Media & Storage",
-  "AI Providers": "AI Providers",
-  Automation: "Automation & Schedules",
-  Notifications: "Notifications",
-  Social: "Social Publishing",
+  "Core Platform": "Core Platform & Web SDK",
+  Authentication: "Authentication & RBAC",
+  Payments: "Payments & Invoicing",
+  Storage: "Media Vault & Google Drive",
+  "AI Providers": "AI Models & Concierge",
+  Automation: "Workflow Engines & n8n",
+  Notifications: "Notifications & Email",
+  Social: "Social & Meta Ads",
+  Security: "Administrative & Encryption",
 };
 
-const configuredTone: StatusTone = "completed";
-const missingTone: StatusTone = "neutral";
+const priorityBadges: Record<string, { bg: string; text: string; border: string }> = {
+  CRITICAL: { bg: "bg-red-50", text: "text-red-700", border: "border-red-200" },
+  HIGH: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" },
+  MEDIUM: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" },
+  LOW: { bg: "bg-stone-50", text: "text-stone-700", border: "border-stone-200" },
+};
 
 export default function AdminIntegrationsPage() {
   const [data, setData] = useState<Payload | null>(null);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [filterPriority, setFilterPriority] = useState<string>("ALL");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -78,186 +104,291 @@ export default function AdminIntegrationsPage() {
     }
   }, []);
 
+  const syncRegistry = async () => {
+    setSyncing(true);
+    try {
+      await jsonRaw("/api/admin/integrations", "POST", {});
+      await load();
+    } catch (err) {
+      setError(errorMessage(err, "Failed to synchronize integration registry."));
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   useEffect(() => {
     void load();
   }, [load]);
 
+  const missingItems = useMemo(() => {
+    if (!data?.integrations) return [];
+    return data.integrations.filter((item) => item.state === "not configured");
+  }, [data]);
+
   const grouped = useMemo(() => {
     const map = new Map<string, IntegrationStatus[]>();
     for (const item of data?.integrations ?? []) {
+      if (filterPriority !== "ALL" && item.priority !== filterPriority) {
+        continue;
+      }
       const list = map.get(item.group) ?? [];
       list.push(item);
       map.set(item.group, list);
     }
     return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-  }, [data]);
+  }, [data, filterPriority]);
 
-  if (loading) return <LoadingState label="Checking integration keys…" rows={4} />;
+  if (loading) return <LoadingState label="Inspecting studio integration keys…" rows={4} />;
   if (error) return <ErrorState message={error} onRetry={() => void load()} />;
   if (!data) return <ErrorState message="Integration status is unavailable." onRetry={() => void load()} />;
 
   const critical = data.summary.criticalMissing;
+  const totalMissing = data.summary.missing;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-5 px-4 py-6 sm:px-6 lg:px-8">
-      <header>
-        <h1 className="text-2xl font-semibold text-[#0F172A]">Integrations</h1>
-        <p className="mt-1 max-w-2xl text-sm text-[#64748B]">
-          Live configuration state for every service Sutra Studio depends on. Nothing on this page
-          calls a provider or reveals a secret value.
-        </p>
-      </header>
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[#E5E1D8] pb-6">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="font-serif text-3xl font-normal text-[#171717]">Integrations Registry</h1>
+            <span className="inline-flex items-center rounded-full bg-[#FAF9F5] px-2.5 py-0.5 text-xs font-medium text-[#5C3A1E] border border-[#E5E1D8]">
+              Step 31A Protected
+            </span>
+          </div>
+          <p className="mt-1 text-sm text-[#737373]">
+            Central declaration for studio credentials, API keys, and missing-key protection. Secret values are never exposed.
+          </p>
+        </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatTile label="Configured" value={`${data.summary.configured}/${data.summary.total}`} tone="good" />
-        <StatTile label="Not configured" value={data.summary.missing} tone={data.summary.missing ? "warn" : "good"} />
+        <button
+          type="button"
+          onClick={() => void syncRegistry()}
+          disabled={syncing}
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#A98B57] bg-[#A98B57] px-4 py-2.5 text-sm font-medium text-white shadow-xs transition hover:bg-[#8F7445] disabled:opacity-50"
+        >
+          <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
+          {syncing ? "Synchronizing..." : "Re-check & Sync Registry"}
+        </button>
+      </div>
+
+      {/* KPI Tiles */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatTile
-          label="Critical gaps"
-          value={critical.length}
-          tone={critical.length ? "bad" : "good"}
-          hint={critical.length ? critical.join(", ") : "Accounts, orders and payments are ready."}
+          label="Services Configured"
+          value={`${data.summary.configured} / ${data.summary.total}`}
+          tone={data.summary.configured === data.summary.total ? "good" : "neutral"}
+          hint="Operational integrations"
         />
         <StatTile
-          label="Firestore records"
-          value={data.countsAvailable ? (data.counts.orders ?? 0) : "—"}
-          tone="neutral"
-          hint={data.countsAvailable ? "Orders in the live database" : "Database unreachable"}
+          label="Missing Keys"
+          value={totalMissing}
+          tone={totalMissing > 0 ? "warn" : "good"}
+          hint={totalMissing > 0 ? "Variables needing values" : "All services ready"}
+        />
+        <StatTile
+          label="Critical Gaps"
+          value={critical.length}
+          tone={critical.length ? "bad" : "good"}
+          hint={critical.length ? `${critical.join(", ")}` : "Core auth & storage ready"}
+        />
+        <StatTile
+          label="Firestore Status"
+          value={data.countsAvailable ? "Connected" : "Offline / Cache"}
+          tone={data.countsAvailable ? "good" : "neutral"}
+          hint={data.countsAvailable ? `${data.counts.orders ?? 0} orders recorded` : "Using local env registry"}
         />
       </div>
 
-      {critical.length > 0 ? (
-        <div
-          role="status"
-          className="rounded-2xl border border-[#FDE68A] bg-[#FFFBEB] p-4"
-        >
-          <div className="flex gap-3">
-            <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-[#B45309]" aria-hidden="true" />
-            <div className="text-sm text-[#0F172A]">
-              <p className="font-semibold">
-                {critical.join(", ")} must be configured before the site goes live.
+      {/* Missing Keys Banner */}
+      {totalMissing > 0 ? (
+        <div className="rounded-2xl border border-[#FDE68A] bg-[#FFFBEB] p-5 shadow-xs">
+          <div className="flex items-start gap-4">
+            <div className="rounded-xl bg-[#FEF3C7] p-2 text-[#B45309]">
+              <TriangleAlert className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-base font-semibold text-[#92400E]">
+                {totalMissing} Integration{totalMissing === 1 ? "" : "s"} Unconfigured ({data.summary.allMissingKeys?.length ?? totalMissing} Variables Missing)
+              </h2>
+              <p className="mt-1 text-sm text-[#78350F]">
+                Features requiring these keys will gracefully respond with <code className="rounded bg-white/80 px-1 py-0.5 text-xs font-mono">503 Service Unavailable</code> without producing fake data or crashing.
               </p>
-              <p className="mt-1 text-[#92400E]">
-                Until they are set, the affected endpoints return{" "}
-                <code className="rounded bg-white px-1 py-0.5 text-xs">503 not configured</code> rather
-                than silently failing or inventing a result.
-              </p>
+
+              <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                {missingItems.slice(0, 6).map((item) => (
+                  <div key={item.id} className="rounded-xl border border-[#FDE68A] bg-white/70 p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-[#171717]">{item.name}</span>
+                      <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${priorityBadges[item.priority].bg} ${priorityBadges[item.priority].text} border ${priorityBadges[item.priority].border}`}>
+                        {item.priority}
+                      </span>
+                    </div>
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                      {item.missingKeys.map((k) => (
+                        <span key={k} className="rounded bg-[#FAF9F5] border border-[#E5E1D8] px-1.5 py-0.5 font-mono text-[10px] text-[#5C3A1E]">
+                          {k}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      ) : null}
-
-      {grouped.map(([group, items]) => {
-        const ready = items.filter((i) => i.state === "configured").length;
-        return (
-          <section key={group} className="overflow-hidden rounded-2xl border border-[#EADFCB] bg-[#FFFFFF]">
-            <div className="flex items-center justify-between gap-3 border-b border-[#EADFCB] bg-[#FAF9F5] px-4 py-3">
-              <h2 className="text-sm font-semibold text-[#0F172A]">
-                {GROUP_LABELS[group] ?? group}
-              </h2>
-              <span className="text-xs tabular-nums text-[#64748B]">
-                {ready} of {items.length} ready
-              </span>
-            </div>
-
-            <ul className="divide-y divide-[#F4EFE6]">
-              {items.map((item) => {
-                const expanded = openId === item.id;
-                const isReady = item.state === "configured";
-                return (
-                  <li key={item.id} className="px-4 py-3">
-                    <button
-                      type="button"
-                      onClick={() => setOpenId(expanded ? null : item.id)}
-                      aria-expanded={expanded}
-                      className="w-full rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4A35A] focus-visible:ring-offset-2"
-                    >
-                      <span className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-medium text-[#0F172A]">{item.name}</span>
-                        <StatusBadge
-                          tone={isReady ? configuredTone : missingTone}
-                          label={item.state}
-                          size="sm"
-                        />
-                      </span>
-                      <span className="mt-1 block text-sm text-[#64748B]">{item.description}</span>
-                    </button>
-
-                    {expanded ? (
-                      <div className="mt-3 space-y-3 rounded-xl border border-[#EADFCB] bg-[#FAF9F5] p-4">
-                        {item.missingKeys.length > 0 ? (
-                          <div>
-                            <p className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B]">
-                              Add these keys to <code>.env.local</code>
-                            </p>
-                            <ul className="mt-2 flex flex-wrap gap-1.5">
-                              {item.missingKeys.map((key) => (
-                                <li
-                                  key={key}
-                                  className="break-anywhere rounded-md border border-[#EADFCB] bg-white px-2 py-1 font-mono text-[11px] text-[#5C3A1E]"
-                                >
-                                  {key}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        ) : (
-                          <p className="flex items-center gap-2 text-sm text-[#2E7D4F]">
-                            <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
-                            All required keys are present.
-                          </p>
-                        )}
-
-                        {item.manualSteps.length > 0 ? (
-                          <div>
-                            <p className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B]">
-                              Manual steps
-                            </p>
-                            <ol className="mt-2 list-inside list-decimal space-y-1 text-sm text-[#64748B]">
-                              {item.manualSteps.map((step) => (
-                                <li key={step}>{step}</li>
-                              ))}
-                            </ol>
-                          </div>
-                        ) : null}
-                      </div>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        );
-      })}
-
-      <section className="overflow-hidden rounded-2xl border border-[#EADFCB] bg-[#FFFFFF]">
-        <div className="border-b border-[#EADFCB] bg-[#FAF9F5] px-4 py-3">
-          <h2 className="text-sm font-semibold text-[#0F172A]">Live record counts</h2>
-          <p className="mt-0.5 text-xs text-[#64748B]">
-            {data.countsAvailable
-              ? "Read directly from Firestore."
-              : "Firestore is unreachable, so these counts are unavailable rather than guessed."}
-          </p>
+      ) : (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+            <p className="text-sm font-medium text-emerald-900">
+              All studio integrations and environment keys are fully configured.
+            </p>
+          </div>
         </div>
-        <dl className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-4">
-          {(["orders", "users", "payments", "notifications"] as const).map((key) => (
-            <div key={key}>
-              <dt className="text-[11px] uppercase tracking-wider text-[#64748B]">{key}</dt>
-              <dd className="mt-1 text-xl font-semibold tabular-nums text-[#0F172A]">
-                {data.countsAvailable && typeof data.counts[key] === "number" ? data.counts[key] : "—"}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </section>
+      )}
 
-      <button
-        type="button"
-        onClick={() => void load()}
-        className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-[#EADFCB] bg-white px-4 text-sm font-semibold text-[#5C3A1E] transition-colors hover:bg-[#FAF9F5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4A35A] focus-visible:ring-offset-2"
-      >
-        <RefreshCw className="h-4 w-4" aria-hidden="true" />
-        Re-check configuration
-      </button>
+      {/* Priority Filters */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <span className="text-xs font-medium text-[#737373] mr-1">Filter Priority:</span>
+        {["ALL", "CRITICAL", "HIGH", "MEDIUM", "LOW"].map((p) => (
+          <button
+            key={p}
+            type="button"
+            onClick={() => setFilterPriority(p)}
+            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+              filterPriority === p
+                ? "bg-[#171717] text-white"
+                : "border border-[#E5E1D8] bg-white text-[#737373] hover:bg-[#FAF9F5]"
+            }`}
+          >
+            {p}
+          </button>
+        ))}
+      </div>
+
+      {/* Grouped Integrations List */}
+      <div className="space-y-6">
+        {grouped.map(([group, items]) => {
+          const readyCount = items.filter((i) => i.state === "configured").length;
+          return (
+            <section key={group} className="overflow-hidden rounded-2xl border border-[#E5E1D8] bg-white shadow-xs">
+              <div className="flex items-center justify-between border-b border-[#E5E1D8] bg-[#FAF9F5] px-5 py-3.5">
+                <div className="flex items-center gap-2">
+                  <Layers className="h-4 w-4 text-[#A98B57]" />
+                  <h3 className="text-sm font-semibold text-[#171717]">{GROUP_LABELS[group] ?? group}</h3>
+                </div>
+                <span className="text-xs font-medium text-[#737373]">
+                  {readyCount} of {items.length} Ready
+                </span>
+              </div>
+
+              <div className="divide-y divide-[#F0ECE1]">
+                {items.map((item) => {
+                  const expanded = openId === item.id;
+                  const isReady = item.state === "configured";
+                  const pBadge = priorityBadges[item.priority] || priorityBadges.LOW;
+
+                  return (
+                    <div key={item.id} className="p-5 transition hover:bg-[#FAF9F5]/40">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex-1 cursor-pointer" onClick={() => setOpenId(expanded ? null : item.id)}>
+                          <div className="flex flex-wrap items-center gap-2.5">
+                            <span className="text-sm font-semibold text-[#171717]">{item.name}</span>
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${pBadge.bg} ${pBadge.text} border ${pBadge.border}`}>
+                              {item.priority}
+                            </span>
+                            <StatusBadge
+                              tone={isReady ? "completed" : "neutral"}
+                              label={isReady ? "Configured" : "Missing Keys"}
+                              size="sm"
+                            />
+                          </div>
+                          <p className="mt-1 text-xs text-[#737373]">{item.description}</p>
+                          
+                          {/* Feature tags */}
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {item.features.map((feat) => (
+                              <span key={feat} className="rounded bg-[#F4EFE6] px-2 py-0.5 text-[10px] font-medium text-[#5C3A1E]">
+                                {feat}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setOpenId(expanded ? null : item.id)}
+                          className="self-start sm:self-center text-xs font-medium text-[#A98B57] hover:underline"
+                        >
+                          {expanded ? "Hide Details" : "View Keys & Setup"}
+                        </button>
+                      </div>
+
+                      {expanded ? (
+                        <div className="mt-4 space-y-4 rounded-xl border border-[#E5E1D8] bg-[#FAF9F5] p-4 text-xs">
+                          {/* Where to get */}
+                          <div>
+                            <span className="font-semibold text-[#171717]">Credential Source:</span>
+                            <p className="mt-1 text-[#5C3A1E] font-medium bg-white p-2.5 rounded-lg border border-[#E5E1D8]">
+                              {item.whereToGet}
+                            </p>
+                          </div>
+
+                          {/* Missing Keys list */}
+                          {item.missingKeys.length > 0 ? (
+                            <div>
+                              <span className="font-semibold text-red-700">Missing Variables (Add to .env.local):</span>
+                              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                                {item.missingKeys.map((k) => (
+                                  <span key={k} className="rounded border border-red-200 bg-red-50/80 px-2 py-1 font-mono text-[11px] text-red-800">
+                                    {k}=
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 text-emerald-700 font-medium">
+                              <ShieldCheck className="h-4 w-4" />
+                              All required keys for this integration are present in the environment.
+                            </div>
+                          )}
+
+                          {/* Present Keys list */}
+                          {item.presentKeys.length > 0 ? (
+                            <div>
+                              <span className="font-semibold text-[#737373]">Configured Keys (Names Only):</span>
+                              <div className="mt-1 flex flex-wrap gap-1.5">
+                                {item.presentKeys.map((k) => (
+                                  <span key={k} className="rounded border border-[#E5E1D8] bg-white px-2 py-0.5 font-mono text-[10px] text-[#737373]">
+                                    {k} (Configured)
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          ) : null}
+
+                          {/* Manual Steps */}
+                          {item.manualSteps.length > 0 ? (
+                            <div>
+                              <span className="font-semibold text-[#171717]">Step-by-Step Setup:</span>
+                              <ol className="mt-1.5 list-inside list-decimal space-y-1 text-[#737373]">
+                                {item.manualSteps.map((step, idx) => (
+                                  <li key={idx}>{step}</li>
+                                ))}
+                              </ol>
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })}
+      </div>
     </div>
   );
 }

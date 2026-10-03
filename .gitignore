@@ -56,6 +56,11 @@ functions/.env.*
 functions/.env.local
 !/.env.example
 !/functions/.env.example
+.env_backups/
+scripts/backups/env-backups/
+*.env.backup*
+*.env.bak*
+
 
 # Service Account Keys & Secrets
 *service-account*.json

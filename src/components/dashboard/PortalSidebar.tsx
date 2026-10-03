@@ -67,6 +67,7 @@ export const ADMIN_NAV_ITEMS: PortalNavItem[] = [
   { name: "Notifications Settings", href: "/admin?tab=notifications", tabKey: "notifications", icon: Bell },
   { name: "Workflows (n8n)", href: "/admin?tab=workflows", tabKey: "workflows", icon: FolderGit2 },
   { name: "Studio Settings & GST", href: "/admin?tab=settings", tabKey: "settings", icon: Sliders },
+  { name: "Integrations & Keys", href: "/admin/integrations", icon: Sliders },
   { name: "Security Audit Log", href: "/admin?tab=audit", tabKey: "audit", icon: ShieldCheck },
 ];
 

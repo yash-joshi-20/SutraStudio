@@ -110,7 +110,7 @@ export class ChatToolsService {
   }
 
   /**
-   * Tool 4: create_commission_draft
+   * Tool 4: create_order / create_commission_draft
    * Validates brief requirements, recomputes price strictly from backend catalog, creates order with source 'ai_chat',
    * provisions Drive folder, creates Razorpay Order, and returns checkout card.
    */
@@ -318,6 +318,13 @@ export class ChatToolsService {
       driveUploadFolder: driveFolderLink,
       summaryMessage: `I have registered your commission **#${orderNumber}** for **${primaryServiceName}** at **₹${computedTotal.toLocaleString("en-IN")}** (Est. Delivery: ${estDeliveryDays} days, ${revsIncluded} revisions included). Please click the **Pay Now** button below to complete verification via Razorpay.`,
     };
+  }
+
+  /**
+   * Tool: create_order (alias for createCommissionDraft)
+   */
+  public static async createOrder(params: CreateCommissionDraftParams) {
+    return this.createCommissionDraft(params);
   }
 
   /**

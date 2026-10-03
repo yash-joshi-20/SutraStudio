@@ -249,6 +249,13 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    /* ---------------- integration status (server-recorded, admin read-only) ---- */
+
+    match /integrationStatus/{statusId} {
+      allow get, list: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
     /* ---------------- media vault ---------------- */
 
     match /mediaFiles/{fileId} {
