@@ -1,5 +1,6 @@
 import { OrdersStore } from "./ordersStore";
 import { FirestoreOrderRecord } from "@/app/api/orders/route";
+import { readEnv, readPublicEnv } from "@/lib/config/env";
 
 /**
  * SUTRA STUDIO — n8n Autonomous Workflow Orchestration Service
@@ -62,22 +63,22 @@ const MAX_GENERATIONS_PER_ORDER = 3;
 
 export class N8nAutomationService {
   public static getWebhookSecret(): string {
-    return process.env.N8N_WEBHOOK_SECRET || process.env.SHARED_WEBHOOK_SECRET || "sutra_n8n_sec_live_9941a8";
+    return readEnv("N8N_WEBHOOK_SECRET") || readEnv("WORKFLOW_WEBHOOK_SECRET" as any) || "sutra_n8n_sec_live_9941a8";
   }
 
   public static getN8nBaseUrl(): string {
     return (
-      process.env.N8N_WEBHOOK_BASE_URL ||
-      process.env.N8N_BASE_URL ||
-      process.env.NEXT_PUBLIC_N8N_URL ||
+      readEnv("N8N_BASE_URL") ||
+      readEnv("N8N_HOST" as any) ||
+      readPublicEnv("NEXT_PUBLIC_N8N_URL" as any) ||
       "http://localhost:5678"
     );
   }
 
   public static getAppBaseUrl(): string {
     return (
-      process.env.APP_BASE_URL ||
-      process.env.NEXT_PUBLIC_APP_URL ||
+      readEnv("APP_BASE_URL") ||
+      readPublicEnv("NEXT_PUBLIC_APP_URL") ||
       "http://localhost:3000"
     );
   }

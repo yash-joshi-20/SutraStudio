@@ -2,6 +2,7 @@ import React from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { VideoCard } from "@/components/media/VideoCard";
 import { LotusSymbol } from "@/components/brand/SutraLogo";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
@@ -26,6 +27,16 @@ export default function StudioPage() {
             technology achieves its highest expression when guided by centuries of
             disciplined design wisdom, sacred geometry, and artisanal human craft.
           </p>
+        </div>
+
+        {/* Studio Showreel Spotlight Card */}
+        <div className="max-w-4xl mx-auto w-full">
+          <VideoCard
+            video="studio-reel"
+            badgeText="ATELIER SHOWREEL"
+            showTranscriptToggle
+            allowExpand
+          />
         </div>
 
         {/* 4 Pillars Grid */}

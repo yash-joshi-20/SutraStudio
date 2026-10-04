@@ -23,6 +23,7 @@ import {
   isRazorpayConfigured,
   isRazorpayWebhookConfigured,
   isPushConfigured,
+  isSmtpConfigured,
   isResendConfigured,
   isSendgridConfigured,
   isN8nConfigured,
@@ -290,6 +291,29 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
     manualSteps: [
       "Create an account at https://serpapi.com.",
       "Copy private API key from dashboard into SERPAPI_API_KEY.",
+    ],
+  },
+  {
+    id: "zoho-smtp",
+    name: "Zoho Mail SMTP (Primary Email)",
+    group: "Notifications",
+    description: "Zero-cost direct TLS SMTP delivery using your Zoho Mailbox for transactional emails, notifications, and client communications.",
+    features: ["Client Invoices & Receipts", "Deliverable Ready Alerts", "Admin Security Alerts", "Client Contact Reply-To"],
+    priority: "CRITICAL",
+    whereToGet: "Zoho Mail (https://mail.zoho.in) → Settings → Mail Accounts → Security → App Passwords",
+    requirements: [
+      { key: "SMTP_HOST", label: "SMTP Host Server", whereToGet: "Set to `smtppro.zoho.in` (India) or `smtp.zoho.com`" },
+      { key: "SMTP_PORT", label: "SMTP TLS Port", whereToGet: "Set to `465` (SSL/TLS) or `587` (STARTTLS)" },
+      { key: "SMTP_USER", label: "SMTP Account Email", whereToGet: "Set to your Zoho email (e.g. `yashjoshi20@zohomail.in`)" },
+      { key: "SMTP_APP_PASSWORD", label: "Zoho App-Specific Password", whereToGet: "Generated from Zoho Account Security → App Passwords" },
+      { key: "EMAIL_FROM", label: "Default Sender Email", whereToGet: "Matches your Zoho email or studio sender" },
+    ],
+    ready: isSmtpConfigured,
+    manualSteps: [
+      "Log in to Zoho Mail (mail.zoho.in or mail.zoho.com).",
+      "Go to My Account → Security → App Passwords → Generate New Password (Name: 'SutraStudio').",
+      "Copy the 16-character generated password into SMTP_APP_PASSWORD in .env.local.",
+      "Set SMTP_HOST=smtppro.zoho.in, SMTP_PORT=465, and SMTP_USER=your-email@zohomail.in.",
     ],
   },
   {

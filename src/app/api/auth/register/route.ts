@@ -18,6 +18,7 @@ import {
   createSessionCookie,
   sessionCookieOptions,
   SESSION_COOKIE,
+  safeReturnTo,
 } from "@/lib/auth/session";
 import { badRequest, clientIp, guarded, notConfigured, ok, sameOrigin } from "@/lib/api/response";
 import {
@@ -121,12 +122,7 @@ export async function POST(req: Request) {
       userAgent: req.headers.get("user-agent") ?? "",
     });
 
-    // Refresh so the new custom claim (role: client) is present.
-    const fresh = await adminAuth().getUser(decoded.uid);
-    const freshIdToken = await adminAuth().createCustomToken(decoded.uid, fresh.customClaims ?? {});
-    const refreshed = await adminAuth().verifyIdToken(freshIdToken);
-
-    const { cookie, maxAge } = await createSessionCookie(refreshed.uid, {
+    const { cookie, maxAge } = await createSessionCookie(body.idToken, {
       rememberMe: body.rememberMe ?? true,
     });
 
@@ -149,12 +145,4 @@ export async function POST(req: Request) {
     response.cookies.set(SESSION_COOKIE, cookie, sessionCookieOptions(maxAge));
     return response;
   });
-}
-
-export function safeReturnTo(value: unknown, fallback = "/dashboard"): string {
-  if (typeof value !== "string") return fallback;
-  if (!value.startsWith("/") || value.startsWith("//")) return fallback;
-  if (value.startsWith("/admin")) return fallback;
-  if (value.startsWith("/login") || value.startsWith("/register")) return fallback;
-  return value;
 }

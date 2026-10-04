@@ -95,7 +95,7 @@ export function Footer() {
       </div>
 
       {/* Main Footer Links Container */}
-      <div className="app-container-cap px-4 sm:px-6 lg:px-8 py-12 lg:py-16 relative z-10">
+      <div className="app-container-cap px-4 sm:px-6 lg:px-8 pt-12 lg:pt-16 pb-24 lg:pb-20 relative z-10">
         {/* Desktop Grid Layout (Hidden on Mobile) */}
         <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-6 gap-8 mb-16">
           {/* Studio Brand Column (Span 2) */}

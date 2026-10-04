@@ -26,9 +26,15 @@ const CLIENT_SAFE_ENV_KEYS = new Set([
 export type EnvKey =
   | "APP_BASE_URL"
   | "NEXT_PUBLIC_APP_URL"
+  | "FIREBASE_OWNER_EMAIL"
+  | "GOOGLE_DRIVE_ACCOUNT_EMAIL"
   | "ADMIN_EMAIL"
+  | "SUPPORT_INBOX_EMAIL"
   | "ADMIN_ALLOWED_EMAILS"
   | "ADMIN_NOTIFY_EMAIL"
+  | "ADMIN_INITIAL_PASSWORD"
+  | "ADMIN_ALLOWED_IPS"
+  | "ADMIN_TOTP_SECRET"
   | "CRON_SECRET"
   | "TOKEN_ENCRYPTION_KEY"
   | "NEXT_PUBLIC_FIREBASE_API_KEY"
@@ -71,8 +77,13 @@ export type EnvKey =
   | "TRIPO3D_API_KEY"
   | "ELEVENLABS_API_KEY"
   | "SERPAPI_API_KEY"
-  | "RESEND_API_KEY"
+  | "SMTP_HOST"
+  | "SMTP_PORT"
+  | "SMTP_USER"
+  | "SMTP_APP_PASSWORD"
   | "EMAIL_FROM"
+  | "EMAIL_REPLY_TO"
+  | "RESEND_API_KEY"
   | "SENDGRID_API_KEY"
   | "META_APP_ID"
   | "META_APP_SECRET"
@@ -84,12 +95,77 @@ export type EnvKey =
   | "N8N_BASE_URL"
   | "N8N_HOST"
   | "N8N_API_KEY"
-  | "N8N_WEBHOOK_SECRET";
+  | "N8N_WEBHOOK_SECRET"
+  | "NEXT_PUBLIC_GA_MEASUREMENT_ID";
+
+import fs from "node:fs";
+import path from "node:path";
+
+let cachedDiskEnv: Record<string, string> | null = null;
+
+function getDiskEnv(): Record<string, string> {
+  if (cachedDiskEnv) return cachedDiskEnv;
+  const map: Record<string, string> = {};
+  try {
+    const candidates = [
+      path.resolve(process.cwd(), ".env.local"),
+      path.resolve(process.cwd(), ".env"),
+    ];
+    for (const file of candidates) {
+      if (fs.existsSync(file)) {
+        const content = fs.readFileSync(file, "utf8");
+        for (const rawLine of content.split(/\r?\n/)) {
+          const line = rawLine.trim();
+          if (!line || line.startsWith("#")) continue;
+          const eq = line.indexOf("=");
+          if (eq <= 0) continue;
+          const k = line.slice(0, eq).trim();
+          if (map[k] !== undefined) continue;
+          let val = line.slice(eq + 1).trim();
+          if (
+            (val.startsWith('"') && val.endsWith('"')) ||
+            (val.startsWith("'") && val.endsWith("'"))
+          ) {
+            val = val.slice(1, -1);
+          }
+          map[k] = val;
+        }
+      }
+    }
+
+    // Also check secrets/sutra-studio-firebase-adminsdk.json if service account is used
+    const saPath = map["FIREBASE_SERVICE_ACCOUNT"] || path.resolve(process.cwd(), "secrets/sutra-studio-firebase-adminsdk.json");
+    if (fs.existsSync(saPath)) {
+      try {
+        const saData = JSON.parse(fs.readFileSync(saPath, "utf8"));
+        if (saData.client_email && !map["FIREBASE_CLIENT_EMAIL"]) {
+          map["FIREBASE_CLIENT_EMAIL"] = saData.client_email;
+        }
+        if (saData.private_key && !map["FIREBASE_PRIVATE_KEY"]) {
+          map["FIREBASE_PRIVATE_KEY"] = saData.private_key;
+        }
+        if (saData.project_id && !map["FIREBASE_PROJECT_ID"]) {
+          map["FIREBASE_PROJECT_ID"] = saData.project_id;
+        }
+      } catch {
+        // quiet
+      }
+    }
+  } catch {
+    // quiet
+  }
+  cachedDiskEnv = map;
+  return map;
+}
 
 /** Read a raw value. Server-only. Returns "" when unset. */
 export function readEnv(key: EnvKey): string {
   const raw = process.env[key];
-  return typeof raw === "string" ? raw.trim() : "";
+  if (typeof raw === "string" && raw.trim().length > 0) {
+    return raw.trim();
+  }
+  const disk = getDiskEnv();
+  return disk[key]?.trim() ?? "";
 }
 
 /** Boolean presence check. Never leaks the value. */
@@ -99,24 +175,46 @@ export function isEnvSet(key: EnvKey): boolean {
 
 /**
  * Public-safe read. Returns "" for any key that is not NEXT_PUBLIC_*.
- * This is the ONLY function a client component may import.
+ * Statically references process.env.NEXT_PUBLIC_* variables so that Next.js
+ * bundler inlines them into browser client components.
  */
 export function readPublicEnv(key: EnvKey): string {
-  if (!key.startsWith("NEXT_PUBLIC_")) return "";
-  if (!CLIENT_SAFE_ENV_KEYS.has(key)) return "";
-  return readEnv(key);
+  switch (key) {
+    case "NEXT_PUBLIC_FIREBASE_API_KEY":
+      return (process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "").trim();
+    case "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN":
+      return (process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? "").trim();
+    case "NEXT_PUBLIC_FIREBASE_PROJECT_ID":
+      return (process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? "").trim();
+    case "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID":
+      return (process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? "").trim();
+    case "NEXT_PUBLIC_FIREBASE_APP_ID":
+      return (process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? "").trim();
+    case "NEXT_PUBLIC_FIREBASE_VAPID_KEY":
+      return (process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY ?? "").trim();
+    case "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET":
+      return (process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? "").trim();
+    case "NEXT_PUBLIC_RAZORPAY_KEY_ID":
+      return (process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? "").trim();
+    case "NEXT_PUBLIC_APP_URL":
+      return (process.env.NEXT_PUBLIC_APP_URL ?? "").trim();
+    case "NEXT_PUBLIC_GA_MEASUREMENT_ID":
+      return (process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? "").trim();
+    default:
+      return "";
+  }
 }
 
 export function isPublicEnvSet(key: EnvKey): boolean {
-  return CLIENT_SAFE_ENV_KEYS.has(key) && isEnvSet(key);
+  return readPublicEnv(key).length > 0;
 }
 
 /** True when Firebase client SDK can boot. */
 export function isFirebaseClientConfigured(): boolean {
   return (
-    isEnvSet("NEXT_PUBLIC_FIREBASE_API_KEY") &&
-    isEnvSet("NEXT_PUBLIC_FIREBASE_PROJECT_ID") &&
-    isEnvSet("NEXT_PUBLIC_FIREBASE_APP_ID")
+    isPublicEnvSet("NEXT_PUBLIC_FIREBASE_API_KEY") &&
+    isPublicEnvSet("NEXT_PUBLIC_FIREBASE_PROJECT_ID") &&
+    isPublicEnvSet("NEXT_PUBLIC_FIREBASE_APP_ID")
   );
 }
 
@@ -149,6 +247,10 @@ export function isRazorpayWebhookConfigured(): boolean {
 
 export function isPushConfigured(): boolean {
   return isEnvSet("NEXT_PUBLIC_FIREBASE_VAPID_KEY") && isFirebaseAdminConfigured();
+}
+
+export function isSmtpConfigured(): boolean {
+  return isEnvSet("SMTP_HOST") && isEnvSet("SMTP_USER") && isEnvSet("SMTP_APP_PASSWORD");
 }
 
 export function isResendConfigured(): boolean {

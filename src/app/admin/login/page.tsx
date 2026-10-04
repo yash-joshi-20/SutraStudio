@@ -99,10 +99,7 @@ function AdminLoginForm() {
       }
 
       // The server set an httpOnly session cookie carrying the admin role claim.
-      // The fresh page load re-reads /api/auth/session, which is the single
-      // source of truth for the role shown by the admin portal.
-      router.replace(returnTo);
-      router.refresh();
+      window.location.href = returnTo;
     } catch (err) {
       const code = (err as { code?: string })?.code ?? "";
       setErrorMsg(
@@ -159,10 +156,10 @@ function AdminLoginForm() {
       </div>
 
       <div className="space-y-3 text-center">
-        <div className="flex justify-center">
-          <SutraLogo variant="vertical" size="lg" />
+        <div className="flex justify-center pb-1">
+          <SutraLogo variant="horizontal" size="lg" href="/" />
         </div>
-        <div className="pt-2">
+        <div className="pt-1">
           <span className="inline-flex items-center gap-2 rounded-full bg-[#171717] px-3 py-1 font-mono text-[11px] font-semibold uppercase tracking-wider text-white shadow-xs">
             <Terminal className="w-3 h-3 text-[#D4A35A]" aria-hidden="true" />
             <span>Executive Terminal Gateway</span>

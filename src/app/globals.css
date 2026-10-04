@@ -41,6 +41,7 @@
   --z-nav: 40;         /* bottom navigation */
   --z-launcher: 45;    /* floating chat launcher (above nav, below sheets) */
   --z-dropdown: 50;
+  --z-fixed: 50;
   --z-drawer: 60;
   --z-modal: 70;
   --z-toast: 80;       /* toasts always readable, never blocked */

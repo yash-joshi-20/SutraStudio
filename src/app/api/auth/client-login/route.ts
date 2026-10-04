@@ -8,14 +8,15 @@
 
 import { NextResponse } from "next/server";
 import { adminAuth, isFirebaseAdminReady, adminMissingKeys } from "@/lib/firebase/admin";
+import { readEnv } from "@/lib/config/env";
 import {
   createSessionCookie,
   sessionCookieOptions,
   SESSION_COOKIE,
   setUserRole,
+  safeReturnTo,
 } from "@/lib/auth/session";
 import { badRequest, guarded, notConfigured, ok, sameOrigin } from "@/lib/api/response";
-import { safeReturnTo } from "@/app/api/auth/register/route";
 import {
   GENERIC_AUTH_FAILURE,
   GENERIC_AUTH_FAILURE_CODE,
@@ -76,10 +77,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const freshToken = await adminAuth().createCustomToken(decoded.uid, { role: "client" });
-    const refreshed = await adminAuth().verifyIdToken(freshToken);
-
-    const { cookie, maxAge } = await createSessionCookie(refreshed.uid, {
+    const { cookie, maxAge } = await createSessionCookie(body.idToken, {
       rememberMe: body.rememberMe ?? false,
     });
 

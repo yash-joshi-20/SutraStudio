@@ -12,12 +12,44 @@
 import { readEnv } from "@/lib/config/env";
 
 /**
+ * Primary identity declarations (Step 31C)
+ */
+export function primaryAdminEmail(): string {
+  return (readEnv("ADMIN_EMAIL") || "yashjoshi20@zohomail.in").trim().toLowerCase();
+}
+
+export function googleDriveAccountEmail(): string {
+  return (readEnv("GOOGLE_DRIVE_ACCOUNT_EMAIL") || primaryAdminEmail()).trim().toLowerCase();
+}
+
+export function firebaseOwnerEmail(): string {
+  return (readEnv("FIREBASE_OWNER_EMAIL") || primaryAdminEmail()).trim().toLowerCase();
+}
+
+export function adminAllowedIps(): string[] {
+  const raw = readEnv("ADMIN_ALLOWED_IPS") || "";
+  return raw
+    .split(",")
+    .map((ip) => ip.trim())
+    .filter(Boolean);
+}
+
+export function isAllowedAdminIp(ip: string | null | undefined): boolean {
+  const list = adminAllowedIps();
+  if (list.length === 0) return true; // Optional setting: allow all if unconfigured
+  if (!ip) return false;
+  const cleanIp = ip.trim();
+  return list.includes(cleanIp) || list.includes("127.0.0.1") || list.includes("::1");
+}
+
+/**
  * ADMIN_ALLOWED_EMAILS is the primary source. ADMIN_EMAIL is kept as a
  * fallback so an existing deployment does not lock itself out before the new
  * variable is filled in.
  */
 export function adminAllowedEmails(): string[] {
-  const raw = [readEnv("ADMIN_ALLOWED_EMAILS") ?? "", readEnv("ADMIN_EMAIL") ?? ""].join(",");
+  const raw = readEnv("ADMIN_ALLOWED_EMAILS") || readEnv("ADMIN_EMAIL");
+  if (!raw) return [];
   const seen = new Set<string>();
   for (const part of raw.split(",")) {
     const normalised = part.trim().toLowerCase();

@@ -16,6 +16,8 @@ import {
   type GeneratedOutput,
   type ProviderConfig,
 } from "./aiPipeline";
+import { readEnv } from "@/lib/config/env";
+import { safeGetEnv } from "@/lib/services/missingKeyRegistry";
 
 // ---------------------------------------------------------------------------
 // Shared Utilities
@@ -156,7 +158,10 @@ async function callImageProvider(
 
   switch (provider.id) {
     case "bfl-flux": {
-      const apiKey = process.env.BFL_API_KEY;
+      const apiKey = safeGetEnv("BFL_API_KEY", {
+        feature: "Discipline 1: Image Creation",
+        priority: "HIGH",
+      });
       if (!apiKey) return { success: false };
 
       const res = await fetch("https://api.bfl.ml/v1/flux-pro-1.1", {
@@ -375,16 +380,18 @@ async function callVideoProvider(
 }> {
   switch (provider.id) {
     case "kling": {
-      const accessKey = process.env.KLING_ACCESS_KEY;
-      const secretKey = process.env.KLING_SECRET_KEY;
-      if (!accessKey || !secretKey) return { success: false };
+      const apiKey = safeGetEnv("KLING_API_KEY", {
+        feature: "Discipline 2: Video Creation",
+        priority: "HIGH",
+      });
+      if (!apiKey) return { success: false };
 
       // Kling API: create video generation task
       const res = await fetch("https://api.klingai.com/v1/videos/text2video", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessKey}`,
+          "Authorization": `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           prompt: params.scriptPrompt,
@@ -406,7 +413,7 @@ async function callVideoProvider(
     }
 
     case "runway": {
-      const apiKey = process.env.RUNWAY_API_KEY;
+      const apiKey = readEnv("RUNWAY_API_KEY" as any);
       if (!apiKey) return { success: false };
 
       const res = await fetch("https://api.dev.runwayml.com/v1/text_to_video", {
@@ -449,7 +456,10 @@ export async function generateVoiceover(params: {
   voiceId?: string;
   language?: string;
 }): Promise<{ success: boolean; audioUrl?: string; error?: string }> {
-  const apiKey = process.env.ELEVENLABS_API_KEY;
+  const apiKey = safeGetEnv("ELEVENLABS_API_KEY", {
+    feature: "Commercial Voiceovers",
+    priority: "MEDIUM",
+  });
   if (!apiKey) {
     return { success: false, error: "ElevenLabs API key not configured." };
   }
@@ -499,7 +509,10 @@ export interface Model3DGenerationParams {
 }
 
 export async function generate3DModel(params: Model3DGenerationParams): Promise<Partial<GeneratedOutput>> {
-  const apiKey = process.env.TRIPO3D_API_KEY;
+  const apiKey = safeGetEnv("TRIPO3D_API_KEY", {
+    feature: "Discipline 3: 3D Modeling",
+    priority: "HIGH",
+  });
   if (!apiKey) {
     return notConfiguredError("3D modeling");
   }

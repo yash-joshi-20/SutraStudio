@@ -5,6 +5,8 @@
  * retention and auto-delete policy.
  */
 
+import { isEnvSet } from "@/lib/config/env";
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -220,9 +222,11 @@ export async function moderateContent(params: {
     }
   }
 
+  const geminiConfigured = isEnvSet("GEMINI_API_KEY");
+
   // Image moderation would use Gemini Vision or similar API
   // For now, flag as needing admin review if we can't auto-moderate
-  if (params.imageUrl && !process.env.GEMINI_API_KEY) {
+  if (params.imageUrl && !geminiConfigured) {
     flags.push({
       category: "unsafe_content",
       severity: "low",
@@ -235,7 +239,7 @@ export async function moderateContent(params: {
     safe: !flags.some((f) => f.severity === "high" || f.severity === "critical"),
     flags,
     checkedAt: new Date().toISOString(),
-    provider: process.env.GEMINI_API_KEY ? "gemini" : "basic_pattern",
+    provider: geminiConfigured ? "gemini" : "basic_pattern",
   };
 }
 

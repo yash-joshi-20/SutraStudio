@@ -78,3 +78,16 @@ google-credentials.json
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+secrets/
+
+# Archives & ZIP files (Do not upload to GitHub)
+*.zip
+**/*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+SutraStudio-Full.zip
+SutraStudio-Project.zip
+

@@ -10,6 +10,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
+import { VideoCard } from "@/components/media/VideoCard";
 import { SUTRA_SERVICES, ServiceItem } from "@/data/servicesData";
 import { LotusSymbol } from "@/components/brand/SutraLogo";
 import {
@@ -443,29 +444,37 @@ export default function ServicesPage() {
       >
         {selectedService && (
           <div className="space-y-6">
-            {/* Visual Media Preview Banner */}
-            <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-[#F4EFE6] border border-[#EADFCB]">
-              <Image
-                src={selectedService.thumbnail}
-                alt={selectedService.name}
-                fill
-                className="object-cover"
+            {/* Visual Media Preview Banner / Video Reel */}
+            {selectedService.mediaType === "video" || selectedService.mediaType === "3d" || selectedService.mediaType === "360" ? (
+              <VideoCard
+                video={selectedService.mediaType === "video" ? "service-ai-video" : "service-spatial-3d"}
+                badgeText={`${selectedService.category.toUpperCase()} REEL`}
+                allowExpand
               />
-              <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
-                <span className="rounded-full bg-[#171717]/85 backdrop-blur-md px-3 py-1 text-xs font-semibold text-white border border-white/10 uppercase tracking-wider">
-                  {selectedService.category}
-                </span>
-                <span className="rounded-full bg-[#D4A35A] px-3 py-1 text-xs font-bold text-[#0F172A] shadow-sm">
-                  {selectedService.badge}
-                </span>
+            ) : (
+              <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-[#F4EFE6] border border-[#EADFCB]">
+                <Image
+                  src={selectedService.thumbnail}
+                  alt={selectedService.name}
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
+                  <span className="rounded-full bg-[#171717]/85 backdrop-blur-md px-3 py-1 text-xs font-semibold text-white border border-white/10 uppercase tracking-wider">
+                    {selectedService.category}
+                  </span>
+                  <span className="rounded-full bg-[#D4A35A] px-3 py-1 text-xs font-bold text-[#0F172A] shadow-sm">
+                    {selectedService.badge}
+                  </span>
+                </div>
+                <div className="absolute top-4 right-4 z-10">
+                  <span className="rounded-full bg-white/95 backdrop-blur-md px-3 py-1 text-xs font-mono font-medium text-[#5C3A1E] border border-[#EADFCB] shadow-xs flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-[#A98B57]" />
+                    {selectedService.turnaround}
+                  </span>
+                </div>
               </div>
-              <div className="absolute top-4 right-4 z-10">
-                <span className="rounded-full bg-white/95 backdrop-blur-md px-3 py-1 text-xs font-mono font-medium text-[#5C3A1E] border border-[#EADFCB] shadow-xs flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-[#A98B57]" />
-                  {selectedService.turnaround}
-                </span>
-              </div>
-            </div>
+            )}
 
             {/* Service Metadata Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] text-xs">

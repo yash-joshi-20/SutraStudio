@@ -165,15 +165,32 @@ export function regenerateMissingKeysMarkdown(): void {
   }
 }
 
-/**
- * Record a missing key invocation in Firestore, throttle notifications, and update files.
- */
-export async function recordMissingKey(options: {
+export interface RecordMissingKeyOptions {
   key: EnvKey;
   feature: string;
   priority?: IntegrationPriority;
   whereToGet?: string;
-}): Promise<void> {
+}
+
+/**
+ * Record a missing key invocation in Firestore, throttle notifications, and update files.
+ */
+export async function recordMissingKey(
+  optionsOrKey: RecordMissingKeyOptions | EnvKey,
+  featureParam?: string,
+  priorityParam?: IntegrationPriority,
+  whereToGetParam?: string
+): Promise<void> {
+  const options: RecordMissingKeyOptions =
+    typeof optionsOrKey === "string"
+      ? {
+          key: optionsOrKey,
+          feature: featureParam || "Studio Service",
+          priority: priorityParam || "HIGH",
+          whereToGet: whereToGetParam,
+        }
+      : optionsOrKey;
+
   const { key, feature, priority = "HIGH" } = options;
 
   // 1. Append empty variable to env files if absent

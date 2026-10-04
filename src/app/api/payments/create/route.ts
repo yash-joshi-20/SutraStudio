@@ -17,9 +17,15 @@ export async function POST(req: Request) {
 
     // Lookup order in database
     const order = OrdersStore.findById(body.orderId);
+    if (!order) {
+      return NextResponse.json(
+        { error: `Order record '${body.orderId}' not found in database.` },
+        { status: 404 }
+      );
+    }
 
     // Multi-tenant client ownership check
-    if (order && user.isAuthenticated && user.role === "client") {
+    if (user.isAuthenticated && user.role === "client") {
       const ownerUid = order.clientUid || order.clientId;
       if (
         ownerUid &&
@@ -34,7 +40,7 @@ export async function POST(req: Request) {
     }
 
     // If order already paid, prevent double charge
-    if (order && order.paymentStatus === "paid") {
+    if (order.paymentStatus === "paid") {
       return NextResponse.json(
         { error: "Order has already been verified and paid.", paymentStatus: "paid" },
         { status: 400 }
@@ -42,10 +48,10 @@ export async function POST(req: Request) {
     }
 
     // Server-recomputed amount directly from official order record (never trust client)
-    const amountINR = order?.totalAmount || body.amountINR || 9499;
-    const orderNumber = order?.orderNumber || `ORD-${body.orderId.slice(-4)}`;
-    const clientEmail = order?.clientEmail || body.customerEmail || "client@sutrastudio.com";
-    const clientId = order?.clientUid || body.clientId || user.uid || "usr_mock_001";
+    const amountINR = order.totalAmount || 9499;
+    const orderNumber = order.orderNumber || `ORD-${body.orderId.slice(-4)}`;
+    const clientEmail = order.clientEmail || body.customerEmail || "client@sutrastudio.com";
+    const clientId = order.clientUid || body.clientId || user.uid || "usr_mock_001";
 
     const razorpayOrder = await PaymentsService.createRazorpayOrder({
       amountINR,

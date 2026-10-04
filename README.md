@@ -138,6 +138,19 @@ npm run dev
 
 ---
 
-## 7. License & Credits
+## 7. GitHub Repository & Deployment Details
+
+- **GitHub Organization / Account**: [`yash-joshi-20`](https://github.com/yash-joshi-20)
+- **Repository**: [`SutraStudio`](https://github.com/yash-joshi-20/SutraStudio)
+- **Clone URL**: `https://github.com/yash-joshi-20/SutraStudio.git`
+- **Canonical Production Branch**: `main`
+- **Repository Security & Cleanliness**:
+  - `*.zip` and compressed archive files are strictly excluded from git tracking.
+  - Environment variables, private keys, and service accounts are guarded by [.gitignore](file:///d:/SutraStudio/.gitignore) and `verify-env-protection.mjs`.
+
+---
+
+## 8. License & Credits
 
 © 2026 SUTRA STUDIO. All rights reserved. Crafted with timeless aesthetic rigor and modern computational intelligence.
+

@@ -9,6 +9,7 @@ import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { BackgroundVideo } from "@/components/media/BackgroundVideo";
 import { LotusSymbol } from "@/components/brand/SutraLogo";
 import {
   Award,
@@ -119,20 +120,19 @@ export default function AboutPage() {
                 </div>
               </div>
 
-              {/* Right Column: Architectural Visual Card */}
+              {/* Right Column: Architectural Visual Card with Video */}
               <div className="lg:col-span-5 relative">
-                <div className="relative aspect-[4/5] w-full max-w-md mx-auto rounded-3xl overflow-hidden shadow-2xl border-4 border-[#FFFDF9] bg-[#EADFCB]">
-                  <Image
-                    src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1000&q=80"
-                    alt="Sutra Studio Craft and Architectural Heritage"
-                    fill
+                <div className="relative aspect-[4/5] w-full max-w-md mx-auto rounded-3xl overflow-hidden shadow-2xl border-4 border-[#FFFDF9] bg-[#0F172A]">
+                  <BackgroundVideo
+                    video="studio-reel"
+                    layout="fill"
+                    overlay="dark-editorial"
+                    overlayOpacity={0.6}
                     priority
-                    className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 40vw"
+                    showPlayPauseToggle
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/70 via-transparent to-black/10" />
 
-                  <div className="absolute bottom-6 inset-x-6">
+                  <div className="absolute bottom-6 inset-x-6 z-10">
                     <div className="bg-[#FFFDF9]/95 backdrop-blur-md rounded-2xl p-4 border border-[#EADFCB] shadow-warm">
                       <p className="text-xs font-serif font-bold text-[#0F172A]">
                         &quot;Form is empty without spirit; spirit is invisible without form.&quot;

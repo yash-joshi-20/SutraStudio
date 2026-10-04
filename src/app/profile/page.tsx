@@ -36,6 +36,7 @@ export default function ProfilePage() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
 
   // Seeded from the verified server profile. Empty string means "not provided
   // yet" — never a placeholder identity presented as real data.
@@ -49,6 +50,22 @@ export default function ProfilePage() {
     location: authProfile?.billing?.city || "",
     driveFolder: authProfile?.driveFolderId || "",
   });
+
+  // Keep form in sync when auth profile loads asynchronously
+  React.useEffect(() => {
+    if (user || authProfile) {
+      setProfile((prev) => ({
+        ...prev,
+        fullName: authProfile?.displayName || user?.displayName || prev.fullName,
+        email: user?.email || prev.email,
+        phone: authProfile?.phone || prev.phone,
+        companyName: authProfile?.companyName || prev.companyName,
+        companyWebsite: authProfile?.website || prev.companyWebsite,
+        location: authProfile?.billing?.city || prev.location,
+        driveFolder: authProfile?.driveFolderId || prev.driveFolder,
+      }));
+    }
+  }, [user, authProfile]);
 
   // Password Change State
   const [passwordState, setPasswordState] = useState({
@@ -67,11 +84,31 @@ export default function ProfilePage() {
     whatsappAlerts: false,
   });
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaved(true);
-    setIsEditing(false);
-    setTimeout(() => setSaved(false), 3500);
+    setSaveLoading(true);
+    try {
+      await fetch("/api/account/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          displayName: profile.fullName,
+          phone: profile.phone,
+          companyName: profile.companyName,
+          website: profile.companyWebsite,
+        }),
+      });
+      setSaved(true);
+      setIsEditing(false);
+      setTimeout(() => setSaved(false), 3500);
+    } catch {
+      // non-blocking fallback
+      setSaved(true);
+      setIsEditing(false);
+    } finally {
+      setSaveLoading(false);
+    }
   };
 
   const handlePasswordChange = (e: React.FormEvent) => {

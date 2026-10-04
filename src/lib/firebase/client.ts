@@ -17,7 +17,7 @@ import { getAuth, browserLocalPersistence, browserSessionPersistence, setPersist
 import { getFirestore, type Firestore } from "firebase/firestore";
 import {
   readPublicEnv,
-  isEnvSet,
+  isPublicEnvSet,
   type EnvKey,
 } from "@/lib/config/env";
 
@@ -39,12 +39,12 @@ let cached: {
 export const FIREBASE_NOT_CONFIGURED =
   "Not configured — Firebase Web keys are missing. Sign-in is unavailable until NEXT_PUBLIC_FIREBASE_* keys are set.";
 
-/** Client-safe presence check. Returns the message string when usable, else "". */
+/** Client-safe presence check. Returns true when usable. */
 export function firebaseClientConfigured(): boolean {
   return (
-    isEnvSet("NEXT_PUBLIC_FIREBASE_API_KEY") &&
-    isEnvSet("NEXT_PUBLIC_FIREBASE_PROJECT_ID") &&
-    isEnvSet("NEXT_PUBLIC_FIREBASE_APP_ID")
+    isPublicEnvSet("NEXT_PUBLIC_FIREBASE_API_KEY") &&
+    isPublicEnvSet("NEXT_PUBLIC_FIREBASE_PROJECT_ID") &&
+    isPublicEnvSet("NEXT_PUBLIC_FIREBASE_APP_ID")
   );
 }
 

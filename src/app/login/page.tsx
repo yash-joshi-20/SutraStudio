@@ -16,6 +16,9 @@ import React, { useState, Suspense, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SutraLogo, LotusSymbol } from "@/components/brand/SutraLogo";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useAuth } from "@/lib/auth/authContext";
@@ -121,7 +124,7 @@ function ClientLoginForm() {
       if (mode === "signin") {
         await loginWithEmail(email, password, rememberMe);
         setSuccessMsg("Welcome back. Opening your workspace…");
-        router.replace(returnTo);
+        window.location.href = returnTo;
         return;
       }
 
@@ -147,7 +150,7 @@ function ClientLoginForm() {
         setMode("signin");
         setPassword("");
       } else {
-        router.replace(returnTo);
+        window.location.href = returnTo;
       }
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Sign-in failed. Please try again.");
@@ -162,7 +165,7 @@ function ClientLoginForm() {
     setLoading(true);
     try {
       await loginWithGoogle(true);
-      router.replace(returnTo);
+      window.location.href = returnTo;
     } catch (err) {
       setErrorMsg(
         err instanceof Error
@@ -219,9 +222,9 @@ function ClientLoginForm() {
         </Link>
       </div>
 
-      <div className="space-y-2 text-center">
-        <div className="flex justify-center">
-          <SutraLogo variant="vertical" size="lg" />
+      <div className="space-y-3 text-center">
+        <div className="flex justify-center pb-1">
+          <SutraLogo variant="horizontal" size="lg" href="/" />
         </div>
         <h2 className="pt-2 font-serif text-2xl font-bold tracking-tight text-[#0F172A] sm:text-3xl">
           {mode === "signin" ? "Client Workspace" : "Create Studio Account"}
@@ -470,11 +473,16 @@ function ClientLoginForm() {
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex min-h-dvh flex-col justify-center overflow-hidden bg-[#F8F5EF] py-12 sm:px-6 lg:px-8">
-      <div className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 opacity-[0.03]">
-        <LotusSymbol className="w-[850px] h-[850px]" color="gold" />
-      </div>
-      <div className="px-4 sm:mx-auto sm:w-full sm:max-w-md">{children}</div>
+    <div className="min-h-screen bg-[#FAF9F5] flex flex-col justify-between">
+      <Navbar />
+      <main className="relative flex-1 flex flex-col justify-center overflow-hidden py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
+        <div className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 opacity-[0.035]">
+          <LotusSymbol className="w-[850px] h-[850px]" color="gold" />
+        </div>
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">{children}</div>
+      </main>
+      <Footer />
+      <MobileBottomNav />
     </div>
   );
 }
@@ -483,11 +491,15 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-dvh items-center justify-center bg-[#F8F5EF]">
-          <div className="flex items-center gap-3 text-sm text-[#64748B]">
-            <PlugZap className="h-4 w-4" aria-hidden="true" />
-            <span>Preparing sign-in…</span>
-          </div>
+        <div className="min-h-screen bg-[#FAF9F5] flex flex-col justify-between">
+          <Navbar />
+          <main className="flex-1 flex items-center justify-center">
+            <div className="flex items-center gap-3 text-sm text-[#64748B]">
+              <PlugZap className="h-4 w-4" aria-hidden="true" />
+              <span>Preparing sign-in…</span>
+            </div>
+          </main>
+          <Footer />
         </div>
       }
     >

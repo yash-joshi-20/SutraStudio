@@ -61,11 +61,7 @@ export function Navbar() {
   const isAdmin = role === "admin";
   const isClient = role === "client";
 
-  const navLinks = isAdmin
-    ? ADMIN_NAV_LINKS
-    : isClient
-    ? CLIENT_NAV_LINKS
-    : PUBLIC_NAV_LINKS;
+  const navLinks = PUBLIC_NAV_LINKS;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -111,7 +107,7 @@ export function Navbar() {
       <div className="app-container-cap px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
         {/* Prominent Official Brand Logo */}
         <div className="flex items-center shrink-0">
-          <SutraLogo variant="horizontal" size="md" href={isAdmin ? "/admin" : isClient ? "/dashboard" : "/"} />
+          <SutraLogo variant="horizontal" size="md" href={isClient ? "/dashboard" : "/"} />
         </div>
 
         {/* Desktop Navigation Links */}
@@ -166,16 +162,16 @@ export function Navbar() {
                 </Button>
               </Link>
             </>
-          ) : isClient ? (
+          ) : (
             <div className="flex items-center gap-3">
-              <Link href="/dashboard">
+              <Link href={isAdmin ? "/admin" : "/dashboard"}>
                 <Button
                   variant="primary"
                   size="sm"
-                  leftIcon={<LayoutDashboard className="w-3.5 h-3.5" />}
+                  leftIcon={isAdmin ? <ShieldCheck className="w-3.5 h-3.5" /> : <LayoutDashboard className="w-3.5 h-3.5" />}
                   className="text-xs uppercase tracking-wider font-semibold touch-target"
                 >
-                  Dashboard
+                  {isAdmin ? "Admin Console" : "Dashboard"}
                 </Button>
               </Link>
               <Button
@@ -183,30 +179,6 @@ export function Navbar() {
                 size="sm"
                 onClick={logout}
                 leftIcon={<LogOut className="w-3.5 h-3.5 text-[#64748B]" />}
-                className="text-xs uppercase tracking-wider text-[#64748B] hover:text-[#DC2626] touch-target"
-              >
-                Sign Out
-              </Button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#5C3A1E] text-[#FFFDF9] text-[11px] font-semibold tracking-wider uppercase">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#D4A35A]" />
-                <span>Executive Producer</span>
-              </div>
-              <Link href="/admin">
-                <Button
-                  variant="primary"
-                  size="sm"
-                  className="text-xs uppercase tracking-wider font-semibold touch-target"
-                >
-                  Admin Hub
-                </Button>
-              </Link>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={logout}
                 className="text-xs uppercase tracking-wider text-[#64748B] hover:text-[#DC2626] touch-target"
               >
                 Sign Out
@@ -306,7 +278,7 @@ export function Navbar() {
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       <Button variant="primary" size="md" className="w-full min-h-[44px]">
-                        {isAdmin ? "Open Admin Hub" : "Open Client Dashboard"}
+                        {isAdmin ? "Open Admin Console" : "Open Client Dashboard"}
                       </Button>
                     </Link>
                     <Button
@@ -316,7 +288,8 @@ export function Navbar() {
                         setMobileMenuOpen(false);
                         void logout();
                       }}
-                      className="w-full text-[#64748B] min-h-[44px]"
+                      leftIcon={<LogOut className="w-4 h-4 text-[#DC2626]" />}
+                      className="w-full min-h-[44px] text-xs uppercase tracking-wider text-[#DC2626] hover:bg-[#FEF2F2]"
                     >
                       Sign Out
                     </Button>

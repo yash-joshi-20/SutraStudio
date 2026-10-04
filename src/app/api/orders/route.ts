@@ -118,7 +118,7 @@ export interface FirestoreOrderRecord {
   comments?: OrderCommentItem[];
   internalNotes?: InternalNoteItem[];
   // Razorpay Payment fields for Step 9 & 15
-  paymentStatus?: "unpaid" | "paid" | "failed" | "refunded";
+  paymentStatus?: "unpaid" | "paid" | "failed" | "refunded" | "awaiting_confirmation";
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
   razorpaySignature?: string;
@@ -202,7 +202,7 @@ export async function GET(req: Request) {
   const user = await getAuthenticatedUser(req);
   const url = new URL(req.url);
 
-  // Return catalog if requested
+  // Public catalog access
   const catalogQuery = url.searchParams.get("catalog");
   if (catalogQuery === "services") {
     return NextResponse.json({
@@ -221,10 +221,18 @@ export async function GET(req: Request) {
     });
   }
 
+  // Authentication guard: Non-catalog requests require valid session
+  if (!user.isAuthenticated) {
+    return NextResponse.json(
+      { error: "Unauthorized: Please sign in to view studio orders." },
+      { status: 401 }
+    );
+  }
+
   const targetClientUid = url.searchParams.get("clientUid");
 
   // Multi-tenant security guard: Client cannot query other clients' orders
-  if (user.isAuthenticated && user.role === "client") {
+  if (user.role === "client") {
     if (targetClientUid && targetClientUid !== user.uid && targetClientUid !== user.email) {
       return NextResponse.json(
         { error: "Forbidden: Cross-tenant data access is strictly blocked." },

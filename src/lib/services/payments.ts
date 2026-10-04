@@ -1,4 +1,6 @@
 import crypto from "crypto";
+import { readEnv, readPublicEnv, isEnvSet } from "@/lib/config/env";
+import { safeGetEnv } from "@/lib/services/missingKeyRegistry";
 
 export interface PaymentIntentOptions {
   amountINR: number;
@@ -42,14 +44,14 @@ export interface UtrVerificationResult {
   orderId: string;
   utrNumber: string;
   amountINR: number;
-  status: "verified" | "flagged" | "rejected";
+  status: "verified" | "flagged" | "rejected" | "awaiting_confirmation";
   settlementMode: "T+0 Zero-Commission Direct Bank Transfer";
   message: string;
   verifiedAt: string;
 }
 
 export class PaymentsService {
-  private static DEFAULT_VPA = process.env.NEXT_PUBLIC_MERCHANT_UPI_VPA || "yashj9428-1@oksbi";
+  private static DEFAULT_VPA = readPublicEnv("NEXT_PUBLIC_MERCHANT_UPI_VPA" as any) || "yashj9428-1@oksbi";
   private static DEFAULT_MERCHANT_NAME = "SUTRA STUDIO";
 
   /**
@@ -68,7 +70,7 @@ export class PaymentsService {
    * Initializes a payment intent with primary support for 0% commission UPI/GPay or Razorpay gateway.
    */
   public static async createPaymentIntent(options: PaymentIntentOptions): Promise<PaymentIntentResult> {
-    const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID;
+    const razorpayKey = readPublicEnv("NEXT_PUBLIC_RAZORPAY_KEY_ID") || readEnv("RAZORPAY_KEY_ID");
     const upiUri = this.generateDynamicUpiUri({
       amountINR: options.amountINR,
       orderId: options.orderId,
@@ -99,6 +101,7 @@ export class PaymentsService {
 
   /**
    * Validates 12-digit Indian Banking UTR (Unique Transaction Reference) / Ref No.
+   * Direct UPI payments stay in "awaiting_confirmation" and never unlock work or AI generation automatically.
    */
   public static verifyUtr(params: UtrVerificationRequest): UtrVerificationResult {
     const cleanedUtr = params.utrNumber.trim();
@@ -123,9 +126,9 @@ export class PaymentsService {
       orderId: params.orderId,
       utrNumber: cleanedUtr,
       amountINR: params.amountINR,
-      status: "verified",
+      status: "awaiting_confirmation",
       settlementMode: "T+0 Zero-Commission Direct Bank Transfer",
-      message: `UTR ${cleanedUtr} validated. Zero-commission payment verified and production pipeline unlocked.`,
+      message: `UTR ${cleanedUtr} submitted. Zero-commission payment is awaiting studio administrator ledger confirmation before production starts.`,
       verifiedAt: new Date().toISOString(),
     };
   }
@@ -135,8 +138,8 @@ export class PaymentsService {
    */
   public static getKeyId(): string {
     return (
-      process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
-      process.env.RAZORPAY_KEY_ID ||
+      readPublicEnv("NEXT_PUBLIC_RAZORPAY_KEY_ID") ||
+      readEnv("RAZORPAY_KEY_ID") ||
       "rzp_test_sutra_studio_live"
     );
   }
@@ -147,9 +150,9 @@ export class PaymentsService {
   public static isTestMode(): boolean {
     const key = this.getKeyId();
     return (
-      process.env.RAZORPAY_MODE === "test" ||
+      readEnv("RAZORPAY_MODE" as any) === "test" ||
       key.startsWith("rzp_test_") ||
-      !process.env.RAZORPAY_KEY_SECRET
+      !isEnvSet("RAZORPAY_KEY_SECRET")
     );
   }
 
@@ -172,7 +175,10 @@ export class PaymentsService {
   }> {
     const amountInPaise = Math.round(params.amountINR * 100);
     const keyId = this.getKeyId();
-    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    const keySecret = safeGetEnv("RAZORPAY_KEY_SECRET", {
+      feature: "Razorpay Checkout",
+      priority: "CRITICAL",
+    });
 
     // If real credentials are provided, call official Razorpay REST API
     if (keySecret && !keySecret.includes("example") && !keySecret.includes("placeholder")) {
@@ -269,7 +275,10 @@ export class PaymentsService {
     hasTrial: boolean;
   }> {
     const keyId = this.getKeyId();
-    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    const keySecret = safeGetEnv("RAZORPAY_KEY_SECRET", {
+      feature: "Razorpay Retainer Billing",
+      priority: "CRITICAL",
+    });
     const amountInPaise = Math.round(params.monthlyPriceINR * 100);
 
     const now = new Date();
@@ -410,7 +419,7 @@ export class PaymentsService {
     }
 
     const secret =
-      process.env.RAZORPAY_KEY_SECRET ||
+      readEnv("RAZORPAY_KEY_SECRET") ||
       "sutra_rzp_mock_secret_live_099182";
 
     const payload = `${params.razorpayOrderId}|${params.razorpayPaymentId}`;
@@ -429,8 +438,8 @@ export class PaymentsService {
     if (!signature) return false;
     const secret =
       webhookSecret ||
-      process.env.RAZORPAY_WEBHOOK_SECRET ||
-      process.env.RAZORPAY_KEY_SECRET ||
+      readEnv("RAZORPAY_WEBHOOK_SECRET") ||
+      readEnv("RAZORPAY_KEY_SECRET") ||
       "sutra_webhook_mock_secret_8921";
 
     const expectedSignature = crypto
@@ -450,7 +459,10 @@ export class PaymentsService {
     reason?: string;
   }): Promise<{ success: boolean; refundId: string; message: string }> {
     const keyId = this.getKeyId();
-    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    const keySecret = safeGetEnv("RAZORPAY_KEY_SECRET", {
+      feature: "Razorpay Refunds",
+      priority: "CRITICAL",
+    });
 
     if (keySecret && !keySecret.includes("example") && !keySecret.includes("placeholder")) {
       try {

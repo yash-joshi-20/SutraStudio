@@ -18,6 +18,7 @@
 
 import { NextResponse } from "next/server";
 import { adminAuth, isFirebaseAdminReady, adminMissingKeys } from "@/lib/firebase/admin";
+import { readEnv } from "@/lib/config/env";
 import {
   createSessionCookie,
   sessionCookieOptions,
@@ -31,6 +32,7 @@ import {
   auditAdminLogin,
   checkAdminLoginLock,
   isAdminAllowedEmail,
+  isAllowedAdminIp,
   isStaffClaim,
   queueAdminLoginAlert,
   recordAdminLoginFailure,
@@ -82,7 +84,10 @@ export async function POST(req: Request) {
     const email = (decoded.email ?? "").trim().toLowerCase();
     if (!email) return reject("(no email)", "token_missing_email", decoded.uid);
 
-    // ---- Gate 2: lockout ---------------------------------------------------
+    // ---- Gate 2: lockout & IP allowlist -----------------------------------
+    if (!isAllowedAdminIp(ip)) {
+      return reject(email, "ip_not_allowed", decoded.uid);
+    }
     const lock = await checkAdminLoginLock(email, ip);
     if (lock.locked) return reject(email, "locked_out", decoded.uid);
 

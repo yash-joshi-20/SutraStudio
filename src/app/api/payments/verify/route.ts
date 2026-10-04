@@ -129,12 +129,43 @@ export async function POST(req: Request) {
 
       const order = OrdersStore.findById(body.orderId);
       if (order) {
-        OrdersStore.markAsPaid({
-          orderId: order.id,
-          razorpayPaymentId: `utr_${body.utrNumber}`,
-          paymentMethod: "upi_direct_utr",
-          amountPaid: body.amountINR || order.totalAmount,
+        const now = new Date().toISOString();
+        OrdersStore.update(order.id, {
+          paymentStatus: "awaiting_confirmation",
+          statusLabel: "Direct UPI UTR Submitted — Awaiting Studio Bank Confirmation",
+          updatedAt: now,
         });
+
+        if (!order.statusHistory) order.statusHistory = [];
+        order.statusHistory.push({
+          status: order.status || "pending_payment",
+          changedAt: now,
+          changedBy: "client",
+          note: `Direct UPI UTR (${body.utrNumber}) submitted. Awaiting studio administrator bank confirmation.`,
+        });
+
+        OrdersStore.logPaymentEvent({
+          orderId: order.id,
+          eventType: "payment.utr_submitted",
+          amountINR: body.amountINR || order.totalAmount,
+          paymentId: `utr_${body.utrNumber}`,
+          source: "checkout",
+          payload: { utrNumber: body.utrNumber, paymentMode: body.paymentMethod },
+        });
+
+        // Alert Studio Admin
+        try {
+          const { NotificationsStore } = await import("@/lib/services/notificationsStore");
+          NotificationsStore.add({
+            userId: "usr_admin_001",
+            type: "status_update",
+            title: "Direct UPI UTR Submitted",
+            message: `Client submitted UTR ${body.utrNumber} for Order #${order.orderNumber || order.code} (₹${(body.amountINR || order.totalAmount || 0).toLocaleString("en-IN")}). Awaiting bank credit confirmation.`,
+            orderId: order.id,
+            orderNumber: order.orderNumber || order.code,
+            actionUrl: "/admin",
+          });
+        } catch {}
       }
 
       return NextResponse.json(verification, { status: 200 });

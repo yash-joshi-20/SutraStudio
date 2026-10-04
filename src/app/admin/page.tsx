@@ -78,6 +78,7 @@ import {
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { OrderReceiptModal, ReceiptOrderData } from "@/components/orders/OrderReceiptModal";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { AdminBrandPromptsView } from "@/components/admin/AdminBrandPromptsView";
 import { computeOrderProgress } from "@/lib/services/orderProgress";
 import type {
   KnowledgeBaseEntry,
@@ -457,7 +458,7 @@ export interface StudioWorkflowEngine {
   iconName: "image" | "video" | "box" | "compass" | "layers" | "megaphone" | "layout" | "smartphone";
 }
 
-export const STUDIO_WORKFLOW_ENGINES: StudioWorkflowEngine[] = [
+const STUDIO_WORKFLOW_ENGINES: StudioWorkflowEngine[] = [
   {
     slug: "image",
     name: "Image Generation Pipeline",
@@ -701,7 +702,8 @@ type AdminTab =
   | "notifications"
   | "settings"
   | "site-control"
-  | "audit";
+  | "audit"
+  | "prompts";
 
 function AdminHubContent() {
   const { user } = useAuth();
@@ -713,6 +715,7 @@ function AdminHubContent() {
     if (!tab || tab === "overview") return "overview";
     if (tab === "orders") return "approvals";
     if (tab === "settings") return "site-control";
+    if (tab === "prompts") return "prompts";
     if (
       [
         "overview",
@@ -727,6 +730,7 @@ function AdminHubContent() {
         "notifications",
         "site-control",
         "audit",
+        "prompts",
       ].includes(tab)
     ) {
       return tab as AdminTab;
@@ -6636,6 +6640,13 @@ const [adminDataError, setAdminDataError] = useState("");
                 </div>
               )}
             </div>
+          )}
+
+          {/* ========================================================
+              TAB: BRAND PROMPTS & MARKETING STUDIO
+              ======================================================== */}
+          {activeTab === "prompts" && (
+            <AdminBrandPromptsView />
           )}
 
           {/* =========================================================

@@ -78,7 +78,6 @@ export async function POST(req: Request) {
     setTimeout(async () => {
       try {
         const { EmailService } = await import("@/lib/services/emailProvider");
-        const provider = EmailService.getProvider();
         const order = OrdersStore.findById(orderId);
         if (order) {
           const adminMailbox = process.env.ADMIN_EMAIL?.trim() || "";
@@ -91,21 +90,15 @@ export async function POST(req: Request) {
           // silently deliver order notes to a stranger, so we skip instead.
           if (!recipientEmail) return;
 
-          await provider.sendEmail({
+          await EmailService.dispatchNotificationEmail({
             to: recipientEmail,
-            subject: `New Note on Order #${order.orderNumber || order.code} — Sutra Studio`,
-            html: `
-              <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; color: #171717; background: #FAF9F5; padding: 24px; border-radius: 12px; border: 1px solid #E5E1D8;">
-                <h2 style="font-size: 20px; font-weight: bold; margin-bottom: 8px;">New Discussion Note</h2>
-                <p style="color: #737373; font-size: 14px;"><strong>Order:</strong> #${order.orderNumber || order.code} (${order.service})</p>
-                <p style="color: #737373; font-size: 14px;"><strong>Author:</strong> ${authorName || callerRole}</p>
-                <div style="background: #FFFFFF; padding: 16px; border-radius: 8px; border: 1px solid #E5E1D8; margin: 16px 0; font-size: 14px; line-height: 1.6;">
-                  ${text.replace(/\n/g, "<br/>")}
-                  ${attachmentUrl ? `<p style="margin-top: 12px; font-size: 13px;"><a href="${attachmentUrl}" style="color: #A98B57; text-decoration: underline;">📎 View Attachment (${attachmentName || "File"})</a></p>` : ""}
-                </div>
-                <p style="font-size: 13px; color: #737373;">Reply directly in the Sutra Studio Portal.</p>
-              </div>
-            `,
+            type: "order_comment",
+            title: `New Note on Order #${order.orderNumber || order.code}`,
+            message: `${authorName || callerRole}: ${text}`,
+            orderNumber: order.orderNumber || order.code,
+            priority: "high",
+            actionUrl: `https://sutrastudio.com/dashboard/orders/${order.id}`,
+            actionLabel: "View Order & Reply",
           });
         }
       } catch (emailErr) {

@@ -9,6 +9,7 @@ import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
+import { BackgroundVideo } from "@/components/media/BackgroundVideo";
 import { SutraLogo, LotusSymbol } from "@/components/brand/SutraLogo";
 import {
   Smartphone,
@@ -273,7 +274,7 @@ export default function MobileAppLandingPage() {
                 </div>
               </div>
 
-              {/* Right Column: Realistic CSS Mobile Device Frame Mockup */}
+              {/* Right Column: Realistic CSS Mobile Device Frame Mockup with Live Video Demo */}
               <div className="lg:col-span-5 flex justify-center">
                 <div className="relative w-full max-w-[320px] sm:max-w-[340px]">
                   {/* Subtle golden ambient glow */}
@@ -286,102 +287,20 @@ export default function MobileAppLandingPage() {
                       <span className="w-2.5 h-2.5 rounded-full bg-[#1E293B]" />
                     </div>
 
-                    {/* Phone Screen Canvas */}
-                    <div className="rounded-[34px] bg-[#FAF9F5] overflow-hidden flex flex-col h-[620px] border border-[#EADFCB] text-[#0F172A] relative">
-                      {/* In-App Header */}
-                      <div className="pt-7 pb-3 px-4 bg-[#FFFDF9] border-b border-[#EADFCB] flex items-center justify-between">
-                        <SutraLogo variant="horizontal" size="sm" href="#" />
-                        <div className="w-7 h-7 rounded-full bg-[#5C3A1E] text-white text-[10px] font-bold flex items-center justify-center">
-                          YJ
-                        </div>
-                      </div>
-
-                      {/* Screen Content Body */}
-                      <div className="flex-1 p-3.5 space-y-3 overflow-y-auto no-scrollbar">
-                        {/* Status Card */}
-                        <div className="p-3.5 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] shadow-xs space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-mono font-bold text-[#5C3A1E] uppercase">
-                              Active Commission
-                            </span>
-                            <Badge variant="gold">Awaiting Approval</Badge>
-                          </div>
-                          <h4 className="font-serif text-sm font-semibold text-[#0F172A]">
-                            3D Spatial Architecture Suite
-                          </h4>
-                          <p className="text-[11px] text-[#64748B] line-clamp-2">
-                            Pass 02 with warm teak materials rendered in 4K resolution in Google Drive vault.
-                          </p>
-                          <div className="pt-1 flex items-center justify-between">
-                            <span className="text-[10px] text-[#2E7D4F] font-semibold flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#2E7D4F]" />
-                              Drive Synced
-                            </span>
-                            <span className="text-[11px] font-bold text-[#5C3A1E] bg-[#F4EFE6] px-2.5 py-1 rounded-full">
-                              1-Click Approve →
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* AI Soundwave / Phone Agent Mini Tile */}
-                        <div className="p-3.5 rounded-2xl bg-gradient-to-br from-[#FFFDF9] to-[#FDF9F0] border border-[#D4A35A]/50 space-y-2">
-                          <div className="flex items-center justify-between text-xs">
-                            <div className="flex items-center gap-1.5">
-                              <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-ping" />
-                              <span className="font-bold text-[11px] text-[#5C3A1E]">Sutra AI Agent</span>
-                            </div>
-                            <span className="text-[10px] font-mono text-[#D4A35A]">Online</span>
-                          </div>
-                          <p className="text-[11px] text-[#64748B]">
-                            &ldquo;Preparing 3 commercial reels for Meta Ads campaign...&rdquo;
-                          </p>
-                          <div className="flex items-center justify-center gap-1 h-6">
-                            {[40, 75, 55, 90, 65, 45, 80, 50, 70, 35].map((h, i) => (
-                              <span
-                                key={i}
-                                style={{ height: `${h}%` }}
-                                className="w-1 bg-[#D4A35A] rounded-full"
-                              />
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Quick KPI grid in mockup */}
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="p-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-center">
-                            <span className="text-[9px] uppercase font-mono text-[#94A3B8] block">Vault Assets</span>
-                            <span className="font-serif text-sm font-bold text-[#0F172A]">24 Files</span>
-                          </div>
-                          <div className="p-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-center">
-                            <span className="text-[9px] uppercase font-mono text-[#94A3B8] block">SLA Clock</span>
-                            <span className="font-serif text-sm font-bold text-[#2E7D4F]">18h Left</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Mockup Native Bottom Navigation */}
-                      <div className="py-2.5 px-4 bg-[#FFFDF9] border-t border-[#EADFCB] flex items-center justify-between text-[#64748B]">
-                        <div className="flex flex-col items-center text-[#5C3A1E]">
-                          <Sparkles className="w-4 h-4" />
-                          <span className="text-[9px] font-bold">Studio</span>
-                        </div>
-                        <div className="flex flex-col items-center">
-                          <Layers className="w-4 h-4" />
-                          <span className="text-[9px]">Orders</span>
-                        </div>
-                        <div className="flex flex-col items-center">
-                          <MessageSquare className="w-4 h-4" />
-                          <span className="text-[9px]">AI Agent</span>
-                        </div>
-                        <div className="flex flex-col items-center">
-                          <HardDrive className="w-4 h-4" />
-                          <span className="text-[9px]">Vault</span>
-                        </div>
-                      </div>
+                    {/* Phone Screen Canvas with Video Stream */}
+                    <div className="rounded-[34px] bg-[#0F172A] overflow-hidden flex flex-col h-[620px] border border-[#EADFCB] text-[#0F172A] relative">
+                      {/* Background Video Stream */}
+                      <BackgroundVideo
+                        video="app-demo"
+                        layout="fill"
+                        overlay="none"
+                        showPlayPauseToggle={false}
+                        priority
+                      />
 
                       {/* Home indicator bar */}
-                      <div className="py-1 flex justify-center bg-[#FFFDF9]">
-                        <div className="w-24 h-1 bg-[#0F172A] rounded-full opacity-30" />
+                      <div className="absolute bottom-2 inset-x-0 py-1 flex justify-center z-20">
+                        <div className="w-24 h-1 bg-[#FFFDF9] rounded-full opacity-60" />
                       </div>
                     </div>
                   </div>

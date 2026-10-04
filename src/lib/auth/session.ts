@@ -15,6 +15,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import { adminAuth, adminDb, isFirebaseAdminReady, serverTimestamp } from "@/lib/firebase/admin";
 import type { DecodedIdToken } from "firebase-admin/auth";
+import { isAdminAllowedEmail } from "@/lib/config/adminPolicy";
 
 export const SESSION_COOKIE = "__session";
 /** Step 1.5 — the admin portal has its own cookie and a 12-hour lifetime. */
@@ -155,9 +156,21 @@ export async function requireAdmin(): Promise<SessionUser> {
 
   const user = await decodeSession(adminCookie, { checkRevoked: true });
   if (!user) throw new AuthRequiredError("Please sign in to the studio console.");
-  if (user.role !== "admin") {
+  
+  if (user.role !== "admin" || !user.emailVerified || !isAdminAllowedEmail(user.email)) {
     throw new ForbiddenError("Administrator clearance is required for this action.");
   }
+
+  // Inactivity check: 30 minutes
+  const lastActivityStr = store.get("sutra_admin_last_activity")?.value;
+  if (lastActivityStr) {
+    const lastActivity = parseInt(lastActivityStr, 10);
+    const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;
+    if (!isNaN(lastActivity) && Date.now() - lastActivity > INACTIVITY_TIMEOUT_MS) {
+      throw new AuthRequiredError("Session expired due to inactivity. Please sign in again.");
+    }
+  }
+
   return user;
 }
 
@@ -337,4 +350,12 @@ export function computeProfileCompleteness(profile: Partial<UserProfile>): numbe
     [Boolean(profile.billing?.legalName?.trim()), 5],
   ];
   return checks.reduce((sum, [ok, weight]) => sum + (ok ? weight : 0), 0);
+}
+
+export function safeReturnTo(value: unknown, fallback = "/dashboard"): string {
+  if (typeof value !== "string") return fallback;
+  if (!value.startsWith("/") || value.startsWith("//")) return fallback;
+  if (value.startsWith("/admin")) return fallback;
+  if (value.startsWith("/login") || value.startsWith("/register")) return fallback;
+  return value;
 }

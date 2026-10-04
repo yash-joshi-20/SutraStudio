@@ -24,6 +24,9 @@ import {
   ArrowRight,
   CheckCircle2,
   Lock,
+  Mail,
+  Send,
+  Info,
 } from "lucide-react";
 import { json, jsonRaw, errorMessage } from "@/lib/api/client";
 import { StatusBadge, StatTile, type StatusTone } from "@/components/ui/Status";
@@ -50,6 +53,14 @@ interface Counts {
   notifications?: number;
 }
 
+interface DnsGuidance {
+  warning: string;
+  recommendation: string;
+  defaultProvider: string;
+  dailyCap: number;
+  sentToday: number;
+}
+
 interface Payload {
   summary: {
     total: number;
@@ -63,6 +74,7 @@ interface Payload {
   counts: Counts;
   countsAvailable: boolean;
   firestoreRegistry?: Record<string, unknown>[];
+  dnsGuidance?: DnsGuidance;
 }
 
 const GROUP_LABELS: Record<string, string> = {
@@ -91,6 +103,9 @@ export default function AdminIntegrationsPage() {
   const [error, setError] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
   const [filterPriority, setFilterPriority] = useState<string>("ALL");
+  const [testEmailTo, setTestEmailTo] = useState<string>("");
+  const [testEmailSending, setTestEmailSending] = useState(false);
+  const [testEmailMessage, setTestEmailMessage] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -113,6 +128,25 @@ export default function AdminIntegrationsPage() {
       setError(errorMessage(err, "Failed to synchronize integration registry."));
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const handleSendTestEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!testEmailTo.trim()) return;
+    setTestEmailSending(true);
+    setTestEmailMessage(null);
+    try {
+      const res = await jsonRaw<{ message?: string; testResult?: any }>("/api/admin/integrations", "POST", {
+        action: "test_email",
+        to: testEmailTo.trim(),
+      });
+      setTestEmailMessage(res?.message || "Test email processed successfully.");
+      await load();
+    } catch (err) {
+      setTestEmailMessage(errorMessage(err, "Failed to send test email."));
+    } finally {
+      setTestEmailSending(false);
     }
   };
 
@@ -153,11 +187,11 @@ export default function AdminIntegrationsPage() {
           <div className="flex items-center gap-2">
             <h1 className="font-serif text-3xl font-normal text-[#171717]">Integrations Registry</h1>
             <span className="inline-flex items-center rounded-full bg-[#FAF9F5] px-2.5 py-0.5 text-xs font-medium text-[#5C3A1E] border border-[#E5E1D8]">
-              Step 31A Protected
+              Step 31D Active
             </span>
           </div>
           <p className="mt-1 text-sm text-[#737373]">
-            Central declaration for studio credentials, API keys, and missing-key protection. Secret values are never exposed.
+            Central declaration for studio credentials, email dispatchers, and missing-key protection. Secret values are never exposed.
           </p>
         </div>
 
@@ -193,11 +227,80 @@ export default function AdminIntegrationsPage() {
           hint={critical.length ? `${critical.join(", ")}` : "Core auth & storage ready"}
         />
         <StatTile
-          label="Firestore Status"
-          value={data.countsAvailable ? "Connected" : "Offline / Cache"}
-          tone={data.countsAvailable ? "good" : "neutral"}
-          hint={data.countsAvailable ? `${data.counts.orders ?? 0} orders recorded` : "Using local env registry"}
+          label="Daily Email Cap"
+          value={`${data.dnsGuidance?.sentToday ?? 0} / ${data.dnsGuidance?.dailyCap ?? 50}`}
+          tone="neutral"
+          hint={`Active: ${data.dnsGuidance?.defaultProvider ?? "SMTP / In-App"}`}
         />
+      </div>
+
+      {/* Email Deliverability & SPF/DKIM Advisory */}
+      <div className="rounded-2xl border border-[#E5E1D8] bg-[#FFFDF9] p-5 shadow-xs">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex items-start gap-3.5 flex-1">
+            <div className="rounded-xl bg-[#F8F5EF] p-2.5 text-[#5C3A1E] border border-[#E5E1D8]">
+              <Mail className="h-5 w-5" />
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-semibold text-[#171717]">
+                  Free-First Email Dispatcher & Deliverability Guidance
+                </h2>
+                <span className="rounded-full bg-[#FAF9F5] px-2 py-0.5 text-[10px] font-semibold text-[#5C3A1E] border border-[#E5E1D8]">
+                  SMTP (Zoho) &gt; Resend &gt; In-App / FCM
+                </span>
+              </div>
+              <p className="text-xs text-[#737373] leading-relaxed max-w-3xl">
+                {data.dnsGuidance?.warning ||
+                  "Without custom domain SPF/DKIM configuration, outbound transactional emails from free SMTP mailboxes may land in client spam folders."}
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                <span className="font-medium text-[#5C3A1E]">DNS Recommendation:</span>
+                <code className="rounded bg-[#FAF9F5] px-2 py-1 font-mono text-[11px] text-[#171717] border border-[#E5E1D8]">
+                  v=spf1 include:zoho.in ~all
+                </code>
+                <span className="text-[#A98B57] font-medium">
+                  (Plan to attach custom domain DNS TXT records for 100% inbox delivery)
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Test Email Dispatcher Widget */}
+          <form
+            onSubmit={handleSendTestEmail}
+            className="w-full lg:w-80 rounded-xl border border-[#E5E1D8] bg-white p-3.5 shadow-xs"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-[#171717] flex items-center gap-1.5">
+                <Send className="h-3.5 w-3.5 text-[#A98B57]" /> Test Live Email Send
+              </span>
+              <span className="text-[10px] text-[#737373]">TLS / In-App</span>
+            </div>
+            <div className="space-y-2">
+              <input
+                type="email"
+                placeholder="recipient@example.com"
+                value={testEmailTo}
+                onChange={(e) => setTestEmailTo(e.target.value)}
+                required
+                className="w-full rounded-lg border border-[#E5E1D8] bg-[#FAF9F5] px-2.5 py-1.5 text-xs text-[#171717] focus:border-[#A98B57] focus:outline-none"
+              />
+              <button
+                type="submit"
+                disabled={testEmailSending}
+                className="w-full rounded-lg bg-[#5C3A1E] px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#432914] disabled:opacity-50 flex items-center justify-center gap-1.5"
+              >
+                {testEmailSending ? "Sending via Dispatcher..." : "Dispatch Test Email"}
+              </button>
+              {testEmailMessage && (
+                <p className="text-[11px] text-[#5C3A1E] mt-1 bg-[#FAF9F5] p-1.5 rounded border border-[#E5E1D8]">
+                  {testEmailMessage}
+                </p>
+              )}
+            </div>
+          </form>
+        </div>
       </div>
 
       {/* Missing Keys Banner */}

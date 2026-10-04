@@ -13,6 +13,8 @@ import { Modal } from "@/components/ui/Modal";
 import { ServiceCard } from "@/components/services/ServiceCard";
 import { ProjectCard } from "@/components/portfolio/ProjectCard";
 import { HeroAnimation } from "@/components/motion/HeroAnimation";
+import { BackgroundVideo } from "@/components/media/BackgroundVideo";
+import { VideoCard } from "@/components/media/VideoCard";
 import { LotusSymbol } from "@/components/brand/SutraLogo";
 import { SUTRA_SERVICES } from "@/data/servicesData";
 import { SUTRA_PROJECTS } from "@/data/projectsData";
@@ -149,39 +151,36 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Right Column: Architectural Visual Card with SUTRA Emblem */}
+                {/* Right Column: Architectural Ambient Video Card */}
                 <div className="hero-visual-card lg:col-span-5 relative">
-                  <div className="relative aspect-[4/5] w-full max-w-md mx-auto rounded-3xl overflow-hidden shadow-2xl border-4 border-[#FFFDF9] bg-[#EADFCB]">
-                    {/* Architectural Living & Design Visual */}
-                    <Image
-                      src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=80"
-                      alt="Sutra Studio Architecture and Living"
-                      fill
+                  <div className="relative aspect-[4/5] w-full max-w-md mx-auto rounded-3xl overflow-hidden shadow-2xl border-4 border-[#FFFDF9] bg-[#0F172A]">
+                    {/* Background Video Ambient Stream */}
+                    <BackgroundVideo
+                      video="hero-showcase"
+                      layout="fill"
+                      overlay="dark-editorial"
+                      overlayOpacity={0.65}
                       priority
-                      className="object-cover"
-                      sizes="(max-width: 1024px) 100vw, 40vw"
+                      showPlayPauseToggle
                     />
 
-                    {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/70 via-transparent to-black/20" />
-
                     {/* Center Video Play Badge */}
-                    <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="absolute inset-0 flex items-center justify-center z-10">
                       <button
                         onClick={() => setDemoModalOpen(true)}
-                        className="group flex items-center gap-3 bg-[#FFFDF9]/95 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/60 shadow-lg transition-transform duration-300 hover:scale-105 cursor-pointer"
+                        className="group flex items-center gap-3 bg-[#FFFDF9]/95 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/60 shadow-lg transition-transform duration-300 hover:scale-105 cursor-pointer touch-target"
                       >
                         <span className="w-8 h-8 rounded-full bg-[#5C3A1E] text-white flex items-center justify-center">
                           <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
                         </span>
                         <span className="text-xs font-semibold text-[#0F172A] tracking-wider uppercase">
-                          Watch Reel
+                          Watch Full Reel
                         </span>
                       </button>
                     </div>
 
                     {/* Bottom Floating Badge */}
-                    <div className="absolute bottom-6 inset-x-6">
+                    <div className="absolute bottom-6 inset-x-6 z-10">
                       <div className="bg-[#FFFDF9]/95 backdrop-blur-md rounded-2xl p-4 border border-[#EADFCB] shadow-warm flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center shrink-0">
                           <Sparkles className="w-5 h-5 text-[#D4A35A]" />
@@ -418,21 +417,13 @@ export default function HomePage() {
         description="A curated montage of our generative visual, 3D spatial, and architectural work."
         maxWidth="lg"
       >
-        <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black flex items-center justify-center relative shadow-inner">
-          <Image
-            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-            alt="Video Reel Preview"
-            fill
-            className="object-cover opacity-80"
+        <div className="w-full">
+          <VideoCard
+            video="studio-reel"
+            badgeText="OFFICIAL REEL"
+            showTranscriptToggle
+            allowExpand
           />
-          <div className="relative z-10 text-center space-y-3">
-            <div className="w-16 h-16 rounded-full bg-[#D4A35A] text-[#0F172A] flex items-center justify-center mx-auto shadow-2xl transition-transform hover:scale-110 cursor-pointer">
-              <Play className="w-7 h-7 fill-current ml-1" />
-            </div>
-            <p className="text-white text-xs font-semibold tracking-wider uppercase">
-              Sutra Studio 2026 Reel Active
-            </p>
-          </div>
         </div>
       </Modal>
     </div>

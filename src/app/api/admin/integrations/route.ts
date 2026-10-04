@@ -11,6 +11,7 @@ import { requireAdmin } from "@/lib/auth/session";
 import { guarded, ok } from "@/lib/api/response";
 import { getIntegrationStatuses, getIntegrationSummary } from "@/lib/config/integrations";
 import { adminDb } from "@/lib/firebase/admin";
+import { EmailService } from "@/lib/services/emailProvider";
 import {
   syncAllIntegrationsToFirestore,
   regenerateMissingKeysMarkdown,
@@ -60,13 +61,42 @@ export async function GET() {
       counts: liveCounts,
       countsAvailable: Object.keys(liveCounts).length > 0,
       firestoreRegistry,
+      dnsGuidance: EmailService.getDnsGuidance(),
     });
   });
 }
 
-export async function POST() {
+export async function POST(req: Request) {
   return guarded(async () => {
     await requireAdmin();
+    
+    let body: any = {};
+    try {
+      body = await req.json();
+    } catch {
+      body = {};
+    }
+
+    // If admin requested a test email send
+    if (body.action === "test_email" && body.to) {
+      const testResult = await EmailService.dispatchNotificationEmail({
+        to: body.to,
+        type: "admin_test",
+        title: "Test Email from Sutra Studio Dispatcher",
+        message: "This is a live test notification verifying your SMTP / Email provider integration configuration.",
+        priority: "high",
+        actionUrl: "https://sutrastudio.com/admin/integrations",
+        actionLabel: "View Studio Integrations",
+      });
+
+      return ok({
+        message: testResult.success
+          ? `Test email successfully dispatched via ${testResult.provider}.`
+          : `Test email failed: ${testResult.error || "Unknown error"}`,
+        testResult,
+      });
+    }
+
     await syncAllIntegrationsToFirestore();
     regenerateMissingKeysMarkdown();
 
@@ -75,6 +105,7 @@ export async function POST() {
       message: "Integration registry synchronized successfully.",
       summary: getIntegrationSummary(),
       integrations: statuses,
+      dnsGuidance: EmailService.getDnsGuidance(),
     });
   });
 }

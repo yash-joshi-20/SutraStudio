@@ -47,7 +47,7 @@ export interface PortalNavItem {
 
 export const CLIENT_NAV_ITEMS: PortalNavItem[] = [
   { name: "Workspace", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Sutra AI Assistant", href: "/chat", icon: Sparkles },
+  { name: "Sutra Concierge", href: "/chat", icon: Sparkles },
   { name: "My Orders", href: "/orders", icon: ShoppingBag },
   { name: "My Projects", href: "/projects-client", icon: FolderGit2 },
   { name: "Media Vault", href: "/media", icon: FolderOpen },
@@ -64,6 +64,7 @@ export const ADMIN_NAV_ITEMS: PortalNavItem[] = [
   { name: "Payments & Refunds", href: "/admin?tab=payments", tabKey: "payments", icon: CreditCard },
   { name: "Deliveries & Drive", href: "/admin?tab=deliveries", tabKey: "deliveries", icon: FolderOpen },
   { name: "Chats & AI Knowledge", href: "/admin?tab=conversations", tabKey: "conversations", icon: MessageSquare },
+  { name: "Brand Prompts", href: "/admin?tab=prompts", tabKey: "prompts", icon: Sparkles },
   { name: "Notifications Settings", href: "/admin?tab=notifications", tabKey: "notifications", icon: Bell },
   { name: "Workflows (n8n)", href: "/admin?tab=workflows", tabKey: "workflows", icon: FolderGit2 },
   { name: "Studio Settings & GST", href: "/admin?tab=settings", tabKey: "settings", icon: Sliders },

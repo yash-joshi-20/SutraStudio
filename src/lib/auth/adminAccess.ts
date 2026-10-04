@@ -41,6 +41,10 @@ export {
   adminAllowedEmails,
   adminNotifyEmail,
   isAdminAllowedEmail,
+  isAllowedAdminIp,
+  primaryAdminEmail,
+  googleDriveAccountEmail,
+  firebaseOwnerEmail,
   isStaffClaim,
 } from "@/lib/config/adminPolicy";
 

@@ -7,6 +7,7 @@
  */
 
 import { adminDb } from "@/lib/firebase/admin";
+import { isEnvSet, type EnvKey } from "@/lib/config/env";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -100,6 +101,15 @@ export interface ProviderConfig {
 // ---------------------------------------------------------------------------
 
 export function getProviderRegistry(): ProviderConfig[] {
+  const bflOk = isEnvSet("BFL_API_KEY");
+  const klingOk = isEnvSet("KLING_API_KEY");
+  const runwayOk = isEnvSet("RUNWAY_API_KEY" as EnvKey);
+  const elevenOk = isEnvSet("ELEVENLABS_API_KEY");
+  const tripoOk = isEnvSet("TRIPO3D_API_KEY");
+  const serpOk = isEnvSet("SERPAPI_API_KEY");
+  const geminiOk = isEnvSet("GEMINI_API_KEY");
+  const openaiOk = isEnvSet("OPENAI_API_KEY");
+
   return [
     // Image providers
     {
@@ -107,11 +117,11 @@ export function getProviderRegistry(): ProviderConfig[] {
       name: "BFL FLUX",
       type: "image",
       apiKeyEnvVar: "BFL_API_KEY",
-      isConfigured: !!process.env.BFL_API_KEY,
+      isConfigured: bflOk,
       costPerUnit: 0.04,
       costUnit: "per image",
       priority: 1,
-      isActive: !!process.env.BFL_API_KEY,
+      isActive: bflOk,
       models: ["flux-pro-1.1", "flux-dev"],
       rateLimitPerMinute: 10,
     },
@@ -120,11 +130,11 @@ export function getProviderRegistry(): ProviderConfig[] {
       name: "Pollinations AI",
       type: "image",
       apiKeyEnvVar: "IMAGE_PROVIDER_API_KEY",
-      isConfigured: !!process.env.IMAGE_PROVIDER_API_KEY,
+      isConfigured: true,
       costPerUnit: 0,
       costUnit: "free tier",
       priority: 2,
-      isActive: !!process.env.IMAGE_PROVIDER_API_KEY,
+      isActive: true,
       models: ["flux", "turbo"],
       rateLimitPerMinute: 5,
     },
@@ -133,12 +143,12 @@ export function getProviderRegistry(): ProviderConfig[] {
       id: "kling",
       name: "Kling AI",
       type: "video",
-      apiKeyEnvVar: "KLING_ACCESS_KEY",
-      isConfigured: !!(process.env.KLING_ACCESS_KEY && process.env.KLING_SECRET_KEY),
+      apiKeyEnvVar: "KLING_API_KEY",
+      isConfigured: klingOk,
       costPerUnit: 0.10,
       costUnit: "per 5s clip",
       priority: 1,
-      isActive: !!(process.env.KLING_ACCESS_KEY && process.env.KLING_SECRET_KEY),
+      isActive: klingOk,
       models: ["kling-v1", "kling-v1.5"],
       rateLimitPerMinute: 3,
     },
@@ -147,11 +157,11 @@ export function getProviderRegistry(): ProviderConfig[] {
       name: "Runway Gen-3",
       type: "video",
       apiKeyEnvVar: "RUNWAY_API_KEY",
-      isConfigured: !!process.env.RUNWAY_API_KEY,
+      isConfigured: runwayOk,
       costPerUnit: 0.15,
       costUnit: "per 5s clip",
       priority: 2,
-      isActive: !!process.env.RUNWAY_API_KEY,
+      isActive: runwayOk,
       models: ["gen-3-alpha"],
       rateLimitPerMinute: 3,
     },
@@ -161,11 +171,11 @@ export function getProviderRegistry(): ProviderConfig[] {
       name: "ElevenLabs",
       type: "voice",
       apiKeyEnvVar: "ELEVENLABS_API_KEY",
-      isConfigured: !!process.env.ELEVENLABS_API_KEY,
+      isConfigured: elevenOk,
       costPerUnit: 0.03,
       costUnit: "per 100 chars",
       priority: 1,
-      isActive: !!process.env.ELEVENLABS_API_KEY,
+      isActive: elevenOk,
       models: ["eleven_multilingual_v2"],
       rateLimitPerMinute: 10,
     },
@@ -175,11 +185,11 @@ export function getProviderRegistry(): ProviderConfig[] {
       name: "Tripo3D",
       type: "3d",
       apiKeyEnvVar: "TRIPO3D_API_KEY",
-      isConfigured: !!process.env.TRIPO3D_API_KEY,
+      isConfigured: tripoOk,
       costPerUnit: 0.20,
       costUnit: "per model",
       priority: 1,
-      isActive: !!process.env.TRIPO3D_API_KEY,
+      isActive: tripoOk,
       models: ["tripo-v2"],
       rateLimitPerMinute: 5,
     },
@@ -189,11 +199,11 @@ export function getProviderRegistry(): ProviderConfig[] {
       name: "SerpAPI",
       type: "search",
       apiKeyEnvVar: "SERPAPI_API_KEY",
-      isConfigured: !!process.env.SERPAPI_API_KEY,
+      isConfigured: serpOk,
       costPerUnit: 0.01,
       costUnit: "per search",
       priority: 1,
-      isActive: !!process.env.SERPAPI_API_KEY,
+      isActive: serpOk,
       models: ["google-trends", "google-search"],
       rateLimitPerMinute: 20,
     },
@@ -203,11 +213,11 @@ export function getProviderRegistry(): ProviderConfig[] {
       name: "Google Gemini",
       type: "text",
       apiKeyEnvVar: "GEMINI_API_KEY",
-      isConfigured: !!process.env.GEMINI_API_KEY,
+      isConfigured: geminiOk,
       costPerUnit: 0.001,
       costUnit: "per 1K tokens",
       priority: 1,
-      isActive: !!process.env.GEMINI_API_KEY,
+      isActive: geminiOk,
       models: ["gemini-2.0-flash", "gemini-1.5-pro"],
       rateLimitPerMinute: 30,
     },
@@ -216,11 +226,11 @@ export function getProviderRegistry(): ProviderConfig[] {
       name: "OpenAI",
       type: "text",
       apiKeyEnvVar: "OPENAI_API_KEY",
-      isConfigured: !!process.env.OPENAI_API_KEY,
+      isConfigured: openaiOk,
       costPerUnit: 0.003,
       costUnit: "per 1K tokens",
       priority: 2,
-      isActive: !!process.env.OPENAI_API_KEY,
+      isActive: openaiOk,
       models: ["gpt-4o", "gpt-4o-mini"],
       rateLimitPerMinute: 20,
     },

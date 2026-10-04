@@ -17,6 +17,9 @@
     "test:production": "node scripts/production-checks.mjs && node scripts/verify-env-protection.mjs",
     "test:audit": "node scripts/final-acceptance-audit.mjs",
     "audit": "node scripts/final-acceptance-audit.mjs",
+    "test:admin": "node scripts/step31c-admin-security-test.mjs",
+    "create-admin": "npx tsx scripts/create-admin.ts",
+    "get-drive-token": "npx tsx scripts/get-drive-refresh-token.ts",
     "migrate:firebase": "node scripts/migrate-to-firebase.mjs",
     "migrate:dry-run": "node scripts/migrate-to-firebase.mjs --dry-run"
   },
@@ -41,6 +44,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.8",
+    "playwright": "^1.63.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

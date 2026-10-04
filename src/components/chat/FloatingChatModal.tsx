@@ -24,6 +24,15 @@ import {
   Clock,
   CheckCircle2,
   Loader2,
+  Paperclip,
+  Image as ImageIcon,
+  FileText,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
+  Volume1,
+  Languages,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -31,12 +40,28 @@ import { LotusSymbol } from "@/components/brand/SutraLogo";
 import { motion, AnimatePresence } from "framer-motion";
 import { openRazorpayCheckout } from "@/lib/services/razorpayClient";
 import { useAuth } from "@/lib/auth/authContext";
+import { usePathname, useRouter } from "next/navigation";
+
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
+interface ChatAttachment {
+  name: string;
+  size: string;
+  type: string;
+  dataUrl?: string;
+}
 
 interface ChatMessage {
   id: string;
   sender: "bot" | "user" | "system";
   text: string;
   time: string;
+  attachments?: ChatAttachment[];
   sources?: Array<{ title: string; category: string }>;
   isLeadPrompt?: boolean;
   orderDraft?: {
@@ -62,14 +87,12 @@ const QUICK_ACTIONS = [
  * Parses inline markdown tokens: bold **text**, code `text`, and links [text](url)
  */
 function parseInlineMarkdown(text: string): React.ReactNode {
-  // Regex matches **bold**, `code`, and [links](url)
   const regex = /(\*\*.*?\*\*|`.*?`|\[.*?\]\(.*?\))/g;
   const parts = text.split(regex);
 
   return parts.map((part, index) => {
     if (!part) return null;
 
-    // Bold text **bold**
     if (part.startsWith("**") && part.endsWith("**") && part.length >= 4) {
       return (
         <strong key={index} className="font-semibold text-[#171717]">
@@ -78,7 +101,6 @@ function parseInlineMarkdown(text: string): React.ReactNode {
       );
     }
 
-    // Inline code `code`
     if (part.startsWith("`") && part.endsWith("`") && part.length >= 2) {
       return (
         <code
@@ -90,7 +112,6 @@ function parseInlineMarkdown(text: string): React.ReactNode {
       );
     }
 
-    // Markdown link [text](url)
     const linkMatch = part.match(/^\[(.*?)\]\((.*?)\)$/);
     if (linkMatch) {
       return (
@@ -128,12 +149,10 @@ function FormattedMessageContent({ text, isUser }: { text: string; isUser: boole
           return <div key={idx} className="h-1" />;
         }
 
-        // Horizontal Rule
         if (trimmed === "---" || trimmed === "***") {
           return <hr key={idx} className="border-[#E5E1D8] my-2" />;
         }
 
-        // Headings (### or ##)
         if (trimmed.startsWith("### ")) {
           return (
             <h4 key={idx} className="font-serif font-bold text-xs text-[#171717] mt-2 mb-0.5">
@@ -149,7 +168,6 @@ function FormattedMessageContent({ text, isUser }: { text: string; isUser: boole
           );
         }
 
-        // Bullet Point (•, -, *, +)
         if (/^[•\-*+]\s+/.test(trimmed)) {
           const content = trimmed.replace(/^[•\-*+]\s+/, "");
           return (
@@ -160,7 +178,6 @@ function FormattedMessageContent({ text, isUser }: { text: string; isUser: boole
           );
         }
 
-        // Numbered List (1., 2., etc.)
         const numberMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
         if (numberMatch) {
           return (
@@ -173,7 +190,6 @@ function FormattedMessageContent({ text, isUser }: { text: string; isUser: boole
           );
         }
 
-        // Standard Paragraph
         return (
           <p key={idx} className="leading-relaxed">
             {parseInlineMarkdown(line)}
@@ -189,8 +205,6 @@ export function openSutraChat() {
     window.dispatchEvent(new CustomEvent("open-sutra-chat"));
   }
 }
-
-import { usePathname, useRouter } from "next/navigation";
 
 export function FloatingChatModal() {
   const pathname = usePathname();
@@ -208,13 +222,148 @@ export function FloatingChatModal() {
     {
       id: "msg-welcome",
       sender: "bot",
-      text: "Namaste! 🙏 Welcome to **Sutra Studio**.\n\nI am your verified AI assistant, grounded directly in verified studio capabilities, pricing, and project workflows. How may I assist you today?",
+      text: "Namaste! 🙏 Welcome to **Sutra Studio**.\n\nI am your dedicated AI Concierge. You can inquire about our 12 creative capabilities, review pricing, share reference files, and commission direct orders right here in this chat. How may we assist your creative vision today?",
       time: "Just now",
     },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Voice Input (Speech Recognition) & Voice Output (Text-to-Speech)
+  const [isListening, setIsListening] = useState(false);
+  const [speechLang, setSpeechLang] = useState<"gu-IN" | "hi-IN" | "en-IN">("gu-IN");
+  const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
+  const [autoSpeakReplies, setAutoSpeakReplies] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  // Clean raw markdown text for natural voice speech synthesis
+  const cleanTextForSpeech = (raw: string): string => {
+    return raw
+      .replace(/https?:\/\/\S+/g, "") // remove URLs
+      .replace(/(\*\*|\*|`|#{1,6}|\[|\]\(.*?\))/g, "") // remove markdown syntax
+      .replace(/([_~`>#*+-])/g, " ") // remove symbols
+      .replace(/\n+/g, " ") // replace line breaks with space
+      .replace(/\s+/g, " ") // normalize spacing
+      .trim();
+  };
+
+  // Text-to-Speech handler
+  const handleSpeakMessage = (msgId: string, text: string) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      alert("Text-to-speech is not supported in this browser.");
+      return;
+    }
+
+    if (speakingMsgId === msgId) {
+      window.speechSynthesis.cancel();
+      setSpeakingMsgId(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const cleanText = cleanTextForSpeech(text);
+    if (!cleanText) return;
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    
+    // Select Indian English, Gujarati or Hindi voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const guVoice = voices.find((v) => v.lang.includes("gu") || v.name.toLowerCase().includes("gujarati"));
+    const hiVoice = voices.find((v) => v.lang.includes("hi") || v.name.toLowerCase().includes("hindi"));
+    const inVoice = voices.find((v) => v.lang.includes("en-IN") || v.name.toLowerCase().includes("india"));
+    
+    // Auto detect language
+    const isGujarati = /[\u0A80-\u0AFF]/.test(cleanText);
+    const isHindi = /[\u0900-\u097F]/.test(cleanText);
+
+    if (isGujarati && guVoice) {
+      utterance.voice = guVoice;
+      utterance.lang = "gu-IN";
+    } else if (isHindi && hiVoice) {
+      utterance.voice = hiVoice;
+      utterance.lang = "hi-IN";
+    } else if (inVoice) {
+      utterance.voice = inVoice;
+      utterance.lang = "en-IN";
+    }
+
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+
+    utterance.onstart = () => setSpeakingMsgId(msgId);
+    utterance.onend = () => setSpeakingMsgId(null);
+    utterance.onerror = () => setSpeakingMsgId(null);
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const handleStopSpeaking = () => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      setSpeakingMsgId(null);
+    }
+  };
+
+  // Speech Recognition (Microphone) handler
+  const startListening = () => {
+    if (typeof window === "undefined") return;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.");
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = speechLang;
+      recognition.continuous = false;
+      recognition.interimResults = true;
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((res: any) => res[0].transcript)
+          .join("");
+        setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+      };
+
+      recognition.onerror = (event: any) => {
+        console.warn("Speech recognition error:", event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (err) {
+      console.error("Speech recognition start failed:", err);
+      setIsListening(false);
+    }
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
+  };
+
+  const toggleListening = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  };
 
   // Human Handoff / Lead Capture Modal
   const [showHandoffModal, setShowHandoffModal] = useState(false);
@@ -237,16 +386,55 @@ export function FloatingChatModal() {
     }
   }, [messages, isOpen, isLoading]);
 
-  // Hide the AI Launcher on auth pages (or when navigating to /login or /admin/login).
-  // This guard deliberately sits AFTER every hook so the hook order never
-  // changes between renders — moving it earlier crashes React on navigation.
   if (pathname === "/login" || pathname === "/admin/login" || pathname?.startsWith("/admin/login")) {
     return null;
   }
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    files.forEach((file) => {
+      const sizeStr =
+        file.size > 1024 * 1024
+          ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+          : `${Math.round(file.size / 1024)} KB`;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        setAttachments((prev) => [
+          ...prev,
+          {
+            name: file.name,
+            size: sizeStr,
+            type: file.type,
+            dataUrl: typeof reader.result === "string" ? reader.result : undefined,
+          },
+        ]);
+      };
+      if (file.type.startsWith("image/")) {
+        reader.readAsDataURL(file);
+      } else {
+        setAttachments((prev) => [
+          ...prev,
+          {
+            name: file.name,
+            size: sizeStr,
+            type: file.type,
+          },
+        ]);
+      }
+    });
+
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handlePayChatOrder = async (msgId: string, draft: NonNullable<ChatMessage["orderDraft"]>) => {
     if (!isAuthenticated || !user) {
-      // Save draft into session and redirect to login with returnTo
       if (typeof window !== "undefined") {
         sessionStorage.setItem("sutra_pending_chat_order", JSON.stringify(draft));
       }
@@ -329,17 +517,20 @@ export function FloatingChatModal() {
 
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend || input).trim();
-    if (!text || isLoading) return;
+    if ((!text && attachments.length === 0) || isLoading) return;
 
+    const currentAttachments = [...attachments];
     const userMsg: ChatMessage = {
       id: `usr_${Date.now()}`,
       sender: "user",
-      text,
+      text: text || "Uploaded reference files for review.",
+      attachments: currentAttachments.length > 0 ? currentAttachments : undefined,
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
     setMessages((prev) => [...prev, userMsg]);
     if (!textToSend) setInput("");
+    setAttachments([]);
     setIsLoading(true);
 
     try {
@@ -349,9 +540,11 @@ export function FloatingChatModal() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          message: text,
+          message: text || "Attached files for studio review",
           mode: "ai",
-          clientId: user?.uid || "client_sutra",
+          clientId: user?.uid || "client_visitor",
+          attachments: currentAttachments,
+          conversationHistory: messages.slice(-5),
         }),
       });
 
@@ -365,6 +558,9 @@ export function FloatingChatModal() {
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setMessages((prev) => [...prev, botMsg]);
+      if (autoSpeakReplies && botMsg.text) {
+        handleSpeakMessage(botMsg.id, botMsg.text);
+      }
     } catch {
       try {
         const fallbackRes = await fetch("/api/chatbot", {
@@ -381,6 +577,9 @@ export function FloatingChatModal() {
           time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         };
         setMessages((prev) => [...prev, fallbackMsg]);
+        if (autoSpeakReplies && fallbackMsg.text) {
+          handleSpeakMessage(fallbackMsg.id, fallbackMsg.text);
+        }
       } catch {
         const errMsg: ChatMessage = {
           id: `err_${Date.now()}`,
@@ -389,6 +588,9 @@ export function FloatingChatModal() {
           time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         };
         setMessages((prev) => [...prev, errMsg]);
+        if (autoSpeakReplies && errMsg.text) {
+          handleSpeakMessage(errMsg.id, errMsg.text);
+        }
       }
     } finally {
       setIsLoading(false);
@@ -406,7 +608,7 @@ export function FloatingChatModal() {
       {
         id: "msg-welcome-new",
         sender: "bot",
-        text: "Chat cleared. I am ready to answer any questions about our approved services, pricing, and studio capabilities.",
+        text: "Chat cleared. I am ready to answer any questions about our approved services, pricing, and studio capabilities in English or Gujarati.",
         time: "Just now",
       },
     ]);
@@ -450,255 +652,288 @@ export function FloatingChatModal() {
 
   return (
     <>
-      {/*
-        Floating Trigger Button.
-        Layering: sits ABOVE the bottom navigation (--z-launcher 45 > --z-nav 40)
-        but BELOW modals, drawers and toasts. The previous `z-45` class does not
-        exist in Tailwind's scale, so the launcher had no stacking context at all
-        and was painted underneath the bottom navigation.
-        Vertical offset uses --nav-space so it clears the nav plus the iOS home
-        indicator, and the trigger is always 56px (w-13/h-13 are not real classes).
-      */}
-      <div className="fixed bottom-[calc(var(--nav-space)+0.75rem)] sm:bottom-6 right-4 sm:right-6 z-[var(--z-launcher)] flex items-center gap-3">
-        {!isOpen && (
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="hidden sm:flex items-center gap-2 bg-[#FFFDF9] border border-[#EADFCB] px-3.5 py-2 rounded-full shadow-lg text-xs text-[#5C3A1E] font-medium"
-          >
-            <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-pulse" />
-            <span>Ask Sutra AI</span>
-          </motion.div>
-        )}
-
+      {/* Launcher Button */}
+      {!isOpen && (
         <button
-          type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          aria-label={isOpen ? "Close AI Assistant" : "Open AI Assistant"}
-          aria-expanded={isOpen}
-          className="w-14 h-14 shrink-0 rounded-full bg-[#5C3A1E] text-white flex items-center justify-center shadow-xl hover:bg-[#432A15] hover:scale-105 active:scale-95 transition-all duration-200 border-2 border-[#D4A35A]/50 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#D4A35A]/40 cursor-pointer touch-target"
+          onClick={() => setIsOpen(true)}
+          aria-label="Open Sutra Studio Concierge"
+          className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-[var(--z-launcher)] flex items-center gap-2.5 px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-full bg-[#171717]/95 backdrop-blur-md text-[#FAF9F5] border border-[#A98B57]/50 shadow-2xl hover:bg-[#262626] hover:scale-105 active:scale-95 transition-all cursor-pointer group"
         >
-          {isOpen ? (
-            <X className="w-6 h-6 text-white" />
-          ) : (
-            <div className="relative">
-              <MessageSquare className="w-6 h-6 text-[#D4A35A]" />
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#2E7D4F] rounded-full ring-2 ring-[#5C3A1E]" />
+          <div className="relative shrink-0">
+            <img
+              src="/brand/sutra-app-icon@4x.png"
+              alt="Sutra Studio"
+              className="w-6 h-6 rounded-full object-cover border border-[#A98B57]/60 group-hover:rotate-12 transition-transform duration-500 shadow-xs"
+            />
+            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#2E7D4F] border-2 border-[#171717]" />
+          </div>
+          <div className="text-left hidden sm:block">
+            <div className="text-xs font-serif font-bold text-[#FAF9F5] leading-tight">
+              Sutra Concierge
             </div>
-          )}
+            <div className="text-[10px] text-[#D4A35A] font-sans tracking-wide">
+              Studio Atelier • Online
+            </div>
+          </div>
         </button>
-      </div>
+      )}
 
-      {/* Floating Chat Panel (z-[var(--z-modal)]) */}
+      {/* Main Chat Drawer */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            initial={{ opacity: 0, y: 20, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 30, scale: 0.95 }}
+            exit={{ opacity: 0, y: 20, scale: 0.98 }}
             transition={{ duration: 0.2 }}
-            role="dialog"
-            aria-modal="false"
-            aria-label="Sutra AI Assistant"
-            className="fixed bottom-[calc(var(--nav-space)+var(--launcher-size)+1rem)] sm:bottom-24 right-2 sm:right-6 z-[var(--z-modal)] w-[calc(100vw-1rem)] sm:w-[430px] max-h-[78dvh] h-[78dvh] bg-[#FFFDF9] border border-[#EADFCB] rounded-3xl shadow-2xl flex flex-col overflow-hidden text-[#0F172A]"
+            className="fixed bottom-4 right-4 z-[var(--z-modal)] w-[calc(100vw-2rem)] sm:w-[420px] h-[580px] max-h-[calc(100vh-2rem)] bg-[#FAF9F5] border border-[#E5E1D8] rounded-3xl shadow-2xl flex flex-col overflow-hidden text-[#171717]"
           >
-            {/* Modal Header */}
-            <div className="p-4 bg-white border-b border-[#E5E1D8] flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#5C3A1E] text-white flex items-center justify-center border border-[#A98B57]/40 shadow-xs">
-                  <LotusSymbol className="w-5 h-5" color="gold" />
+            {/* Header */}
+            <div className="px-4 py-3.5 bg-[#171717] text-[#FAF9F5] flex items-center justify-between border-b border-[#A98B57]/30 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full overflow-hidden border border-[#A98B57]/60 flex items-center justify-center shrink-0 bg-[#262626] shadow-xs">
+                  <img
+                    src="/brand/sutra-app-icon@4x.png"
+                    alt="Sutra Studio"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <h3 className="font-serif text-sm font-bold text-[#171717]">
-                      Sutra Studio AI
-                    </h3>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#EDF7F0] text-[#2E7D4F] text-[10px] font-semibold border border-[#2E7D4F]/20">
-                      <ShieldCheck className="w-3 h-3" />
-                      Approved RAG
-                    </span>
+                    <h3 className="font-serif font-bold text-xs text-[#FAF9F5]">Sutra Studio</h3>
+                    <Badge variant="outline" className="text-[9px] py-0 px-1.5 border-[#A98B57]/50 text-[#D4A35A] bg-[#262626]">
+                      Concierge
+                    </Badge>
                   </div>
-                  <p className="text-[11px] text-[#64748B]">
-                    Grounded strictly in verified studio knowledge
-                  </p>
+                  <p className="text-[10px] text-[#94A3B8]">Creative Technology & Atelier Concierge</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
+                {/* Voice recognition / response language selector */}
+                <div className="relative flex items-center">
+                  <select
+                    value={speechLang}
+                    onChange={(e) => setSpeechLang(e.target.value as any)}
+                    title="Voice Recognition Language (Microphone)"
+                    className="text-[10px] bg-[#262626] text-[#D4A35A] border border-[#A98B57]/40 rounded-lg px-2 py-1 focus:outline-none cursor-pointer"
+                  >
+                    <option value="gu-IN">ગુજરાતી (GU)</option>
+                    <option value="hi-IN">हिंदी (HI)</option>
+                    <option value="en-IN">English (IN)</option>
+                  </select>
+                </div>
+
+                {/* Auto-Voice Speak toggle */}
+                <button
+                  onClick={() => {
+                    const next = !autoSpeakReplies;
+                    setAutoSpeakReplies(next);
+                    if (!next && speakingMsgId) handleStopSpeaking();
+                  }}
+                  title={autoSpeakReplies ? "Auto-speak replies is ON (Click to turn off)" : "Auto-speak replies is OFF (Click to speak responses)"}
+                  className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                    autoSpeakReplies
+                      ? "text-[#D4A35A] bg-[#262626] ring-1 ring-[#D4A35A]/50"
+                      : "text-[#94A3B8] hover:text-[#FAF9F5] hover:bg-[#262626]"
+                  }`}
+                >
+                  {autoSpeakReplies ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+                </button>
+
                 <button
                   onClick={handleClearChat}
-                  title="Clear Conversation"
-                  className="p-1.5 rounded-lg text-[#64748B] hover:text-[#171717] hover:bg-[#F4F1EA] transition-colors cursor-pointer"
+                  title="Clear chat"
+                  className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#FAF9F5] hover:bg-[#262626] transition-colors cursor-pointer"
                 >
-                  <RefreshCw className="w-4 h-4" />
+                  <RefreshCw className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
-                  title="Minimize Chat"
-                  className="p-1.5 rounded-lg text-[#64748B] hover:text-[#171717] hover:bg-[#F4F1EA] transition-colors cursor-pointer"
+                  title="Close chat"
+                  className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#FAF9F5] hover:bg-[#262626] transition-colors cursor-pointer"
                 >
-                  <ChevronDown className="w-4 h-4" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
-            {/* Quick Actions Strip - Explicitly hides native scrollbar on Windows/Chromium/Firefox */}
-            <div className="px-3 py-2.5 bg-[#FAF9F5] border-b border-[#E5E1D8]/60 flex items-center gap-1.5 overflow-x-auto shrink-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-              {QUICK_ACTIONS.map((qa, i) => (
+            {/* Quick Action Chips */}
+            <div className="px-3 py-2 bg-white/60 border-b border-[#E5E1D8] flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+              {QUICK_ACTIONS.map((action, idx) => (
                 <button
-                  key={i}
-                  onClick={() => handleSendMessage(qa.query)}
-                  className="px-3 py-1 rounded-full bg-white border border-[#E5E1D8] text-[11px] font-medium text-[#5C3A1E] hover:border-[#A98B57] hover:bg-[#F4F1EA] whitespace-nowrap transition-all shrink-0 shadow-2xs cursor-pointer"
+                  key={idx}
+                  onClick={() => handleSendMessage(action.query)}
+                  className="px-2.5 py-1 rounded-full bg-white border border-[#E5E1D8] hover:border-[#A98B57] hover:bg-[#FAF9F5] text-[11px] text-[#5C3A1E] font-medium whitespace-nowrap transition-all shadow-2xs cursor-pointer"
                 >
-                  {qa.label}
+                  {action.label}
                 </button>
               ))}
-              <button
-                onClick={() => setShowHandoffModal(true)}
-                className="px-3 py-1 rounded-full bg-[#5C3A1E] text-white text-[11px] font-medium hover:bg-[#432A15] whitespace-nowrap transition-all shrink-0 shadow-2xs flex items-center gap-1 cursor-pointer"
-              >
-                <PhoneCall className="w-3 h-3 text-[#D4A35A]" />
-                <span>Talk to Human</span>
-              </button>
             </div>
 
-            {/* Chat Messages Body with Luxury Minimal Scrollbar */}
-            <div className="flex-1 p-4 overflow-y-auto overflow-x-hidden space-y-3.5 text-xs text-[#171717] [scrollbar-width:thin] [scrollbar-color:#E5E1D8_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#E5E1D8] [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-[#A98B57]/60">
-              {messages.map((m) => (
-                <div
-                  key={m.id}
-                  className={`flex flex-col ${
-                    m.sender === "user"
-                      ? "items-end"
-                      : m.sender === "system"
-                      ? "items-center"
-                      : "items-start"
-                  }`}
-                >
-                  {m.sender === "system" ? (
-                    <div className="p-3 rounded-2xl bg-[#EDF7F0] border border-[#2E7D4F]/20 text-[#2E7D4F] text-center w-full my-1">
-                      <p className="font-semibold text-xs">{m.text}</p>
+            {/* Messages Body */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
+              {messages.map((msg) => {
+                const isBot = msg.sender === "bot";
+                const isSystem = msg.sender === "system";
+
+                if (isSystem) {
+                  return (
+                    <div key={msg.id} className="text-center my-2">
+                      <span className="inline-block px-3 py-1 rounded-full bg-[#EBF3ED] text-[#2E7D4F] border border-[#2E7D4F]/20 text-[11px]">
+                        {msg.text}
+                      </span>
                     </div>
-                  ) : (
-                    <div
-                      className={`max-w-[88%] rounded-2xl p-3.5 shadow-xs relative group break-words ${
-                        m.sender === "user"
-                          ? "bg-[#5C3A1E] text-white rounded-br-xs"
-                          : "bg-white border border-[#E5E1D8] text-[#171717] rounded-bl-xs"
-                      }`}
-                    >
-                      <FormattedMessageContent
-                        text={m.text}
-                        isUser={m.sender === "user"}
-                      />
+                  );
+                }
 
-                      {/* Order Draft & Razorpay Pay Now Card */}
-                      {m.orderDraft && (
-                        <div className="mt-3 p-3 rounded-xl bg-[#FFFDF9] border border-[#D4A35A]/50 space-y-2 shadow-2xs">
-                          <div className="flex items-center justify-between">
-                            <span className="font-mono text-xs font-bold text-[#5C3A1E]">
-                              #{m.orderDraft.orderNumber}
-                            </span>
-                            {m.orderDraft.paid ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#F0FDF4] text-[#15803D] border border-[#BBF7D0]">
-                                <CheckCircle2 className="w-3 h-3" />
-                                <span>Paid & Confirmed</span>
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A]">
-                                <Clock className="w-3 h-3" />
-                                <span>Pending Payment</span>
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-[#64748B] font-medium">{m.orderDraft.service}</span>
-                            <span className="font-serif font-bold text-sm text-[#5C3A1E]">
-                              ₹{m.orderDraft.totalAmount.toLocaleString("en-IN")}
-                            </span>
-                          </div>
-
-                          {m.orderDraft.paid ? (
-                            <div className="p-2 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] text-[11px] text-[#15803D] flex items-center gap-1.5">
-                              <Check className="w-3.5 h-3.5 shrink-0" />
-                              <span>Verified (ID: <strong className="font-mono">{m.orderDraft.paymentId}</strong>). In production.</span>
-                            </div>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handlePayChatOrder(m.id, m.orderDraft!)}
-                              disabled={isProcessingPayment === m.orderDraft.orderId}
-                              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-[#5C3A1E] text-white text-xs font-semibold hover:bg-[#432A15] disabled:opacity-50 cursor-pointer shadow-xs transition-all"
-                            >
-                              {isProcessingPayment === m.orderDraft.orderId ? (
-                                <>
-                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                  <span>Opening Razorpay...</span>
-                                </>
+                return (
+                  <div
+                    key={msg.id}
+                    className={`flex flex-col ${isBot ? "items-start" : "items-end"} gap-1`}
+                  >
+                    <div className={`flex items-start gap-2 ${isBot ? "" : "flex-row-reverse"}`}>
+                      {isBot && (
+                        <div className="w-6 h-6 rounded-full overflow-hidden border border-[#A98B57]/50 shrink-0 bg-[#171717] mt-0.5 shadow-2xs">
+                          <img
+                            src="/brand/sutra-app-icon@4x.png"
+                            alt="Sutra Studio"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      <div
+                        className={`max-w-[85%] rounded-2xl p-3 text-xs leading-relaxed shadow-xs relative group ${
+                          isBot
+                            ? "bg-white border border-[#E5E1D8] text-[#171717] rounded-tl-xs"
+                            : "bg-[#5C3A1E] text-white rounded-tr-xs"
+                        }`}
+                      >
+                      {/* Attached images / files */}
+                      {msg.attachments && msg.attachments.length > 0 && (
+                        <div className="mb-2 space-y-1.5">
+                          {msg.attachments.map((att, i) => (
+                            <div key={i} className="flex items-center gap-2 p-1.5 rounded-lg bg-black/10 border border-white/10 text-[11px]">
+                              {att.dataUrl ? (
+                                <img src={att.dataUrl} alt={att.name} className="w-12 h-12 object-cover rounded-md" />
                               ) : (
-                                <>
-                                  <CreditCard className="w-3.5 h-3.5 text-[#D4A35A]" />
-                                  <span>Pay Now via Razorpay</span>
-                                </>
+                                <FileText className="w-4 h-4 text-[#D4A35A]" />
                               )}
-                            </button>
+                              <div className="truncate">
+                                <p className="font-medium truncate">{att.name}</p>
+                                <p className="text-[9px] opacity-75">{att.size}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <FormattedMessageContent text={msg.text} isUser={!isBot} />
+
+                      {/* Order Draft Interactive Checkout Card */}
+                      {msg.orderDraft && (
+                        <div className="mt-3 p-3 rounded-xl bg-[#FAF9F5] border border-[#A98B57]/40 text-[#171717] space-y-2">
+                          <div className="flex items-center justify-between border-b border-[#E5E1D8] pb-1.5">
+                            <span className="font-serif font-bold text-xs text-[#5C3A1E]">
+                              Order #{msg.orderDraft.orderNumber}
+                            </span>
+                            <Badge variant="outline" className="text-[9px] bg-white border-[#A98B57]/50 text-[#A98B57]">
+                              {msg.orderDraft.paid ? "Paid" : "Pending Payment"}
+                            </Badge>
+                          </div>
+                          <div className="text-[11px] space-y-0.5">
+                            <div className="flex justify-between">
+                              <span className="text-[#64748B]">Service:</span>
+                              <span className="font-medium">{msg.orderDraft.service}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-[#64748B]">Total Amount:</span>
+                              <span className="font-bold text-[#5C3A1E]">
+                                ₹{msg.orderDraft.totalAmount.toLocaleString("en-IN")}
+                              </span>
+                            </div>
+                          </div>
+
+                          {!msg.orderDraft.paid ? (
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              disabled={isProcessingPayment === msg.orderDraft.orderId}
+                              onClick={() => handlePayChatOrder(msg.id, msg.orderDraft!)}
+                              className="w-full text-xs justify-center gap-1.5 mt-1 !bg-[#2E7D4F] hover:!bg-[#24633F]"
+                            >
+                              {isProcessingPayment === msg.orderDraft.orderId ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <CreditCard className="w-3.5 h-3.5" />
+                              )}
+                              <span>Pay Now via Razorpay (₹{msg.orderDraft.totalAmount.toLocaleString("en-IN")})</span>
+                            </Button>
+                          ) : (
+                            <div className="flex items-center gap-1 text-[11px] text-[#2E7D4F] font-semibold pt-1">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>Payment Completed • Assigned to Studio</span>
+                            </div>
                           )}
                         </div>
                       )}
 
-                      {/* Verified Sources pill */}
-                      {m.sources && m.sources.length > 0 && (
-                        <div className="mt-2.5 pt-2 border-t border-[#E5E1D8]/70 space-y-1">
-                          <span className="text-[10px] uppercase font-bold text-[#A98B57] block tracking-wider">
-                            Verified Sources:
-                          </span>
-                          <div className="flex flex-wrap gap-1">
-                            {m.sources.map((s, idx) => (
-                              <span
-                                key={idx}
-                                className="px-2 py-0.5 rounded-md bg-[#FAF9F5] border border-[#E5E1D8] text-[10px] text-[#5C3A1E]"
-                              >
-                                {s.category}: {s.title}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="mt-1.5 flex items-center justify-between gap-2">
-                        <span
-                          className={`text-[9px] ${
-                            m.sender === "user" ? "text-white/70" : "text-[#94A3B8]"
-                          }`}
-                        >
-                          {m.time}
-                        </span>
-                        {m.sender === "bot" && (
+                      {/* Speaker & Copy Actions */}
+                      {isBot && (
+                        <div className="absolute -right-14 top-1 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
-                            onClick={() => handleCopy(m.id, m.text)}
-                            className="text-[#94A3B8] hover:text-[#5C3A1E] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                            title="Copy response"
+                            onClick={() => handleSpeakMessage(msg.id, msg.text)}
+                            title={speakingMsgId === msg.id ? "Stop voice playback" : "Listen to audio response"}
+                            className={`p-1 rounded-md transition-colors cursor-pointer ${
+                              speakingMsgId === msg.id
+                                ? "text-[#A98B57] bg-[#FAF9F5] ring-1 ring-[#A98B57]/40 shadow-xs"
+                                : "text-[#94A3B8] hover:text-[#171717]"
+                            }`}
                           >
-                            {copiedId === m.id ? (
-                              <Check className="w-3 h-3 text-[#2E7D4F]" />
+                            {speakingMsgId === msg.id ? (
+                              <VolumeX className="w-3.5 h-3.5 text-[#DC2626] animate-pulse" />
                             ) : (
-                              <Copy className="w-3 h-3" />
+                              <Volume2 className="w-3.5 h-3.5" />
                             )}
                           </button>
-                        )}
+
+                          <button
+                            onClick={() => handleCopy(msg.id, msg.text)}
+                            title="Copy response"
+                            className="p-1 text-[#94A3B8] hover:text-[#171717] transition-colors cursor-pointer"
+                          >
+                            {copiedId === msg.id ? (
+                              <Check className="w-3.5 h-3.5 text-[#2E7D4F]" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </div>
+                      )}
                       </div>
                     </div>
-                  )}
-                </div>
-              ))}
+
+                    <span className="text-[9px] text-[#94A3B8] px-1">{msg.time}</span>
+                  </div>
+                );
+              })}
 
               {isLoading && (
-                <div className="flex items-center gap-2 p-3 bg-white border border-[#E5E1D8] rounded-2xl rounded-bl-xs w-fit shadow-xs">
-                  <div className="w-2 h-2 rounded-full bg-[#D4A35A] animate-bounce" />
-                  <div className="w-2 h-2 rounded-full bg-[#5C3A1E] animate-bounce [animation-delay:0.2s]" />
-                  <div className="w-2 h-2 rounded-full bg-[#D4A35A] animate-bounce [animation-delay:0.4s]" />
+                <div className="flex items-center gap-2 p-3 bg-white border border-[#E5E1D8] rounded-2xl rounded-tl-xs max-w-[80%] shadow-xs">
+                  <div className="w-5 h-5 rounded-full overflow-hidden border border-[#A98B57]/50 shrink-0 bg-[#171717]">
+                    <img
+                      src="/brand/sutra-app-icon@4x.png"
+                      alt="Sutra Studio"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#A98B57] animate-bounce" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#A98B57] animate-bounce [animation-delay:0.2s]" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#A98B57] animate-bounce [animation-delay:0.4s]" />
+                  </div>
                   <span className="text-[11px] text-[#64748B] ml-1">
-                    Retrieving verified studio knowledge...
+                    Studio Concierge composing...
                   </span>
                 </div>
               )}
@@ -708,31 +943,112 @@ export function FloatingChatModal() {
 
             {/* Input Bar */}
             <div className="p-3 bg-white border-t border-[#E5E1D8] shrink-0">
+              {/* Listening Active Banner */}
+              {isListening && (
+                <div className="mb-2 px-3 py-1.5 rounded-xl bg-[#FEF2F2] border border-[#FECACA] flex items-center justify-between text-xs text-[#991B1B] animate-pulse">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#DC2626] animate-ping" />
+                    <span className="font-medium text-[11px]">
+                      Listening in {speechLang === "gu-IN" ? "ગુજરાતી" : speechLang === "hi-IN" ? "हिंदी" : "English"}... Speak now
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={stopListening}
+                    className="text-[10px] font-semibold underline text-[#DC2626] hover:text-[#7F1D1D] cursor-pointer"
+                  >
+                    Done
+                  </button>
+                </div>
+              )}
+
+              {/* Attachment preview pills */}
+              {attachments.length > 0 && (
+                <div className="mb-2 flex flex-wrap gap-1.5 max-h-20 overflow-y-auto">
+                  {attachments.map((att, index) => (
+                    <div
+                      key={index}
+                      className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#FAF9F5] border border-[#E5E1D8] text-[10px] text-[#5C3A1E]"
+                    >
+                      <Paperclip className="w-3 h-3 text-[#A98B57]" />
+                      <span className="max-w-[120px] truncate">{att.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeAttachment(index)}
+                        className="text-[#94A3B8] hover:text-[#DC2626]"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleSendMessage();
                 }}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1.5"
               >
+                {/* Hidden file input */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  multiple
+                  accept="image/*,.pdf,.glb,.gltf,.blend,.zip"
+                  className="hidden"
+                />
+
+                {/* Attach File Button */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Attach images or brief files"
+                  className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-[#5C3A1E] hover:bg-[#F4F1EA] hover:border-[#A98B57] transition-all cursor-pointer shadow-2xs shrink-0"
+                >
+                  <Paperclip className="w-4 h-4 text-[#A98B57]" />
+                </button>
+
+                {/* Microphone Voice Input Button */}
+                <button
+                  type="button"
+                  onClick={toggleListening}
+                  title={isListening ? "Stop voice listening" : `Voice Input (${speechLang === "gu-IN" ? "ગુજરાતી" : speechLang === "hi-IN" ? "हिंदी" : "English"})`}
+                  className={`p-2.5 rounded-xl border transition-all cursor-pointer shadow-2xs shrink-0 ${
+                    isListening
+                      ? "bg-[#DC2626] border-[#DC2626] text-white animate-pulse ring-2 ring-[#DC2626]/40"
+                      : "bg-[#FAF9F5] border-[#E5E1D8] text-[#5C3A1E] hover:bg-[#F4F1EA] hover:border-[#A98B57]"
+                  }`}
+                >
+                  {isListening ? (
+                    <MicOff className="w-4 h-4 text-white" />
+                  ) : (
+                    <Mic className="w-4 h-4 text-[#A98B57]" />
+                  )}
+                </button>
+
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask about services, pricing, studio capabilities..."
+                  placeholder="Ask in English or ગુજરાતી, or click mic to speak..."
                   className="flex-1 min-h-[44px] bg-[#FAF9F5] border border-[#E5E1D8] rounded-xl px-3.5 py-2 text-base sm:text-xs text-[#171717] placeholder:text-[#94A3B8] focus:outline-none focus:bg-white focus:border-[#A98B57] focus:ring-1 focus:ring-[#A98B57] transition-all"
                 />
+
                 <button
                   type="submit"
-                  disabled={!input.trim() || isLoading}
+                  disabled={(!input.trim() && attachments.length === 0) || isLoading}
                   aria-label="Send message"
-                  className="p-2 rounded-xl bg-[#5C3A1E] text-white hover:bg-[#432A15] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shadow-xs"
+                  className="p-2.5 rounded-xl bg-[#5C3A1E] text-white hover:bg-[#432A15] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shadow-xs shrink-0"
                 >
                   <Send className="w-4 h-4 text-[#D4A35A]" />
                 </button>
               </form>
+
               <div className="mt-2 flex items-center justify-between text-[10px] text-[#94A3B8] px-1">
-                <span>100% Admin-Approved Studio Knowledge</span>
+                <span>Sutra Studio Intelligence</span>
                 <button
                   onClick={() => setShowHandoffModal(true)}
                   className="text-[#5C3A1E] font-semibold hover:underline cursor-pointer"
@@ -748,7 +1064,7 @@ export function FloatingChatModal() {
       {/* Talk to Human / Lead Modal */}
       <AnimatePresence>
         {showHandoffModal && (
-          <div className="fixed inset-0 z-60 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[var(--z-toast)] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}

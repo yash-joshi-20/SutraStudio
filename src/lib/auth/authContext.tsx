@@ -243,24 +243,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       try {
-        setUser(toAuthUser(fbUser));
-        await fetch("/api/auth/session", { cache: "no-store", credentials: "same-origin" });
+        const idTokenResult = await fbUser.getIdTokenResult();
+        const isStaff =
+          idTokenResult.claims.role === "admin" ||
+          idTokenResult.claims.role === "superAdmin" ||
+          Boolean(idTokenResult.claims.admin);
+        const resolvedRole: UserRole = isStaff ? "admin" : "client";
+
+        setUser({
+          uid: fbUser.uid,
+          email: fbUser.email ?? "",
+          displayName: fbUser.displayName ?? "",
+          photoURL: fbUser.photoURL ?? "",
+          role: resolvedRole,
+          emailVerified: fbUser.emailVerified,
+          phone: fbUser.phoneNumber ?? "",
+        });
+        setRole(resolvedRole);
+
         const res = await fetch("/api/auth/session", { cache: "no-store", credentials: "same-origin" });
         const data = await res.json();
         if (data.authenticated) {
           setProfile(data.profile ?? null);
-          setRole(data.user?.role ?? "client");
+          const serverRole = data.user?.role ?? resolvedRole;
+          setRole(serverRole);
+          setUser((prev) => (prev ? { ...prev, role: serverRole } : null));
           setIsSessionStale(false);
         } else {
-          // Firebase knows the user but the server cookie is gone (expired or
-          // revoked). Re-establish it rather than silently logging them out.
+          // Firebase knows the user but the server cookie is absent. Re-establish it.
           const idToken = await fbUser.getIdToken();
-          await establishServerSession(idToken, true);
-          setRole("client");
+          if (isStaff) {
+            await postJson("/api/auth/admin-login", { idToken, rememberMe: true }).catch(() => {});
+          } else {
+            await establishServerSession(idToken, true).catch(() => {});
+          }
+          setRole(resolvedRole);
           setIsSessionStale(false);
           const retry = await fetch("/api/auth/session", { cache: "no-store" });
           const retryData = await retry.json();
           setProfile(retryData.profile ?? null);
+          if (retryData.user?.role) {
+            setRole(retryData.user.role);
+            setUser((prev) => (prev ? { ...prev, role: retryData.user.role } : null));
+          }
         }
       } catch {
         setIsSessionStale(true);
@@ -286,10 +311,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await applyPersistence(rememberMe);
       try {
         const cred = await signInWithEmailAndPassword(getFirebaseAuth(), email.trim(), password);
-        const next = toAuthUser(cred.user);
+        const idTokenResult = await cred.user.getIdTokenResult();
+        const isStaff =
+          idTokenResult.claims.role === "admin" ||
+          idTokenResult.claims.role === "superAdmin" ||
+          Boolean(idTokenResult.claims.admin);
+        const resolvedRole: UserRole = isStaff ? "admin" : "client";
+
+        const next: AuthUser = {
+          uid: cred.user.uid,
+          email: cred.user.email ?? "",
+          displayName: cred.user.displayName ?? "",
+          photoURL: cred.user.photoURL ?? "",
+          role: resolvedRole,
+          emailVerified: cred.user.emailVerified,
+          phone: cred.user.phoneNumber ?? "",
+        };
+
         setUser(next);
-        await establishServerSession(await cred.user.getIdToken(), rememberMe);
-        setRole("client");
+        setRole(resolvedRole);
+        const token = await cred.user.getIdToken();
+        if (isStaff) {
+          await postJson("/api/auth/admin-login", { idToken: token, rememberMe });
+        } else {
+          await establishServerSession(token, rememberMe);
+        }
         setIsSessionStale(false);
         void refreshProfile();
         return next;
@@ -308,10 +354,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       provider.setCustomParameters({ prompt: "select_account" });
       try {
         const cred = await signInWithPopup(getFirebaseAuth(), provider);
-        const next = toAuthUser(cred.user);
+        const idTokenResult = await cred.user.getIdTokenResult();
+        const isStaff =
+          idTokenResult.claims.role === "admin" ||
+          idTokenResult.claims.role === "superAdmin" ||
+          Boolean(idTokenResult.claims.admin);
+        const resolvedRole: UserRole = isStaff ? "admin" : "client";
+
+        const next: AuthUser = {
+          uid: cred.user.uid,
+          email: cred.user.email ?? "",
+          displayName: cred.user.displayName ?? "",
+          photoURL: cred.user.photoURL ?? "",
+          role: resolvedRole,
+          emailVerified: cred.user.emailVerified,
+          phone: cred.user.phoneNumber ?? "",
+        };
+
         setUser(next);
-        await establishServerSession(await cred.user.getIdToken(), rememberMe);
-        setRole("client");
+        setRole(resolvedRole);
+        const token = await cred.user.getIdToken();
+        if (isStaff) {
+          await postJson("/api/auth/admin-login", { idToken: token, rememberMe });
+        } else {
+          await establishServerSession(token, rememberMe);
+        }
         setIsSessionStale(false);
         void refreshProfile();
         return next;
@@ -392,6 +459,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile(null);
     setRole("guest");
     setIsSessionStale(false);
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+    }
   }, [configurationError]);
 
   /** Signs out of this device AND revokes every other refresh token. */
@@ -411,6 +481,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile(null);
     setRole("guest");
     setIsSessionStale(false);
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+    }
   }, [configurationError]);
 
   const requestPasswordReset = useCallback(

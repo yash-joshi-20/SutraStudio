@@ -6,6 +6,8 @@
  */
 
 import { adminDb } from "@/lib/firebase/admin";
+import { readEnv, readPublicEnv } from "@/lib/config/env";
+import { safeGetEnv } from "@/lib/services/missingKeyRegistry";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -273,9 +275,10 @@ export class MediaVaultStore {
     const file = await MediaVaultStore.getFile(fileId, clientUid);
     if (!file) return null;
 
+    const appUrl = readPublicEnv("NEXT_PUBLIC_APP_URL") || "https://sutrastudio.com";
     const shareLink: ShareLink = {
       id: `share_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-      url: `${process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudio.com"}/share/${fileId}/${Date.now().toString(36)}`,
+      url: `${appUrl}/share/${fileId}/${Date.now().toString(36)}`,
       expiresAt: new Date(Date.now() + expiresInHours * 3600000).toISOString(),
       accessCount: 0,
       maxAccess,
@@ -427,8 +430,14 @@ export async function postToSocial(request: SocialPostRequest): Promise<{
   error?: string;
 }> {
   // Verify Meta credentials
-  const appId = process.env.META_APP_ID;
-  const appSecret = process.env.META_APP_SECRET;
+  const appId = safeGetEnv("META_APP_ID", {
+    feature: "Social Media Publishing",
+    priority: "MEDIUM",
+  });
+  const appSecret = safeGetEnv("META_APP_SECRET", {
+    feature: "Social Media Publishing",
+    priority: "MEDIUM",
+  });
 
   if (!appId || !appSecret) {
     return {
