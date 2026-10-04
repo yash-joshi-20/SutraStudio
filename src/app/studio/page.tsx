@@ -3,6 +3,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { VideoCard } from "@/components/media/VideoCard";
+import { SutraParticleWings } from "@/components/canvas/SutraParticleWings";
 import { LotusSymbol } from "@/components/brand/SutraLogo";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
@@ -36,6 +37,34 @@ export default function StudioPage() {
             badgeText="ATELIER SHOWREEL"
             showTranscriptToggle
             allowExpand
+          />
+        </div>
+
+        {/* ===================================================
+            Computational Sacred Geometry & Fluid Particles Showcase
+            (Inspired by Aeterna 3D Particle Mesh Wings)
+            =================================================== */}
+        <div className="max-w-4xl mx-auto w-full space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-[#EADFCB] pb-3">
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[#D4A35A] flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                MATHEMATICAL SYMMETRY
+              </span>
+              <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-[#0F172A] mt-1">
+                3D Particle Light Matrix & Sacred Geometry
+              </h2>
+            </div>
+            <p className="text-xs text-[#64748B] max-w-xs sm:text-right">
+              Move your mouse or finger across the canvas to interact with the flowing golden particle vector field.
+            </p>
+          </div>
+
+          <SutraParticleWings
+            height="460px"
+            initialMode="wings"
+            showControls={true}
+            interactive={true}
           />
         </div>
 
