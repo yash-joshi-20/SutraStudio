@@ -36,12 +36,11 @@ const CLIENT_PROTECTED = [
   "/client-form",
 ];
 
-/** Cheap shape test so a junk cookie does not skip the server-side check. */
+/** Cheap shape test so a non-empty cookie is inspected by server components. */
 function looksLikeFirebaseSession(value: string | undefined): boolean {
   if (!value) return false;
-  if (value.length < 100 || value.length > 4096) return false;
-  const parts = value.split(".");
-  return parts.length === 3 && parts.every((p) => p.length > 0);
+  if (typeof value !== "string") return false;
+  return value.trim().length >= 10;
 }
 
 export function middleware(request: NextRequest) {
@@ -65,22 +64,34 @@ export function middleware(request: NextRequest) {
   if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
     if (!isAdminSessionShaped) {
       const url = new URL("/admin/login", request.url);
-      url.searchParams.set("returnTo", fullPath);
+      if (fullPath !== "/admin" && !fullPath.startsWith("/admin/login")) {
+        url.searchParams.set("returnTo", fullPath);
+      }
       return NextResponse.redirect(url);
     }
   }
 
-  // 2. Client workspace
+  // 2. Client workspace (Accessible by client or admin)
   const isClientProtected = CLIENT_PROTECTED.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`)
   );
-  if (isClientProtected && !isSessionShaped) {
+  if (isClientProtected && !isSessionShaped && !isAdminSessionShaped) {
     const url = new URL("/login", request.url);
-    url.searchParams.set("returnTo", fullPath);
+    if (fullPath !== "/dashboard" && !fullPath.startsWith("/login")) {
+      url.searchParams.set("returnTo", fullPath);
+    }
     return NextResponse.redirect(url);
   }
 
   // 3. Signed-in visitors should not see the sign-in screens again.
+  if (isAdminSessionShaped && pathname.startsWith("/admin/login")) {
+    return NextResponse.redirect(new URL("/admin", request.url));
+  }
+
+  if (isAdminSessionShaped && (pathname === "/login" || pathname === "/register")) {
+    return NextResponse.redirect(new URL("/admin", request.url));
+  }
+
   if (isSessionShaped && (pathname === "/login" || pathname === "/register")) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }

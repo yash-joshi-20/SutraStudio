@@ -24,9 +24,17 @@ export function RouteGuard({
     if (!isLoading) {
       if (!isAuthenticated) {
         const targetLogin = requiredRole === "admin" ? "/admin/login" : "/login";
-        router.push(`${targetLogin}?returnTo=${encodeURIComponent(pathname || "/")}`);
+        const currentPath = pathname || (requiredRole === "admin" ? "/admin" : "/dashboard");
+        if (currentPath === "/login" || currentPath === "/register" || currentPath === "/admin/login") {
+          return;
+        }
+        if (currentPath === "/dashboard" || currentPath === "/admin" || currentPath === "/") {
+          router.push(targetLogin);
+        } else {
+          router.push(`${targetLogin}?returnTo=${encodeURIComponent(currentPath)}`);
+        }
       } else if (requiredRole === "admin" && role !== "admin") {
-        router.push(`/admin/login?returnTo=${encodeURIComponent(pathname || "/admin")}`);
+        router.push("/admin/login");
       }
     }
   }, [isLoading, isAuthenticated, role, requiredRole, pathname, router]);
@@ -42,6 +50,9 @@ export function RouteGuard({
   // Not authenticated fallback
   if (!isAuthenticated) {
     const loginHref = requiredRole === "admin" ? "/admin/login" : "/login";
+    const targetLink = pathname && pathname !== "/dashboard" && pathname !== "/admin" && pathname !== "/"
+      ? `${loginHref}?returnTo=${encodeURIComponent(pathname)}`
+      : loginHref;
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F5EF] p-4 text-[#0F172A]">
         <div className="w-full max-w-md rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-warm p-8 text-center space-y-6">
@@ -64,7 +75,7 @@ export function RouteGuard({
               size="md"
               className="w-full"
               withArrow
-              href={`${loginHref}?returnTo=${encodeURIComponent(pathname || "/")}`}
+              href={targetLink}
             >
               Sign In to Continue
             </Button>
@@ -101,7 +112,7 @@ export function RouteGuard({
               variant="primary"
               size="md"
               className="w-full !bg-[#171717] hover:!bg-[#262626] !text-[#FAF9F5]"
-              href={`/admin/login?returnTo=${encodeURIComponent(pathname || "/admin")}`}
+              href="/admin/login"
             >
               Sign In to Executive Terminal
             </Button>

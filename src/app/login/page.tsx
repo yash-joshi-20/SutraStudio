@@ -27,16 +27,41 @@ import { NotConfiguredState } from "@/components/ui/States";
 import { ArrowLeft, CheckCircle2, Lock, PlugZap, ShieldCheck } from "lucide-react";
 
 /** Only same-site, non-protocol-relative paths are ever honoured. */
-function safeReturnTo(raw: string | null): string {
-  if (!raw) return "/dashboard";
-  if (!raw.startsWith("/") || raw.startsWith("//") || raw.startsWith("/\\")) return "/dashboard";
-  return raw;
+function safeReturnTo(raw: string | null, userRole?: string): string {
+  const fallback = userRole === "admin" ? "/admin" : "/dashboard";
+  if (!raw) return fallback;
+  const trimmed = raw.trim();
+  if (!trimmed.startsWith("/") || trimmed.startsWith("//") || trimmed.startsWith("/\\")) {
+    return fallback;
+  }
+  if (
+    trimmed === "/login" ||
+    trimmed === "/register" ||
+    trimmed === "/admin/login" ||
+    trimmed.startsWith("/login?") ||
+    trimmed.startsWith("/register?") ||
+    trimmed.startsWith("/admin/login?")
+  ) {
+    return fallback;
+  }
+  if (userRole === "admin") {
+    return trimmed;
+  }
+  if (trimmed.startsWith("/admin")) {
+    return "/dashboard";
+  }
+  return trimmed;
 }
 
 function ClientLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const returnTo = safeReturnTo(searchParams?.get("returnTo") ?? null);
+  const rawParam =
+    searchParams?.get("returnTo") ||
+    searchParams?.get("redirect") ||
+    searchParams?.get("next") ||
+    searchParams?.get("callbackUrl") ||
+    null;
 
   const {
     loginWithEmail,
@@ -44,9 +69,12 @@ function ClientLoginForm() {
     register,
     requestPasswordReset,
     isAuthenticated,
+    role,
     isLoading: authLoading,
     configurationError,
   } = useAuth();
+
+  const returnTo = safeReturnTo(rawParam, role);
 
   const [mode, setMode] = useState<"signin" | "register">("signin");
   const [fullName, setFullName] = useState("");
@@ -71,9 +99,10 @@ function ClientLoginForm() {
   // An already-signed-in visitor has no business on this page.
   useEffect(() => {
     if (isAuthenticated && !authLoading) {
-      window.location.href = returnTo;
+      const destination = safeReturnTo(rawParam, role);
+      window.location.replace(destination);
     }
-  }, [isAuthenticated, authLoading, returnTo]);
+  }, [isAuthenticated, authLoading, rawParam, role]);
 
   if (configurationError) {
     return (
@@ -124,9 +153,10 @@ function ClientLoginForm() {
     setLoading(true);
     try {
       if (mode === "signin") {
-        await loginWithEmail(email, password, rememberMe);
+        const loggedIn = await loginWithEmail(email, password, rememberMe);
         setSuccessMsg("Welcome back. Opening your workspace…");
-        window.location.href = returnTo;
+        const destination = safeReturnTo(rawParam, loggedIn.role);
+        window.location.replace(destination);
         return;
       }
 
@@ -140,7 +170,7 @@ function ClientLoginForm() {
         acceptedPrivacy,
         marketingOptIn,
         rememberMe,
-        returnTo,
+        returnTo: safeReturnTo(rawParam, "client"),
       });
 
       setSuccessMsg(
@@ -152,7 +182,8 @@ function ClientLoginForm() {
         setMode("signin");
         setPassword("");
       } else {
-        window.location.href = returnTo;
+        const destination = safeReturnTo(rawParam, "client");
+        window.location.replace(destination);
       }
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Sign-in failed. Please try again.");
@@ -166,8 +197,9 @@ function ClientLoginForm() {
     setSuccessMsg("");
     setLoading(true);
     try {
-      await loginWithGoogle(true);
-      window.location.href = returnTo;
+      const loggedIn = await loginWithGoogle(true);
+      const destination = safeReturnTo(rawParam, loggedIn.role);
+      window.location.replace(destination);
     } catch (err) {
       setErrorMsg(
         err instanceof Error

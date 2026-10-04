@@ -354,8 +354,9 @@ export function computeProfileCompleteness(profile: Partial<UserProfile>): numbe
 
 export function safeReturnTo(value: unknown, fallback = "/dashboard"): string {
   if (typeof value !== "string") return fallback;
-  if (!value.startsWith("/") || value.startsWith("//")) return fallback;
-  if (value.startsWith("/admin")) return fallback;
-  if (value.startsWith("/login") || value.startsWith("/register")) return fallback;
-  return value;
+  const trimmed = value.trim();
+  if (!trimmed.startsWith("/") || trimmed.startsWith("//") || trimmed.startsWith("/\\")) return fallback;
+  if (trimmed === "/login" || trimmed === "/register" || trimmed === "/admin/login") return fallback;
+  if (trimmed.startsWith("/login?") || trimmed.startsWith("/register?") || trimmed.startsWith("/admin/login?")) return fallback;
+  return trimmed;
 }

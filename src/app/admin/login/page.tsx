@@ -20,6 +20,7 @@ import { SutraLogo, LotusSymbol } from "@/components/brand/SutraLogo";
 import { Button } from "@/components/ui/Button";
 import { TextField, FormAlert } from "@/components/ui/FormField";
 import { NotConfiguredState } from "@/components/ui/States";
+import { useAuth } from "@/lib/auth/authContext";
 import {
   getFirebaseAuth,
   firebaseClientConfigured,
@@ -33,15 +34,33 @@ const FIREBASE_NOT_CONFIGURED =
 
 function safeReturnTo(raw: string | null): string {
   if (!raw) return "/admin";
-  if (!raw.startsWith("/") || raw.startsWith("//") || raw.startsWith("/\\")) return "/admin";
-  // Admin routes only. Never bounce an admin to a client page.
-  return raw.startsWith("/admin") ? raw : "/admin";
+  const trimmed = raw.trim();
+  if (!trimmed.startsWith("/") || trimmed.startsWith("//") || trimmed.startsWith("/\\")) return "/admin";
+  if (
+    trimmed === "/admin/login" ||
+    trimmed === "/login" ||
+    trimmed === "/register" ||
+    trimmed.startsWith("/admin/login?") ||
+    trimmed.startsWith("/login?") ||
+    trimmed.startsWith("/register?")
+  ) {
+    return "/admin";
+  }
+  return trimmed.startsWith("/admin") ? trimmed : "/admin";
 }
 
 function AdminLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const returnTo = safeReturnTo(searchParams?.get("returnTo") ?? null);
+  const rawParam =
+    searchParams?.get("returnTo") ||
+    searchParams?.get("redirect") ||
+    searchParams?.get("next") ||
+    searchParams?.get("callbackUrl") ||
+    null;
+  const returnTo = safeReturnTo(rawParam);
+
+  const { isAuthenticated, role, isLoading: authLoading } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -54,6 +73,13 @@ function AdminLoginForm() {
     if (configured) void applyPersistence(true);
   }, [configured]);
 
+  // Already signed in as admin - redirect immediately
+  useEffect(() => {
+    if (isAuthenticated && !authLoading && role === "admin") {
+      window.location.replace(returnTo);
+    }
+  }, [isAuthenticated, authLoading, role, returnTo]);
+
   async function handleAdminSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrorMsg("");
@@ -64,12 +90,10 @@ function AdminLoginForm() {
 
     setLoading(true);
     try {
-      // 1. Prove the password with Firebase. This is the only credential check
-      //    that happens on the client, and it proves nothing about role.
+      // 1. Prove the password with Firebase.
       const cred = await signInWithEmailAndPassword(getFirebaseAuth(), email.trim(), password);
 
-      // 2. Hand the freshly-verified ID token to the server, which alone
-      //    decides whether this uid may enter the admin portal.
+      // 2. Hand the freshly-verified ID token to the server
       const res = await fetch("/api/auth/admin-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -84,8 +108,7 @@ function AdminLoginForm() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        // Sign out locally so a rejected admin does not keep a live Firebase
-        // session in the browser.
+        // Sign out locally so a rejected admin does not keep a live Firebase session
         await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(
           () => undefined
         );
@@ -99,7 +122,7 @@ function AdminLoginForm() {
       }
 
       // The server set an httpOnly session cookie carrying the admin role claim.
-      window.location.href = returnTo;
+      window.location.replace(returnTo);
     } catch (err) {
       const code = (err as { code?: string })?.code ?? "";
       setErrorMsg(
