@@ -98,15 +98,19 @@ export type EnvKey =
   | "N8N_WEBHOOK_SECRET"
   | "NEXT_PUBLIC_GA_MEASUREMENT_ID";
 
-import fs from "node:fs";
-import path from "node:path";
-
 let cachedDiskEnv: Record<string, string> | null = null;
 
 function getDiskEnv(): Record<string, string> {
+  if (typeof window !== "undefined") return {};
   if (cachedDiskEnv) return cachedDiskEnv;
   const map: Record<string, string> = {};
   try {
+    // Dynamic import to prevent Webpack client-side bundle errors
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require("fs");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require("path");
+
     const candidates = [
       path.resolve(process.cwd(), ".env.local"),
       path.resolve(process.cwd(), ".env"),
@@ -134,7 +138,9 @@ function getDiskEnv(): Record<string, string> {
     }
 
     // Also check secrets/sutra-studio-firebase-adminsdk.json if service account is used
-    const saPath = map["FIREBASE_SERVICE_ACCOUNT"] || path.resolve(process.cwd(), "secrets/sutra-studio-firebase-adminsdk.json");
+    const saPath =
+      map["FIREBASE_SERVICE_ACCOUNT"] ||
+      path.resolve(process.cwd(), "secrets/sutra-studio-firebase-adminsdk.json");
     if (fs.existsSync(saPath)) {
       try {
         const saData = JSON.parse(fs.readFileSync(saPath, "utf8"));
