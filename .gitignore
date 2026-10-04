@@ -88,6 +88,10 @@ secrets/
 *.tar.gz
 *.rar
 *.7z
+zips/
+zip-backups/
+backups/
 SutraStudio-Full.zip
 SutraStudio-Project.zip
+
 
