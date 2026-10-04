@@ -234,9 +234,7 @@ export function FloatingChatModal() {
 
   // Voice Input (Speech Recognition) & Voice Output (Text-to-Speech)
   const [isListening, setIsListening] = useState(false);
-  const [speechLang, setSpeechLang] = useState<"gu-IN" | "hi-IN" | "en-IN">("gu-IN");
   const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
-  const [autoSpeakReplies, setAutoSpeakReplies] = useState(false);
   const recognitionRef = useRef<any>(null);
 
   // Clean raw markdown text for natural voice speech synthesis
@@ -250,7 +248,7 @@ export function FloatingChatModal() {
       .trim();
   };
 
-  // Text-to-Speech handler
+  // Text-to-Speech handler (Gemini-style per message voice synthesis)
   const handleSpeakMessage = (msgId: string, text: string) => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
       alert("Text-to-speech is not supported in this browser.");
@@ -269,28 +267,27 @@ export function FloatingChatModal() {
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
     
-    // Select Indian English, Gujarati or Hindi voice if available
+    // Auto detect language from content
+    const isGujarati = /[\u0A80-\u0AFF]/.test(cleanText);
+    const isHindi = /[\u0900-\u097F]/.test(cleanText);
+
     const voices = window.speechSynthesis.getVoices();
     const guVoice = voices.find((v) => v.lang.includes("gu") || v.name.toLowerCase().includes("gujarati"));
     const hiVoice = voices.find((v) => v.lang.includes("hi") || v.name.toLowerCase().includes("hindi"));
     const inVoice = voices.find((v) => v.lang.includes("en-IN") || v.name.toLowerCase().includes("india"));
-    
-    // Auto detect language
-    const isGujarati = /[\u0A80-\u0AFF]/.test(cleanText);
-    const isHindi = /[\u0900-\u097F]/.test(cleanText);
 
-    if (isGujarati && guVoice) {
-      utterance.voice = guVoice;
+    if (isGujarati) {
+      if (guVoice) utterance.voice = guVoice;
       utterance.lang = "gu-IN";
-    } else if (isHindi && hiVoice) {
-      utterance.voice = hiVoice;
+    } else if (isHindi) {
+      if (hiVoice) utterance.voice = hiVoice;
       utterance.lang = "hi-IN";
-    } else if (inVoice) {
-      utterance.voice = inVoice;
+    } else {
+      if (inVoice) utterance.voice = inVoice;
       utterance.lang = "en-IN";
     }
 
-    utterance.rate = 1.0;
+    utterance.rate = 0.95;
     utterance.pitch = 1.0;
 
     utterance.onstart = () => setSpeakingMsgId(msgId);
@@ -318,7 +315,7 @@ export function FloatingChatModal() {
 
     try {
       const recognition = new SpeechRecognition();
-      recognition.lang = speechLang;
+      recognition.lang = "gu-IN";
       recognition.continuous = false;
       recognition.interimResults = true;
 
@@ -558,9 +555,6 @@ export function FloatingChatModal() {
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setMessages((prev) => [...prev, botMsg]);
-      if (autoSpeakReplies && botMsg.text) {
-        handleSpeakMessage(botMsg.id, botMsg.text);
-      }
     } catch {
       try {
         const fallbackRes = await fetch("/api/chatbot", {
@@ -577,9 +571,6 @@ export function FloatingChatModal() {
           time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         };
         setMessages((prev) => [...prev, fallbackMsg]);
-        if (autoSpeakReplies && fallbackMsg.text) {
-          handleSpeakMessage(fallbackMsg.id, fallbackMsg.text);
-        }
       } catch {
         const errMsg: ChatMessage = {
           id: `err_${Date.now()}`,
@@ -588,9 +579,6 @@ export function FloatingChatModal() {
           time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         };
         setMessages((prev) => [...prev, errMsg]);
-        if (autoSpeakReplies && errMsg.text) {
-          handleSpeakMessage(errMsg.id, errMsg.text);
-        }
       }
     } finally {
       setIsLoading(false);
@@ -689,7 +677,7 @@ export function FloatingChatModal() {
             className="fixed bottom-4 right-4 z-[var(--z-modal)] w-[calc(100vw-2rem)] sm:w-[420px] h-[580px] max-h-[calc(100vh-2rem)] bg-[#FAF9F5] border border-[#E5E1D8] rounded-3xl shadow-2xl flex flex-col overflow-hidden text-[#171717]"
           >
             {/* Header */}
-            <div className="px-4 py-3.5 bg-[#171717] text-[#FAF9F5] flex items-center justify-between border-b border-[#A98B57]/30 shrink-0">
+            <div className="px-4 py-3 bg-[#171717] text-[#FAF9F5] flex items-center justify-between border-b border-[#A98B57]/30 shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-full overflow-hidden border border-[#A98B57]/60 flex items-center justify-center shrink-0 bg-[#262626] shadow-xs">
                   <img
@@ -709,41 +697,11 @@ export function FloatingChatModal() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5">
-                {/* Voice recognition / response language selector */}
-                <div className="relative flex items-center">
-                  <select
-                    value={speechLang}
-                    onChange={(e) => setSpeechLang(e.target.value as any)}
-                    title="Voice Recognition Language (Microphone)"
-                    className="text-[10px] bg-[#262626] text-[#D4A35A] border border-[#A98B57]/40 rounded-lg px-2 py-1 focus:outline-none cursor-pointer"
-                  >
-                    <option value="gu-IN">ગુજરાતી (GU)</option>
-                    <option value="hi-IN">हिंदी (HI)</option>
-                    <option value="en-IN">English (IN)</option>
-                  </select>
-                </div>
-
-                {/* Auto-Voice Speak toggle */}
-                <button
-                  onClick={() => {
-                    const next = !autoSpeakReplies;
-                    setAutoSpeakReplies(next);
-                    if (!next && speakingMsgId) handleStopSpeaking();
-                  }}
-                  title={autoSpeakReplies ? "Auto-speak replies is ON (Click to turn off)" : "Auto-speak replies is OFF (Click to speak responses)"}
-                  className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                    autoSpeakReplies
-                      ? "text-[#D4A35A] bg-[#262626] ring-1 ring-[#D4A35A]/50"
-                      : "text-[#94A3B8] hover:text-[#FAF9F5] hover:bg-[#262626]"
-                  }`}
-                >
-                  {autoSpeakReplies ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
-                </button>
-
+              <div className="flex items-center gap-1">
                 <button
                   onClick={handleClearChat}
                   title="Clear chat"
+                  aria-label="Clear chat"
                   className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#FAF9F5] hover:bg-[#262626] transition-colors cursor-pointer"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
@@ -751,6 +709,7 @@ export function FloatingChatModal() {
                 <button
                   onClick={() => setIsOpen(false)}
                   title="Close chat"
+                  aria-label="Close chat"
                   className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#FAF9F5] hover:bg-[#262626] transition-colors cursor-pointer"
                 >
                   <X className="w-4 h-4" />
@@ -878,34 +837,48 @@ export function FloatingChatModal() {
                         </div>
                       )}
 
-                      {/* Speaker & Copy Actions */}
+                      {/* Speaker & Copy Actions (Gemini-style inline action toolbar) */}
                       {isBot && (
-                        <div className="absolute -right-14 top-1 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="mt-2.5 pt-1.5 border-t border-[#E5E1D8]/60 flex items-center gap-1.5 text-[11px] text-[#64748B]">
                           <button
+                            type="button"
                             onClick={() => handleSpeakMessage(msg.id, msg.text)}
-                            title={speakingMsgId === msg.id ? "Stop voice playback" : "Listen to audio response"}
-                            className={`p-1 rounded-md transition-colors cursor-pointer ${
+                            title={speakingMsgId === msg.id ? "Stop voice playback" : "Read aloud (Voice)"}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md transition-all cursor-pointer select-none ${
                               speakingMsgId === msg.id
-                                ? "text-[#A98B57] bg-[#FAF9F5] ring-1 ring-[#A98B57]/40 shadow-xs"
-                                : "text-[#94A3B8] hover:text-[#171717]"
+                                ? "bg-[#5C3A1E] text-[#FAF9F5] font-medium shadow-xs"
+                                : "bg-[#FAF9F5] border border-[#E5E1D8] hover:bg-[#F4F1EA] hover:text-[#171717] text-[#5C3A1E]"
                             }`}
                           >
                             {speakingMsgId === msg.id ? (
-                              <VolumeX className="w-3.5 h-3.5 text-[#DC2626] animate-pulse" />
+                              <>
+                                <VolumeX className="w-3 h-3 text-[#D4A35A] animate-pulse" />
+                                <span className="text-[10px]">Stop Audio</span>
+                              </>
                             ) : (
-                              <Volume2 className="w-3.5 h-3.5" />
+                              <>
+                                <Volume2 className="w-3 h-3 text-[#A98B57]" />
+                                <span className="text-[10px]">Read Aloud</span>
+                              </>
                             )}
                           </button>
 
                           <button
+                            type="button"
                             onClick={() => handleCopy(msg.id, msg.text)}
                             title="Copy response"
-                            className="p-1 text-[#94A3B8] hover:text-[#171717] transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#FAF9F5] border border-[#E5E1D8] hover:bg-[#F4F1EA] hover:text-[#171717] text-[#5C3A1E] transition-all cursor-pointer select-none"
                           >
                             {copiedId === msg.id ? (
-                              <Check className="w-3.5 h-3.5 text-[#2E7D4F]" />
+                              <>
+                                <Check className="w-3 h-3 text-[#2E7D4F]" />
+                                <span className="text-[10px] text-[#2E7D4F] font-medium">Copied</span>
+                              </>
                             ) : (
-                              <Copy className="w-3.5 h-3.5" />
+                              <>
+                                <Copy className="w-3 h-3 text-[#A98B57]" />
+                                <span className="text-[10px]">Copy</span>
+                              </>
                             )}
                           </button>
                         </div>
@@ -945,17 +918,17 @@ export function FloatingChatModal() {
             <div className="p-3 bg-white border-t border-[#E5E1D8] shrink-0">
               {/* Listening Active Banner */}
               {isListening && (
-                <div className="mb-2 px-3 py-1.5 rounded-xl bg-[#FEF2F2] border border-[#FECACA] flex items-center justify-between text-xs text-[#991B1B] animate-pulse">
+                <div className="mb-2 px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#A98B57]/40 flex items-center justify-between text-xs text-[#5C3A1E] shadow-2xs">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-[#DC2626] animate-ping" />
-                    <span className="font-medium text-[11px]">
-                      Listening in {speechLang === "gu-IN" ? "ગુજરાતી" : speechLang === "hi-IN" ? "हिंदी" : "English"}... Speak now
+                    <span className="font-medium text-[11px] text-[#171717]">
+                      Listening... Speak in ગુજરાતી, English or Hindi
                     </span>
                   </div>
                   <button
                     type="button"
                     onClick={stopListening}
-                    className="text-[10px] font-semibold underline text-[#DC2626] hover:text-[#7F1D1D] cursor-pointer"
+                    className="text-[10px] font-bold text-[#5C3A1E] hover:text-[#171717] px-2 py-0.5 rounded bg-white border border-[#E5E1D8] cursor-pointer"
                   >
                     Done
                   </button>
@@ -1015,7 +988,7 @@ export function FloatingChatModal() {
                 <button
                   type="button"
                   onClick={toggleListening}
-                  title={isListening ? "Stop voice listening" : `Voice Input (${speechLang === "gu-IN" ? "ગુજરાતી" : speechLang === "hi-IN" ? "हिंदी" : "English"})`}
+                  title={isListening ? "Stop voice listening" : "Voice Input (Microphone)"}
                   className={`p-2.5 rounded-xl border transition-all cursor-pointer shadow-2xs shrink-0 ${
                     isListening
                       ? "bg-[#DC2626] border-[#DC2626] text-white animate-pulse ring-2 ring-[#DC2626]/40"
@@ -1033,7 +1006,7 @@ export function FloatingChatModal() {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask in English or ગુજરાતી, or click mic to speak..."
+                  placeholder="Ask in English, ગુજરાતી or हिंदी, or click mic..."
                   className="flex-1 min-h-[44px] bg-[#FAF9F5] border border-[#E5E1D8] rounded-xl px-3.5 py-2 text-base sm:text-xs text-[#171717] placeholder:text-[#94A3B8] focus:outline-none focus:bg-white focus:border-[#A98B57] focus:ring-1 focus:ring-[#A98B57] transition-all"
                 />
 
