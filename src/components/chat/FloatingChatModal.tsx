@@ -780,12 +780,12 @@ export function FloatingChatModal() {
             </div>
 
             {/* Quick Action Chips */}
-            <div className="px-3 py-2 bg-white/60 border-b border-[#E5E1D8] flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+            <div className="px-3 py-2 bg-white/80 border-b border-[#E5E1D8] flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
               {QUICK_ACTIONS.map((action, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleSendMessage(action.query)}
-                  className="px-2.5 py-1 rounded-full bg-white border border-[#E5E1D8] hover:border-[#A98B57] hover:bg-[#FAF9F5] text-[11px] text-[#5C3A1E] font-medium whitespace-nowrap transition-all shadow-2xs cursor-pointer"
+                  className="px-2.5 py-1 rounded-full bg-white border border-[#E5E1D8] hover:border-[#A98B57] hover:bg-[#FAF9F5] text-[11px] text-[#5C3A1E] font-medium whitespace-nowrap transition-all shadow-2xs cursor-pointer shrink-0"
                 >
                   {action.label}
                 </button>
@@ -1024,7 +1024,7 @@ export function FloatingChatModal() {
                   e.preventDefault();
                   handleSendMessage();
                 }}
-                className="flex items-center gap-1.5"
+                className="flex items-center gap-1.5 w-full"
               >
                 {/* Hidden file input */}
                 <input
@@ -1041,7 +1041,8 @@ export function FloatingChatModal() {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   title="Attach images or brief files"
-                  className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-[#5C3A1E] hover:bg-[#F4F1EA] hover:border-[#A98B57] transition-all cursor-pointer shadow-2xs shrink-0"
+                  aria-label="Attach file"
+                  className="p-2 sm:p-2.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-[#5C3A1E] hover:bg-[#F4F1EA] hover:border-[#A98B57] transition-all cursor-pointer shadow-2xs shrink-0 flex items-center justify-center"
                 >
                   <Paperclip className="w-4 h-4 text-[#A98B57]" />
                 </button>
@@ -1051,7 +1052,8 @@ export function FloatingChatModal() {
                   type="button"
                   onClick={toggleListening}
                   title={isListening ? "Stop voice listening" : "Voice Input (Microphone)"}
-                  className={`p-2.5 rounded-xl border transition-all cursor-pointer shadow-2xs shrink-0 ${
+                  aria-label="Voice input"
+                  className={`p-2 sm:p-2.5 rounded-xl border transition-all cursor-pointer shadow-2xs shrink-0 flex items-center justify-center ${
                     isListening
                       ? "bg-[#DC2626] border-[#DC2626] text-white animate-pulse ring-2 ring-[#DC2626]/40"
                       : "bg-[#FAF9F5] border-[#E5E1D8] text-[#5C3A1E] hover:bg-[#F4F1EA] hover:border-[#A98B57]"
@@ -1068,15 +1070,15 @@ export function FloatingChatModal() {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask in English, ગુજરાતી or हिंदी, or click mic..."
-                  className="flex-1 min-h-[44px] bg-[#FAF9F5] border border-[#E5E1D8] rounded-xl px-3.5 py-2 text-base sm:text-xs text-[#171717] placeholder:text-[#94A3B8] focus:outline-none focus:bg-white focus:border-[#A98B57] focus:ring-1 focus:ring-[#A98B57] transition-all"
+                  placeholder="Ask in English, ગુજરાતી or हिंदी..."
+                  className="flex-1 min-w-0 min-h-[42px] bg-[#FAF9F5] border border-[#E5E1D8] rounded-xl px-3 py-2 text-xs sm:text-xs text-[#171717] placeholder:text-[#94A3B8] placeholder:truncate focus:outline-none focus:bg-white focus:border-[#A98B57] focus:ring-1 focus:ring-[#A98B57] transition-all"
                 />
 
                 <button
                   type="submit"
                   disabled={(!input.trim() && attachments.length === 0) || isLoading}
                   aria-label="Send message"
-                  className="p-2.5 rounded-xl bg-[#5C3A1E] text-white hover:bg-[#432A15] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shadow-xs shrink-0"
+                  className="p-2 sm:p-2.5 rounded-xl bg-[#5C3A1E] text-white hover:bg-[#432A15] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shadow-xs shrink-0 flex items-center justify-center"
                 >
                   <Send className="w-4 h-4 text-[#D4A35A]" />
                 </button>
