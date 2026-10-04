@@ -70,8 +70,10 @@ function ClientLoginForm() {
 
   // An already-signed-in visitor has no business on this page.
   useEffect(() => {
-    if (isAuthenticated && !authLoading) router.replace(returnTo);
-  }, [isAuthenticated, authLoading, router, returnTo]);
+    if (isAuthenticated && !authLoading) {
+      window.location.href = returnTo;
+    }
+  }, [isAuthenticated, authLoading, returnTo]);
 
   if (configurationError) {
     return (

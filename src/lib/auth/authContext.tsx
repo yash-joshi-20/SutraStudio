@@ -142,34 +142,37 @@ async function postJson(url: string, body: unknown) {
   return data as Record<string, unknown>;
 }
 
-function friendlyAuthError(code: string): string {
-  switch (code) {
-    case "auth/invalid-credential":
-    case "auth/wrong-password":
-    case "auth/user-not-found":
-      return "That email and password combination is not correct.";
-    case "auth/invalid-email":
-      return "Enter a valid email address.";
-    case "auth/email-already-in-use":
-      return "An account with that email already exists. Try signing in instead.";
-    case "auth/weak-password":
-      return "Choose a stronger password — at least 8 characters with a letter and a number.";
-    case "auth/too-many-requests":
-      return "Too many attempts. Please wait a minute and try again.";
-    case "auth/network-request-failed":
-      return "Network problem. Check your connection and try again.";
-    case "auth/popup-closed-by-user":
-    case "auth/cancelled-popup-request":
-      return "Google sign-in was cancelled.";
-    case "auth/popup-blocked":
-      return "Your browser blocked the sign-in popup. Allow popups and try again.";
-    case "auth/account-exists-with-different-credential":
-      return "That email is already registered with a different sign-in method.";
-    case "auth/requires-recent-login":
-      return "For security, please sign in again before making this change.";
-    default:
-      return "We could not complete that. Please try again.";
+function friendlyAuthError(code?: string, fallbackMessage?: string): string {
+  if (code) {
+    switch (code) {
+      case "auth/invalid-credential":
+      case "auth/wrong-password":
+      case "auth/user-not-found":
+        return "That email and password combination is not correct.";
+      case "auth/invalid-email":
+        return "Enter a valid email address.";
+      case "auth/email-already-in-use":
+        return "An account with that email already exists. Try signing in instead.";
+      case "auth/weak-password":
+        return "Choose a stronger password — at least 8 characters with a letter and a number.";
+      case "auth/too-many-requests":
+        return "Too many attempts. Please wait a minute and try again.";
+      case "auth/network-request-failed":
+        return "Network problem. Check your connection and try again.";
+      case "auth/popup-closed-by-user":
+      case "auth/cancelled-popup-request":
+        return "Google sign-in was cancelled.";
+      case "auth/popup-blocked":
+        return "Your browser blocked the sign-in popup. Allow popups and try again.";
+      case "auth/account-exists-with-different-credential":
+        return "That email is already registered with a different sign-in method.";
+      case "auth/requires-recent-login":
+        return "For security, please sign in again before making this change.";
+    }
   }
+  return fallbackMessage && fallbackMessage !== "[object Object]"
+    ? fallbackMessage
+    : "Sign-in could not be completed. Please check your credentials and try again.";
 }
 
 function toAuthUser(fbUser: {
@@ -339,8 +342,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsSessionStale(false);
         void refreshProfile();
         return next;
-      } catch (err) {
-        throw new Error(friendlyAuthError((err as { code?: string })?.code ?? ""));
+      } catch (err: any) {
+        throw new Error(friendlyAuthError(err?.code, err?.message));
       }
     },
     [configurationError, establishServerSession, refreshProfile]
@@ -382,8 +385,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsSessionStale(false);
         void refreshProfile();
         return next;
-      } catch (err) {
-        throw new Error(friendlyAuthError((err as { code?: string })?.code ?? ""));
+      } catch (err: any) {
+        throw new Error(friendlyAuthError(err?.code, err?.message));
       }
     },
     [configurationError, establishServerSession, refreshProfile]
@@ -400,8 +403,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           input.email.trim(),
           input.password
         );
-      } catch (err) {
-        throw new Error(friendlyAuthError((err as { code?: string })?.code ?? ""));
+      } catch (err: any) {
+        throw new Error(friendlyAuthError(err?.code, err?.message));
       }
 
       const email = input.email.trim();
