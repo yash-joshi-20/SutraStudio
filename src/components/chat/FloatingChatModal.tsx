@@ -248,7 +248,19 @@ export function FloatingChatModal() {
       .trim();
   };
 
-  // Text-to-Speech handler (Gemini-style per message voice synthesis)
+  // Preload speech synthesis voices
+  useEffect(() => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.getVoices();
+      const onVoices = () => {
+        window.speechSynthesis.getVoices();
+      };
+      window.speechSynthesis.addEventListener("voiceschanged", onVoices);
+      return () => window.speechSynthesis.removeEventListener("voiceschanged", onVoices);
+    }
+  }, []);
+
+  // Text-to-Speech handler (Gemini-style per message female voice synthesis)
   const handleSpeakMessage = (msgId: string, text: string) => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
       alert("Text-to-speech is not supported in this browser.");
@@ -266,15 +278,60 @@ export function FloatingChatModal() {
     if (!cleanText) return;
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
-    
+
     // Auto detect language from content
     const isGujarati = /[\u0A80-\u0AFF]/.test(cleanText);
     const isHindi = /[\u0900-\u097F]/.test(cleanText);
 
     const voices = window.speechSynthesis.getVoices();
-    const guVoice = voices.find((v) => v.lang.includes("gu") || v.name.toLowerCase().includes("gujarati"));
-    const hiVoice = voices.find((v) => v.lang.includes("hi") || v.name.toLowerCase().includes("hindi"));
-    const inVoice = voices.find((v) => v.lang.includes("en-IN") || v.name.toLowerCase().includes("india"));
+
+    const isFemaleName = (v: SpeechSynthesisVoice) => {
+      const name = v.name.toLowerCase();
+      return (
+        name.includes("female") ||
+        name.includes("woman") ||
+        name.includes("neerja") ||
+        name.includes("priya") ||
+        name.includes("swara") ||
+        name.includes("ananya") ||
+        name.includes("heera") ||
+        name.includes("kavya") ||
+        name.includes("veena") ||
+        name.includes("aditi") ||
+        name.includes("kalpana") ||
+        name.includes("disha") ||
+        name.includes("radha") ||
+        name.includes("zira") ||
+        name.includes("aria") ||
+        name.includes("jenny") ||
+        name.includes("samantha") ||
+        name.includes("victoria") ||
+        name.includes("natural") ||
+        name.includes("online")
+      );
+    };
+
+    // Filter regional voices prioritizing female names
+    const guVoices = voices.filter(
+      (v) => v.lang.toLowerCase().startsWith("gu") || v.name.toLowerCase().includes("gujarati")
+    );
+    const guVoice = guVoices.find(isFemaleName) || guVoices[0];
+
+    const hiVoices = voices.filter(
+      (v) => v.lang.toLowerCase().startsWith("hi") || v.name.toLowerCase().includes("hindi")
+    );
+    const hiVoice = hiVoices.find(isFemaleName) || hiVoices[0];
+
+    const inVoices = voices.filter(
+      (v) =>
+        v.lang.toLowerCase().includes("en-in") ||
+        (v.lang.toLowerCase().startsWith("en") && v.name.toLowerCase().includes("india"))
+    );
+    const inFemaleVoice = inVoices.find(isFemaleName) || inVoices[0];
+
+    const fallbackFemaleVoice =
+      voices.find((v) => v.lang.toLowerCase().startsWith("en") && isFemaleName(v)) ||
+      voices.find(isFemaleName);
 
     if (isGujarati) {
       if (guVoice) utterance.voice = guVoice;
@@ -283,12 +340,17 @@ export function FloatingChatModal() {
       if (hiVoice) utterance.voice = hiVoice;
       utterance.lang = "hi-IN";
     } else {
-      if (inVoice) utterance.voice = inVoice;
+      if (inFemaleVoice) {
+        utterance.voice = inFemaleVoice;
+      } else if (fallbackFemaleVoice) {
+        utterance.voice = fallbackFemaleVoice;
+      }
       utterance.lang = "en-IN";
     }
 
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
+    // Warm, soothing natural female concierge pitch and pace
+    utterance.rate = 0.94;
+    utterance.pitch = 1.08;
 
     utterance.onstart = () => setSpeakingMsgId(msgId);
     utterance.onend = () => setSpeakingMsgId(null);
