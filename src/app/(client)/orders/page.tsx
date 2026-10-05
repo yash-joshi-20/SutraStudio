@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 import { PortalSidebar } from "@/components/dashboard/PortalSidebar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
@@ -563,14 +563,16 @@ export default function OrdersPage() {
     return orders;
   }, [activeFilterTab, activeOrders, historyOrders, orders]);
 
-  // Auto-Save Draft Debounced to Firebase
-  useEffect(() => {
-    if (!isNewOrderOpen || flowStep === "choose_type" || flowStep === "success") return;
-    const timeout = setTimeout(async () => {
+  // Auto-Save Draft Debounced to Firebase (Silent background sync without disrupting typing)
+  const isSavingDraftRef = useRef(false);
+  const saveDraftToCloud = useCallback(
+    async (silent = true) => {
       try {
-        setDraftStatus("Saving draft...");
         const clientUid = user?.uid || "";
-        if (!clientUid) return;
+        if (!clientUid || isSavingDraftRef.current) return;
+        isSavingDraftRef.current = true;
+        if (!silent) setDraftStatus("Saving draft...");
+
         await fetch("/api/orders/drafts", {
           method: "POST",
           headers: {
@@ -592,32 +594,42 @@ export default function OrdersPage() {
             uploadedFiles,
           }),
         });
-        setDraftStatus("Draft auto-saved to cloud");
         setHasSavedDraft(true);
-        setTimeout(() => setDraftStatus(""), 3000);
+        if (!silent) {
+          setDraftStatus("Draft saved");
+          setTimeout(() => setDraftStatus(""), 2000);
+        }
       } catch {
-        setDraftStatus("");
+        if (!silent) setDraftStatus("");
+      } finally {
+        isSavingDraftRef.current = false;
       }
-    }, 1200);
+    },
+    [
+      user?.uid,
+      orderType,
+      selectedServices,
+      selectedPlanId,
+      billingCycle,
+      commissionTitle,
+      requirements,
+      briefAnswers,
+      preferredTimeline,
+      targetKickoffDate,
+      clientContact,
+      driveLink,
+      uploadedFiles,
+    ]
+  );
+
+  useEffect(() => {
+    if (!isNewOrderOpen || flowStep === "choose_type" || flowStep === "success") return;
+    const timeout = setTimeout(() => {
+      saveDraftToCloud(true);
+    }, 2500);
 
     return () => clearTimeout(timeout);
-  }, [
-    isNewOrderOpen,
-    flowStep,
-    orderType,
-    selectedServices,
-    selectedPlanId,
-    billingCycle,
-    commissionTitle,
-    requirements,
-    briefAnswers,
-    preferredTimeline,
-    targetKickoffDate,
-    clientContact,
-    driveLink,
-    uploadedFiles,
-    user,
-  ]);
+  }, [isNewOrderOpen, flowStep, saveDraftToCloud]);
 
   // Handle toggling / selecting an individual service
   const handleToggleService = (srvId: string) => {
@@ -2213,11 +2225,15 @@ export default function OrdersPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {draftStatus && (
-                      <span className="text-[10px] text-[#A98B57] font-medium animate-pulse">
-                        {draftStatus}
-                      </span>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => saveDraftToCloud(false)}
+                      className="text-[11px] font-medium text-[#5C3A1E] px-2.5 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] hover:bg-[#F4EFE6] hover:border-[#D4A35A] transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                      title="Save current progress as draft"
+                    >
+                      <HardDrive className="w-3.5 h-3.5 text-[#A98B57]" />
+                      <span>{draftStatus || "Save Draft"}</span>
+                    </button>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -2489,16 +2505,27 @@ export default function OrdersPage() {
                       Upload reference moodboards, CAD models, product photos, or paste a Google Drive folder URL.
                     </p>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      setFlowStep(orderType === "service" ? "service_details" : "plan_details")
-                    }
-                    leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
-                  >
-                    Back to Brief
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => saveDraftToCloud(false)}
+                      className="text-[11px] font-medium text-[#5C3A1E] px-2.5 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] hover:bg-[#F4EFE6] hover:border-[#D4A35A] transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                      title="Save current progress as draft"
+                    >
+                      <HardDrive className="w-3.5 h-3.5 text-[#A98B57]" />
+                      <span>{draftStatus || "Save Draft"}</span>
+                    </button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        setFlowStep(orderType === "service" ? "service_details" : "plan_details")
+                      }
+                      leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
+                    >
+                      Back to Brief
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Required Assets Hints for this Service */}
