@@ -25,8 +25,10 @@ export interface FirebaseClientConfig {
   apiKey: string;
   authDomain: string;
   projectId: string;
+  storageBucket?: string;
   messagingSenderId: string;
   appId: string;
+  measurementId?: string;
 }
 
 let app: FirebaseApp | null = null;
@@ -61,8 +63,10 @@ export function getFirebaseClient() {
     apiKey: readPublicEnv("NEXT_PUBLIC_FIREBASE_API_KEY" as EnvKey),
     authDomain: readPublicEnv("NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN" as EnvKey),
     projectId: readPublicEnv("NEXT_PUBLIC_FIREBASE_PROJECT_ID" as EnvKey),
+    storageBucket: readPublicEnv("NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET" as EnvKey),
     messagingSenderId: readPublicEnv("NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID" as EnvKey),
     appId: readPublicEnv("NEXT_PUBLIC_FIREBASE_APP_ID" as EnvKey),
+    measurementId: readPublicEnv("NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID" as EnvKey),
   };
 
   app = getApps()[0] ?? initializeApp(config);
