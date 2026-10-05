@@ -21,13 +21,10 @@ import { Button } from "@/components/ui/Button";
 import { TextField, FormAlert } from "@/components/ui/FormField";
 import { NotConfiguredState } from "@/components/ui/States";
 import { useAuth } from "@/lib/auth/authContext";
-import {
-  getFirebaseAuth,
-  firebaseClientConfigured,
-  applyPersistence,
-} from "@/lib/firebase/client";
+import { Modal } from "@/components/ui/Modal";
+import { getFirebaseAuth, firebaseClientConfigured, applyPersistence } from "@/lib/firebase/client";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { ArrowLeft, ArrowRight, ShieldCheck, Terminal } from "lucide-react";
+import { ArrowLeft, ArrowRight, ShieldCheck, Terminal, CheckCircle2 } from "lucide-react";
 
 const FIREBASE_NOT_CONFIGURED =
   "Firebase is not configured. Missing environment key(s): NEXT_PUBLIC_FIREBASE_API_KEY, NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN, NEXT_PUBLIC_FIREBASE_PROJECT_ID.";
@@ -60,12 +57,17 @@ function AdminLoginForm() {
     null;
   const returnTo = safeReturnTo(rawParam);
 
-  const { isAuthenticated, role, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, role, isLoading: authLoading, requestPasswordReset } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetNotice, setResetNotice] = useState("");
 
   const configured = firebaseClientConfigured();
 
@@ -135,6 +137,25 @@ function AdminLoginForm() {
               : "Access denied: administrative clearance required."
       );
       setLoading(false);
+    }
+  }
+
+  async function handlePasswordReset(e: React.FormEvent) {
+    e.preventDefault();
+    setResetNotice("");
+    if (!resetEmail.trim()) return;
+    setResetLoading(true);
+    try {
+      const message = await requestPasswordReset(resetEmail.trim());
+      setResetNotice(message);
+    } catch (err) {
+      setResetNotice(
+        err instanceof Error
+          ? err.message
+          : "We could not send a reset email. Please try again shortly."
+      );
+    } finally {
+      setResetLoading(false);
     }
   }
 
@@ -213,16 +234,29 @@ function AdminLoginForm() {
             disabled={loading}
           />
 
-          <TextField
-            label="Security Passkey"
-            required
-            type="password"
-            value={password}
-            onChange={setPassword}
-            placeholder="••••••••••••"
-            autoComplete="current-password"
-            disabled={loading}
-          />
+          <div>
+            <TextField
+              label="Security Passkey"
+              required
+              type="password"
+              value={password}
+              onChange={setPassword}
+              placeholder="••••••••••••"
+              autoComplete="current-password"
+              disabled={loading}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setResetEmail(email);
+                setResetNotice("");
+                setForgotOpen(true);
+              }}
+              className="mt-1.5 cursor-pointer text-[11px] font-medium text-[#5C3A1E] hover:underline"
+            >
+              Forgot passkey?
+            </button>
+          </div>
 
           <div className="pt-3">
             <Button
@@ -245,6 +279,53 @@ function AdminLoginForm() {
           </p>
         </div>
       </div>
+
+      <Modal isOpen={forgotOpen} onClose={() => setForgotOpen(false)} title="Reset Passkey">
+        <div className="space-y-4 pt-1">
+          {resetNotice ? (
+            <div className="space-y-3 py-4 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-[#BBF7D0] bg-[#F0FDF4] text-[#16A34A]">
+                <CheckCircle2 className="w-6 h-6" aria-hidden="true" />
+              </div>
+              <h4 className="font-serif text-base font-bold text-[#0F172A]">Check your inbox</h4>
+              <p className="text-xs leading-relaxed text-[#64748B] break-anywhere">{resetNotice}</p>
+              <Button
+                variant="primary"
+                size="sm"
+                className="mt-2 w-full !bg-[#171717] !text-[#FAF9F5] hover:!bg-[#262626] border-transparent"
+                onClick={() => setForgotOpen(false)}
+              >
+                Back to Sign In
+              </Button>
+            </div>
+          ) : (
+            <form onSubmit={handlePasswordReset} noValidate className="space-y-4">
+              <p className="text-xs leading-relaxed text-[#64748B]">
+                Enter your administrator email address. We will send a secure link to reset your passkey.
+              </p>
+              <TextField
+                label="Email Address"
+                required
+                type="email"
+                inputMode="email"
+                value={resetEmail}
+                onChange={setResetEmail}
+                placeholder="Enter your email"
+                disabled={resetLoading}
+              />
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                className="w-full justify-center !bg-[#171717] !text-[#FAF9F5] hover:!bg-[#262626] border-transparent"
+                isLoading={resetLoading}
+              >
+                Send Reset Link
+              </Button>
+            </form>
+          )}
+        </div>
+      </Modal>
     </Shell>
   );
 }
