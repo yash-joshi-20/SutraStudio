@@ -323,23 +323,13 @@ export default function MediaLibraryPage() {
                 <div className="flex items-center gap-2">
                   <HardDrive className="w-4 h-4 text-[#5C3A1E]" />
                   <h4 className="font-serif text-base font-semibold text-[#0F172A]">
-                    Cloud Vault: 4.8 GB of 50 GB Used
+                    Cloud Vault Connected
                   </h4>
                   <Badge variant="completed" size="sm">
                     Synced & Healthy
                   </Badge>
                 </div>
-                <p className="text-xs text-[#64748B] mt-1">
-                  Private Google Drive workspace directory:{" "}
-                  <code className="px-1.5 py-0.5 rounded bg-[#FAF9F5] border border-[#EADFCB] text-[11px] font-mono text-[#5C3A1E]">
-                    drive_fld_sutra_001
-                  </code>
-                </p>
               </div>
-              <span className="text-xs font-mono font-bold text-[#5C3A1E]">9.6% Allocated</span>
-            </div>
-            <div className="w-full h-2 rounded-full bg-[#EADFCB]/50 overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-[#D4A35A] to-[#5C3A1E] rounded-full w-[9.6%]" />
             </div>
           </div>
 

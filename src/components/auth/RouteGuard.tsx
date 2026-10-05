@@ -28,13 +28,19 @@ export function RouteGuard({
         if (currentPath === "/login" || currentPath === "/register" || currentPath === "/admin/login") {
           return;
         }
-        if (currentPath === "/dashboard" || currentPath === "/admin" || currentPath === "/") {
-          router.push(targetLogin);
-        } else {
-          router.push(`${targetLogin}?returnTo=${encodeURIComponent(currentPath)}`);
-        }
+        const timer = setTimeout(() => {
+          if (currentPath === "/dashboard" || currentPath === "/admin" || currentPath === "/") {
+            router.push(targetLogin);
+          } else {
+            router.push(`${targetLogin}?returnTo=${encodeURIComponent(currentPath)}`);
+          }
+        }, 150);
+        return () => clearTimeout(timer);
       } else if (requiredRole === "admin" && role !== "admin") {
-        router.push("/admin/login");
+        const timer = setTimeout(() => {
+          router.push("/admin/login");
+        }, 150);
+        return () => clearTimeout(timer);
       }
     }
   }, [isLoading, isAuthenticated, role, requiredRole, pathname, router]);

@@ -83,18 +83,6 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // 3. Signed-in visitors should not see the sign-in screens again.
-  if (isAdminSessionShaped && pathname.startsWith("/admin/login")) {
-    return NextResponse.redirect(new URL("/admin", request.url));
-  }
-
-  if (isAdminSessionShaped && (pathname === "/login" || pathname === "/register")) {
-    return NextResponse.redirect(new URL("/admin", request.url));
-  }
-
-  if (isSessionShaped && (pathname === "/login" || pathname === "/register")) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
 
   const res = NextResponse.next();
   res.headers.set("x-sutra-session-present", isSessionShaped || isAdminSessionShaped ? "1" : "0");

@@ -100,11 +100,11 @@ function ClientLoginForm() {
 
   // An already-signed-in visitor has no business on this page.
   useEffect(() => {
-    if (isAuthenticated && !authLoading) {
+    if (isAuthenticated && !authLoading && !loading) {
       const destination = safeReturnTo(rawParam, role);
       window.location.replace(destination);
     }
-  }, [isAuthenticated, authLoading, rawParam, role]);
+  }, [isAuthenticated, authLoading, loading, rawParam, role]);
 
   if (configurationError) {
     return (

@@ -27,7 +27,6 @@ interface PricingTier {
   popular: boolean;
   cta: string;
   turnaround: string;
-  driveAllocation: string;
 }
 
 const TIERS: PricingTier[] = [
@@ -41,13 +40,12 @@ const TIERS: PricingTier[] = [
       "1x 10-Second Commercial Video Ad",
       "Full Commercial Copyright License",
       "48-Hour Turnaround Pipeline",
-      "Google Drive Organized Delivery",
+      "Secure Media Vault Delivery",
       "2 Revision Rounds Included",
     ],
     popular: false,
     cta: "Start with Starter",
     turnaround: "48 Hours",
-    driveAllocation: "10 GB Cloud Vault",
   },
   {
     name: "Studio Growth",
@@ -66,7 +64,6 @@ const TIERS: PricingTier[] = [
     popular: true,
     cta: "Choose Growth",
     turnaround: "24–72 Hours",
-    driveAllocation: "50 GB Cloud Vault",
   },
   {
     name: "Bespoke Enterprise",
@@ -85,15 +82,10 @@ const TIERS: PricingTier[] = [
     popular: false,
     cta: "Inquire for Enterprise",
     turnaround: "Same-Day / Dedicated",
-    driveAllocation: "Unlimited Cloud Storage",
   },
 ];
 
 const FAQS = [
-  {
-    q: "How does Google Drive delivery work?",
-    a: "Every client is provisioned a dedicated, encrypted Google Drive folder upon account creation. All master 4K TIFF/PNG renders, ProRes videos, and 3D models auto-synchronize to your drive with permanent ownership.",
-  },
   {
     q: "What is your revision policy?",
     a: "Every project tier includes revision rounds overseen directly by our Principal Art Director. You can annotate feedback, request lighting passes, or submit copy edits through the client portal with guaranteed 24-hour turnaround.",
@@ -208,14 +200,10 @@ export default function PricingPage() {
                 </div>
 
                 {/* Metadata Pills */}
-                <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
+                <div className="grid grid-cols-1 gap-2 text-[11px] font-mono">
                   <div className="p-2 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center gap-1.5 text-[#5C3A1E]">
                     <Clock className="w-3.5 h-3.5 text-[#A98B57]" />
                     <span>{tier.turnaround}</span>
-                  </div>
-                  <div className="p-2 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center gap-1.5 text-[#5C3A1E]">
-                    <HardDrive className="w-3.5 h-3.5 text-[#A98B57]" />
-                    <span>{tier.driveAllocation}</span>
                   </div>
                 </div>
 

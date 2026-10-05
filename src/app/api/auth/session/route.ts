@@ -6,12 +6,14 @@
  */
 
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { isFirebaseAdminReady, isNotConfigured, adminMissingKeys } from "@/lib/firebase/admin";
 import {
   createSessionCookie,
   getSessionUser,
   sessionCookieOptions,
   SESSION_COOKIE,
+  SESSION_COOKIE_ADMIN,
 } from "@/lib/auth/session";
 import { badRequest, guarded, ok, sameOrigin } from "@/lib/api/response";
 import { getProfile } from "@/lib/services/profileStore";
@@ -23,7 +25,15 @@ export async function GET() {
   return guarded(async () => {
     const user = await getSessionUser();
     if (!user) {
-      return ok({ authenticated: false, user: null, profile: null });
+      const response = ok({ authenticated: false, user: null, profile: null });
+      const store = await cookies();
+      if (store.get(SESSION_COOKIE)) {
+        response.cookies.set(SESSION_COOKIE, "", { path: "/", maxAge: 0 });
+      }
+      if (store.get(SESSION_COOKIE_ADMIN)) {
+        response.cookies.set(SESSION_COOKIE_ADMIN, "", { path: "/", maxAge: 0 });
+      }
+      return response;
     }
 
     let profile = null;

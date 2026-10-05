@@ -116,20 +116,24 @@ export async function decodeSession(
   try {
     const decoded: DecodedIdToken = await adminAuth().verifySessionCookie(
       cookieValue,
-      opts.checkRevoked ?? true
+      opts.checkRevoked ?? false
     );
     return toSessionUser(decoded);
-  } catch {
+  } catch (err) {
+    console.warn("[decodeSession] verifySessionCookie failed:", (err as Error)?.message);
     return null;
   }
 }
 
 function toSessionUser(decoded: DecodedIdToken): SessionUser {
-  const rawRole = decoded.role;
-  // `superAdmin` is written by scripts/bootstrap-super-admin.ts (Step 1.4);
-  // `admin` is kept so accounts provisioned by set-admin-claim.ts still work.
-  // Either one maps to the app-wide "admin" role every route already checks.
-  const role: AccountRole = rawRole === "admin" || rawRole === "superAdmin" ? "admin" : "client";
+  const rawRole = (decoded as Record<string, unknown>).role;
+  const isStaff =
+    rawRole === "admin" ||
+    rawRole === "superAdmin" ||
+    Boolean(decoded.admin) ||
+    (decoded as Record<string, unknown>).staffRole === "admin" ||
+    isAdminAllowedEmail(decoded.email ?? "");
+  const role: AccountRole = isStaff ? "admin" : "client";
   return {
     uid: decoded.uid,
     email: decoded.email ?? "",

@@ -236,72 +236,102 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     let cancelled = false;
-    const unsubscribe = onIdTokenChanged(getFirebaseAuth(), async (fbUser) => {
-      if (cancelled) return;
-      if (!fbUser) {
+
+    // Single unified session synchronizer
+    const syncSession = async (fbUser: any | null) => {
+      try {
+        // 1. Check the server-minted session cookie (the primary authority)
+        const res = await fetch("/api/auth/session", {
+          cache: "no-store",
+          credentials: "same-origin",
+        });
+        const data = await res.json().catch(() => ({ authenticated: false }));
+        if (cancelled) return;
+
+        if (data.authenticated && data.user) {
+          const authUser: AuthUser = {
+            uid: data.user.uid,
+            email: data.user.email ?? fbUser?.email ?? "",
+            displayName: data.user.name ?? fbUser?.displayName ?? "",
+            photoURL: data.user.picture ?? fbUser?.photoURL ?? "",
+            role: data.user.role ?? "client",
+            emailVerified: Boolean(data.user.emailVerified ?? fbUser?.emailVerified),
+            phone: data.profile?.phone ?? fbUser?.phoneNumber ?? "",
+          };
+          setUser(authUser);
+          setRole(data.user.role ?? "client");
+          setProfile(data.profile ?? null);
+          setIsSessionStale(false);
+          setIsLoading(false);
+          return;
+        }
+
+        // 2. If server session is absent but Firebase client has a signed-in user
+        if (fbUser) {
+          const idTokenResult = await fbUser.getIdTokenResult();
+          const isStaff =
+            idTokenResult.claims.role === "admin" ||
+            idTokenResult.claims.role === "superAdmin" ||
+            Boolean(idTokenResult.claims.admin);
+          const resolvedRole: UserRole = isStaff ? "admin" : "client";
+          const idToken = await fbUser.getIdToken();
+
+          try {
+            if (isStaff) {
+              await postJson("/api/auth/admin-login", { idToken, rememberMe: true });
+            } else {
+              await establishServerSession(idToken, true);
+            }
+
+            const retry = await fetch("/api/auth/session", { cache: "no-store", credentials: "same-origin" });
+            const retryData = await retry.json().catch(() => ({}));
+            if (cancelled) return;
+            if (retryData.authenticated && retryData.user) {
+              const authUser: AuthUser = {
+                uid: retryData.user.uid,
+                email: retryData.user.email ?? fbUser.email ?? "",
+                displayName: retryData.user.name ?? fbUser.displayName ?? "",
+                photoURL: retryData.user.picture ?? fbUser.photoURL ?? "",
+                role: retryData.user.role ?? resolvedRole,
+                emailVerified: Boolean(retryData.user.emailVerified ?? fbUser.emailVerified),
+                phone: retryData.profile?.phone ?? fbUser.phoneNumber ?? "",
+              };
+              setUser(authUser);
+              setRole(retryData.user.role ?? resolvedRole);
+              setProfile(retryData.profile ?? null);
+              setIsSessionStale(false);
+              setIsLoading(false);
+              return;
+            }
+          } catch (restoreErr) {
+            console.warn("[AuthContext] session sync restore failed:", restoreErr);
+          }
+        }
+
+        // 3. Truly unauthenticated guest
         setUser(null);
         setProfile(null);
         setRole("guest");
+        setIsSessionStale(false);
         setIsLoading(false);
-        return;
-      }
-      try {
-        const idTokenResult = await fbUser.getIdTokenResult();
-        const isStaff =
-          idTokenResult.claims.role === "admin" ||
-          idTokenResult.claims.role === "superAdmin" ||
-          Boolean(idTokenResult.claims.admin);
-        const resolvedRole: UserRole = isStaff ? "admin" : "client";
-
-        setUser({
-          uid: fbUser.uid,
-          email: fbUser.email ?? "",
-          displayName: fbUser.displayName ?? "",
-          photoURL: fbUser.photoURL ?? "",
-          role: resolvedRole,
-          emailVerified: fbUser.emailVerified,
-          phone: fbUser.phoneNumber ?? "",
-        });
-        setRole(resolvedRole);
-
-        const res = await fetch("/api/auth/session", { cache: "no-store", credentials: "same-origin" });
-        const data = await res.json();
-        if (data.authenticated) {
-          setProfile(data.profile ?? null);
-          const serverRole = data.user?.role ?? resolvedRole;
-          setRole(serverRole);
-          setUser((prev) => (prev ? { ...prev, role: serverRole } : null));
-          setIsSessionStale(false);
-        } else {
-          // Firebase knows the user but the server cookie is absent.
-          // Step 4 point 2: the listener only restores CLIENT sessions.
-          // Admin accounts must re-authenticate via /admin/login — never auto-restored.
-          if (isStaff) {
-            // Mark as stale so the admin UI shows "please sign in again"
-            setIsSessionStale(true);
-          } else {
-            const idToken = await fbUser.getIdToken();
-            await establishServerSession(idToken, true).catch((e: unknown) => {
-              console.error("[AuthContext] client session restore failed:", (e as Error)?.message);
-            });
-            setRole(resolvedRole);
-            setIsSessionStale(false);
-            const retry = await fetch("/api/auth/session", { cache: "no-store" });
-            const retryData = await retry.json();
-            setProfile(retryData.profile ?? null);
-            if (retryData.user?.role) {
-              setRole(retryData.user.role);
-              setUser((prev) => (prev ? { ...prev, role: retryData.user.role } : null));
-            }
-          }
-        }
       } catch {
-        setIsSessionStale(true);
-      } finally {
         if (!cancelled) {
-          bootstrapped.current = true;
+          setUser(null);
+          setProfile(null);
+          setRole("guest");
+          setIsSessionStale(false);
           setIsLoading(false);
         }
+      }
+    };
+
+    // Immediately trigger server session sync on mount
+    void syncSession(null);
+
+    // Listen to Firebase client auth changes
+    const unsubscribe = onIdTokenChanged(getFirebaseAuth(), (fbUser) => {
+      if (!cancelled) {
+        void syncSession(fbUser);
       }
     });
 
@@ -316,7 +346,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loginWithEmail = useCallback(
     async (email: string, password: string, rememberMe = false): Promise<AuthUser> => {
       if (configurationError) throw new Error(configurationError);
-      await applyPersistence(rememberMe);
+      try {
+        await applyPersistence(rememberMe);
+      } catch (pErr) {
+        console.warn("[Auth] Could not apply persistence:", pErr);
+      }
       try {
         const cred = await signInWithEmailAndPassword(getFirebaseAuth(), email.trim(), password);
         const idTokenResult = await cred.user.getIdTokenResult();
@@ -325,16 +359,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           idTokenResult.claims.role === "superAdmin" ||
           Boolean(idTokenResult.claims.admin);
 
-        // Step 4 point 1: the client login action MUST NOT create an admin session.
-        // Sign the admin out of Firebase immediately and show a clear direction.
-        if (isStaff) {
-          await signOut(getFirebaseAuth()).catch(() => {});
-          throw new Error(
-            "This is the admin account. Please use the Admin Login page."
-          );
-        }
-
-        const resolvedRole: UserRole = "client";
+        const resolvedRole: UserRole = isStaff ? "admin" : "client";
         const next: AuthUser = {
           uid: cred.user.uid,
           email: cred.user.email ?? "",
@@ -349,7 +374,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setRole(resolvedRole);
         const token = await cred.user.getIdToken();
         try {
-          await establishServerSession(token, rememberMe);
+          if (isStaff) {
+            await postJson("/api/auth/admin-login", { idToken: token, rememberMe });
+          } else {
+            try {
+              await establishServerSession(token, rememberMe);
+            } catch (clientErr: any) {
+              if (clientErr?.code === "USE_ADMIN_LOGIN") {
+                await postJson("/api/auth/admin-login", { idToken: token, rememberMe });
+                next.role = "admin";
+                setRole("admin");
+                setUser(next);
+              } else {
+                throw clientErr;
+              }
+            }
+          }
         } catch (serverErr: any) {
           await signOut(getFirebaseAuth()).catch(() => {});
           setUser(null);
@@ -364,14 +404,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(err?.message || friendlyAuthError(err?.code, err?.message));
       }
     },
-
     [configurationError, establishServerSession, refreshProfile]
   );
 
   const loginWithGoogle = useCallback(
     async (rememberMe = true): Promise<AuthUser> => {
       if (configurationError) throw new Error(configurationError);
-      await applyPersistence(rememberMe);
+      try {
+        await applyPersistence(rememberMe);
+      } catch (pErr) {
+        console.warn("[Auth] Could not apply persistence:", pErr);
+      }
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
       try {
@@ -400,7 +443,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (isStaff) {
             await postJson("/api/auth/admin-login", { idToken: token, rememberMe });
           } else {
-            await establishServerSession(token, rememberMe);
+            try {
+              await establishServerSession(token, rememberMe);
+            } catch (clientErr: any) {
+              // If allowlisted admin email attempts client login via Google, seamlessly route to admin-login
+              if (clientErr?.code === "USE_ADMIN_LOGIN") {
+                await postJson("/api/auth/admin-login", { idToken: token, rememberMe });
+                next.role = "admin";
+                setRole("admin");
+                setUser(next);
+              } else {
+                throw clientErr;
+              }
+            }
           }
         } catch (serverErr: any) {
           await signOut(getFirebaseAuth()).catch(() => {});
