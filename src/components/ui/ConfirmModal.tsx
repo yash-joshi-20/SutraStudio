@@ -40,10 +40,10 @@ export function ConfirmModal({
             {cancelText}
           </Button>
           <Button
-            variant={isDangerous ? "danger" : "primary"}
+            variant={isDangerous ? "secondary" : "primary"}
             onClick={onConfirm}
-            loading={isLoading}
-            className="sm:w-auto w-full"
+            isLoading={isLoading}
+            className={`sm:w-auto w-full ${isDangerous ? "bg-red-600 text-white hover:bg-red-700 border-transparent" : ""}`}
           >
             {confirmText}
           </Button>

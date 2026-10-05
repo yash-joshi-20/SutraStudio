@@ -7,12 +7,13 @@
 
 import { redirect } from "next/navigation";
 
-export default function RegisterPage({
+export default async function RegisterPage({
   searchParams,
 }: {
-  searchParams?: Record<string, string>;
+  searchParams?: Promise<Record<string, string>>;
 }) {
-  const returnTo = searchParams?.returnTo ?? searchParams?.redirect ?? searchParams?.next ?? "";
+  const sp = (await searchParams) || {};
+  const returnTo = sp.returnTo ?? sp.redirect ?? sp.next ?? "";
   const dest = returnTo ? `/login?mode=register&returnTo=${encodeURIComponent(returnTo)}` : "/login?mode=register";
   redirect(dest);
 }
