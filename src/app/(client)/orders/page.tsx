@@ -1934,7 +1934,7 @@ export default function OrdersPage() {
                     <Loader2 className="w-6 h-6 animate-spin text-[#5C3A1E] mx-auto" />
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[46vh] overflow-y-auto pr-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {servicesCatalog.map((srv) => {
                       const qty = selectedServices[srv.id] || 0;
                       const isSelected = qty > 0;
@@ -1942,36 +1942,38 @@ export default function OrdersPage() {
                       return (
                         <div
                           key={srv.id}
-                          className={`p-3.5 rounded-2xl border transition-all flex flex-col justify-between gap-3 text-left ${
+                          className={`p-4 rounded-2xl border transition-all flex flex-col justify-between gap-3 text-left ${
                             isSelected
-                              ? "bg-[#FFFDF9] border-[#D4A35A] ring-1 ring-[#D4A35A]/30 shadow-xs"
-                              : "bg-[#FFFFFF] border-[#EADFCB] hover:border-[#D4A35A]/50"
+                              ? "bg-[#FFFDF9] border-[#D4A35A] ring-1 ring-[#D4A35A]/40 shadow-sm"
+                              : "bg-[#FFFFFF] border-[#EADFCB] hover:border-[#D4A35A]/60"
                           }`}
                         >
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <div className="flex items-center gap-1.5 mb-1">
-                                <span className="text-[10px] uppercase font-bold text-[#A98B57] tracking-wider">
-                                  {srv.tagline || srv.category}
-                                </span>
-                                {srv.estimatedDeliveryDays && (
-                                  <span className="px-1.5 py-0.2 rounded bg-[#FAF9F5] border border-[#EADFCB] text-[9px] text-[#64748B]">
-                                    {srv.estimatedDeliveryDays}d SLA
+                          <div className="space-y-1.5">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <span className="text-[10px] uppercase font-bold text-[#A98B57] tracking-wider">
+                                    {srv.tagline || srv.category}
                                   </span>
-                                )}
+                                  {srv.estimatedDeliveryDays && (
+                                    <span className="px-1.5 py-0.5 rounded bg-[#FAF9F5] border border-[#EADFCB] text-[9px] font-medium text-[#64748B]">
+                                      {srv.estimatedDeliveryDays}d SLA
+                                    </span>
+                                  )}
+                                </div>
+                                <h4 className="text-sm font-semibold text-[#0F172A]">
+                                  {srv.name}
+                                </h4>
                               </div>
-                              <h4 className="text-sm font-semibold text-[#0F172A]">
-                                {srv.name}
-                              </h4>
+                              <span className="text-xs font-bold text-[#5C3A1E] shrink-0">
+                                From ₹{srvPrice.toLocaleString("en-IN")}
+                              </span>
                             </div>
-                            <span className="text-xs font-bold text-[#5C3A1E] shrink-0">
-                              From ₹{srvPrice.toLocaleString("en-IN")}
-                            </span>
-                          </div>
 
-                          <p className="text-[11px] text-[#64748B] line-clamp-2">
-                            {srv.shortDescription || ""}
-                          </p>
+                            <p className="text-xs text-[#64748B] leading-relaxed">
+                              {srv.shortDescription || ""}
+                            </p>
+                          </div>
 
                           {/* Selection toggle & Quantity Counter */}
                           <div className="pt-2 border-t border-[#EADFCB]/60 flex items-center justify-between">
@@ -2001,7 +2003,7 @@ export default function OrdersPage() {
                               <button
                                 type="button"
                                 onClick={() => handleToggleService(srv.id)}
-                                className="px-3 py-1 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#FFFDF9] transition-all cursor-pointer"
+                                className="px-3.5 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#FFFDF9] transition-all cursor-pointer"
                               >
                                 Select Service
                               </button>
@@ -2065,44 +2067,46 @@ export default function OrdersPage() {
                 </div>
 
                 {/* Billing Cycle Selector */}
-                <div className="inline-flex rounded-full bg-[#FFFDF9] border border-[#EADFCB] p-1 shadow-xs mx-auto">
-                  <button
-                    type="button"
-                    onClick={() => setBillingCycle("monthly")}
-                    className={`px-3 sm:px-4 py-1.5 text-xs font-medium rounded-full transition-all cursor-pointer ${
-                      billingCycle === "monthly"
-                        ? "bg-[#5C3A1E] text-white shadow-xs"
-                        : "text-[#64748B] hover:text-[#0F172A]"
-                    }`}
-                  >
-                    Monthly (Standard)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setBillingCycle("quarterly")}
-                    className={`px-3 sm:px-4 py-1.5 text-xs font-medium rounded-full transition-all cursor-pointer ${
-                      billingCycle === "quarterly"
-                        ? "bg-[#5C3A1E] text-white shadow-xs"
-                        : "text-[#64748B] hover:text-[#0F172A]"
-                    }`}
-                  >
-                    Quarterly (Save 10%)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setBillingCycle("annual")}
-                    className={`px-3 sm:px-4 py-1.5 text-xs font-medium rounded-full transition-all cursor-pointer ${
-                      billingCycle === "annual"
-                        ? "bg-[#5C3A1E] text-white shadow-xs"
-                        : "text-[#64748B] hover:text-[#0F172A]"
-                    }`}
-                  >
-                    Annual (Save 20%)
-                  </button>
+                <div className="flex justify-center">
+                  <div className="inline-flex rounded-full bg-[#FFFDF9] border border-[#EADFCB] p-1 shadow-2xs">
+                    <button
+                      type="button"
+                      onClick={() => setBillingCycle("monthly")}
+                      className={`px-3 sm:px-4 py-1.5 text-xs font-medium rounded-full transition-all cursor-pointer ${
+                        billingCycle === "monthly"
+                          ? "bg-[#5C3A1E] text-white shadow-xs"
+                          : "text-[#64748B] hover:text-[#0F172A]"
+                      }`}
+                    >
+                      Monthly (Standard)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBillingCycle("quarterly")}
+                      className={`px-3 sm:px-4 py-1.5 text-xs font-medium rounded-full transition-all cursor-pointer ${
+                        billingCycle === "quarterly"
+                          ? "bg-[#5C3A1E] text-white shadow-xs"
+                          : "text-[#64748B] hover:text-[#0F172A]"
+                      }`}
+                    >
+                      Quarterly (Save 10%)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBillingCycle("annual")}
+                      className={`px-3 sm:px-4 py-1.5 text-xs font-medium rounded-full transition-all cursor-pointer ${
+                        billingCycle === "annual"
+                          ? "bg-[#5C3A1E] text-white shadow-xs"
+                          : "text-[#64748B] hover:text-[#0F172A]"
+                      }`}
+                    >
+                      Annual (Save 20%)
+                    </button>
+                  </div>
                 </div>
 
                 {/* Plans Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {plansCatalog.map((plan) => {
                     const isSelected = selectedPlanId === plan.id;
                     const basePrice = plan.monthlyPrice ?? plan.price ?? 5999;
@@ -2117,52 +2121,54 @@ export default function OrdersPage() {
                       <div
                         key={plan.id}
                         onClick={() => setSelectedPlanId(plan.id)}
-                        className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 text-left ${
+                        className={`p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-4 text-left ${
                           isSelected
                             ? "bg-[#FFFDF9] border-[#D4A35A] ring-2 ring-[#D4A35A]/30 shadow-warm"
-                            : "bg-[#FFFFFF] border-[#EADFCB] hover:border-[#D4A35A]/50"
+                            : "bg-[#FFFFFF] border-[#EADFCB] hover:border-[#D4A35A]/60"
                         }`}
                       >
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between gap-1">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between gap-1.5 flex-wrap">
                             <span className="text-[10px] font-bold uppercase tracking-wider text-[#A98B57]">
                               {plan.tier || plan.name}
                             </span>
-                            <span className="px-2 py-0.5 rounded-full bg-[#EDF7F0] border border-[#A3E635] text-[9px] font-bold text-[#2E7D4F]">
+                            <span className="px-2.5 py-0.5 rounded-full bg-[#EBF5EE] border border-[#C2E0C7] text-[10px] font-semibold text-[#1B5E20]">
                               3-Day Free Trial
                             </span>
                           </div>
-                          <h4 className="font-serif text-base font-semibold text-[#0F172A]">
-                            {plan.name}
-                          </h4>
-                          <div className="pt-1">
-                            <span className="text-xl font-bold text-[#5C3A1E]">
-                              ₹{calculatedRate.toLocaleString("en-IN")}
-                            </span>
-                            <span className="text-[11px] text-[#64748B] ml-1">
-                              /{billingCycle === "monthly" ? "mo" : billingCycle === "quarterly" ? "quarter" : "yr"}
-                            </span>
+                          <div>
+                            <h4 className="font-serif text-base font-semibold text-[#0F172A]">
+                              {plan.name}
+                            </h4>
+                            <div className="pt-1.5">
+                              <span className="text-xl font-bold text-[#5C3A1E]">
+                                ₹{calculatedRate.toLocaleString("en-IN")}
+                              </span>
+                              <span className="text-xs text-[#64748B] ml-1">
+                                /{billingCycle === "monthly" ? "mo" : billingCycle === "quarterly" ? "quarter" : "yr"}
+                              </span>
+                            </div>
                           </div>
                           <p className="text-xs text-[#64748B] leading-relaxed">
                             {plan.features?.[0] || "Full creative studio access with dedicated art director."}
                           </p>
-                        </div>
 
-                        <div className="space-y-1.5 pt-2 border-t border-[#EADFCB]/60 text-[11px] text-[#0F172A]">
-                          {(plan.features || []).slice(0, 4).map((f, i) => (
-                            <div key={i} className="flex items-start gap-1.5">
-                              <Check className="w-3.5 h-3.5 text-[#2E7D4F] shrink-0 mt-0.5" />
-                              <span className="line-clamp-1">{f}</span>
-                            </div>
-                          ))}
+                          <div className="space-y-2 pt-3 border-t border-[#EADFCB]/60 text-xs text-[#0F172A]">
+                            {(plan.features || []).slice(0, 4).map((f, i) => (
+                              <div key={i} className="flex items-start gap-2">
+                                <Check className="w-3.5 h-3.5 text-[#2E7D4F] shrink-0 mt-0.5" />
+                                <span className="leading-snug text-xs">{f}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
 
                         <button
                           type="button"
-                          className={`w-full py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                          className={`w-full py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                             isSelected
                               ? "bg-[#5C3A1E] text-white shadow-xs"
-                              : "bg-[#F8F5EF] text-[#5C3A1E] border border-[#EADFCB]"
+                              : "bg-[#F8F5EF] text-[#5C3A1E] border border-[#EADFCB] hover:bg-[#F2ECE1]"
                           }`}
                         >
                           {isSelected ? "Selected" : "Select Plan"}
@@ -2194,7 +2200,7 @@ export default function OrdersPage() {
 
             {/* STEP 2: DYNAMIC BRIEF QUESTIONNAIRE & SPECIFICATIONS */}
             {(flowStep === "service_details" || flowStep === "plan_details") && (
-              <div className="space-y-4 max-h-[62vh] overflow-y-auto pr-1">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-serif text-lg font-semibold text-[#0F172A]">
@@ -2473,7 +2479,7 @@ export default function OrdersPage() {
 
             {/* STEP 3: DRIVE ASSETS & REFERENCE UPLOADS */}
             {flowStep === "drive_assets" && (
-              <div className="space-y-4 max-h-[62vh] overflow-y-auto pr-1">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-serif text-lg font-semibold text-[#0F172A]">
@@ -2656,7 +2662,7 @@ export default function OrdersPage() {
 
             {/* STEP 4: REVIEW & AUTHORIZE (WITH SERVER RECOMPUTATION & RAZORPAY) */}
             {flowStep === "review_confirm" && (
-              <div className="space-y-4 max-h-[62vh] overflow-y-auto pr-1">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-serif text-lg font-semibold text-[#0F172A]">

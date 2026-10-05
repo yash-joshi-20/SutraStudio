@@ -11,7 +11,7 @@ export interface ModalProps {
   description?: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
-  maxWidth?: "sm" | "md" | "lg" | "xl" | "full";
+  maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "full";
   variant?: "modal" | "sheet" | "auto"; // "auto" uses bottom-sheet on phone (<640px) and centered on desktop
 }
 
@@ -55,8 +55,9 @@ export function Modal({
     sm: "sm:max-w-sm",
     md: "sm:max-w-md",
     lg: "sm:max-w-lg",
-    xl: "sm:max-w-xl",
-    full: "sm:max-w-3xl",
+    xl: "sm:max-w-2xl md:max-w-4xl lg:max-w-5xl",
+    "2xl": "sm:max-w-3xl md:max-w-5xl lg:max-w-6xl",
+    full: "sm:max-w-4xl md:max-w-6xl lg:max-w-7xl",
   }[maxWidth];
 
   const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
