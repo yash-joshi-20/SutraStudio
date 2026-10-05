@@ -17,9 +17,12 @@ import {
   ExternalLink,
   MessageSquare,
   ShieldAlert,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { useAuth } from "@/lib/auth/authContext";
+import { soundSystem } from "@/lib/audio/soundSystem";
 
 export interface StudioNotificationItem {
   id: string;
@@ -42,23 +45,42 @@ export function NotificationBell({ className = "" }: { className?: string }) {
   const [notifications, setNotifications] = useState<StudioNotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isMuted, setIsMuted] = useState(soundSystem.getMuted());
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const prevUnreadCountRef = useRef<number>(0);
+  const hasInitializedRef = useRef<boolean>(false);
 
   const fetchNotifications = useCallback(async () => {
     try {
       const res = await fetch("/api/notifications", {
-        headers: {
-        },
+        headers: {},
       });
       if (res.ok) {
         const data = await res.json();
-        setNotifications(data.notifications || []);
-        setUnreadCount(data.unreadCount || 0);
+        const items = data.notifications || [];
+        const unread = data.unreadCount || 0;
+        setNotifications(items);
+        setUnreadCount(unread);
+
+        // If new notifications arrived after initial load, play chime
+        if (hasInitializedRef.current && unread > prevUnreadCountRef.current) {
+          soundSystem.play("notification");
+        }
+        prevUnreadCountRef.current = unread;
+        hasInitializedRef.current = true;
       }
     } catch {
       // quiet fallback
     }
   }, [user?.uid, role]);
+
+  useEffect(() => {
+    const handleMuteChange = (e: any) => {
+      setIsMuted(e.detail?.isMuted ?? soundSystem.getMuted());
+    };
+    window.addEventListener("sutra_sound_mute_changed", handleMuteChange);
+    return () => window.removeEventListener("sutra_sound_mute_changed", handleMuteChange);
+  }, []);
 
   useEffect(() => {
     fetchNotifications();
@@ -193,7 +215,10 @@ export function NotificationBell({ className = "" }: { className?: string }) {
       {/* Bell Trigger Button */}
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          soundSystem.play("tap");
+          setIsOpen(!isOpen);
+        }}
         aria-label="View Studio Notifications"
         aria-expanded={isOpen}
         className="relative p-2 rounded-xl text-[#5C3A1E] hover:bg-[#F8F5EF] border border-[#EADFCB] bg-[#FFFDF9] transition-all cursor-pointer shadow-2xs focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D4A35A] min-h-[44px] min-w-[44px] flex items-center justify-center"
@@ -252,13 +277,30 @@ export function NotificationBell({ className = "" }: { className?: string }) {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
+                    {/* Audio Sound Mute / Unmute Toggle */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newMuted = soundSystem.toggleMute();
+                        setIsMuted(newMuted);
+                        if (!newMuted) {
+                          soundSystem.play("notification");
+                        }
+                      }}
+                      className="p-1 rounded-md text-[#64748B] hover:text-[#5C3A1E] hover:bg-[#EADFCB]/40 transition-colors cursor-pointer"
+                      title={isMuted ? "Unmute Studio Sounds" : "Mute Studio Sounds"}
+                      aria-label={isMuted ? "Unmute audio" : "Mute audio"}
+                    >
+                      {isMuted ? <VolumeX className="w-3.5 h-3.5 text-[#94A3B8]" /> : <Volume2 className="w-3.5 h-3.5 text-[#5C3A1E]" />}
+                    </button>
+
                     {unreadCount > 0 && (
                       <button
                         type="button"
                         onClick={handleMarkAllAsRead}
                         disabled={isLoading}
-                        className="text-[11px] font-semibold text-[#5C3A1E] hover:text-[#432813] transition-colors cursor-pointer flex items-center gap-1"
+                        className="text-[11px] font-semibold text-[#5C3A1E] hover:text-[#432813] transition-colors cursor-pointer flex items-center gap-1 ml-1"
                       >
                         <CheckCheck className="w-3.5 h-3.5" />
                         <span>Mark all read</span>

@@ -217,43 +217,51 @@ export default function MobileAppLandingPage() {
                     {isInstalled ? "Open Web App" : "Install App / Open PWA"}
                   </Button>
 
-                  {/* App Store Badge (Placeholder) */}
-                  <a
-                    href="https://apps.apple.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center px-5 py-3 rounded-full bg-[#0F172A] text-white hover:bg-[#1E293B] transition-all text-xs font-medium border border-[#0F172A] w-full sm:w-auto min-h-[48px] touch-target group cursor-pointer"
-                    title="[PLACEHOLDER LINK - REPLACE WITH YOUR APP STORE URL]"
+                  {/* App Store Badge (Coming Soon) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      alert("Apple App Store release is Coming Soon! You can install and use the full-featured PWA on iOS right now by tapping Share -> 'Add to Home Screen'.");
+                    }}
+                    className="inline-flex items-center justify-between px-5 py-3 rounded-full bg-[#0F172A] text-white hover:bg-[#1E293B] transition-all text-xs font-medium border border-[#0F172A] w-full sm:w-auto min-h-[48px] touch-target group cursor-pointer relative"
+                    title="Apple App Store — Coming Soon"
                   >
                     <div className="text-left flex items-center gap-2">
                       <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                         <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.89c.65-.8 1.1-1.92.97-3.05-1 .04-2.18.67-2.87 1.48-.6.69-1.12 1.83-.98 2.93 1.12.09 2.23-.56 2.88-1.36z" />
                       </svg>
                       <div>
-                        <span className="block text-[9px] uppercase tracking-wider text-slate-400">Download on</span>
+                        <span className="block text-[8px] uppercase tracking-wider text-slate-400">Download on</span>
                         <span className="font-semibold text-xs text-white">Apple App Store</span>
                       </div>
                     </div>
-                  </a>
+                    <span className="ml-2 px-1.5 py-0.5 rounded text-[8px] font-mono uppercase bg-[#D4A35A]/20 text-[#D4A35A] font-bold border border-[#D4A35A]/40">
+                      Soon
+                    </span>
+                  </button>
 
-                  {/* Google Play Badge (Placeholder) */}
-                  <a
-                    href="https://play.google.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center px-5 py-3 rounded-full bg-[#0F172A] text-white hover:bg-[#1E293B] transition-all text-xs font-medium border border-[#0F172A] w-full sm:w-auto min-h-[48px] touch-target group cursor-pointer"
-                    title="[PLACEHOLDER LINK - REPLACE WITH YOUR GOOGLE PLAY URL]"
+                  {/* Google Play Badge (Coming Soon) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      alert("Google Play Store release is Coming Soon! You can install the live PWA immediately on Android via the 'Install App / Open PWA' button.");
+                    }}
+                    className="inline-flex items-center justify-between px-5 py-3 rounded-full bg-[#0F172A] text-white hover:bg-[#1E293B] transition-all text-xs font-medium border border-[#0F172A] w-full sm:w-auto min-h-[48px] touch-target group cursor-pointer relative"
+                    title="Google Play Store — Coming Soon"
                   >
                     <div className="text-left flex items-center gap-2">
                       <svg className="w-4 h-4 fill-current text-[#D4A35A]" viewBox="0 0 24 24">
                         <path d="M3.6 2.2c-.3.3-.4.8-.4 1.4v16.8c0 .6.1 1.1.4 1.4l.1.1 9.4-9.4v-.2L3.7 2.1l-.1.1zM16.8 15.6l-3.7-3.7v-.2l3.7-3.7.1.1 4.4 2.5c1.3.7 1.3 1.9 0 2.6l-4.5 2.4zM13.1 12.1L3.7 21.5c.4.4 1.1.5 1.8.1l10.4-5.9-2.8-3.6zM13.1 11.9l2.8-3.6-10.4-6c-.7-.4-1.4-.3-1.8.1l9.4 9.5z" />
                       </svg>
                       <div>
-                        <span className="block text-[9px] uppercase tracking-wider text-slate-400">Get it on</span>
+                        <span className="block text-[8px] uppercase tracking-wider text-slate-400">Get it on</span>
                         <span className="font-semibold text-xs text-white">Google Play</span>
                       </div>
                     </div>
-                  </a>
+                    <span className="ml-2 px-1.5 py-0.5 rounded text-[8px] font-mono uppercase bg-[#D4A35A]/20 text-[#D4A35A] font-bold border border-[#D4A35A]/40">
+                      Soon
+                    </span>
+                  </button>
                 </div>
 
                 <div className="pt-2 flex items-center justify-center lg:justify-start gap-4 text-xs text-[#64748B]">

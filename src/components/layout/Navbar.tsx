@@ -30,7 +30,7 @@ const PUBLIC_NAV_LINKS: NavLinkItem[] = [
   { name: "Projects", href: "/projects" },
   { name: "Pricing", href: "/pricing" },
   { name: "About", href: "/about" },
-  { name: "Mobile App", href: "/mobile-app" },
+  { name: "Mobile App", href: "/mobile-app", badge: "Coming Soon" },
   { name: "Contact", href: "/contact" },
 ];
 
@@ -125,6 +125,11 @@ export function Navbar() {
                 }`}
               >
                 <span>{link.name}</span>
+                {link.badge && (
+                  <span className="ml-1.5 text-[9px] font-mono uppercase px-1.5 py-0.5 rounded-full bg-[#FAF9F5] text-[#A98B57] font-bold border border-[#D4A35A]/30">
+                    {link.badge}
+                  </span>
+                )}
                 {isActive && (
                   <motion.div
                     layoutId="nav-active-pill"
@@ -247,9 +252,15 @@ export function Navbar() {
                       }`}
                     >
                       <span>{link.name}</span>
-                      {link.href === "/mobile-app" && (
-                        <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-[#D4A35A] text-white font-bold">
-                          NEW
+                      {link.badge && (
+                        <span
+                          className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded-full font-bold border ${
+                            isActive
+                              ? "bg-[#FAF9F5] text-[#5C3A1E] border-white/40"
+                              : "bg-[#FAF9F5] text-[#A98B57] border-[#D4A35A]/30"
+                          }`}
+                        >
+                          {link.badge}
                         </span>
                       )}
                     </Link>

@@ -25,6 +25,7 @@ import { useAuth } from "@/lib/auth/authContext";
 import { TextField, Checkbox, FormAlert } from "@/components/ui/FormField";
 import { NotConfiguredState } from "@/components/ui/States";
 import { ArrowLeft, CheckCircle2, Lock, PlugZap, ShieldCheck } from "lucide-react";
+import { soundSystem } from "@/lib/audio/soundSystem";
 
 /** Only same-site, non-protocol-relative paths are ever honoured. */
 function safeReturnTo(raw: string | null, userRole?: string): string {
@@ -156,6 +157,7 @@ function ClientLoginForm() {
     try {
       if (mode === "signin") {
         const loggedIn = await loginWithEmail(email, password, rememberMe);
+        soundSystem.play("welcome");
         setSuccessMsg("Welcome back. Opening your workspace…");
         const destination = safeReturnTo(rawParam, loggedIn.role);
         window.location.replace(destination);
@@ -175,6 +177,7 @@ function ClientLoginForm() {
         returnTo: safeReturnTo(rawParam, "client"),
       });
 
+      soundSystem.play("welcome");
       setSuccessMsg(
         emailVerificationSent
           ? "Account created. Check your inbox to verify your email, then sign in."
@@ -200,6 +203,7 @@ function ClientLoginForm() {
     setLoading(true);
     try {
       const loggedIn = await loginWithGoogle(true);
+      soundSystem.play("welcome");
       const destination = safeReturnTo(rawParam, loggedIn.role);
       window.location.replace(destination);
     } catch (err) {

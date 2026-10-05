@@ -50,6 +50,7 @@ import { OrderReceiptModal, ReceiptOrderData } from "@/components/orders/OrderRe
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { computeOrderProgress, type OrderProgressInfo } from "@/lib/services/orderProgress";
 import { uploadFileToDrive } from "@/lib/drive/useDriveUpload";
+import { soundSystem } from "@/lib/audio/soundSystem";
 
 // Unified Order Item representing both legacy and modern Firestore orders
 interface OrderItem {
@@ -982,6 +983,7 @@ export default function OrdersPage() {
         setFlowStep("success");
       }
 
+      soundSystem.play("order_success");
       window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
     } catch (err: any) {
       setSubmitError(err.message || "An unexpected error occurred while placing your order.");

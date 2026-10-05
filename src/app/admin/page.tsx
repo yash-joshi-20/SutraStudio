@@ -95,6 +95,7 @@ import { SEED_CATALOG_SERVICES, SEED_CATALOG_PLANS } from "@/lib/services/catalo
 import { json, jsonRaw, errorMessage } from "@/lib/api/client";
 import { uploadFileToDrive, type DriveUploadResult, type DriveUploadProgress } from "@/lib/drive/useDriveUpload";
 import { useConfirm } from "@/hooks/useConfirm";
+import { soundSystem } from "@/lib/audio/soundSystem";
 
 /**
  * Step 1.6 — explain a rejected admin call instead of failing silently.
@@ -1150,6 +1151,7 @@ function AdminHubContent() {
 
       const data = await res.json();
       if (res.ok) {
+        soundSystem.play("order_success");
         setApprovalToast(
           `✓ Order #${data.order?.orderNumber || "NEW"} registered successfully via ${externalOrderForm.source.toUpperCase()}.`
         );
@@ -1202,6 +1204,7 @@ function AdminHubContent() {
       });
       const data = await res.json();
       if (res.ok) {
+        soundSystem.play("payment_success");
         setPaymentActionFeedback({
           orderId,
           type: "paid",
@@ -1251,6 +1254,7 @@ function AdminHubContent() {
       });
       const data = await res.json();
       if (res.ok) {
+        soundSystem.play("reminder");
         setPaymentActionFeedback({
           orderId,
           type: "reminder",
