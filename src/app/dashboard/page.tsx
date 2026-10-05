@@ -22,6 +22,7 @@ import {
   Sparkles,
   HardDrive,
   CheckCircle2,
+  ShieldCheck,
   Clock,
   RotateCcw,
   DollarSign,
@@ -57,9 +58,24 @@ interface OrderItem {
 }
 
 export default function ClientDashboardPage() {
-  const { user, profile } = useAuth();
+  const { user, profile, resendVerification } = useAuth();
   const [viewMode, setViewMode] = useState<"orders" | "commission" | "zero_state">("orders");
   const isZeroState = viewMode === "zero_state";
+  const [verificationMsg, setVerificationMsg] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  const handleResend = async () => {
+    setIsVerifying(true);
+    setVerificationMsg("");
+    try {
+      const msg = await resendVerification();
+      setVerificationMsg(msg);
+    } catch (e: any) {
+      setVerificationMsg(e.message || "Could not send email.");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
 
   // Orders State with Approvals & Revisions
   const [orders, setOrders] = useState<OrderItem[]>([]);
@@ -239,6 +255,34 @@ export default function ClientDashboardPage() {
         <PortalSidebar />
 
         <main id="main-content" className="flex-1 p-4 sm:p-8 lg:p-10 max-w-7xl mx-auto pb-24 md:pb-12 space-y-8">
+          {user && user.emailVerified === false && (
+            <div className="bg-[#FFF8E6] border border-[#F2D696] rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex gap-3">
+                <div className="p-2 bg-[#F2D696]/30 rounded-full text-[#5C3A1E]">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-[#5C3A1E]">Verify your email address</h3>
+                  <p className="text-xs text-[#5C3A1E]/80 mt-0.5">
+                    You won't be able to commission new projects until you verify {user.email}.
+                  </p>
+                  {verificationMsg && (
+                    <p className="text-xs font-medium text-emerald-700 mt-2">{verificationMsg}</p>
+                  )}
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleResend}
+                disabled={isVerifying}
+                className="bg-white border-[#F2D696] text-[#5C3A1E] hover:bg-[#FFFDF9] whitespace-nowrap"
+              >
+                {isVerifying ? "Sending..." : "Resend Email"}
+              </Button>
+            </div>
+          )}
+
           {/* =========================================================
               TOP HEADER BAR WITH COMMISSIONING & PIPELINE SWITCHER
               ========================================================= */}

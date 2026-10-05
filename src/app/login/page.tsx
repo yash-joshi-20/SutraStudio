@@ -76,7 +76,9 @@ function ClientLoginForm() {
 
   const returnTo = safeReturnTo(rawParam, role);
 
-  const [mode, setMode] = useState<"signin" | "register">("signin");
+  const [mode, setMode] = useState<"signin" | "register">(
+    searchParams?.get("mode") === "register" ? "register" : "signin"
+  );
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");

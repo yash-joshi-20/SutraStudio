@@ -273,25 +273,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser((prev) => (prev ? { ...prev, role: serverRole } : null));
           setIsSessionStale(false);
         } else {
-          // Firebase knows the user but the server cookie is absent. Re-establish it.
-          const idToken = await fbUser.getIdToken();
+          // Firebase knows the user but the server cookie is absent.
+          // Step 4 point 2: the listener only restores CLIENT sessions.
+          // Admin accounts must re-authenticate via /admin/login — never auto-restored.
           if (isStaff) {
-            await postJson("/api/auth/admin-login", { idToken, rememberMe: true }).catch((e: unknown) => {
-              console.error("[AuthContext] admin session restore failed:", (e as Error)?.message);
-            });
+            // Mark as stale so the admin UI shows "please sign in again"
+            setIsSessionStale(true);
           } else {
+            const idToken = await fbUser.getIdToken();
             await establishServerSession(idToken, true).catch((e: unknown) => {
               console.error("[AuthContext] client session restore failed:", (e as Error)?.message);
             });
-          }
-          setRole(resolvedRole);
-          setIsSessionStale(false);
-          const retry = await fetch("/api/auth/session", { cache: "no-store" });
-          const retryData = await retry.json();
-          setProfile(retryData.profile ?? null);
-          if (retryData.user?.role) {
-            setRole(retryData.user.role);
-            setUser((prev) => (prev ? { ...prev, role: retryData.user.role } : null));
+            setRole(resolvedRole);
+            setIsSessionStale(false);
+            const retry = await fetch("/api/auth/session", { cache: "no-store" });
+            const retryData = await retry.json();
+            setProfile(retryData.profile ?? null);
+            if (retryData.user?.role) {
+              setRole(retryData.user.role);
+              setUser((prev) => (prev ? { ...prev, role: retryData.user.role } : null));
+            }
           }
         }
       } catch {
@@ -323,8 +324,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           idTokenResult.claims.role === "admin" ||
           idTokenResult.claims.role === "superAdmin" ||
           Boolean(idTokenResult.claims.admin);
-        const resolvedRole: UserRole = isStaff ? "admin" : "client";
 
+        // Step 4 point 1: the client login action MUST NOT create an admin session.
+        // Sign the admin out of Firebase immediately and show a clear direction.
+        if (isStaff) {
+          await signOut(getFirebaseAuth()).catch(() => {});
+          throw new Error(
+            "This is the admin account. Please use the Admin Login page."
+          );
+        }
+
+        const resolvedRole: UserRole = "client";
         const next: AuthUser = {
           uid: cred.user.uid,
           email: cred.user.email ?? "",
@@ -339,11 +349,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setRole(resolvedRole);
         const token = await cred.user.getIdToken();
         try {
-          if (isStaff) {
-            await postJson("/api/auth/admin-login", { idToken: token, rememberMe });
-          } else {
-            await establishServerSession(token, rememberMe);
-          }
+          await establishServerSession(token, rememberMe);
         } catch (serverErr: any) {
           await signOut(getFirebaseAuth()).catch(() => {});
           setUser(null);
@@ -358,6 +364,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(err?.message || friendlyAuthError(err?.code, err?.message));
       }
     },
+
     [configurationError, establishServerSession, refreshProfile]
   );
 
