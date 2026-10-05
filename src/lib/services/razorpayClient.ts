@@ -82,6 +82,19 @@ export function loadRazorpayScript(): Promise<boolean> {
 export async function openRazorpayCheckout(
   options: RazorpayCheckoutOptions
 ): Promise<{ success: boolean; error?: string }> {
+  // Catch mock orders generated when RAZORPAY_KEY_SECRET is absent
+  if (options.order_id && options.order_id.startsWith("mock_rp_")) {
+    console.warn("[Razorpay] Mock order ID detected. Simulating successful checkout.");
+    setTimeout(() => {
+      options.onSuccess({
+        razorpay_payment_id: `pay_mock_${Date.now()}`,
+        razorpay_order_id: options.order_id,
+        razorpay_signature: "mock_signature_for_testing",
+      });
+    }, 1500);
+    return { success: true };
+  }
+
   const loaded = await loadRazorpayScript();
   if (!loaded || !(window as any).Razorpay) {
     return {
