@@ -57,6 +57,7 @@ functions/.env.local
 !/.env.example
 !/functions/.env.example
 .env_backups/
+scripts/backups/
 scripts/backups/env-backups/
 *.env.backup*
 *.env.bak*

@@ -63,9 +63,11 @@ function getAdminApp(): App {
         privateKey: readEnv("FIREBASE_PRIVATE_KEY").replace(/\\n/g, "\n"),
       }),
     });
-  } catch {
-    // Local emulator / Application Default Credentials path.
-    appInstance = initializeApp({ credential: applicationDefault() });
+  } catch (initErr) {
+    // Log the error CODE only — never the key value.
+    const code = (initErr as { code?: string })?.code ?? "UNKNOWN";
+    console.error(`[Firebase Admin] init failed — code: ${code}`);
+    throw new NotConfiguredError("Firebase Admin", adminMissingKeys());
   }
   return appInstance;
 }
