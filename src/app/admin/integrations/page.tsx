@@ -12,6 +12,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   ShieldCheck,
   TriangleAlert,
@@ -22,15 +23,20 @@ import {
   Sparkles,
   Layers,
   ArrowRight,
+  ArrowLeft,
   CheckCircle2,
   Lock,
   Mail,
   Send,
   Info,
+  LayoutDashboard,
 } from "lucide-react";
 import { json, jsonRaw, errorMessage } from "@/lib/api/client";
 import { StatusBadge, StatTile, type StatusTone } from "@/components/ui/Status";
 import { ErrorState, LoadingState } from "@/components/ui/States";
+import { RouteGuard } from "@/components/auth/RouteGuard";
+import { LotusSymbol } from "@/components/brand/SutraLogo";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 interface IntegrationStatus {
   id: string;
@@ -180,31 +186,62 @@ export default function AdminIntegrationsPage() {
   const totalMissing = data.summary.missing;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[#E5E1D8] pb-6">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-serif text-3xl font-normal text-[#171717]">Integrations Registry</h1>
-            <span className="inline-flex items-center rounded-full bg-[#FAF9F5] px-2.5 py-0.5 text-xs font-medium text-[#5C3A1E] border border-[#E5E1D8]">
-              Step 31D Active
-            </span>
+    <RouteGuard requiredRole="admin">
+      <div className="min-h-screen bg-[#F8F5EF] text-[#0F172A]">
+        {/* Top Studio Admin Nav Header */}
+        <header className="sticky top-0 z-30 bg-[#FFFDF9]/95 backdrop-blur-md border-b border-[#EADFCB] px-4 sm:px-8 py-3 flex items-center justify-between shadow-2xs">
+          <div className="flex items-center gap-3">
+            <Link href="/admin" className="flex items-center gap-2 text-[#5C3A1E] hover:opacity-80 transition-opacity">
+              <LotusSymbol className="w-6 h-6" color="gold" />
+              <span className="font-serif font-bold text-sm tracking-wider">SUTRA STUDIO</span>
+            </Link>
+            <span className="text-xs text-[#94A3B8]">/</span>
+            <div className="flex items-center gap-1.5 text-xs text-[#64748B]">
+              <Link href="/admin" className="hover:text-[#5C3A1E] font-medium transition-colors">
+                Admin Hub
+              </Link>
+              <span className="text-[#94A3B8]">/</span>
+              <span className="text-[#0F172A] font-semibold">Integrations & API Keys</span>
+            </div>
           </div>
-          <p className="mt-1 text-sm text-[#737373]">
-            Central declaration for studio credentials, email dispatchers, and missing-key protection. Secret values are never exposed.
-          </p>
-        </div>
 
-        <button
-          type="button"
-          onClick={() => void syncRegistry()}
-          disabled={syncing}
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#A98B57] bg-[#A98B57] px-4 py-2.5 text-sm font-medium text-white shadow-xs transition hover:bg-[#8F7445] disabled:opacity-50"
-        >
-          <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
-          {syncing ? "Synchronizing..." : "Re-check & Sync Registry"}
-        </button>
-      </div>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/admin"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] hover:border-[#D4A35A] hover:bg-[#FFFFFF] text-xs font-semibold text-[#5C3A1E] transition-all shadow-2xs"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back to Admin Hub</span>
+            </Link>
+            <NotificationBell />
+          </div>
+        </header>
+
+        <main className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[#E5E1D8] pb-6">
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="font-serif text-3xl font-normal text-[#171717]">Integrations & API Keys Registry</h1>
+                <span className="inline-flex items-center rounded-full bg-[#FAF9F5] px-2.5 py-0.5 text-xs font-medium text-[#5C3A1E] border border-[#E5E1D8]">
+                  Step 31D Active
+                </span>
+              </div>
+              <p className="mt-1 text-sm text-[#737373]">
+                Central declaration for studio credentials, email dispatchers, and missing-key protection. Secret values are never exposed.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => void syncRegistry()}
+              disabled={syncing}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#A98B57] bg-[#A98B57] px-4 py-2.5 text-sm font-medium text-white shadow-xs transition hover:bg-[#8F7445] disabled:opacity-50 cursor-pointer"
+            >
+              <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
+              {syncing ? "Synchronizing..." : "Re-check & Sync Registry"}
+            </button>
+          </div>
 
       {/* KPI Tiles */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -492,6 +529,8 @@ export default function AdminIntegrationsPage() {
           );
         })}
       </div>
-    </div>
+    </main>
+  </div>
+</RouteGuard>
   );
 }

@@ -1585,11 +1585,11 @@ function AdminHubContent() {
       const q = chatSearchQuery.toLowerCase().trim();
       list = list.filter(
         (s) =>
-          s.clientName.toLowerCase().includes(q) ||
-          s.company.toLowerCase().includes(q) ||
+          (s.clientName || "").toLowerCase().includes(q) ||
+          (s.company || "").toLowerCase().includes(q) ||
           (s.clientEmail && s.clientEmail.toLowerCase().includes(q)) ||
-          s.lastPrompt.toLowerCase().includes(q) ||
-          s.messages.some((m) => m.text.toLowerCase().includes(q))
+          (s.lastPrompt || "").toLowerCase().includes(q) ||
+          (s.messages || []).some((m) => (m.text || "").toLowerCase().includes(q))
       );
     }
 
@@ -1598,7 +1598,7 @@ function AdminHubContent() {
     } else if (chatFilter === "has_orders") {
       list = list.filter((s) => {
         const clientEmail = (s.clientEmail || "").toLowerCase();
-        const clientName = s.clientName.toLowerCase();
+        const clientName = (s.clientName || "").toLowerCase();
         const hasOrderInReal = realOrders.some(
           (o) =>
             (o.clientEmail && o.clientEmail.toLowerCase() === clientEmail) ||
@@ -1606,7 +1606,7 @@ function AdminHubContent() {
             o.clientId === s.clientId ||
             o.clientId === s.id
         );
-        const hasOrderInMessages = s.messages.some((m) => m.orderDraft || m.text.includes("#ORD-"));
+        const hasOrderInMessages = (s.messages || []).some((m) => m.orderDraft || (m.text && m.text.includes("#ORD-")));
         return hasOrderInReal || hasOrderInMessages;
       });
     }
@@ -1614,14 +1614,14 @@ function AdminHubContent() {
     if (chatDateFilter === "today") {
       list = list.filter(
         (s) =>
-          s.lastTime.includes("m ago") ||
-          s.lastTime.includes("h ago") ||
-          s.lastTime.includes("AM") ||
-          s.lastTime.includes("PM") ||
+          (s.lastTime || "").includes("m ago") ||
+          (s.lastTime || "").includes("h ago") ||
+          (s.lastTime || "").includes("AM") ||
+          (s.lastTime || "").includes("PM") ||
           s.lastTime === "Just now"
       );
     } else if (chatDateFilter === "week") {
-      list = list.filter((s) => !s.lastTime.includes("month"));
+      list = list.filter((s) => !(s.lastTime || "").includes("month"));
     }
 
     return list;
@@ -1652,7 +1652,7 @@ function AdminHubContent() {
   const currentChatOrders = useMemo(() => {
     if (!currentSession) return [];
     const sessionEmail = (currentSession.clientEmail || "").toLowerCase();
-    const sessionName = currentSession.clientName.toLowerCase();
+    const sessionName = (currentSession.clientName || "").toLowerCase();
     const sessionId = currentSession.clientId || currentSession.id;
 
     const matched = realOrders.filter(
@@ -1664,7 +1664,7 @@ function AdminHubContent() {
 
     if (matched.length === 0) {
       const drafts: AdminOrder[] = [];
-      currentSession.messages.forEach((m, idx) => {
+      (currentSession.messages || []).forEach((m, idx) => {
         if (m.orderDraft) {
           drafts.push({
             id: m.orderDraft.orderId || `ord_${idx + 1}`,
@@ -1675,11 +1675,11 @@ function AdminHubContent() {
             totalAmount: m.orderDraft.totalAmount || 18999,
             status: (m.orderDraft.status as any) || "in_progress",
             statusLabel: "In Production",
-            clientName: currentSession.clientName,
-            clientEmail: currentSession.clientEmail,
+            clientName: currentSession.clientName || "Studio Client",
+            clientEmail: currentSession.clientEmail || "client@sutrastudio.com",
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-            driveFolderId: currentSession.vaultId,
+            driveFolderId: currentSession.vaultId || "drive_vault",
           });
         }
       });
@@ -2762,37 +2762,49 @@ const [adminDataError, setAdminDataError] = useState("");
                   </div>
 
                   {/* CENTER PANEL: REAL-TIME CHAT & INTERVENTION (5 COLS DESKTOP) */}
-                  <div
-                    className={`lg:col-span-5 border-b lg:border-b-0 lg:border-r border-[#EADFCB] flex flex-col justify-between bg-[#FFFDF9] ${
-                      mobileChatView !== "chat" ? "hidden lg:flex" : "flex"
-                    }`}
-                  >
-                    {/* Chat Stream Header */}
-                    <div className="p-3.5 sm:p-4 border-b border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#FAF9F5]/70">
-                      <div className="flex items-center gap-2.5">
-                        {/* Mobile Back to List Button */}
-                        <button
-                          type="button"
-                          onClick={() => setMobileChatView("list")}
-                          className="lg:hidden p-1.5 rounded-lg bg-[#FFFFFF] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:bg-[#F4EFE6] cursor-pointer"
-                          title="Back to Clients List"
-                        >
-                          ← Chats
-                        </button>
-
-                        <Avatar name={currentSession.clientName} size="md" status="online" />
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <h4 className="font-serif font-semibold text-sm sm:text-base text-[#0F172A]">
-                              {currentSession.clientName}
-                            </h4>
-                            <span className="text-[11px] text-[#64748B]">({currentSession.company})</span>
-                          </div>
-                          <p className="text-[10px] text-[#94A3B8] font-mono">
-                            Vault: <span className="text-[#5C3A1E] font-bold">{currentSession.vaultId}</span> • {currentSession.mode === "human" ? "Direct Producer Active" : "Autonomous AI Router"}
-                          </p>
-                        </div>
+                  {!currentSession ? (
+                    <div className="lg:col-span-9 p-12 flex flex-col items-center justify-center text-center text-xs text-[#64748B] space-y-3 bg-[#FFFDF9]">
+                      <div className="w-12 h-12 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center">
+                        <MessageSquare className="w-6 h-6 text-[#5C3A1E]" />
                       </div>
+                      <h4 className="font-serif font-bold text-base text-[#0F172A]">No Client Conversation Selected</h4>
+                      <p className="max-w-sm text-[#64748B]">
+                        Select an active client session from the left directory to monitor live AI prompts, inspect generated order drafts, or take over as human producer.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div
+                        className={`lg:col-span-5 border-b lg:border-b-0 lg:border-r border-[#EADFCB] flex flex-col justify-between bg-[#FFFDF9] ${
+                          mobileChatView !== "chat" ? "hidden lg:flex" : "flex"
+                        }`}
+                      >
+                        {/* Chat Stream Header */}
+                        <div className="p-3.5 sm:p-4 border-b border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#FAF9F5]/70">
+                          <div className="flex items-center gap-2.5">
+                            {/* Mobile Back to List Button */}
+                            <button
+                              type="button"
+                              onClick={() => setMobileChatView("list")}
+                              className="lg:hidden p-1.5 rounded-lg bg-[#FFFFFF] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:bg-[#F4EFE6] cursor-pointer"
+                              title="Back to Clients List"
+                            >
+                              ← Chats
+                            </button>
+
+                            <Avatar name={currentSession?.clientName || "Client"} size="md" status="online" />
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <h4 className="font-serif font-semibold text-sm sm:text-base text-[#0F172A]">
+                                  {currentSession?.clientName || "Studio Client"}
+                                </h4>
+                                <span className="text-[11px] text-[#64748B]">({currentSession?.company || "Direct Client"})</span>
+                              </div>
+                              <p className="text-[10px] text-[#94A3B8] font-mono">
+                                Vault: <span className="text-[#5C3A1E] font-bold">{currentSession?.vaultId || "drive_vault"}</span> • {currentSession?.mode === "human" ? "Direct Producer Active" : "Autonomous AI Router"}
+                              </p>
+                            </div>
+                          </div>
 
                       {/* Header Action Controls */}
                       <div className="flex items-center gap-2">
@@ -3385,8 +3397,10 @@ const [adminDataError, setAdminDataError] = useState("");
                         </div>
                       </div>
                     </div>
-                </div>
-              )}
+                  </>
+                )}
+              </div>
+            )}
 
               {/* =========================================================
                   SUB-VIEW 2: AI KNOWLEDGE BASE (EDITABLE RULES & Q&A)
