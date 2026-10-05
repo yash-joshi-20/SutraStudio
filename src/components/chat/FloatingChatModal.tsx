@@ -218,14 +218,34 @@ export function FloatingChatModal() {
     return () => window.removeEventListener("open-sutra-chat", handleOpen);
   }, []);
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "msg-welcome",
-      sender: "bot",
-      text: "Namaste! 🙏 Welcome to **Sutra Studio**.\n\nI am your dedicated AI Concierge. You can inquire about our 12 creative capabilities, review pricing, share reference files, and commission direct orders right here in this chat. How may we assist your creative vision today?",
-      time: "Just now",
-    },
-  ]);
+  const getGreetingData = () => {
+    const hour = new Date().getHours();
+    let greetingTime = "Good Morning";
+    let gujaratiTime = "શુભ પ્રભાત";
+    if (hour >= 12 && hour < 17) {
+      greetingTime = "Good Afternoon";
+      gujaratiTime = "શુભ બપોર";
+    } else if (hour >= 17) {
+      greetingTime = "Good Evening";
+      gujaratiTime = "શુભ સંધ્યા";
+    }
+
+    const text = `${greetingTime} (${gujaratiTime})! 🙏 Welcome to **Sutra Studio**.\n\nI am your dedicated AI Concierge. You can speak or type to inquire about our 12 creative capabilities, review pricing, share reference files, or commission direct orders. How may we assist your creative vision today?`;
+    const spoken = `${greetingTime}! Welcome to Sutra Studio Atelier. How may I assist your creative vision today?`;
+    return { text, spoken };
+  };
+
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    const greeting = getGreetingData();
+    return [
+      {
+        id: "msg-welcome",
+        sender: "bot",
+        text: greeting.text,
+        time: "Just now",
+      },
+    ];
+  });
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -236,6 +256,19 @@ export function FloatingChatModal() {
   const [isListening, setIsListening] = useState(false);
   const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
+  const hasSpokenGreetingRef = useRef(false);
+
+  // Auto-speak female greeting when chat is first opened
+  useEffect(() => {
+    if (isOpen && !hasSpokenGreetingRef.current) {
+      hasSpokenGreetingRef.current = true;
+      const greeting = getGreetingData();
+      const timer = setTimeout(() => {
+        handleSpeakMessage("msg-welcome", greeting.spoken);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
 
   // Clean raw markdown text for natural voice speech synthesis
   const cleanTextForSpeech = (raw: string): string => {
@@ -367,18 +400,21 @@ export function FloatingChatModal() {
   };
 
   // Speech Recognition (Microphone) handler
+  const baseInputRef = useRef("");
   const startListening = () => {
     if (typeof window === "undefined") return;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.");
+      alert("Speech recognition is not supported in this browser. Please use Google Chrome, Microsoft Edge, or Safari.");
       return;
     }
 
     try {
+      baseInputRef.current = input;
       const recognition = new SpeechRecognition();
-      recognition.lang = "gu-IN";
-      recognition.continuous = false;
+      // en-IN allows English, Hindi and Gujarati code-mixed speech recognition on modern browsers
+      recognition.lang = "en-IN";
+      recognition.continuous = true;
       recognition.interimResults = true;
 
       recognition.onstart = () => {
@@ -386,15 +422,33 @@ export function FloatingChatModal() {
       };
 
       recognition.onresult = (event: any) => {
-        const transcript = Array.from(event.results)
-          .map((res: any) => res[0].transcript)
-          .join("");
-        setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+        let interimTranscript = "";
+        let finalTranscript = "";
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const item = event.results[i];
+          if (item.isFinal) {
+            finalTranscript += item[0].transcript;
+          } else {
+            interimTranscript += item[0].transcript;
+          }
+        }
+
+        const combined = (finalTranscript || interimTranscript).trim();
+        if (combined) {
+          if (baseInputRef.current) {
+            setInput(`${baseInputRef.current} ${combined}`);
+          } else {
+            setInput(combined);
+          }
+        }
       };
 
       recognition.onerror = (event: any) => {
-        console.warn("Speech recognition error:", event.error);
-        setIsListening(false);
+        console.warn("Speech recognition notice:", event.error);
+        if (event.error !== "no-speech") {
+          setIsListening(false);
+        }
       };
 
       recognition.onend = () => {
@@ -411,7 +465,9 @@ export function FloatingChatModal() {
 
   const stopListening = () => {
     if (recognitionRef.current) {
-      recognitionRef.current.stop();
+      try {
+        recognitionRef.current.stop();
+      } catch (_) {}
       setIsListening(false);
     }
   };
