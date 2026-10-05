@@ -18,6 +18,7 @@
     "test:audit": "node scripts/final-acceptance-audit.mjs",
     "audit": "node scripts/final-acceptance-audit.mjs",
     "test:admin": "node scripts/step31c-admin-security-test.mjs",
+    "check:auth": "node scripts/check-auth.mjs",
     "create-admin": "npx tsx scripts/create-admin.ts",
     "get-drive-token": "npx tsx scripts/get-drive-refresh-token.ts",
     "migrate:firebase": "node scripts/migrate-to-firebase.mjs",

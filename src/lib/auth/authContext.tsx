@@ -276,9 +276,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Firebase knows the user but the server cookie is absent. Re-establish it.
           const idToken = await fbUser.getIdToken();
           if (isStaff) {
-            await postJson("/api/auth/admin-login", { idToken, rememberMe: true }).catch(() => {});
+            await postJson("/api/auth/admin-login", { idToken, rememberMe: true }).catch((e: unknown) => {
+              console.error("[AuthContext] admin session restore failed:", (e as Error)?.message);
+            });
           } else {
-            await establishServerSession(idToken, true).catch(() => {});
+            await establishServerSession(idToken, true).catch((e: unknown) => {
+              console.error("[AuthContext] client session restore failed:", (e as Error)?.message);
+            });
           }
           setRole(resolvedRole);
           setIsSessionStale(false);
