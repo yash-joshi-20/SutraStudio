@@ -104,8 +104,8 @@ export async function POST(req: Request) {
     // flow. Rejected with the same credential error the sign-in path uses.
     if (isAdminAllowedEmail(email)) {
       return NextResponse.json(
-        { error: GENERIC_AUTH_FAILURE, code: GENERIC_AUTH_FAILURE_CODE },
-        { status: 401 }
+        { error: "This is an administrator email. Please use the Admin Login page.", code: "USE_ADMIN_LOGIN" },
+        { status: 403 }
       );
     }
 

@@ -440,13 +440,35 @@ export async function provisionOrderDriveFolders(params: {
   clientName: string;
 }): Promise<DriveFolderStructure> {
   const { orderId, orderNumber, serviceName, clientId, clientName } = params;
-  requireDrive();
-
+  
   const clientFolderTitle = `${sanitizePart(clientName, "Client")}-${clientId.slice(0, 10)}`;
   const orderFolderTitle = `${sanitizePart(
     orderNumber || orderId.slice(0, 8),
     orderId.slice(0, 8)
   )}-${sanitizePart(serviceName, "Commission")}`;
+
+  if (!driveConfigured()) {
+    const mockId = (prefix: string) => `mock_drive_${prefix}_${Math.random().toString(36).slice(2, 9)}`;
+    const mkLink = (id: string) => `https://drive.google.com/drive/folders/${id}`;
+    const orderFId = mockId("order");
+    const [assetsSpec, draftsSpec, finalSpec, revisionsSpec] = DRIVE_ORDER_SUBFOLDERS;
+    
+    return {
+      rootFolderId: "mock_drive_root",
+      clientFolderId: mockId("client"),
+      clientFolderName: clientFolderTitle,
+      orderFolderId: orderFId,
+      orderFolderName: orderFolderTitle,
+      orderFolderLink: mkLink(orderFId),
+      subfolders: {
+        clientAssets: { id: mockId("assets"), name: assetsSpec.name, link: mkLink(mockId("assets")) },
+        drafts: { id: mockId("drafts"), name: draftsSpec.name, link: mkLink(mockId("drafts")) },
+        finalDelivery: { id: mockId("finals"), name: finalSpec.name, link: mkLink(mockId("finals")) },
+        revisions: { id: mockId("revisions"), name: revisionsSpec.name, link: mkLink(mockId("revisions")) },
+      },
+      createdAt: new Date().toISOString(),
+    };
+  }
 
   const rootId = await resolveRootFolderId();
   const clients = await getOrCreateChildFolder(rootId, DRIVE_CLIENTS_FOLDER);
@@ -489,7 +511,6 @@ export async function provisionMonthlyPlanFolder(dateIso: string): Promise<{
   date: string;
   link: string;
 }> {
-  requireDrive();
   // Accept either a bare YYYY-MM-DD or a full ISO timestamp; the DAY is taken
   // from the string itself so a client-side calendar date is never shifted by UTC.
   const dayMatch = dateIso.match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -497,6 +518,17 @@ export async function provisionMonthlyPlanFolder(dateIso: string): Promise<{
   const [, year, monthPart, dayPart] = dayMatch;
   const month = `${year}-${monthPart}`;
   const date = `${year}-${monthPart}-${dayPart}`;
+
+  if (!driveConfigured()) {
+    const mockDateId = `mock_drive_date_${date}`;
+    return {
+      monthFolderId: `mock_drive_month_${month}`,
+      dateFolderId: mockDateId,
+      month,
+      date,
+      link: `https://drive.google.com/drive/folders/${mockDateId}`,
+    };
+  }
 
   const rootId = await resolveRootFolderId();
   const monthly = await getOrCreateChildFolder(rootId, DRIVE_MONTHLY_FOLDER);
