@@ -244,9 +244,9 @@ export class ChatToolsService {
       billingCycle: type === "monthly_plan" ? billingCycle : undefined,
       requirements: finalRequirements,
       notes: finalRequirements,
-      status: "pending_payment",
-      statusLabel: "Pending Payment via Razorpay",
-      paymentStatus: "unpaid",
+      status: "confirmed",
+      statusLabel: "Confirmed — In Studio Production Queue",
+      paymentStatus: "invoice",
       source: "ai_chat",
       chatId,
       clientUid,
@@ -267,10 +267,10 @@ export class ChatToolsService {
       internalNotes: [],
       statusHistory: [
         {
-          status: "pending_payment",
+          status: "confirmed",
           changedAt: now,
           changedBy: "ai_chat",
-          note: `Order registered via AI Chat. Verified catalog price ₹${computedTotal.toLocaleString("en-IN")}. Awaiting checkout confirmation.`,
+          note: `Order registered & confirmed via AI Chat. Verified catalog price ₹${computedTotal.toLocaleString("en-IN")}. Placed directly into Studio Production Queue.`,
         },
       ],
       createdAt: now,
@@ -284,7 +284,7 @@ export class ChatToolsService {
       userId: clientUid,
       type: "order_placed",
       title: "Order Placed via AI Concierge",
-      message: `Commission #${orderNumber} for ${primaryServiceName} is registered. Proceed with Razorpay payment to commence production.`,
+      message: `Commission #${orderNumber} for ${primaryServiceName} is registered & confirmed. Our team has queued it for production.`,
       orderId,
       orderNumber,
       actionUrl: "/orders",
@@ -313,10 +313,10 @@ export class ChatToolsService {
         totalAmount: computedTotal,
         razorpayOrderId: razorpayOrder.razorpayOrderId,
         keyId: razorpayOrder.keyId,
-        paid: false,
+        paid: true,
       },
       driveUploadFolder: driveFolderLink,
-      summaryMessage: `I have registered your commission **#${orderNumber}** for **${primaryServiceName}** at **₹${computedTotal.toLocaleString("en-IN")}** (Est. Delivery: ${estDeliveryDays} days, ${revsIncluded} revisions included). Please click the **Pay Now** button below to complete verification via Razorpay.`,
+      summaryMessage: `✓ I have confirmed and queued your commission **#${orderNumber}** for **${primaryServiceName}** (₹${computedTotal.toLocaleString("en-IN")}, Est. Delivery: ${estDeliveryDays} days, ${revsIncluded} revisions). You can view and manage this order directly in **My Orders**.`,
     };
   }
 

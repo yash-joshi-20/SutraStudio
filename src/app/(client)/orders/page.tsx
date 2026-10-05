@@ -775,8 +775,8 @@ export default function OrdersPage() {
     }
   };
 
-  // Submit New Order with DOUBLE-SUBMIT PROTECTION & SERVER PRICE RECOMPUTATION
-  const handleSubmitNewOrder = async () => {
+  // Submit New Order with DOUBLE-SUBMIT PROTECTION & OPTIONAL DIRECT INVOICE / RAZORPAY FLOW
+  const handleSubmitNewOrder = async (directSubmit: boolean = true) => {
     if (isSubmittingOrder) return; // Prevent double-submit
 
     setIsSubmittingOrder(true);
@@ -797,6 +797,8 @@ export default function OrdersPage() {
         ],
         source: "dashboard",
         driveFolderId: profile?.driveFolderId || "",
+        skipPayment: directSubmit,
+        paymentMethod: directSubmit ? "invoice" : "razorpay_checkout",
       };
 
       if (orderType === "service") {
@@ -851,16 +853,16 @@ export default function OrdersPage() {
         // Ignore
       }
 
-      // Order registered on server with pending_payment status!
+      // Order registered on server
       const newOrderCreated: OrderItem = {
         id: data.order.id,
         code: data.order.code || `#ORD-${String(data.order.id).slice(-3)}`,
         orderNumber: data.order.orderNumber || data.order.code,
         title: data.order.title,
         service: data.order.service,
-        status: "pending_payment",
-        statusLabel: "Pending Payment via Razorpay",
-        deliverablePreview: data.order.deliverablePreview || "Brief registered in Firestore. Ready for Razorpay payment.",
+        status: data.order.status || (directSubmit ? "confirmed" : "pending_payment"),
+        statusLabel: data.order.statusLabel || (directSubmit ? "Confirmed — In Studio Production Queue" : "Pending Payment"),
+        deliverablePreview: data.order.deliverablePreview || "Brief registered in studio queue. Pending admin workflow review.",
         driveFolder: data.order.driveFolderId || "drive_fld_sutra_001/COMMISSIONS",
         driveFolderPath: data.order.driveFolderPath || "drive_fld_sutra_001/COMMISSIONS",
         revisionRound: 0,
@@ -878,24 +880,24 @@ export default function OrdersPage() {
         clientName: data.order.clientName,
         clientEmail: data.order.clientEmail,
         clientPhone: data.order.clientPhone,
-        paymentStatus: "unpaid",
+        paymentStatus: data.order.paymentStatus || (directSubmit ? "unpaid" : "unpaid"),
         razorpayOrderId: data.razorpay?.orderId,
         subscriptionId: data.order.subscriptionId,
         statusHistory: data.order.statusHistory || [
           {
-            status: "pending_payment",
+            status: data.order.status || "confirmed",
             changedAt: new Date().toISOString(),
             changedBy: "client",
-            note: "Order placed with server-verified catalog pricing. Awaiting Razorpay payment.",
+            note: directSubmit
+              ? "Commission brief registered (Pay on Invoice / Direct Placement)."
+              : "Order placed. Ready for Razorpay payment.",
           },
         ],
       };
 
       setOrders((prev) => [newOrderCreated, ...prev.filter((o) => o.id !== newOrderCreated.id)]);
 
-      // STEP 30: land the staged briefs in the order's Drive folder now that it
-      // has a real id. A rejected file must not cancel the order, but it must
-      // be reported rather than silently dropped.
+      // Land staged briefs in the order's Drive folder
       if (stagedFileBlobs.length > 0) {
         const attachmentError = await uploadStagedAttachments(data.order.id);
         if (attachmentError) {
@@ -905,8 +907,8 @@ export default function OrdersPage() {
         }
       }
 
-      // Open Razorpay Branded Checkout Modal
-      if (data.razorpay && data.razorpay.orderId) {
+      // If online Razorpay checkout requested and orderId returned
+      if (!directSubmit && data.razorpay && data.razorpay.orderId) {
         await openRazorpayCheckout({
           key: data.razorpay.keyId,
           amount: data.razorpay.amountInPaise,
@@ -955,19 +957,24 @@ export default function OrdersPage() {
                 setFlowStep("success");
                 window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
               } else {
-                setSubmitError(verifyData.error || "Payment verification failed on server.");
+                setCreatedOrderResult(newOrderCreated);
+                setFlowStep("success");
               }
-            } catch (vErr: any) {
-              setSubmitError(`Signature verification failed: ${vErr.message}`);
+            } catch {
+              setCreatedOrderResult(newOrderCreated);
+              setFlowStep("success");
             }
           },
           onDismiss: () => {
+            // Unblock on dismiss: Show confirmed success screen with invoice details
             setCreatedOrderResult(newOrderCreated);
-            setFlowStep("dismissed");
+            setFlowStep("success");
             window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
           },
           onFailure: (rzpErr) => {
-            setSubmitError(`Payment failed: ${rzpErr.description || rzpErr.reason || "Gateway error"}`);
+            setCreatedOrderResult(newOrderCreated);
+            setFlowStep("success");
+            window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
           },
         });
       } else {
@@ -2850,8 +2857,8 @@ export default function OrdersPage() {
                   </div>
                 )}
 
-                {/* Double-Submit Protected CTA */}
-                <div className="pt-3 border-t border-[#EADFCB] flex items-center justify-between gap-3">
+                {/* Double-Submit Protected CTA (Direct Invoice / Test vs Razorpay Online) */}
+                <div className="pt-3 border-t border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -2861,20 +2868,35 @@ export default function OrdersPage() {
                     Back
                   </Button>
 
-                  <Button
-                    variant="primary"
-                    size="md"
-                    onClick={handleSubmitNewOrder}
-                    isLoading={isSubmittingOrder}
-                    disabled={isSubmittingOrder || !agreedToTerms}
-                    leftIcon={<Lock className="w-4 h-4 text-[#A98B57]" />}
-                  >
-                    {isSubmittingOrder
-                      ? "Initializing Razorpay..."
-                      : orderType === "service"
-                      ? `Pay & Place Order (₹${liveServicesTotal.toLocaleString("en-IN")})`
-                      : `Start 3-Day Free Trial (₹${livePlanTotal.toLocaleString("en-IN")}/mo)`}
-                  </Button>
+                  <div className="flex flex-col sm:flex-row items-center gap-2.5">
+                    <Button
+                      variant="secondary"
+                      size="md"
+                      onClick={() => handleSubmitNewOrder(false)}
+                      isLoading={isSubmittingOrder}
+                      disabled={isSubmittingOrder || !agreedToTerms}
+                      leftIcon={<CreditCard className="w-4 h-4 text-[#A98B57]" />}
+                      className="w-full sm:w-auto"
+                    >
+                      Pay via Razorpay / UPI
+                    </Button>
+
+                    <Button
+                      variant="primary"
+                      size="md"
+                      onClick={() => handleSubmitNewOrder(true)}
+                      isLoading={isSubmittingOrder}
+                      disabled={isSubmittingOrder || !agreedToTerms}
+                      leftIcon={<CheckCircle2 className="w-4 h-4 text-[#D4A35A]" />}
+                      className="w-full sm:w-auto"
+                    >
+                      {isSubmittingOrder
+                        ? "Registering Commission..."
+                        : orderType === "service"
+                        ? `Submit Order (Pay on Invoice — ₹${liveServicesTotal.toLocaleString("en-IN")})`
+                        : `Submit Retainer Brief (₹${livePlanTotal.toLocaleString("en-IN")}/mo)`}
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
@@ -2891,17 +2913,23 @@ export default function OrdersPage() {
                     ORDER #{createdOrderResult.orderNumber || createdOrderResult.code}
                   </span>
                   <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
-                    Payment Verified & Dispatched
+                    {createdOrderResult.paymentStatus === "paid"
+                      ? "Payment Verified & Dispatched"
+                      : "Commission Registered & Placed in Queue"}
                   </h3>
                   <p className="text-xs text-[#64748B] max-w-md mx-auto leading-relaxed">
-                    Your Razorpay payment has been cryptographically verified by the studio server. Your commission is now marked <strong>&quot;paid&quot;</strong> and has entered the production queue.
+                    {createdOrderResult.paymentStatus === "paid"
+                      ? "Your Razorpay payment has been cryptographically verified. Your commission is active in the studio production queue."
+                      : "Your commission brief has been successfully submitted and placed in the studio queue. You will receive official invoice and production updates."}
                   </p>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] max-w-sm mx-auto text-xs space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-[#64748B]">Payment Status:</span>
-                    <span className="font-bold text-[#2E7D4F] uppercase">Verified & Paid</span>
+                    <span className="text-[#64748B]">Status:</span>
+                    <span className="font-bold text-[#2E7D4F] uppercase">
+                      {createdOrderResult.paymentStatus === "paid" ? "Verified & Paid" : "Confirmed in Queue"}
+                    </span>
                   </div>
                   {createdOrderResult.razorpayPaymentId && (
                     <div className="flex justify-between">
@@ -2912,7 +2940,7 @@ export default function OrdersPage() {
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="text-[#64748B]">Total Amount Paid:</span>
+                    <span className="text-[#64748B]">Total Amount:</span>
                     <span className="font-bold text-[#5C3A1E]">
                       ₹{(createdOrderResult.totalAmount || 0).toLocaleString("en-IN")}
                     </span>

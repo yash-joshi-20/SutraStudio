@@ -544,6 +544,11 @@ function AdminHubContent() {
   const [isArchivingDrive, setIsArchivingDrive] = useState(false);
   const [assignedMemberId, setAssignedMemberId] = useState("");
 
+  // n8n Autonomous Workflow Execution State
+  const [dispatchingOrderWf, setDispatchingOrderWf] = useState<string | null>(null);
+  const [selectedWfId, setSelectedWfId] = useState<string>("W1_order_fulfillment_router");
+  const [wfDispatchFeedback, setWfDispatchFeedback] = useState<{ success: boolean; message: string; runId?: string } | null>(null);
+
   // Internal Notes & Discussion Comments State
   const [adminOrderComments, setAdminOrderComments] = useState<any[]>([]);
   const [isLoadingAdminComments, setIsLoadingAdminComments] = useState(false);
@@ -1005,6 +1010,71 @@ function AdminHubContent() {
       setTimeout(() => setApprovalToast(""), 3500);
     } catch (err: any) {
       alert(`Assignment error: ${err.message}`);
+    }
+  };
+
+  // Dispatch client order to n8n Autonomous Automation Engine (Admin Review-Gated)
+  const handleDispatchOrderToN8n = async (order: AdminOrder, workflowIdOverride?: string) => {
+    const wfId = workflowIdOverride || selectedWfId;
+    setDispatchingOrderWf(order.id);
+    setWfDispatchFeedback(null);
+    try {
+      const res = await fetch("/api/n8n/dispatch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          workflowId: wfId,
+          orderId: order.id,
+          service: order.service,
+          brief: order.requirements || order.notes,
+          clientId: order.clientUid || order.clientId,
+          driveFolderId: order.driveFolderId,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setWfDispatchFeedback({
+          success: true,
+          message: `✓ Pipeline ${wfId} authorized & dispatched. Container Run: ${data.runId}.`,
+          runId: data.runId,
+        });
+        setRealOrders((prev) =>
+          prev.map((o) =>
+            o.id === order.id
+              ? {
+                  ...o,
+                  status: "in_production",
+                  statusLabel: "In Production (n8n Pipeline Running)",
+                }
+              : o
+          )
+        );
+        if (inspectingAdminOrder?.id === order.id) {
+          setInspectingAdminOrder((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  status: "in_production",
+                  statusLabel: "In Production (n8n Pipeline Running)",
+                }
+              : null
+          );
+        }
+        setApprovalToast(`Workflow ${wfId} dispatched for ${order.code || order.orderNumber || order.id}.`);
+        setTimeout(() => setApprovalToast(""), 4000);
+      } else {
+        setWfDispatchFeedback({
+          success: false,
+          message: `Dispatch failed: ${data.error || data.details || "Failed to trigger pipeline."}`,
+        });
+      }
+    } catch (err: any) {
+      setWfDispatchFeedback({
+        success: false,
+        message: `Network error dispatching workflow: ${err.message}`,
+      });
+    } finally {
+      setDispatchingOrderWf(null);
     }
   };
 
@@ -4660,6 +4730,20 @@ const [adminDataError, setAdminDataError] = useState("");
                                         <Receipt className="w-3.5 h-3.5 text-[#A98B57]" />
                                       </button>
                                     )}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDispatchOrderToN8n(order)}
+                                      disabled={dispatchingOrderWf === order.id}
+                                      className="p-1.5 rounded-lg border border-[#D4A35A] bg-[#FFFDF9] text-[#5C3A1E] hover:bg-[#FAF9F5] cursor-pointer flex items-center gap-1 text-[11px] font-semibold transition-all shadow-2xs"
+                                      title="Dispatch to n8n Autonomous Automation Engine"
+                                    >
+                                      {dispatchingOrderWf === order.id ? (
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#5C3A1E]" />
+                                      ) : (
+                                        <Zap className="w-3.5 h-3.5 text-[#D4A35A]" />
+                                      )}
+                                      <span className="hidden xl:inline">n8n</span>
+                                    </button>
                                     <Button
                                       variant="secondary"
                                       size="sm"
@@ -4767,6 +4851,20 @@ const [adminDataError, setAdminDataError] = useState("");
                                 >
                                   {order.paymentStatus ? order.paymentStatus.toUpperCase() : "UNPAID"}
                                 </span>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleDispatchOrderToN8n(order)}
+                                  disabled={dispatchingOrderWf === order.id}
+                                  className="p-1.5 rounded-xl border border-[#D4A35A] bg-[#FFFDF9] text-[#5C3A1E] hover:bg-[#FAF9F5] cursor-pointer flex items-center gap-1 text-[11px] font-semibold"
+                                  title="Dispatch to n8n"
+                                >
+                                  {dispatchingOrderWf === order.id ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#5C3A1E]" />
+                                  ) : (
+                                    <Zap className="w-3.5 h-3.5 text-[#D4A35A]" />
+                                  )}
+                                </button>
 
                                 <Button
                                   variant="secondary"
@@ -5014,6 +5112,88 @@ const [adminDataError, setAdminDataError] = useState("");
                           <p className="text-xs text-[#0F172A] leading-relaxed whitespace-pre-wrap">
                             {inspectingAdminOrder.requirements || inspectingAdminOrder.notes || "No special instructions provided."}
                           </p>
+                        </div>
+
+                        {/* N8N AUTONOMOUS WORKFLOW EXECUTION GATE */}
+                        <div className="p-4 rounded-2xl bg-[#FFFDF9] border-2 border-[#D4A35A] space-y-3 shadow-xs">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-center text-[#5C3A1E]">
+                                <Zap className="w-4 h-4 text-[#D4A35A]" />
+                              </div>
+                              <div>
+                                <h5 className="font-serif font-bold text-sm text-[#0F172A]">
+                                  n8n Autonomous Pipeline Execution Gate
+                                </h5>
+                                <p className="text-[11px] text-[#64748B]">
+                                  Admin Review Gated: Direct client orders require admin approval before dispatching to n8n.
+                                </p>
+                              </div>
+                            </div>
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF9F5] text-[#5C3A1E] border border-[#EADFCB]">
+                              Admin Gated
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-1">
+                            <div className="sm:col-span-8 space-y-1">
+                              <label className="text-[11px] font-bold text-[#64748B] block">
+                                Target n8n Autonomous Workflow Engine:
+                              </label>
+                              <select
+                                value={selectedWfId}
+                                onChange={(e) => setSelectedWfId(e.target.value)}
+                                className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] font-medium focus:outline-none focus:border-[#D4A35A]"
+                              >
+                                <option value="W1_order_fulfillment_router">
+                                  W1: Order Fulfillment Router (4K Render / Video Reel / 3D / Ads)
+                                </option>
+                                <option value="W2_approval_and_publish">
+                                  W2: Client Approval & Social Media Multi-Publisher
+                                </option>
+                                <option value="W3_monthly_plan_content">
+                                  W3: Monthly Retainer Automated Calendar Generator
+                                </option>
+                                <option value="W5_agency_daily_autopost">
+                                  W5: Agency Daily Automated Social Publisher
+                                </option>
+                              </select>
+                            </div>
+
+                            <div className="sm:col-span-4 flex items-end">
+                              <Button
+                                variant="primary"
+                                size="md"
+                                className="w-full justify-center text-xs"
+                                disabled={dispatchingOrderWf === inspectingAdminOrder.id}
+                                isLoading={dispatchingOrderWf === inspectingAdminOrder.id}
+                                onClick={() => handleDispatchOrderToN8n(inspectingAdminOrder)}
+                                leftIcon={<Zap className="w-3.5 h-3.5 text-[#D4A35A]" />}
+                              >
+                                ⚡ Dispatch to n8n
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Execution Feedback */}
+                          {wfDispatchFeedback && (
+                            <div
+                              className={`p-3 rounded-xl border text-xs flex items-center justify-between ${
+                                wfDispatchFeedback.success
+                                  ? "bg-[#F0FDF4] border-[#BBF7D0] text-[#166534]"
+                                  : "bg-[#FEF2F2] border-[#FECACA] text-[#991B1B]"
+                              }`}
+                            >
+                              <span>{wfDispatchFeedback.message}</span>
+                              <button
+                                type="button"
+                                onClick={() => setWfDispatchFeedback(null)}
+                                className="text-[11px] font-bold underline cursor-pointer"
+                              >
+                                Dismiss
+                              </button>
+                            </div>
+                          )}
                         </div>
 
                         {/* Scope Breakdown */}

@@ -947,9 +947,22 @@ export function FloatingChatModal() {
                               <span>Pay Now via Razorpay (₹{msg.orderDraft.totalAmount.toLocaleString("en-IN")})</span>
                             </Button>
                           ) : (
-                            <div className="flex items-center gap-1 text-[11px] text-[#2E7D4F] font-semibold pt-1">
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              <span>Payment Completed • Assigned to Studio</span>
+                            <div className="space-y-1.5 pt-1">
+                              <div className="flex items-center gap-1 text-[11px] text-[#2E7D4F] font-semibold">
+                                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                                <span>Order Registered • In Studio Queue</span>
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setIsOpen(false);
+                                  router.push("/orders");
+                                }}
+                                className="w-full text-xs justify-center gap-1.5 border-[#5C3A1E]/30 text-[#5C3A1E] hover:bg-[#FAF9F5]"
+                              >
+                                View Order in Dashboard →
+                              </Button>
                             </div>
                           )}
                         </div>
