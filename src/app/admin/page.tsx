@@ -73,6 +73,8 @@ import {
   Trash2,
   Edit3,
   Save,
+  Zap,
+  ShieldCheck,
   Archive,
 } from "lucide-react";
 import { RouteGuard } from "@/components/auth/RouteGuard";
@@ -500,6 +502,8 @@ function AdminHubContent() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [tierFilter, setTierFilter] = useState<string>("All");
+  const [showPricingGuide, setShowPricingGuide] = useState(true);
+  const [copiedPitch, setCopiedPitch] = useState(false);
 
   // Real-Time Firebase Orders State
   const [realOrders, setRealOrders] = useState<AdminOrder[]>([]);
@@ -6166,6 +6170,240 @@ const [adminDataError, setAdminDataError] = useState("");
                       />
                     </div>
                   </div>
+                </div>
+
+                {/* SUTRA STUDIO CLIENT DELIVERABLES & PRICING PITCH GUIDE */}
+                <div className="rounded-3xl bg-linear-to-br from-[#FFFDF9] via-[#FAF9F5] to-[#F5EFE6] border border-[#A98B57]/40 p-6 sm:p-8 shadow-md space-y-6">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#EADFCB] pb-5">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="px-3 py-1 rounded-full bg-[#5C3A1E] text-white text-[11px] font-bold uppercase tracking-wider">
+                          Admin Reference & Client Pitch
+                        </span>
+                        <span className="px-2.5 py-0.5 rounded-full bg-[#EBF5EE] border border-[#C2E0C7] text-[10px] font-semibold text-[#1B5E20]">
+                          Live Studio Blueprint
+                        </span>
+                      </div>
+                      <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#0F172A]">
+                        Client Deliverables, Quantity Scaling & Retainer Fulfillment Guide
+                      </h3>
+                      <p className="text-xs text-[#64748B] max-w-3xl leading-relaxed">
+                        Use this guide to explain exact deliverables per unit, quantity multipliers (1, 2, 3...), turnarounds, and how monthly retainers fulfill daily/weekly client requests.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const pitch = `Namaste! At Sutra Studio, you can work with us in two flexible ways:\n\n1. Per-Project (Individual Services): 4K image creation starting at ₹5,499 (3-5 renders/unit), cinematic video ads at ₹7,999, 3D modeling at ₹9,499, and 360 virtual tours at ₹11,999. Quantity scales linearly with full commercial usage license.\n\n2. Monthly Retainer Plans: Studio Growth (₹12,999/mo) or Starter (₹5,999/mo) gives you dedicated creative capacity (15 renders, 3 video ads, 3D models) with continuous 24-48h sprint fulfillment and a 3-Day Risk-Free Trial.\n\nAll deliverables stage directly into your private Google Drive vault.`;
+                          navigator.clipboard.writeText(pitch);
+                          setCopiedPitch(true);
+                          setTimeout(() => setCopiedPitch(false), 2500);
+                        }}
+                        className="px-3.5 py-2 rounded-xl bg-[#5C3A1E] text-white text-xs font-semibold hover:bg-[#432A15] transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        {copiedPitch ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-[#A3E635]" />
+                            <span>Pitch Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5 text-[#D4A35A]" />
+                            <span>Copy Client Pitch Script</span>
+                          </>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowPricingGuide(!showPricingGuide)}
+                        className="px-3 py-2 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-xs font-medium text-[#5C3A1E] hover:bg-white transition-colors cursor-pointer"
+                      >
+                        {showPricingGuide ? "Collapse Guide" : "Expand Guide"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {showPricingGuide && (
+                    <div className="space-y-6 pt-2">
+                      {/* Section 1: How Quantity (1, 2, 3...) Works */}
+                      <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#EADFCB] space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-full bg-[#5C3A1E] text-white text-xs font-bold flex items-center justify-center">
+                            1
+                          </span>
+                          <h4 className="font-serif text-sm font-bold text-[#0F172A]">
+                            How the Quantity Selector (1, 2, 3...) Works for Individual Services
+                          </h4>
+                        </div>
+                        <p className="text-xs text-[#64748B] leading-relaxed">
+                          In the Client Dashboard, <strong>Quantity = 1</strong> represents <strong>1 complete production unit / package</strong>. Selecting 2, 3, or more multiplies the unit volume linearly:
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                          <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-xs">
+                            <span className="font-bold text-[#5C3A1E] block">Image Creation (Qty = 1)</span>
+                            <span className="text-[#64748B] mt-0.5 block">₹5,499 • 1 Product (3–5 multi-angle 4K renders)</span>
+                          </div>
+                          <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-xs">
+                            <span className="font-bold text-[#5C3A1E] block">Image Creation (Qty = 2)</span>
+                            <span className="text-[#64748B] mt-0.5 block">₹10,998 • 2 Products (6–10 multi-angle 4K renders)</span>
+                          </div>
+                          <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-xs">
+                            <span className="font-bold text-[#5C3A1E] block">3D Modeling (Qty = 3)</span>
+                            <span className="text-[#64748B] mt-0.5 block">₹28,497 • 3 Distinct 3D PBR models + WebGL files</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Section 2: How Monthly Retainer Fulfillment Operates */}
+                      <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#EADFCB] space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-full bg-[#5C3A1E] text-white text-xs font-bold flex items-center justify-center">
+                            2
+                          </span>
+                          <h4 className="font-serif text-sm font-bold text-[#0F172A]">
+                            How Monthly Retainer Plans Fulfill Client Requests (Daily / Weekly)
+                          </h4>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                          <div className="space-y-1.5 p-3.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]">
+                            <span className="font-bold text-[#0F172A] flex items-center gap-1.5">
+                              <Zap className="w-3.5 h-3.5 text-[#D4A35A]" />
+                              Continuous Sprint Queue (Always-On Studio)
+                            </span>
+                            <p className="text-[#64748B] leading-relaxed">
+                              Clients submit briefs throughout the month. Each request is picked up immediately with a <strong>24–48 hour sprint turnaround</strong>. Deliverables flow continuously to the client’s private Google Drive vault.
+                            </p>
+                          </div>
+                          <div className="space-y-1.5 p-3.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]">
+                            <span className="font-bold text-[#0F172A] flex items-center gap-1.5">
+                              <ShieldCheck className="w-3.5 h-3.5 text-[#2E7D4F]" />
+                              3-Day Free Trial & Monthly Drops
+                            </span>
+                            <p className="text-[#64748B] leading-relaxed">
+                              Every retainer includes a <strong>3-Day Risk-Free Trial</strong> for sample renders before billing starts. Clients can also request a full <strong>Batch Drop</strong> in the first week for social media scheduling.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Section 3: Summary Table of Deliverables */}
+                      <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#EADFCB] space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="w-6 h-6 rounded-full bg-[#5C3A1E] text-white text-xs font-bold flex items-center justify-center">
+                              3
+                            </span>
+                            <h4 className="font-serif text-sm font-bold text-[#0F172A]">
+                              12 Services Deliverables Reference (Per Unit Qty = 1)
+                            </h4>
+                          </div>
+                          <span className="text-[11px] text-[#94A3B8]">Full doc in docs/PRICING_DELIVERABLES_GUIDE.md</span>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-xs border-collapse">
+                            <thead>
+                              <tr className="border-b border-[#EADFCB] text-[#5C3A1E] font-bold">
+                                <th className="py-2 pr-3">Service</th>
+                                <th className="py-2 pr-3">Price</th>
+                                <th className="py-2 pr-3">SLA</th>
+                                <th className="py-2 pr-3">Deliverables (per Unit = 1)</th>
+                                <th className="py-2">Formats</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[#EADFCB]/60 text-[#64748B]">
+                              <tr>
+                                <td className="py-2 pr-3 font-semibold text-[#0F172A]">1. Image Creation</td>
+                                <td className="py-2 pr-3 font-bold text-[#5C3A1E]">₹5,499</td>
+                                <td className="py-2 pr-3">24–48h</td>
+                                <td className="py-2 pr-3">3–5 Photorealistic 4K Renders for 1 product/concept</td>
+                                <td className="py-2">4K PNG / TIFF</td>
+                              </tr>
+                              <tr>
+                                <td className="py-2 pr-3 font-semibold text-[#0F172A]">2. Video Creation</td>
+                                <td className="py-2 pr-3 font-bold text-[#5C3A1E]">₹7,999</td>
+                                <td className="py-2 pr-3">48–72h</td>
+                                <td className="py-2 pr-3">1× 10-30s Cinematic Master Video Ad with Voiceover Sync</td>
+                                <td className="py-2">4K MP4 / ProRes (9:16 + 16:9)</td>
+                              </tr>
+                              <tr>
+                                <td className="py-2 pr-3 font-semibold text-[#0F172A]">3. 3D Modeling</td>
+                                <td className="py-2 pr-3 font-bold text-[#5C3A1E]">₹9,499</td>
+                                <td className="py-2 pr-3">48–72h</td>
+                                <td className="py-2 pr-3">1× Precision 3D Model with PBR Textures + 360 Turntable</td>
+                                <td className="py-2">GLTF / USDZ / OBJ / .blend</td>
+                              </tr>
+                              <tr>
+                                <td className="py-2 pr-3 font-semibold text-[#0F172A]">4. 360 View Tour</td>
+                                <td className="py-2 pr-3 font-bold text-[#5C3A1E]">₹11,999</td>
+                                <td className="py-2 pr-3">2–4d</td>
+                                <td className="py-2 pr-3">4–8 Interconnected Panoramic Nodes with Hotspots</td>
+                                <td className="py-2">8K HDR / HTML5 WebXR</td>
+                              </tr>
+                              <tr>
+                                <td className="py-2 pr-3 font-semibold text-[#0F172A]">5. Interior Design</td>
+                                <td className="py-2 pr-3 font-bold text-[#5C3A1E]">₹12,499</td>
+                                <td className="py-2 pr-3">48–72h</td>
+                                <td className="py-2 pr-3">4K Render Suite (Day/Night) + Material & Furniture Spec</td>
+                                <td className="py-2">4K PNG / PDF Spec Deck</td>
+                              </tr>
+                              <tr>
+                                <td className="py-2 pr-3 font-semibold text-[#0F172A]">6. Window Design</td>
+                                <td className="py-2 pr-3 font-bold text-[#5C3A1E]">₹6,499</td>
+                                <td className="py-2 pr-3">24–48h</td>
+                                <td className="py-2 pr-3">Facade Elevation Profiles + 4K Exterior Renders</td>
+                                <td className="py-2">CAD DWG / 4K PNG</td>
+                              </tr>
+                              <tr>
+                                <td className="py-2 pr-3 font-semibold text-[#0F172A]">7. Digital Marketing</td>
+                                <td className="py-2 pr-3 font-bold text-[#5C3A1E]">₹14,999</td>
+                                <td className="py-2 pr-3">3–5d</td>
+                                <td className="py-2 pr-3">30-Day Content Calendar + Copywriting Matrix</td>
+                                <td className="py-2">PDF Deck + Notion</td>
+                              </tr>
+                              <tr>
+                                <td className="py-2 pr-3 font-semibold text-[#0F172A]">8. Meta Ads Launcher</td>
+                                <td className="py-2 pr-3 font-bold text-[#5C3A1E]">₹13,499</td>
+                                <td className="py-2 pr-3">48h</td>
+                                <td className="py-2 pr-3">5 Creative Ad Variations + Copywriting + Targeting JSON</td>
+                                <td className="py-2">Ad Pack (1:1 & 9:16)</td>
+                              </tr>
+                              <tr>
+                                <td className="py-2 pr-3 font-semibold text-[#0F172A]">9. Website Dev</td>
+                                <td className="py-2 pr-3 font-bold text-[#5C3A1E]">₹16,999</td>
+                                <td className="py-2 pr-3">5–7d</td>
+                                <td className="py-2 pr-3">Complete Next.js 16 Website (Up to 5 Pages) + GSAP</td>
+                                <td className="py-2">TypeScript Code / Vercel</td>
+                              </tr>
+                              <tr>
+                                <td className="py-2 pr-3 font-semibold text-[#0F172A]">10. Web App Dev</td>
+                                <td className="py-2 pr-3 font-bold text-[#5C3A1E]">₹19,999</td>
+                                <td className="py-2 pr-3">7–14d</td>
+                                <td className="py-2 pr-3">Full-Stack SaaS / Portal + Firebase DB + Auth + Razorpay</td>
+                                <td className="py-2">Production Full-Stack</td>
+                              </tr>
+                              <tr>
+                                <td className="py-2 pr-3 font-semibold text-[#0F172A]">11. Mobile App Setup</td>
+                                <td className="py-2 pr-3 font-bold text-[#5C3A1E]">₹18,499</td>
+                                <td className="py-2 pr-3">10–14d</td>
+                                <td className="py-2 pr-3">React Native Expo App (iOS & Android) + Push Alerts</td>
+                                <td className="py-2">Expo / IPA / AAB</td>
+                              </tr>
+                              <tr>
+                                <td className="py-2 pr-3 font-semibold text-[#0F172A]">12. AI Automation</td>
+                                <td className="py-2 pr-3 font-bold text-[#5C3A1E]">₹15,999</td>
+                                <td className="py-2 pr-3">48–72h</td>
+                                <td className="py-2 pr-3">Cloud Webhook Router + Google Drive Auto-Sync Pipeline</td>
+                                <td className="py-2">n8n / Cloud Functions</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* STEP 12: ALL 12 DATA-DRIVEN STUDIO SERVICES CATALOG */}
