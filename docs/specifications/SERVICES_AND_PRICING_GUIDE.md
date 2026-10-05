@@ -85,9 +85,44 @@ In the Client Dashboard (`/orders` -> *Individual Services*):
 
 ---
 
-## 5. Client Explanatory Script for Admin / Sales Pitch
+## 6. Free vs Paid AI APIs: Deep Technical & Economic Breakdown
 
-Use this exact conversational script when explaining options to prospective clients on Call or WhatsApp:
+### Why Free AI Tools Aren't Free for Commercial Production
+
+| AI Category & Tools | Free Tier Capabilities (Zero Cost) | Paid / Enterprise API ($ / ₹ Cost per Unit) | Why Sutra Studio Uses Paid & Hybrid Pipelines |
+| :--- | :--- | :--- | :--- |
+| **Generative Imagery** *(Midjourney, Flux Pro, SDXL)* | • Discord free trials (exhausted in 10 prompts)<br>• 72 DPI compressed webp<br>• Public prompts visible to everyone | • Midjourney Pro / Fast GPU Credits (~₹15–₹30 / batch)<br>• Flux 1.1 Pro API (~₹4 / image)<br>• Real-ESRGAN 4K AI Upscale (~₹5 / pass) | • High-resolution 3840×2160 (4K UHD) output<br>• Stealth / Private prompt generation<br>• True photorealistic texture & lighting coherence |
+| **Cinematic Video** *(Runway, Kling, Luma, Pika)* | • 4-second watermarked clips<br>• Low 720p resolution with motion jitter<br>• 24-hour slow queue | • Runway Gen-3 Alpha API (~₹80–₹120 / generation)<br>• Kling AI Pro (~₹60 / 10s shot)<br>• Topaz Video AI 4K frame interpolation (~₹30) | • Clean 1080p/4K 24fps cinematic camera motion<br>• Zero watermarks + commercial licensing<br>• Seamless multi-shot continuity |
+| **Voiceover & Audio** *(ElevenLabs, Bark, Suno)* | • 10,000 characters/mo free (robotic cadence)<br>• Non-commercial attribution required | • ElevenLabs Turbo v2.5 / Multilingual v2 (~₹20–₹50 / script)<br>• Soundly / Epidemic Sound commercial audio license | • Natural Indian & global accent inflections<br>• Broadcast-quality audio mastering & dynamic compression |
+| **3D Modeling & CAD** *(Meshy, Tripo, CSM)* | • Low-poly messy wireframes (5,000 triangles)<br>• Blurry vertex colors, no PBR textures | • Meshy v2 Pro API (~₹50–₹100 / model)<br>• Quad-remesh & PBR material bake (~₹100) | • Clean quad topology suitable for AR & web animation<br>• 4K Albedo, Normal, Roughness, and Metallic maps |
+| **Text & Strategic LLM** *(Gemini 1.5, OpenAI GPT-4o, Claude 3.5)* | • Free Gemini / ChatGPT web interfaces with rate limits | • Google Gemini 1.5 Pro API (Free tier: 15 RPM; Paid: ₹0.001 / 1k tokens)<br>• Anthropic Claude 3.5 Sonnet API (~₹0.25 / call) | • Automated JSON brief synthesis<br>• Multi-ratio copywriting matrix (Hooks, CTAs, Body copy) |
+
+---
+
+## 7. The Studio Cost Structure: What ₹350–₹500 Actually Represents
+
+When an order is placed at Sutra Studio (e.g. ₹5,499 Image Creation):
+
+```
++-------------------------------------------------------------------------------+
+| TOTAL CLIENT PAYMENT: ₹5,499                                                  |
++-------------------------------------------------------------------------------+
+|  [-] Direct AI Compute & GPU Credits:            ~₹40  (Midjourney + Upscaling)|
+|  [-] Human Art Director & Designer Finishing:   ~₹350  (Photoshop / Grading)  |
+|  [-] Cloud Storage & Permanent Drive Vault:      ~₹10  (Google Drive + CDN)   |
+|  [-] Payment Gateway (Razorpay 2%):             ~₹110  (Transaction Fee)      |
++-------------------------------------------------------------------------------+
+|  [=] TOTAL INTERNAL STUDIO PRODUCTION COST:     ~₹510                         |
+|  [★] NET STUDIO PROFIT:                         ~₹4,989 (90.7% Margin!)       |
++-------------------------------------------------------------------------------+
+```
+
+### Why the Client Happily Pays ₹5,499
+1. **Zero Prompt Guesswork**: The client doesn't waste 40 hours prompting and getting deformed hands, distorted logos, or cartoonish outputs.
+2. **Human Touch-Up**: A human Senior Art Director cleans every seam, balances lighting, adds brand-accurate typography, and formats everything for print & social.
+3. **Massive Cost Savings**: Compared to a physical studio photoshoot costing ₹35,000–₹60,000, Sutra Studio saves the client over 80% while delivering within 24–48 hours.
+4. **Permanent Digital Asset Vault**: The client receives organized Google Drive folders with 100% commercial IP rights and lifetime access.
+
 
 > *"Namaste [Client Name]! At Sutra Studio, you can work with us in two flexible ways:*
 >
