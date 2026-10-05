@@ -55,14 +55,23 @@ export async function POST(req: Request) {
       );
     }
 
-    // Step 1.9 / rule 13: a staff or allowlisted identity NEVER receives a client
-    // session. The response is byte-identical to a bad credential, so the
-    // client app cannot be used to discover who is on the admin allowlist.
-    const claims = (await adminAuth().getUser(decoded.uid)).customClaims ?? {};
+    // Step 1.9 / rule 13: a staff or allowlisted identity must use the admin login portal
+    const userRecord = await adminAuth().getUser(decoded.uid);
+    const claims = userRecord.customClaims ?? {};
     if (isAdminAllowedEmail(decoded.email) || isStaffClaim(claims)) {
       return NextResponse.json(
-        { error: GENERIC_AUTH_FAILURE, code: GENERIC_AUTH_FAILURE_CODE },
-        { status: 401 }
+        {
+          error: "This is the admin account. Please use the Admin Login page.",
+          code: "USE_ADMIN_LOGIN",
+        },
+        { status: 403 }
+      );
+    }
+
+    if (userRecord.disabled) {
+      return NextResponse.json(
+        { error: "This account has been suspended. Contact the studio.", code: "ACCOUNT_DISABLED" },
+        { status: 403 }
       );
     }
 
@@ -70,16 +79,14 @@ export async function POST(req: Request) {
     if (claims.role !== "client") {
       await setUserRole(decoded.uid, "client");
     }
-    if (decoded.disabled) {
-      return NextResponse.json(
-        { error: "This account has been suspended. Contact the studio.", code: "ACCOUNT_DISABLED" },
-        { status: 403 }
-      );
-    }
 
     const { cookie, maxAge } = await createSessionCookie(body.idToken, {
       rememberMe: body.rememberMe ?? false,
     });
+
+    const isSecure =
+      req.headers.get("x-forwarded-proto") === "https" ||
+      (typeof req.url === "string" && req.url.startsWith("https:"));
 
     const response = ok({
       success: true,
@@ -96,7 +103,10 @@ export async function POST(req: Request) {
       returnTo: safeReturnTo(body.returnTo),
     });
 
-    response.cookies.set(SESSION_COOKIE, cookie, sessionCookieOptions(maxAge));
+    response.cookies.set(SESSION_COOKIE, cookie, {
+      ...sessionCookieOptions(maxAge),
+      secure: isSecure,
+    });
     return response;
   });
 }

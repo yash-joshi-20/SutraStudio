@@ -15,8 +15,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // Lookup order in database
-    const order = OrdersStore.findById(body.orderId);
+    // Lookup order in database (async lookup to guarantee Firestore sync)
+    const order = (await OrdersStore.findByIdAsync(body.orderId)) || OrdersStore.findById(body.orderId);
     if (!order) {
       return NextResponse.json(
         { error: `Order record '${body.orderId}' not found in database.` },
@@ -48,10 +48,37 @@ export async function POST(req: Request) {
     }
 
     // Server-recomputed amount directly from official order record (never trust client)
-    const amountINR = order.totalAmount || 9499;
-    const orderNumber = order.orderNumber || `ORD-${body.orderId.slice(-4)}`;
-    const clientEmail = order.clientEmail || body.customerEmail || "client@sutrastudio.com";
-    const clientId = order.clientUid || body.clientId || user.uid || "usr_mock_001";
+    const amountINR = order.totalAmount;
+    if (!amountINR || typeof amountINR !== "number" || amountINR <= 0) {
+      return NextResponse.json(
+        { error: "Invalid order amount. The specified order has no valid price configured." },
+        { status: 400 }
+      );
+    }
+
+    const orderNumber = order.orderNumber || order.code;
+    if (!orderNumber) {
+      return NextResponse.json(
+        { error: "Order is missing an assigned order number." },
+        { status: 400 }
+      );
+    }
+
+    const clientEmail = order.clientEmail || (user.isAuthenticated ? user.email : body.customerEmail);
+    if (!clientEmail) {
+      return NextResponse.json(
+        { error: "A verified client email address is required for payment processing." },
+        { status: 400 }
+      );
+    }
+
+    const clientId = order.clientUid || order.clientId || (user.isAuthenticated ? user.uid : body.clientId);
+    if (!clientId) {
+      return NextResponse.json(
+        { error: "A valid client identification is required for payment initialization." },
+        { status: 400 }
+      );
+    }
 
     const razorpayOrder = await PaymentsService.createRazorpayOrder({
       amountINR,

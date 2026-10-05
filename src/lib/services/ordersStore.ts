@@ -1,284 +1,18 @@
 import type { FirestoreOrderRecord } from "@/app/api/orders/route";
 import { NotificationsStore } from "./notificationsStore";
 import { computeOrderProgress, type OrderProgressInfo } from "@/lib/services/orderProgress";
+import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
 
 /**
- * SUTRA STUDIO — Shared Orders Store & Payment Event Log
- * Ensures memory persistence and cross-route synchronization for orders,
- * payment verifications, webhooks, and administrative refunds.
+ * SUTRA STUDIO — Unified Orders Store & Firestore Repository
+ * Firestore is the single source of truth for all orders, status transitions,
+ * payments ledger, comments, and deliverables.
  */
 
-// Initial canonical orders
-const INITIAL_ORDERS: FirestoreOrderRecord[] = [
-  {
-    id: "ord_001",
-    code: "#ORD-001",
-    orderNumber: "ORD-2026-0001",
-    title: "3D Spatial Architecture — Luxury Living Suite",
-    service: "3D Visualization",
-    type: "service",
-    items: [
-      {
-        serviceId: "3d-modeling",
-        name: "3D Spatial Architecture",
-        price: 9499,
-        quantity: 1,
-      },
-    ],
-    totalAmount: 9499,
-    status: "awaiting_approval",
-    statusLabel: "Awaiting Client Approval",
-    source: "dashboard",
-    deliverablePreview: "4K Render Pass 02 with warm teak wood materials and diffused sunlight.",
-    clientUid: "usr_mock_001",
-    clientId: "usr_mock_001",
-    clientName: "Yash Joshi",
-    clientEmail: "yash@studioliving.com",
-    clientPhone: "+91 98765 43210",
-    driveFolderId: "drive_fld_sutra_001",
-    driveFolderPath: "drive_fld_sutra_001/3D_RENDERS",
-    revisionRound: 1,
-    maxRevisions: 2,
-    paymentStatus: "paid",
-    razorpayOrderId: "order_mock_001",
-    razorpayPaymentId: "pay_live_sutra_001",
-    amountPaid: 9499,
-    paidAt: "2026-09-28T10:05:00.000Z",
-    paymentMethod: "razorpay_upi",
-    deliverables: [
-      {
-        driveFileId: "drive_55a120ef_sutra",
-        filename: "Pavilion_Villa_Baked_Model.gltf",
-        checksum: "sha256:7c9921e54f01f0987a...",
-        fileSize: "42.1 MB",
-        mimeType: "model/gltf+json",
-      },
-    ],
-    statusHistory: [
-      {
-        status: "pending_payment",
-        changedAt: "2026-09-28T10:00:00.000Z",
-        changedBy: "client",
-        note: "Order placed via Client Dashboard",
-      },
-      {
-        status: "paid",
-        changedAt: "2026-09-28T10:05:00.000Z",
-        changedBy: "system",
-        note: "Payment verified via Razorpay (pay_live_sutra_001). Commission queued for production.",
-      },
-      {
-        status: "in_progress",
-        changedAt: "2026-09-28T11:30:00.000Z",
-        changedBy: "admin",
-        note: "Assigned to Lead 3D Visualizer",
-      },
-      {
-        status: "awaiting_approval",
-        changedAt: "2026-09-28T14:30:00.000Z",
-        changedBy: "admin",
-        note: "Render Pass 02 uploaded to Google Drive for client review",
-      },
-    ],
-    createdAt: "2026-09-28T10:00:00.000Z",
-    updatedAt: "2026-09-28T14:30:00.000Z",
-    notes: "Please inspect material specular intensity on marble backsplash.",
-  },
-  {
-    id: "ord_002",
-    code: "#ORD-002",
-    orderNumber: "ORD-2026-0002",
-    title: "Commercial Film Color Grade & Audio Polish",
-    service: "Video Production",
-    type: "service",
-    items: [
-      {
-        serviceId: "video-production",
-        name: "Commercial Film & Video Production",
-        price: 14999,
-        quantity: 1,
-      },
-    ],
-    totalAmount: 14999,
-    status: "in_progress",
-    statusLabel: "In Production Pipeline",
-    source: "dashboard",
-    deliverablePreview: "Rough cut assembled. Foley sound design and warm film LUT in progress.",
-    clientUid: "usr_mock_001",
-    clientId: "usr_mock_001",
-    clientName: "Yash Joshi",
-    clientEmail: "yash@studioliving.com",
-    driveFolderId: "drive_fld_sutra_001",
-    driveFolderPath: "drive_fld_sutra_001/VIDEO_PROJECTS",
-    revisionRound: 0,
-    maxRevisions: 3,
-    paymentStatus: "paid",
-    razorpayOrderId: "order_mock_002",
-    razorpayPaymentId: "pay_live_sutra_002",
-    amountPaid: 14999,
-    paidAt: "2026-09-29T12:00:00.000Z",
-    paymentMethod: "razorpay_netbanking",
-    deliverables: [
-      {
-        driveFileId: "drive_89c314de_sutra",
-        filename: "Zenith_Commercial_Reel_1080p.mp4",
-        checksum: "sha256:3d1e9912ba44f0892a...",
-        fileSize: "188.4 MB",
-        mimeType: "video/mp4",
-      },
-    ],
-    statusHistory: [
-      {
-        status: "pending_payment",
-        changedAt: "2026-09-29T11:45:00.000Z",
-        changedBy: "client",
-        note: "Order placed via Client Dashboard",
-      },
-      {
-        status: "paid",
-        changedAt: "2026-09-29T12:00:00.000Z",
-        changedBy: "system",
-        note: "Payment verified via Razorpay (pay_live_sutra_002)",
-      },
-      {
-        status: "in_progress",
-        changedAt: "2026-09-29T14:00:00.000Z",
-        changedBy: "admin",
-        note: "Footage ingested into Studio DaVinci Resolve cloud station",
-      },
-    ],
-    createdAt: "2026-09-29T11:45:00.000Z",
-    updatedAt: "2026-09-29T14:00:00.000Z",
-  },
-  {
-    id: "ord_003",
-    code: "#ORD-003",
-    orderNumber: "ORD-2026-0003",
-    title: "Brand Identity Genesis & Typography System",
-    service: "Brand Identity",
-    type: "service",
-    items: [
-      {
-        serviceId: "brand-identity",
-        name: "Brand Identity Genesis",
-        price: 9999,
-        quantity: 1,
-      },
-    ],
-    totalAmount: 9999,
-    status: "completed",
-    statusLabel: "Completed & Archived",
-    source: "dashboard",
-    deliverablePreview: "Brand Guidelines V2 & Master Typography Spec sheet delivered to Drive Vault.",
-    clientUid: "usr_mock_001",
-    clientId: "usr_mock_001",
-    clientName: "Yash Joshi",
-    clientEmail: "yash@studioliving.com",
-    driveFolderId: "drive_fld_sutra_001",
-    driveFolderPath: "drive_fld_sutra_001/BRAND_ASSETS",
-    revisionRound: 2,
-    maxRevisions: 2,
-    paymentStatus: "paid",
-    razorpayOrderId: "order_mock_003",
-    razorpayPaymentId: "pay_live_sutra_003",
-    amountPaid: 9999,
-    paidAt: "2026-09-25T09:30:00.000Z",
-    paymentMethod: "razorpay_card",
-    deliverables: [
-      {
-        driveFileId: "drive_33f789aa_sutra",
-        filename: "Sutra_Brand_Guidelines_V2.pdf",
-        checksum: "sha256:1a8844ff0923e811bc...",
-        fileSize: "14.2 MB",
-        mimeType: "application/pdf",
-      },
-    ],
-    statusHistory: [
-      {
-        status: "pending_payment",
-        changedAt: "2026-09-25T09:15:00.000Z",
-        changedBy: "client",
-        note: "Order created",
-      },
-      {
-        status: "paid",
-        changedAt: "2026-09-25T09:30:00.000Z",
-        changedBy: "system",
-        note: "Payment verified via Razorpay",
-      },
-      {
-        status: "completed",
-        changedAt: "2026-09-27T18:00:00.000Z",
-        changedBy: "client",
-        note: "Client approved final deliverables",
-      },
-    ],
-    createdAt: "2026-09-25T09:15:00.000Z",
-    updatedAt: "2026-09-27T18:00:00.000Z",
-  },
-  {
-    id: "ord_004",
-    code: "#ORD-004",
-    orderNumber: "ORD-2026-0004",
-    title: "Maison Aura — Festive Campaign Variation Pack",
-    service: "Meta Ads & Digital Marketing",
-    type: "service",
-    items: [
-      {
-        serviceId: "meta-ads",
-        name: "Meta Ads & Digital Marketing",
-        price: 8499,
-        quantity: 1,
-      },
-    ],
-    totalAmount: 8499,
-    status: "in_progress",
-    statusLabel: "In Production Pipeline",
-    source: "dashboard",
-    deliverablePreview: "9:16 vertical motion reels formatted for Instagram & Facebook Ad Manager.",
-    clientUid: "usr_mock_002",
-    clientId: "usr_mock_002",
-    clientName: "Aura Fragrances",
-    clientEmail: "contact@maisonaura.com",
-    driveFolderId: "drive_fld_maison_002",
-    driveFolderPath: "drive_fld_maison_002/CAMPAIGNS",
-    revisionRound: 0,
-    maxRevisions: 2,
-    paymentStatus: "paid",
-    razorpayOrderId: "order_mock_004",
-    razorpayPaymentId: "pay_live_sutra_004",
-    amountPaid: 8499,
-    paidAt: "2026-09-30T10:00:00.000Z",
-    paymentMethod: "razorpay_upi",
-    deliverables: [
-      {
-        driveFileId: "drive_77c891ff_sutra",
-        filename: "Diwali_Meta_Ads_Creative_Pack.zip",
-        checksum: "sha256:22a498bb7621f9001a...",
-        fileSize: "64.8 MB",
-        mimeType: "application/zip",
-      },
-    ],
-    statusHistory: [
-      {
-        status: "pending_payment",
-        changedAt: "2026-09-30T09:45:00.000Z",
-        changedBy: "client",
-        note: "Order created",
-      },
-      {
-        status: "paid",
-        changedAt: "2026-09-30T10:00:00.000Z",
-        changedBy: "system",
-        note: "Payment verified via Razorpay",
-      },
-    ],
-    createdAt: "2026-09-30T09:45:00.000Z",
-    updatedAt: "2026-09-30T10:00:00.000Z",
-  },
-];
+// Initial canonical orders array (empty — no mock data)
+const INITIAL_ORDERS: FirestoreOrderRecord[] = [];
 
-// Attach to globalThis to survive Hot Module Reloading in dev and share across route bundles
+// Attach to globalThis to share cache across route bundles and reduce cold read latency
 const globalAny = globalThis as any;
 
 if (!globalAny.__SUTRA_STORED_ORDERS__) {
@@ -291,6 +25,10 @@ if (!globalAny.__SUTRA_PROCESSED_WEBHOOKS__) {
 
 if (!globalAny.__SUTRA_PAYMENT_EVENTS__) {
   globalAny.__SUTRA_PAYMENT_EVENTS__ = [];
+}
+
+if (!globalAny.__SUTRA_ORDERS_LAST_SYNC__) {
+  globalAny.__SUTRA_ORDERS_LAST_SYNC__ = 0;
 }
 
 export const STORED_ORDERS: FirestoreOrderRecord[] = globalAny.__SUTRA_STORED_ORDERS__;
@@ -321,7 +59,7 @@ export const ALLOWED_STATUS_TRANSITIONS: Record<string, string[]> = {
   delivered: ["approved", "completed", "revision_requested", "in_production", "on_hold"],
   revision_requested: ["in_production", "draft_delivered", "delivered", "on_hold", "cancelled"],
   approved: ["completed"],
-  completed: ["in_production", "active"], // Admin reopen allowed
+  completed: ["in_production", "active"],
   on_hold: ["paid", "brief_review", "in_production", "active", "draft_delivered", "revision_requested", "cancelled"],
   trial: ["active", "closed", "expired", "cancelled"],
   active: ["paused", "on_hold", "closed", "expired", "cancelled"],
@@ -331,14 +69,68 @@ export const ALLOWED_STATUS_TRANSITIONS: Record<string, string[]> = {
   refunded: [],
 };
 
-
 export { computeOrderProgress } from "@/lib/services/orderProgress";
 export type { OrderProgressInfo } from "@/lib/services/orderProgress";
 export type { FirestoreOrderRecord, OrderDeliverableItem } from "@/app/api/orders/route";
 
+/**
+ * Persists an order directly to Firestore asynchronously
+ */
+async function persistOrderToFirestore(order: FirestoreOrderRecord): Promise<void> {
+  if (!isFirebaseAdminReady()) return;
+  try {
+    const db = adminDb();
+    await db.collection("orders").doc(order.id).set(order, { merge: true });
+  } catch (err) {
+    console.warn(`[OrdersStore] Failed to persist order ${order.id} to Firestore:`, err);
+  }
+}
+
 export class OrdersStore {
+  /**
+   * Synchronizes cache from Firestore
+   */
+  public static async syncFromFirestore(force = false): Promise<FirestoreOrderRecord[]> {
+    if (!isFirebaseAdminReady()) {
+      return globalAny.__SUTRA_STORED_ORDERS__;
+    }
+
+    const now = Date.now();
+    // Throttle syncs to every 2 seconds unless forced
+    if (!force && now - globalAny.__SUTRA_ORDERS_LAST_SYNC__ < 2000) {
+      return globalAny.__SUTRA_STORED_ORDERS__;
+    }
+
+    try {
+      const db = adminDb();
+      const snapshot = await db.collection("orders").get();
+      const loaded: FirestoreOrderRecord[] = [];
+      snapshot.forEach((doc) => {
+        loaded.push(doc.data() as FirestoreOrderRecord);
+      });
+
+      // Sort newest first
+      loaded.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+
+      globalAny.__SUTRA_STORED_ORDERS__ = loaded;
+      globalAny.__SUTRA_ORDERS_LAST_SYNC__ = now;
+      return loaded;
+    } catch (err) {
+      console.warn("[OrdersStore] syncFromFirestore warning:", err);
+      return globalAny.__SUTRA_STORED_ORDERS__;
+    }
+  }
+
   public static getAll(): FirestoreOrderRecord[] {
+    // Trigger background sync if stale
+    if (Date.now() - globalAny.__SUTRA_ORDERS_LAST_SYNC__ > 10000) {
+      this.syncFromFirestore().catch(() => {});
+    }
     return globalAny.__SUTRA_STORED_ORDERS__;
+  }
+
+  public static async getAllAsync(): Promise<FirestoreOrderRecord[]> {
+    return await this.syncFromFirestore(true);
   }
 
   public static findById(idOrNumber: string): FirestoreOrderRecord | undefined {
@@ -351,8 +143,65 @@ export class OrdersStore {
     );
   }
 
+  public static async findByIdAsync(idOrNumber: string): Promise<FirestoreOrderRecord | undefined> {
+    const existing = this.findById(idOrNumber);
+    if (existing) return existing;
+
+    if (!isFirebaseAdminReady()) return undefined;
+
+    try {
+      const db = adminDb();
+      // Try direct doc get
+      const docSnap = await db.collection("orders").doc(idOrNumber).get();
+      if (docSnap.exists) {
+        const data = docSnap.data() as FirestoreOrderRecord;
+        this.add(data);
+        return data;
+      }
+
+      // Try query by orderNumber or code
+      const qSnap = await db.collection("orders").where("orderNumber", "==", idOrNumber).limit(1).get();
+      if (!qSnap.empty) {
+        const data = qSnap.docs[0].data() as FirestoreOrderRecord;
+        this.add(data);
+        return data;
+      }
+
+      const qCodeSnap = await db.collection("orders").where("code", "==", idOrNumber).limit(1).get();
+      if (!qCodeSnap.empty) {
+        const data = qCodeSnap.docs[0].data() as FirestoreOrderRecord;
+        this.add(data);
+        return data;
+      }
+
+      const qRzpSnap = await db.collection("orders").where("razorpayOrderId", "==", idOrNumber).limit(1).get();
+      if (!qRzpSnap.empty) {
+        const data = qRzpSnap.docs[0].data() as FirestoreOrderRecord;
+        this.add(data);
+        return data;
+      }
+    } catch (err) {
+      console.warn("[OrdersStore] findByIdAsync warning:", err);
+    }
+
+    return undefined;
+  }
+
   public static add(order: FirestoreOrderRecord): void {
-    globalAny.__SUTRA_STORED_ORDERS__.unshift(order);
+    const existingIndex = globalAny.__SUTRA_STORED_ORDERS__.findIndex(
+      (o: FirestoreOrderRecord) => o.id === order.id
+    );
+    if (existingIndex >= 0) {
+      globalAny.__SUTRA_STORED_ORDERS__[existingIndex] = order;
+    } else {
+      globalAny.__SUTRA_STORED_ORDERS__.unshift(order);
+    }
+    persistOrderToFirestore(order).catch(() => {});
+  }
+
+  public static async addAsync(order: FirestoreOrderRecord): Promise<void> {
+    this.add(order);
+    await persistOrderToFirestore(order);
   }
 
   public static update(
@@ -366,6 +215,18 @@ export class OrdersStore {
       updatedAt: new Date().toISOString(),
     });
 
+    persistOrderToFirestore(order).catch(() => {});
+    return order;
+  }
+
+  public static async updateAsync(
+    idOrNumber: string,
+    updates: Partial<FirestoreOrderRecord>
+  ): Promise<FirestoreOrderRecord | undefined> {
+    const order = this.update(idOrNumber, updates);
+    if (order) {
+      await persistOrderToFirestore(order);
+    }
     return order;
   }
 
@@ -401,6 +262,8 @@ export class OrdersStore {
       note: `Payment verified via Razorpay (${params.razorpayPaymentId}) via ${params.source || "checkout"}.`,
     });
 
+    persistOrderToFirestore(order).catch(() => {});
+
     this.logPaymentEvent({
       orderId: order.id,
       eventType: "payment.verified",
@@ -412,7 +275,7 @@ export class OrdersStore {
     // Notify Studio Administrator of new verified paid commission
     try {
       NotificationsStore.add({
-        userId: "usr_admin_001",
+        userId: "admin",
         type: "order_paid",
         title: "New Commission Paid",
         message: `Order #${order.orderNumber || order.code} received verified payment of ₹${(order.amountPaid || order.totalAmount || 0).toLocaleString("en-IN")}. Work process can be initiated.`,
@@ -430,7 +293,7 @@ export class OrdersStore {
         await N8nAutomationService.dispatchWorkflow({
           workflowId: "W1_order_fulfillment_router",
           orderId: order.id,
-          clientId: order.clientUid || order.clientId,
+          clientId: order.clientUid || order.clientId || "",
           service: order.service,
           brief: order.requirements || order.notes,
           driveFolderId: order.driveFolderId,
@@ -463,6 +326,8 @@ export class OrdersStore {
       changedBy: "system",
       note: `Payment attempt failed: ${params.reason}`,
     });
+
+    persistOrderToFirestore(order).catch(() => {});
 
     this.logPaymentEvent({
       orderId: order.id,
@@ -523,26 +388,31 @@ export class OrdersStore {
       note: params.note || `Status updated to ${params.newStatus} by ${params.actorRole}`,
     });
 
+    persistOrderToFirestore(order).catch(() => {});
+
     // In-app notifications based on transition
     try {
-      if (params.newStatus === "in_production") {
-        NotificationsStore.add({
-          userId: order.clientUid || order.clientId || "usr_client_001",
-          type: "status_update",
-          title: "Production Started",
-          message: `Your commission #${order.orderNumber || order.code} is now actively in studio production.`,
-          orderId: order.id,
-          orderNumber: order.orderNumber || order.code,
-        });
-      } else if (params.newStatus === "brief_review") {
-        NotificationsStore.add({
-          userId: order.clientUid || order.clientId || "usr_client_001",
-          type: "status_update",
-          title: "Brief Reviewed & Kickoff",
-          message: `Art Director has reviewed your brief for #${order.orderNumber || order.code}. Creative kickoff confirmed.`,
-          orderId: order.id,
-          orderNumber: order.orderNumber || order.code,
-        });
+      const targetUser = order.clientUid || order.clientId || "";
+      if (targetUser) {
+        if (params.newStatus === "in_production") {
+          NotificationsStore.add({
+            userId: targetUser,
+            type: "status_update",
+            title: "Production Started",
+            message: `Your commission #${order.orderNumber || order.code} is now actively in studio production.`,
+            orderId: order.id,
+            orderNumber: order.orderNumber || order.code,
+          });
+        } else if (params.newStatus === "brief_review") {
+          NotificationsStore.add({
+            userId: targetUser,
+            type: "status_update",
+            title: "Brief Reviewed & Kickoff",
+            message: `Art Director has reviewed your brief for #${order.orderNumber || order.code}. Creative kickoff confirmed.`,
+            orderId: order.id,
+            orderNumber: order.orderNumber || order.code,
+          });
+        }
       }
     } catch {
       // safe fallback
@@ -581,18 +451,22 @@ export class OrdersStore {
     order.comments.push(commentItem);
     order.updatedAt = now;
 
+    persistOrderToFirestore(order).catch(() => {});
+
     // Notify other party
     try {
       const recipientId =
-        params.sender === "client" ? "usr_admin_001" : order.clientUid || order.clientId || "usr_client_001";
-      NotificationsStore.add({
-        userId: recipientId,
-        type: "order_comment",
-        title: `New Note on #${order.orderNumber || order.code}`,
-        message: `${params.authorName}: "${params.text.slice(0, 80)}"`,
-        orderId: order.id,
-        orderNumber: order.orderNumber || order.code,
-      });
+        params.sender === "client" ? "admin" : (order.clientUid || order.clientId || "");
+      if (recipientId) {
+        NotificationsStore.add({
+          userId: recipientId,
+          type: "order_comment",
+          title: `New Note on #${order.orderNumber || order.code}`,
+          message: `${params.authorName}: "${params.text.slice(0, 80)}"`,
+          orderId: order.id,
+          orderNumber: order.orderNumber || order.code,
+        });
+      }
     } catch {
       // safe fallback
     }
@@ -623,6 +497,8 @@ export class OrdersStore {
     if (!order.internalNotes) order.internalNotes = [];
     order.internalNotes.push(noteItem);
     order.updatedAt = now;
+
+    persistOrderToFirestore(order).catch(() => {});
 
     return { success: true, note: noteItem };
   }
@@ -685,16 +561,21 @@ export class OrdersStore {
       note: params.deliveryNote || `${isFinal ? "Final" : "Draft"} deliverable (${currentVersion}) vaulted for client review.`,
     });
 
+    persistOrderToFirestore(order).catch(() => {});
+
     // Notify client in-app
     try {
-      NotificationsStore.add({
-        userId: order.clientUid || order.clientId || "usr_client_001",
-        type: "order_delivered",
-        title: isFinal ? "Final Deliverable Ready" : "Draft Ready for Review",
-        message: `Deliverable (${currentVersion}) for #${order.orderNumber || order.code} is available for your review in Google Drive.`,
-        orderId: order.id,
-        orderNumber: order.orderNumber || order.code,
-      });
+      const targetUser = order.clientUid || order.clientId || "";
+      if (targetUser) {
+        NotificationsStore.add({
+          userId: targetUser,
+          type: "order_delivered",
+          title: isFinal ? "Final Deliverable Ready" : "Draft Ready for Review",
+          message: `Deliverable (${currentVersion}) for #${order.orderNumber || order.code} is available for your review in Google Drive.`,
+          orderId: order.id,
+          orderNumber: order.orderNumber || order.code,
+        });
+      }
     } catch {
       // safe fallback
     }
@@ -719,8 +600,7 @@ export class OrdersStore {
       params.clientUid &&
       ownerUid &&
       ownerUid !== params.clientUid &&
-      params.clientUid !== "admin" &&
-      params.clientUid !== "usr_admin_001"
+      params.clientUid !== "admin"
     ) {
       return { success: false, error: "Forbidden: You can only review your own orders." };
     }
@@ -745,10 +625,12 @@ export class OrdersStore {
         note: "Order workflow 100% completed. Permanent commercial license granted.",
       });
 
+      persistOrderToFirestore(order).catch(() => {});
+
       // Notify admin
       try {
         NotificationsStore.add({
-          userId: "usr_admin_001",
+          userId: "admin",
           type: "order_approved",
           title: "Order 100% Approved",
           message: `Client ${params.clientName || "Client"} approved deliverables for order #${order.orderNumber || order.code}.`,
@@ -788,10 +670,12 @@ export class OrdersStore {
         note: noteText,
       });
 
+      persistOrderToFirestore(order).catch(() => {});
+
       // Notify admin
       try {
         NotificationsStore.add({
-          userId: "usr_admin_001",
+          userId: "admin",
           type: "revision_requested",
           title: limitReached ? "Extra Revision Requested" : "Revision Requested",
           message: `Client requested revision on #${order.orderNumber || order.code} (Round ${nextRound}): "${params.comment.slice(0, 80)}"`,
@@ -814,6 +698,12 @@ export class OrdersStore {
 
   public static markWebhookProcessed(eventId: string): void {
     globalAny.__SUTRA_PROCESSED_WEBHOOKS__.add(eventId);
+    if (isFirebaseAdminReady()) {
+      adminDb().collection("processedWebhooks").doc(eventId).set({
+        eventId,
+        processedAt: new Date().toISOString(),
+      }).catch(() => {});
+    }
   }
 
   public static logPaymentEvent(event: Omit<PaymentAuditLog, "id" | "timestamp">): void {
@@ -823,6 +713,10 @@ export class OrdersStore {
       ...event,
     };
     globalAny.__SUTRA_PAYMENT_EVENTS__.unshift(auditRecord);
+
+    if (isFirebaseAdminReady()) {
+      adminDb().collection("payments").doc(auditRecord.id).set(auditRecord).catch(() => {});
+    }
   }
 
   /**
@@ -921,7 +815,7 @@ export class OrdersStore {
     });
 
     NotificationsStore.add({
-      userId: "usr_admin_001",
+      userId: "admin",
       type: "order_placed",
       title: "New Client Trial Activated",
       message: `${params.clientName} started 3-day trial on ${params.planName} (#${orderNumber}).`,
@@ -966,6 +860,8 @@ export class OrdersStore {
       note: `Trial successfully converted to active paid retainer. First billing verified via Razorpay (${params.razorpayPaymentId}).`,
     });
 
+    persistOrderToFirestore(order).catch(() => {});
+
     this.logPaymentEvent({
       orderId: order.id,
       eventType: "subscription.converted",
@@ -974,15 +870,18 @@ export class OrdersStore {
       source: "checkout",
     });
 
-    NotificationsStore.add({
-      userId: order.clientUid || order.clientId || "usr_client_001",
-      type: "order_paid",
-      title: "Retainer Activated",
-      message: `Your monthly retainer for ${order.service} is officially active. Next renewal on ${new Date(nextPeriodEnd).toLocaleDateString()}.`,
-      orderId: order.id,
-      orderNumber: order.orderNumber,
-      actionUrl: "/orders",
-    });
+    const targetUser = order.clientUid || order.clientId || "";
+    if (targetUser) {
+      NotificationsStore.add({
+        userId: targetUser,
+        type: "order_paid",
+        title: "Retainer Activated",
+        message: `Your monthly retainer for ${order.service} is officially active. Next renewal on ${new Date(nextPeriodEnd).toLocaleDateString()}.`,
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        actionUrl: "/orders",
+      });
+    }
 
     return { success: true, order };
   }
@@ -1000,7 +899,7 @@ export class OrdersStore {
     if (!order) return { success: false, error: "Order not found." };
 
     // Security check: client ownership
-    if (params.clientUid && order.clientUid && order.clientUid !== params.clientUid && params.clientUid !== "admin" && params.clientUid !== "usr_admin_001") {
+    if (params.clientUid && order.clientUid && order.clientUid !== params.clientUid && params.clientUid !== "admin") {
       return { success: false, error: "Forbidden: You cannot cancel orders belonging to another client." };
     }
 
@@ -1038,9 +937,11 @@ export class OrdersStore {
       note: `Client cancelled order before production kickoff. Reason: ${params.reason || "Self-service cancellation"}.${wasPaid ? " 100% refund initiated via Razorpay." : ""}`,
     });
 
+    persistOrderToFirestore(order).catch(() => {});
+
     // Notify Admin
     NotificationsStore.add({
-      userId: "usr_admin_001",
+      userId: "admin",
       type: "status_update",
       title: "Order Cancelled by Client",
       message: `Order #${order.orderNumber || order.code} cancelled by client before kickoff.${wasPaid ? " Refund processed." : ""}`,
@@ -1080,6 +981,8 @@ export class OrdersStore {
       note: `Administrative refund of ₹${refundAmount.toLocaleString("en-IN")} executed via Razorpay. Reason: ${params.reason}`,
     });
 
+    persistOrderToFirestore(order).catch(() => {});
+
     this.logPaymentEvent({
       orderId: order.id,
       eventType: "payment.refunded",
@@ -1090,15 +993,18 @@ export class OrdersStore {
     });
 
     // Notify Client
-    NotificationsStore.add({
-      userId: order.clientUid || order.clientId || "usr_client_001",
-      type: "status_update",
-      title: "Refund Processed",
-      message: `A refund of ₹${refundAmount.toLocaleString("en-IN")} has been processed for Order #${order.orderNumber || order.code}. Funds will reflect in your bank account in 3-5 days.`,
-      orderId: order.id,
-      orderNumber: order.orderNumber || order.code,
-      actionUrl: `/orders`,
-    });
+    const targetUser = order.clientUid || order.clientId || "";
+    if (targetUser) {
+      NotificationsStore.add({
+        userId: targetUser,
+        type: "status_update",
+        title: "Refund Processed",
+        message: `A refund of ₹${refundAmount.toLocaleString("en-IN")} has been processed for Order #${order.orderNumber || order.code}. Funds will reflect in your bank account in 3-5 days.`,
+        orderId: order.id,
+        orderNumber: order.orderNumber || order.code,
+        actionUrl: `/orders`,
+      });
+    }
 
     return { success: true, order };
   }
@@ -1119,6 +1025,7 @@ export class OrdersStore {
         order.status = "expired";
         order.statusLabel = "Draft Expired (Abandoned Checkout)";
         order.updatedAt = new Date().toISOString();
+        persistOrderToFirestore(order).catch(() => {});
         expiredCount += 1;
       }
     }

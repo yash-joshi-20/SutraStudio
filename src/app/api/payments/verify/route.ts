@@ -65,7 +65,7 @@ export async function POST(req: Request) {
       }
 
       // Multi-tenant authorization check
-      if (callerRole === "client" && callerUid && order.clientUid !== callerUid && order.clientId !== callerUid && callerUid !== "usr_mock_001") {
+      if (callerRole === "client" && callerUid && order.clientUid !== callerUid && order.clientId !== callerUid) {
         return NextResponse.json(
           { error: "Forbidden: You are not authorized to verify payment on this order." },
           { status: 403 }

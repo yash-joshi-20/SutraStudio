@@ -53,7 +53,7 @@ export class ScheduledNotificationEngine {
       const orderId: string = o.id || "";
       const orderNumber: string = o.orderNumber || o.code || orderId;
       const serviceName: string = o.serviceName || o.service || "Studio Creative Commission";
-      const clientUid: string = o.clientUid || o.clientId || "usr_mock_001";
+      const clientUid: string = o.clientUid || o.clientId || "";
       const clientEmail: string | undefined = o.clientEmail;
       const clientName: string = o.clientName || "Studio Client";
 

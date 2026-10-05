@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     }
 
     // Access control
-    if (callerRole === "client" && callerUid && order.clientUid !== callerUid && order.clientId !== callerUid && callerUid !== "usr_mock_001") {
+    if (callerRole === "client" && callerUid && order.clientUid !== callerUid && order.clientId !== callerUid) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

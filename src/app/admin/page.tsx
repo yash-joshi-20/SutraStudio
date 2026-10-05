@@ -146,76 +146,9 @@ interface ClientRecord {
   lastActive: string;
 }
 
-const CLIENTS_DATA: ClientRecord[] = [
-  {
-    id: "cl-1",
-    name: "Yash Joshi",
-    company: "Studio Living Architecture",
-    email: "yash@studioliving.com",
-    tier: "Enterprise",
-    driveFolderId: "drive_fld_sutra_001",
-    activeOrders: 2,
-    lifetimeVolume: "₹1,85,000",
-    status: "Active",
-    lastActive: "10 mins ago",
-  },
-  {
-    id: "cl-2",
-    name: "Aarav Singhania",
-    company: "Maison Aura Luxury Fragrances",
-    email: "aarav@maisonaura.com",
-    tier: "Enterprise",
-    driveFolderId: "drive_fld_maison_002",
-    activeOrders: 3,
-    lifetimeVolume: "₹2,40,000",
-    status: "Active",
-    lastActive: "45 mins ago",
-  },
-  {
-    id: "cl-3",
-    name: "Meera Patel",
-    company: "Zenith Spatial & Interiors",
-    email: "meera@zenithliving.in",
-    tier: "Growth",
-    driveFolderId: "drive_fld_zenith_003",
-    activeOrders: 1,
-    lifetimeVolume: "₹95,000",
-    status: "Under Review",
-    lastActive: "3 hours ago",
-  },
-  {
-    id: "cl-4",
-    name: "Karan Verma",
-    company: "Shri Naturals D2C",
-    email: "growth@shrinaturals.com",
-    tier: "Starter",
-    driveFolderId: "drive_fld_shri_004",
-    activeOrders: 0,
-    lifetimeVolume: "₹45,000",
-    status: "Pending Brief",
-    lastActive: "Yesterday",
-  },
-  {
-    id: "cl-5",
-    name: "Devika Rao",
-    company: "Vedic Living Heritage Resorts",
-    email: "devika@vedicresorts.com",
-    tier: "Enterprise",
-    driveFolderId: "drive_fld_vedic_005",
-    activeOrders: 4,
-    lifetimeVolume: "₹3,20,000",
-    status: "Active",
-    lastActive: "Just now",
-  },
-];
+const CLIENTS_DATA: ClientRecord[] = [];
 
-const AUDIT_LOGS = [
-  { id: "log-1", event: "AUTH_SESSION", actor: "yash@studioliving.com", detail: "Firebase ID token validated. Session active.", time: "10:24:12 UTC", type: "info" },
-  { id: "log-2", event: "DRIVE_SYNC", actor: "n8n_webhook_worker", detail: "Master render synced to drive_fld_sutra_001/3D_RENDERS", time: "10:18:05 UTC", type: "success" },
-  { id: "log-3", event: "REVISION_REQUEST", actor: "yash@studioliving.com", detail: "Revision round 1 initiated on order #ORD-001", time: "10:04:30 UTC", type: "warning" },
-  { id: "log-4", event: "WORKFLOW_DISPATCH", actor: "ai_router_core", detail: "Triggered 3D spatial meshing pipeline in isolated container", time: "09:55:18 UTC", type: "info" },
-  { id: "log-5", event: "ORDER_CREATED", actor: "aarav@maisonaura.com", detail: "Order #ORD-008 created in Firestore: 4K Commercial Reel", time: "09:30:00 UTC", type: "success" },
-];
+const AUDIT_LOGS: Array<{ id: string; event: string; actor: string; detail: string; time: string; type: string }> = [];
 
 export interface AdminChatMessage {
   id?: string;
@@ -252,197 +185,7 @@ export interface AdminChatSession {
   messages: AdminChatMessage[];
 }
 
-const INITIAL_ADMIN_SESSIONS: AdminChatSession[] = [
-  {
-    id: "cl-1",
-    clientId: "usr_mock_001",
-    clientName: "Yash Joshi",
-    clientEmail: "yash@studioliving.com",
-    clientPhone: "+91 98200 45678",
-    company: "Studio Living Architecture",
-    vaultId: "drive_fld_sutra_001",
-    joinedDate: "August 2026",
-    mode: "ai",
-    lastPrompt: "Can we do 4K multi-angle lighting passes for our new catalog?",
-    workflowTag: "3D Visualization (95% match)",
-    lastTime: "5m ago",
-    unreadCount: 1,
-    messages: [
-      {
-        sender: "client",
-        text: "Namaste team, we need a 4K spatial architectural visualization for the Luxury Living Pavilion Suite.",
-        time: "10:15 AM",
-      },
-      {
-        sender: "ai",
-        text: "Namaste Yash! 🙏 I have initiated the 3D Spatial Architecture pipeline. We have generated order draft #ORD-001 for ₹18,999.",
-        time: "10:16 AM",
-        workflow: "3D Visualization (95% match)",
-        orderDraft: {
-          orderId: "ord_001",
-          orderNumber: "ORD-001",
-          service: "3D Spatial Architecture",
-          totalAmount: 18999,
-          status: "in_progress",
-          driveFolderId: "drive_fld_sutra_001",
-        },
-      },
-      {
-        sender: "client",
-        text: "Can we do 4K multi-angle lighting passes for our new catalog?",
-        time: "10:20 AM",
-      },
-      {
-        sender: "ai",
-        text: "Yes, multi-angle dusk and midday lighting bakes are included in your 3D spatial deliverable package. Master render will sync to your Google Drive vault.",
-        time: "10:21 AM",
-        workflow: "3D Visualization (95% match)",
-      },
-    ],
-  },
-  {
-    id: "cl-2",
-    clientId: "usr_mock_002",
-    clientName: "Aarav Singhania",
-    clientEmail: "aarav@maisonaura.com",
-    clientPhone: "+91 98111 23456",
-    company: "Maison Aura Luxury Fragrances",
-    vaultId: "drive_fld_maison_002",
-    joinedDate: "July 2026",
-    mode: "human",
-    lastPrompt: "ProRes master video ready for Google Drive vault export.",
-    workflowTag: "Video Production",
-    lastTime: "25m ago",
-    unreadCount: 0,
-    messages: [
-      {
-        sender: "client",
-        text: "Can you confirm the color grading pass on the fragrance commercial reel?",
-        time: "09:45 AM",
-      },
-      {
-        sender: "admin",
-        text: "Raghavan here: I've personally reviewed the color balance. ProRes master will be in your Drive vault by 2 PM.",
-        time: "09:50 AM",
-      },
-      {
-        sender: "note",
-        text: "Client requested warm golden highlights on the glass bottle refraction.",
-        time: "09:52 AM",
-      },
-      {
-        sender: "ai",
-        text: "Commercial cinematic reel order #ORD-003 is currently undergoing Final Cut rendering.",
-        time: "09:55 AM",
-        orderDraft: {
-          orderId: "ord_003",
-          orderNumber: "ORD-003",
-          service: "Commercial Cinematic Reel",
-          totalAmount: 14999,
-          status: "awaiting_approval",
-          driveFolderId: "drive_fld_maison_002",
-        },
-      },
-    ],
-  },
-  {
-    id: "cl-3",
-    clientId: "usr_mock_003",
-    clientName: "Meera Patel",
-    clientEmail: "meera@zenithliving.in",
-    clientPhone: "+91 99200 88776",
-    company: "Zenith Spatial & Interiors",
-    vaultId: "drive_fld_zenith_003",
-    joinedDate: "September 2026",
-    mode: "ai",
-    lastPrompt: "Need photorealistic living room and terrace architectural renders.",
-    workflowTag: "Interior Design",
-    lastTime: "2h ago",
-    unreadCount: 0,
-    messages: [
-      {
-        sender: "client",
-        text: "Need photorealistic living room and terrace architectural renders for a penthouse.",
-        time: "08:15 AM",
-      },
-      {
-        sender: "ai",
-        text: "Sutra AI: Initialized Interior Design pipeline. Order #ORD-005 generated for ₹16,999.",
-        time: "08:16 AM",
-        workflow: "Interior Design (92% match)",
-        orderDraft: {
-          orderId: "ord_005",
-          orderNumber: "ORD-005",
-          service: "Interior Architectural Engine",
-          totalAmount: 16999,
-          status: "in_progress",
-          driveFolderId: "drive_fld_zenith_003",
-        },
-      },
-    ],
-  },
-  {
-    id: "cl-4",
-    clientId: "usr_mock_004",
-    clientName: "Karan Verma",
-    clientEmail: "growth@shrinaturals.com",
-    clientPhone: "+91 97110 33445",
-    company: "Shri Naturals D2C",
-    vaultId: "drive_fld_shri_004",
-    joinedDate: "September 2026",
-    mode: "ai",
-    lastPrompt: "Looking for high-converting Meta ads creative campaign.",
-    workflowTag: "Digital Marketing",
-    lastTime: "Yesterday",
-    unreadCount: 0,
-    messages: [
-      {
-        sender: "client",
-        text: "Looking for high-converting Meta ads creative campaign for our festive launch.",
-        time: "Yesterday 04:30 PM",
-      },
-      {
-        sender: "ai",
-        text: "Sutra AI: Meta Ads & Digital Marketing workflow active. Can provide 10 carousel hooks and 3 video creatives.",
-        time: "Yesterday 04:32 PM",
-        workflow: "Marketing (90% match)",
-      },
-    ],
-  },
-  {
-    id: "cl-5",
-    clientId: "usr_mock_005",
-    clientName: "Devika Rao",
-    clientEmail: "devika@vedicresorts.com",
-    clientPhone: "+91 98450 11223",
-    company: "Vedic Living Heritage Resorts",
-    vaultId: "drive_fld_vedic_005",
-    joinedDate: "June 2026",
-    mode: "ai",
-    lastPrompt: "Need 360 VR virtual tour bake for our heritage pavilion",
-    workflowTag: "360 VR Spatial",
-    lastTime: "1h ago",
-    unreadCount: 2,
-    messages: [
-      {
-        sender: "client",
-        text: "Need 360 VR virtual tour bake for our heritage pavilion.",
-        time: "09:10 AM",
-      },
-      {
-        sender: "ai",
-        text: "Sutra AI: Initialized 360 View pipeline. Panoramas will be compiled for web and VR headsets.",
-        time: "09:12 AM",
-        workflow: "360 View (96% match)",
-      },
-      {
-        sender: "client",
-        text: "Please make sure the heritage courtyard lighting matches the sunset golden hour.",
-        time: "09:15 AM",
-      },
-    ],
-  },
-];
+const INITIAL_ADMIN_SESSIONS: AdminChatSession[] = [];
 
 export interface StudioWorkflowEngine {
   slug: string;
@@ -814,7 +557,7 @@ function AdminHubContent() {
     clientRemindersEnabled: true,
     adminAlertsEnabled: true,
     timezone: "Asia/Kolkata",
-    adminEmail: "admin@sutrastudio.com",
+    adminEmail: "yashjoshi20@zohomail.in",
     updatedAt: new Date().toISOString(),
   });
   const [isSavingNotifSettings, setIsSavingNotifSettings] = useState(false);
@@ -5194,7 +4937,7 @@ const [adminDataError, setAdminDataError] = useState("");
                               <p className="text-[#64748B] flex items-center gap-1.5 text-[11px]">
                                 <span>Client ID:</span>
                                 <span className="font-mono text-[#5C3A1E]">
-                                  {inspectingAdminOrder.clientId || inspectingAdminOrder.clientUid || "usr_mock_001"}
+                                  {inspectingAdminOrder.clientId || inspectingAdminOrder.clientUid || "client"}
                                 </span>
                               </p>
                             </div>

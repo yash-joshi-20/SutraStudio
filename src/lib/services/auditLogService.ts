@@ -33,62 +33,7 @@ export interface AuditLogEntry {
   type: "info" | "success" | "warning" | "error";
 }
 
-const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [
-  {
-    id: "audit_init_001",
-    who: {
-      uid: "usr_admin_001",
-      email: "admin@sutrastudio.com",
-      name: "Executive Producer",
-      role: "admin",
-    },
-    what: "ORDER_DELIVERED",
-    when: new Date(Date.now() - 3600000).toISOString(),
-    targetType: "order",
-    targetId: "ord_001",
-    targetTitle: "3D Spatial Architecture (#ORD-2026-0001)",
-    before: { status: "in_production", revisionRound: 0 },
-    after: { status: "draft_delivered", revisionRound: 1, deliverable: "Render Pass 02" },
-    note: "4K Render Pass 02 vaulted to client Google Drive folder.",
-    type: "success",
-  },
-  {
-    id: "audit_init_002",
-    who: {
-      uid: "usr_admin_001",
-      email: "admin@sutrastudio.com",
-      name: "Executive Producer",
-      role: "admin",
-    },
-    what: "STATUS_UPDATED",
-    when: new Date(Date.now() - 7200000).toISOString(),
-    targetType: "order",
-    targetId: "ord_002",
-    targetTitle: "Commercial Film Color Grade (#ORD-2026-0002)",
-    before: { status: "paid" },
-    after: { status: "in_production" },
-    note: "Footage ingested to cloud station and assigned to Lead Colorist.",
-    type: "info",
-  },
-  {
-    id: "audit_init_003",
-    who: {
-      uid: "usr_admin_001",
-      email: "admin@sutrastudio.com",
-      name: "Executive Producer",
-      role: "admin",
-    },
-    what: "CLIENT_NOTE_ADDED",
-    when: new Date(Date.now() - 86400000).toISOString(),
-    targetType: "client",
-    targetId: "cl-1",
-    targetTitle: "Yash Joshi (Studio Living Architecture)",
-    before: null,
-    after: { noteCount: 1 },
-    note: "Key account: prioritizes warm teak finishes and dusk lighting passes.",
-    type: "info",
-  },
-];
+const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [];
 
 const globalAny = globalThis as any;
 

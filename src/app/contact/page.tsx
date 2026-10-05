@@ -171,25 +171,12 @@ export default function ContactPage() {
                   <div className="flex items-start gap-3 p-3 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB]/60">
                     <Mail className="w-5 h-5 text-[#5C3A1E] shrink-0 mt-0.5" />
                     <div className="flex-1">
-                      <p className="font-semibold text-[#0F172A]">Inquiries & Commissions</p>
+                      <p className="font-semibold text-[#0F172A]">Official Inquiries &amp; Commissions</p>
                       <a
-                        href="mailto:concierge@sutrastudio.com"
-                        className="text-xs text-[#5C3A1E] hover:underline block font-mono"
+                        href="mailto:yashjoshi20@zohomail.in"
+                        className="text-xs text-[#5C3A1E] hover:underline block font-mono font-medium"
                       >
-                        concierge@sutrastudio.com
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 p-3 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB]/60">
-                    <Phone className="w-5 h-5 text-[#5C3A1E] shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="font-semibold text-[#0F172A]">Direct Studio Phone</p>
-                      <a
-                        href="tel:+912224901234"
-                        className="text-xs text-[#5C3A1E] hover:underline block font-mono"
-                      >
-                        +91 (22) 2490-1234
+                        yashjoshi20@zohomail.in
                       </a>
                     </div>
                   </div>
@@ -342,7 +329,7 @@ export default function ContactPage() {
                       <div className="p-4 rounded-2xl bg-[#FDF2F2] border border-[#F8B4B4] flex items-center gap-3 text-xs text-[#B42318]">
                         <AlertCircle className="w-5 h-5 shrink-0" />
                         <span>
-                          Unable to transmit inquiry. Please check your network or email concierge@sutrastudio.com directly.
+                          Unable to transmit inquiry. Please check your network or email yashjoshi20@zohomail.in directly.
                         </span>
                       </div>
                     )}

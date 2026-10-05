@@ -73,115 +73,54 @@ export default function ClientProjectsPage() {
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [campaignActionMsg, setCampaignActionMsg] = useState("");
 
-  const [projects, setProjects] = useState<ProjectItem[]>([
-    {
-      id: "p-3",
-      title: "Diwali Festive Omni-Channel Meta Ads Campaign",
-      service: "Digital Marketing & Meta Ads",
-      progress: 70,
-      currentMilestone: "Creative Ad Sets Staged for Client Approval",
-      dueDate: "Oct 12, 2026",
-      status: "review",
-      statusLabel: "In Review / Awaiting Approval",
-      revisionRound: 1,
-      maxRevisions: 3,
-      campaignData: {
-        platform: "Meta Ads (Instagram Reels & Facebook Feed)",
-        objective: "Conversions & High-Intent ROAS (4.8x Target)",
-        targetAudience: "Luxury Real Estate & Architectural Connoisseurs (Ages 28–54, Tier 1 Metros)",
-        budget: "₹2,50,000 / month",
-        overallState: "review",
-        adSets: [
-          {
-            id: "ad-1",
-            name: "Ad Set 01: High-Impact Video Hook",
-            aspectRatio: "9:16",
-            format: "Vertical Video Reel (15s)",
-            headline: "Elevate Your Living Sanctuary with Sacred Indian Proportions",
-            hook: "Architectural craftsmanship meets modern digital luxury. Explore our heritage spaces.",
-            state: "review",
-            thumbnail: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80",
-          },
-          {
-            id: "ad-2",
-            name: "Ad Set 02: Multi-Room Staging Carousel",
-            aspectRatio: "1:1",
-            format: "Square Carousel (5 Cards)",
-            headline: "Timeless Interiors Crafted for Modern Heirs",
-            hook: "Swipe through our handcrafted sandstone & teakwood master suites.",
-            state: "review",
-            thumbnail: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=600&q=80",
-          },
-          {
-            id: "ad-3",
-            name: "Ad Set 03: 360 VR Interactive Retargeting",
-            aspectRatio: "16:9",
-            format: "Landscape Dynamic Display",
-            headline: "Take an Interactive 360° Walkthrough of Your Next Villa",
-            hook: "Experience the architectural flow live in immersive virtual reality.",
-            state: "draft",
-            thumbnail: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=600&q=80",
-          },
-        ],
-      },
-      milestones: [
-        { name: "Audience Persona Blueprint & Pixel Calibration", completed: true, date: "Sep 28, 2026" },
-        { name: "Ad Copywriting Angles & Headline Testing Matrix", completed: true, date: "Sep 30, 2026" },
-        { name: "Creative Ad Sets Staging (9:16, 1:1, 16:9)", completed: true, date: "Oct 01, 2026" },
-        { name: "Client Creative Sign-off & Live Meta Dispatch", completed: false, date: "Pending Approval" },
-      ],
-      documents: [
-        { name: "Meta_Campaign_Targeting_Blueprint.pdf", size: "2.1 MB", type: "Strategy Deck" },
-        { name: "Ad_Copy_Matrix_V1.pdf", size: "680 KB", type: "Copywriting" },
-        { name: "Ad_Set_Assets_Pack.zip", size: "48 MB", type: "Creative Suite" },
-      ],
-    },
-    {
-      id: "p-1",
-      title: "Vedic Living Pavilion — 360° VR Spatial Experience",
-      service: "3D Visualization",
-      progress: 75,
-      currentMilestone: "Lighting Bake & Diffuse Shader Pass Completed",
-      dueDate: "Oct 15, 2026",
-      status: "progress",
-      statusLabel: "In Production",
-      revisionRound: 1,
-      maxRevisions: 2,
-      milestones: [
-        { name: "Creative Moodboard & Spatial Geometry", completed: true, date: "Sep 20, 2026" },
-        { name: "High-Poly Architectural Meshing", completed: true, date: "Sep 26, 2026" },
-        { name: "Lighting & Texture Shader Pass", completed: true, date: "Oct 01, 2026" },
-        { name: "4K Master Render & Drive Sync", completed: false, date: "Pending" },
-      ],
-      documents: [
-        { name: "Vedic_Pavilion_SOW_Agreement.pdf", size: "1.2 MB", type: "Contract" },
-        { name: "Architectural_Spatial_Brief_V1.pdf", size: "3.4 MB", type: "Creative Brief" },
-        { name: "Commercial_License_Certificate.pdf", size: "850 KB", type: "License" },
-      ],
-    },
-    {
-      id: "p-2",
-      title: "Commercial Perfume Visuals — 4K Render Pack",
-      service: "Image Creation",
-      progress: 100,
-      currentMilestone: "Final Retouched Master Files Delivered to Google Drive",
-      dueDate: "Delivered",
-      status: "completed",
-      statusLabel: "Completed & Archived",
-      revisionRound: 2,
-      maxRevisions: 2,
-      milestones: [
-        { name: "Bottle 3D Silhouette & Glass Refraction", completed: true, date: "Sep 12, 2026" },
-        { name: "Liquid Simulation & Caustics", completed: true, date: "Sep 16, 2026" },
-        { name: "Art Director Color Grading Pass", completed: true, date: "Sep 20, 2026" },
-        { name: "Google Drive Master Archive", completed: true, date: "Sep 24, 2026" },
-      ],
-      documents: [
-        { name: "Perfume_Render_Agreement.pdf", size: "1.1 MB", type: "Contract" },
-        { name: "Final_Delivery_Manifest.pdf", size: "540 KB", type: "Delivery Sign-off" },
-      ],
-    },
-  ]);
+  const [projects, setProjects] = useState<ProjectItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  React.useEffect(() => {
+    async function fetchProjects() {
+      try {
+        setIsLoading(true);
+        const res = await fetch("/api/orders");
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.orders)) {
+            setProjects(
+              data.orders.map((o: any) => ({
+                id: o.id,
+                title: o.title || o.service || "Studio Commission",
+                service: o.service || "Creative Direction",
+                progress: o.status === "completed" ? 100 : o.status === "approved" ? 90 : 65,
+                currentMilestone: o.statusLabel || "Production in progress",
+                dueDate: o.estimatedDueDate ? new Date(o.estimatedDueDate).toLocaleDateString() : "Standard SLA",
+                status: o.status === "completed" ? "completed" : o.status === "awaiting_approval" || o.status === "draft_delivered" ? "review" : "progress",
+                statusLabel: o.statusLabel || "In Production",
+                revisionRound: o.revisionRound || 0,
+                maxRevisions: o.maxRevisions || 2,
+                milestones: o.statusHistory?.map((sh: any) => ({
+                  name: sh.note || `Status: ${sh.status}`,
+                  completed: true,
+                  date: new Date(sh.changedAt).toLocaleDateString(),
+                })) || [
+                  { name: "Order Placed & Brief Staged", completed: true, date: "Initiated" },
+                  { name: "Creative Production & Master Rendering", completed: o.status === "completed", date: "Active" },
+                ],
+                documents: o.deliverables?.map((d: any) => ({
+                  name: d.filename || "Deliverable Master",
+                  size: d.fileSize || "45 MB",
+                  type: d.mimeType || "Deliverable",
+                })) || [],
+              }))
+            );
+          }
+        }
+      } catch (err) {
+        console.warn("[ProjectsClient] Error loading orders:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchProjects();
+  }, []);
 
   const handleUpdateAdSetState = (
     projectId: string,

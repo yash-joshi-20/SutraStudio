@@ -208,7 +208,7 @@ function AdminLoginForm() {
             inputMode="email"
             value={email}
             onChange={setEmail}
-            placeholder="admin@sutrastudio.com"
+            placeholder="yashjoshi20@zohomail.in"
             autoComplete="username"
             disabled={loading}
           />

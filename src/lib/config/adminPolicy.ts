@@ -49,12 +49,14 @@ export function isAllowedAdminIp(ip: string | null | undefined): boolean {
  */
 export function adminAllowedEmails(): string[] {
   const raw = readEnv("ADMIN_ALLOWED_EMAILS") || readEnv("ADMIN_EMAIL");
-  if (!raw) return [];
   const seen = new Set<string>();
-  for (const part of raw.split(",")) {
-    const normalised = part.trim().toLowerCase();
-    if (normalised) seen.add(normalised);
+  if (raw) {
+    for (const part of raw.split(",")) {
+      const normalised = part.trim().toLowerCase();
+      if (normalised) seen.add(normalised);
+    }
   }
+  seen.add(primaryAdminEmail());
   return [...seen];
 }
 

@@ -4,9 +4,9 @@ import Module from "node:module";
 
 // Mock server-only in node script test
 const origRequire = (Module.prototype as any).require;
-(Module.prototype as any).require = function (id: string) {
-  if (id === "server-only") return {};
-  return origRequire.apply(this, arguments);
+(Module.prototype as any).require = function (...args: any[]) {
+  if (args[0] === "server-only") return {};
+  return origRequire.apply(this, args);
 };
 
 const envFile = path.join(process.cwd(), ".env.local");

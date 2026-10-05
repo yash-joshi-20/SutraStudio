@@ -241,7 +241,9 @@ export async function GET(req: Request) {
     }
   }
 
-  let filtered = [...STORED_ORDERS];
+  await OrdersStore.syncFromFirestore();
+  const allOrders = OrdersStore.getAll();
+  let filtered = [...allOrders];
 
   // If caller is an authenticated client, strictly filter to their orders only
   if (user.isAuthenticated && user.role === "client") {
@@ -552,7 +554,7 @@ export async function POST(req: Request) {
 
       // Admin Alert
       NotificationsStore.add({
-        userId: "usr_admin_001",
+        userId: "admin",
         type: "order_placed",
         title: "New Commission Placed",
         message: `${newOrder.clientName || "Client"} placed order #${newOrder.orderNumber} (₹${(newOrder.totalAmount || 0).toLocaleString("en-IN")}).`,
@@ -615,10 +617,12 @@ export async function PATCH(req: Request) {
     }
 
     const now = new Date().toISOString();
-    const targetOrderId = body.orderId || body.projectId || "ord_001";
-    const targetOrder = STORED_ORDERS.find(
-      (o) => o.id === targetOrderId || o.orderNumber === targetOrderId || o.code === targetOrderId
-    );
+    const targetOrderId = body.orderId || body.projectId;
+    if (!targetOrderId) {
+      return NextResponse.json({ error: "orderId or projectId is required." }, { status: 400 });
+    }
+
+    const targetOrder = OrdersStore.findById(targetOrderId);
 
     if (targetOrder) {
       const rawStatus = String(body.status || "confirmed").toLowerCase();
@@ -679,12 +683,14 @@ export async function PATCH(req: Request) {
         },
       ];
 
+      OrdersStore.update(targetOrder.id, targetOrder);
+
       // Record in immutable Administrative Audit Trail
       try {
         AuditLogService.record({
           who: {
-            uid: body.adminId || "usr_admin_001",
-            email: "admin@sutrastudio.com",
+            uid: body.adminId || "admin",
+            email: body.adminEmail || "yashjoshi20@zohomail.in",
             name: body.adminName || "Studio Administrator",
             role: "admin",
           },
@@ -703,9 +709,9 @@ export async function PATCH(req: Request) {
     // Official Admin Approval Record (satisfies Section 18 test contract)
     const approvalRecord = {
       approvalId: `appr_${Date.now()}`,
-      projectId: body.projectId || body.orderId || "ord_001",
-      clientId: body.clientId || targetOrder?.clientId || targetOrder?.clientUid || "usr_mock_001",
-      adminId: body.adminId || "usr_admin_001",
+      projectId: targetOrderId,
+      clientId: body.clientId || targetOrder?.clientId || targetOrder?.clientUid || "",
+      adminId: body.adminId || "admin",
       status: body.status || "APPROVED",
       message:
         body.message || body.note || "Your project has been approved and is ready for the next stage.",

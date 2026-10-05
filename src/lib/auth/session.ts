@@ -24,7 +24,7 @@ export const SESSION_COOKIE_LEGACY = "sutra_user";
 export const ADMIN_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 
 const FIVE_DAYS_MS = 5 * 24 * 60 * 60 * 1000;
-const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000; // Firebase Admin createSessionCookie max is 14 days (2 weeks)
 
 export type AccountRole = "client" | "admin";
 
@@ -76,17 +76,27 @@ export async function createSessionCookie(
     typeof options.ttlMs === "number" && options.ttlMs > 0
       ? options.ttlMs
       : options.rememberMe
-        ? THIRTY_DAYS_MS
+        ? FOURTEEN_DAYS_MS
         : FIVE_DAYS_MS;
   const cookie = await adminAuth().createSessionCookie(idToken, { expiresIn: maxAge });
   return { cookie, maxAge };
 }
 
-export function sessionCookieOptions(maxAge: number) {
+export function sessionCookieOptions(
+  maxAge: number,
+  req?: Request | { headers?: Headers | { get(k: string): string | null }; url?: string }
+) {
+  let secure = process.env.NODE_ENV === "production";
+  if (req) {
+    const isHttps =
+      req.headers?.get?.("x-forwarded-proto") === "https" ||
+      (typeof req.url === "string" && req.url.startsWith("https:"));
+    secure = Boolean(isHttps);
+  }
   return {
     httpOnly: true,
     sameSite: "lax" as const,
-    secure: process.env.NODE_ENV === "production",
+    secure,
     path: "/",
     maxAge: Math.floor(maxAge / 1000),
   };

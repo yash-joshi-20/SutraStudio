@@ -5,6 +5,7 @@
 
 import { EmailService } from "./emailProvider";
 import { NotificationSettingsStore } from "./notificationSettingsStore";
+import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
 
 export type NotificationType =
   | "order_placed"
@@ -31,7 +32,7 @@ export type NotificationType =
 
 export interface StudioNotification {
   id: string;
-  userId: string; // Target recipient: "usr_admin_001" / "admin" or client UID
+  userId: string; // Target recipient: "admin" or client UID
   type: NotificationType;
   title: string;
   message: string;
@@ -47,36 +48,7 @@ export interface StudioNotification {
   metadata?: Record<string, any>;
 }
 
-const INITIAL_NOTIFICATIONS: StudioNotification[] = [
-  {
-    id: "notif_001",
-    userId: "usr_admin_001",
-    type: "order_paid",
-    title: "New Commission Paid",
-    message: "Client Yash Joshi settled ₹9,499 for 3D Spatial Architecture (#ORD-001).",
-    orderId: "ord_001",
-    orderNumber: "ORD-2026-0001",
-    actionUrl: "/admin",
-    actionLabel: "View Order in Hub",
-    idempotencyKey: "init_001",
-    read: false,
-    createdAt: new Date(Date.now() - 3600000).toISOString(),
-  },
-  {
-    id: "notif_002",
-    userId: "usr_mock_001",
-    type: "order_delivered",
-    title: "Deliverables Ready for Review",
-    message: "Render Pass 02 for #ORD-001 has been uploaded to your Media Vault.",
-    orderId: "ord_001",
-    orderNumber: "ORD-2026-0001",
-    actionUrl: "/orders",
-    actionLabel: "Review Draft Deliverables",
-    idempotencyKey: "init_002",
-    read: false,
-    createdAt: new Date(Date.now() - 1800000).toISOString(),
-  },
-];
+const INITIAL_NOTIFICATIONS: StudioNotification[] = [];
 
 const globalAny = globalThis as any;
 
@@ -84,15 +56,70 @@ if (!globalAny.__SUTRA_NOTIFICATIONS__) {
   globalAny.__SUTRA_NOTIFICATIONS__ = [...INITIAL_NOTIFICATIONS];
 }
 
+if (!globalAny.__SUTRA_NOTIFS_LAST_SYNC__) {
+  globalAny.__SUTRA_NOTIFS_LAST_SYNC__ = 0;
+}
+
+async function persistNotificationToFirestore(notification: StudioNotification): Promise<void> {
+  if (!isFirebaseAdminReady()) return;
+  try {
+    const db = adminDb();
+    await db.collection("notifications").doc(notification.id).set(notification, { merge: true });
+  } catch (err) {
+    console.warn(`[NotificationsStore] Failed to persist notification ${notification.id} to Firestore:`, err);
+  }
+}
+
 export class NotificationsStore {
+  public static async syncFromFirestore(userId?: string, force = false): Promise<StudioNotification[]> {
+    if (!isFirebaseAdminReady()) {
+      return this.getAll(userId);
+    }
+
+    const now = Date.now();
+    if (!force && now - globalAny.__SUTRA_NOTIFS_LAST_SYNC__ < 3000) {
+      return this.getAll(userId);
+    }
+
+    try {
+      const db = adminDb();
+      let query: FirebaseFirestore.Query = db.collection("notifications");
+      if (userId && userId !== "admin") {
+        query = query.where("userId", "==", userId);
+      }
+      const snapshot = await query.get();
+      const loaded: StudioNotification[] = [];
+      snapshot.forEach((doc) => {
+        loaded.push(doc.data() as StudioNotification);
+      });
+
+      loaded.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+
+      // Merge into in-memory list
+      const current = globalAny.__SUTRA_NOTIFICATIONS__ as StudioNotification[];
+      const mergedMap = new Map<string, StudioNotification>();
+      for (const item of loaded) mergedMap.set(item.id, item);
+      for (const item of current) {
+        if (!mergedMap.has(item.id)) mergedMap.set(item.id, item);
+      }
+      globalAny.__SUTRA_NOTIFICATIONS__ = Array.from(mergedMap.values()).sort(
+        (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+      );
+      globalAny.__SUTRA_NOTIFS_LAST_SYNC__ = now;
+      return this.getAll(userId);
+    } catch (err) {
+      console.warn("[NotificationsStore] syncFromFirestore warning:", err);
+      return this.getAll(userId);
+    }
+  }
+
   public static getAll(userId?: string): StudioNotification[] {
     const all = globalAny.__SUTRA_NOTIFICATIONS__ as StudioNotification[];
     if (!userId) return all;
     return all.filter(
       (n) =>
         n.userId === userId ||
-        (userId === "admin" && (n.userId === "usr_admin_001" || n.userId === "admin")) ||
-        (userId === "usr_admin_001" && (n.userId === "usr_admin_001" || n.userId === "admin"))
+        (userId === "admin" && (n.userId === "admin" || n.userId === "usr_admin_001"))
     );
   }
 
@@ -139,6 +166,7 @@ export class NotificationsStore {
     };
 
     globalAny.__SUTRA_NOTIFICATIONS__.unshift(record);
+    persistNotificationToFirestore(record).catch(() => {});
 
     // Dispatch email asynchronously if enabled
     if (settings.emailNotificationsEnabled) {
@@ -159,7 +187,10 @@ export class NotificationsStore {
           actionLabel: notification.actionLabel,
         })
           .then((res) => {
-            if (res.success) record.emailSent = true;
+            if (res.success) {
+              record.emailSent = true;
+              persistNotificationToFirestore(record).catch(() => {});
+            }
           })
           .catch((err) => {
             console.warn(`[NotificationsStore] Email dispatch omitted: ${err.message}`);
@@ -177,12 +208,12 @@ export class NotificationsStore {
         n.id === id &&
         (!userId ||
           n.userId === userId ||
-          (userId === "admin" && (n.userId === "usr_admin_001" || n.userId === "admin")) ||
-          (userId === "usr_admin_001" && (n.userId === "usr_admin_001" || n.userId === "admin")))
+          (userId === "admin" && (n.userId === "admin" || n.userId === "usr_admin_001")))
     );
     if (item) {
       item.read = true;
       item.readAt = new Date().toISOString();
+      persistNotificationToFirestore(item).catch(() => {});
       return true;
     }
     return false;
@@ -194,12 +225,12 @@ export class NotificationsStore {
     for (const n of list) {
       if (
         (n.userId === userId ||
-          (userId === "admin" && (n.userId === "usr_admin_001" || n.userId === "admin")) ||
-          (userId === "usr_admin_001" && (n.userId === "usr_admin_001" || n.userId === "admin"))) &&
+          (userId === "admin" && (n.userId === "admin" || n.userId === "usr_admin_001"))) &&
         !n.read
       ) {
         n.read = true;
         n.readAt = new Date().toISOString();
+        persistNotificationToFirestore(n).catch(() => {});
         count++;
       }
     }

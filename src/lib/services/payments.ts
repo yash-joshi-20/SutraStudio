@@ -229,11 +229,8 @@ export class PaymentsService {
     };
   }
 
-  // In-memory / cache store for tracking consumed free trials per client
-  private static consumedTrials: Set<string> = new Set([
-    // Seeded test client
-    "usr_mock_005:studio-starter",
-  ]);
+  // Cache store for tracking consumed free trials per client
+  private static consumedTrials: Set<string> = new Set();
 
   /**
    * Checks if a client is eligible for a 3-day free trial on a specific monthly package.

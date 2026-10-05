@@ -392,7 +392,7 @@ export class ChatToolsService {
   public static async getMyOrders(params: { clientUid: string }) {
     const all = OrdersStore.getAll();
     const clientOrders = all.filter(
-      (o) => o.clientUid === params.clientUid || o.clientId === params.clientUid || params.clientUid === "usr_mock_001"
+      (o) => o.clientUid === params.clientUid || o.clientId === params.clientUid
     );
 
     return clientOrders.map((o) => {

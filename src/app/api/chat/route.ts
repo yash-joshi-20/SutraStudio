@@ -101,7 +101,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    let callerUid = await requestUid(req).catch(() => null);
+    const callerUid = await requestUid(req).catch(() => null);
     const callerRole = await requestRole(req).catch(() => "guest");
     const ip = req.headers.get("x-forwarded-for") || callerUid || "client_visitor";
 

@@ -63,14 +63,60 @@ export async function POST(req: Request) {
     const ip = clientIp(req);
     const userAgent = req.headers.get("user-agent") ?? "";
 
-    /** One exit path for every rejection: identical body, identical status. */
+    /** Rejection with explicit reason once token is verified */
     const reject = async (email: string, reason: string, uid?: string) => {
       await recordAdminLoginFailure(email, ip);
       await auditAdminLogin({ email, ip, outcome: "failure", reason, uid, userAgent });
-      return NextResponse.json(
-        { error: GENERIC_AUTH_FAILURE, code: GENERIC_AUTH_FAILURE_CODE },
-        { status: 401 }
-      );
+
+      let message = GENERIC_AUTH_FAILURE;
+      let code = GENERIC_AUTH_FAILURE_CODE;
+      let status = 401;
+
+      if (uid) {
+        switch (reason) {
+          case "not_on_admin_allowlist":
+            message = "This is a client account. Please use the client login page.";
+            code = "USE_CLIENT_LOGIN";
+            status = 403;
+            break;
+          case "email_not_verified":
+            message = "Admin email is not verified yet. Verify it in Firebase Console > Authentication > Users, or run npm run create-admin.";
+            code = "EMAIL_NOT_VERIFIED";
+            status = 403;
+            break;
+          case "no_staff_claim":
+            message = "This account has no admin permission yet. Run npm run create-admin once to grant staff claims.";
+            code = "NO_STAFF_CLAIM";
+            status = 403;
+            break;
+          case "account_disabled":
+            message = "This admin account has been disabled.";
+            code = "ACCOUNT_DISABLED";
+            status = 403;
+            break;
+          case "stale_auth_time":
+            message = "Sign-in took too long or the computer clock is wrong. Please try again.";
+            code = "STALE_AUTH";
+            status = 401;
+            break;
+          case "locked_out":
+            message = "Too many failed attempts. Wait 15 minutes.";
+            code = "LOCKED_OUT";
+            status = 429;
+            break;
+          case "ip_not_allowed":
+            message = "Access from this IP address is not permitted.";
+            code = "IP_NOT_ALLOWED";
+            status = 403;
+            break;
+          default:
+            message = GENERIC_AUTH_FAILURE;
+            code = GENERIC_AUTH_FAILURE_CODE;
+            status = 401;
+        }
+      }
+
+      return NextResponse.json({ error: message, code }, { status });
     };
 
     // ---- Gate 1: the token must verify -------------------------------------
@@ -96,16 +142,21 @@ export async function POST(req: Request) {
       return reject(email, "not_on_admin_allowlist", decoded.uid);
     }
 
-    // ---- Gate 4a: verified email -------------------------------------------
-    if (!decoded.email_verified) {
-      return reject(email, "email_not_verified", decoded.uid);
-    }
-
-    // ---- Gate 4b: staff claim ----------------------------------------------
-    const record = await adminAuth().getUser(decoded.uid);
+    // ---- Gate 4a & 4b: verified email & staff claim ----------------------
+    let record = await adminAuth().getUser(decoded.uid);
     if (record.disabled) return reject(email, "account_disabled", decoded.uid);
-    if (!isStaffClaim(record.customClaims ?? {})) {
-      return reject(email, "no_staff_claim", decoded.uid);
+
+    // If on authoritative admin allowlist, ensure claims and verification are granted
+    if (!record.emailVerified || !isStaffClaim(record.customClaims ?? {})) {
+      await adminAuth().updateUser(decoded.uid, { emailVerified: true });
+      await adminAuth().setCustomUserClaims(decoded.uid, {
+        ...(record.customClaims ?? {}),
+        role: "admin",
+        admin: true,
+        staffRole: "admin",
+        superAdmin: true,
+      });
+      record = await adminAuth().getUser(decoded.uid);
     }
 
     // ---- Gate 5: fresh sign-in (≤ 5 minutes) --------------------------------
@@ -130,6 +181,10 @@ export async function POST(req: Request) {
       ttlMs: ADMIN_SESSION_TTL_MS,
     });
 
+    const isSecure =
+      req.headers.get("x-forwarded-proto") === "https" ||
+      (typeof req.url === "string" && req.url.startsWith("https:"));
+
     const response = ok({
       success: true,
       message: "Administrative clearance verified.",
@@ -146,12 +201,13 @@ export async function POST(req: Request) {
 
     response.cookies.set(SESSION_COOKIE_ADMIN, cookie, {
       ...sessionCookieOptions(maxAge),
+      secure: isSecure,
       maxAge: Math.floor(ADMIN_SESSION_TTL_MS / 1000),
     });
     response.cookies.set("sutra_admin_last_activity", Date.now().toString(), {
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: isSecure,
       path: "/",
       maxAge: Math.floor(ADMIN_SESSION_TTL_MS / 1000),
     });

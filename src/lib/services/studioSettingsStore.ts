@@ -4,6 +4,8 @@
  * coupons toggle, and commission limits.
  */
 
+import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+
 export interface StudioSettings {
   enableGst: boolean;
   gstPercentage: number;
@@ -50,7 +52,37 @@ if (!globalAny.__SUTRA_STUDIO_SETTINGS__) {
   globalAny.__SUTRA_STUDIO_SETTINGS__ = { ...DEFAULT_STUDIO_SETTINGS };
 }
 
+async function persistStudioSettingsToFirestore(settings: StudioSettings): Promise<void> {
+  if (!isFirebaseAdminReady()) return;
+  try {
+    const db = adminDb();
+    await db.collection("settings").doc("studio").set(settings, { merge: true });
+  } catch (err) {
+    console.warn("[StudioSettingsStore] Failed to persist settings to Firestore:", err);
+  }
+}
+
 export class StudioSettingsStore {
+  public static async syncFromFirestore(): Promise<StudioSettings> {
+    if (!isFirebaseAdminReady()) {
+      return globalAny.__SUTRA_STUDIO_SETTINGS__;
+    }
+
+    try {
+      const db = adminDb();
+      const doc = await db.collection("settings").doc("studio").get();
+      if (doc.exists) {
+        globalAny.__SUTRA_STUDIO_SETTINGS__ = {
+          ...DEFAULT_STUDIO_SETTINGS,
+          ...doc.data(),
+        };
+      }
+    } catch (err) {
+      console.warn("[StudioSettingsStore] sync error:", err);
+    }
+    return globalAny.__SUTRA_STUDIO_SETTINGS__;
+  }
+
   public static getSettings(): StudioSettings {
     return globalAny.__SUTRA_STUDIO_SETTINGS__;
   }
@@ -68,6 +100,7 @@ export class StudioSettingsStore {
         ...(updates.pricingModel || {}),
       },
     };
+    persistStudioSettingsToFirestore(globalAny.__SUTRA_STUDIO_SETTINGS__).catch(() => {});
     return globalAny.__SUTRA_STUDIO_SETTINGS__;
   }
 }

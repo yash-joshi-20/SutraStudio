@@ -4,11 +4,13 @@
  * Protects raw Google Drive URLs by wrapping in short-lived tokenized gateways.
  */
 
+import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+
 export interface ShareLinkOptions {
   assetId: string;
   assetName: string;
   clientId: string;
-  expiresInDays?: number; // Default: 7 days - TO BE CONFIRMED
+  expiresInDays?: number; // Default: 7 days
   isPasswordProtected?: boolean;
 }
 
@@ -16,6 +18,7 @@ export interface ShareLinkRecord {
   shareId: string;
   assetId: string;
   assetName: string;
+  clientId?: string;
   shareUrl: string;
   createdAt: string;
   expiresAt: string;
@@ -25,7 +28,7 @@ export interface ShareLinkRecord {
 
 export class ShareLinksService {
   /**
-   * Generates an expiring, revocable share link for a deliverable.
+   * Generates an expiring, revocable share link for a deliverable and persists to Firestore.
    */
   public static createShareLink(options: ShareLinkOptions): ShareLinkRecord {
     const shareToken = `stl_${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 6)}`;
@@ -33,15 +36,33 @@ export class ShareLinksService {
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + expiryDays);
 
-    return {
+    const record: ShareLinkRecord = {
       shareId: shareToken,
       assetId: options.assetId,
       assetName: options.assetName,
+      clientId: options.clientId,
       shareUrl: `https://sutrastudio.com/share/${shareToken}`,
       createdAt: new Date().toISOString(),
       expiresAt: expiryDate.toISOString(),
       isRevoked: false,
       downloadsCount: 0,
     };
+
+    if (isFirebaseAdminReady()) {
+      adminDb().collection("shareLinks").doc(shareToken).set(record).catch(() => {});
+    }
+
+    return record;
+  }
+
+  public static async getShareLink(shareToken: string): Promise<ShareLinkRecord | null> {
+    if (!isFirebaseAdminReady()) return null;
+    try {
+      const doc = await adminDb().collection("shareLinks").doc(shareToken).get();
+      if (!doc.exists) return null;
+      return doc.data() as ShareLinkRecord;
+    } catch {
+      return null;
+    }
   }
 }

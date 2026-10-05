@@ -166,9 +166,8 @@ function getDiskEnv(): Record<string, string> {
 
 /** Read a raw value. Server-only. Returns "" when unset. */
 export function readEnv(key: EnvKey): string {
-  const raw = process.env[key];
-  if (typeof raw === "string" && raw.trim().length > 0) {
-    return raw.trim();
+  if (process.env[key] !== undefined) {
+    return (process.env[key] ?? "").trim();
   }
   const disk = getDiskEnv();
   return disk[key]?.trim() ?? "";

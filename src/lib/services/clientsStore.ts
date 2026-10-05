@@ -7,6 +7,7 @@
 import { OrdersStore } from "./ordersStore";
 import { NotificationsStore } from "./notificationsStore";
 import { AuditLogService } from "./auditLogService";
+import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
 
 export interface ClientAdminNote {
   id: string;
@@ -22,7 +23,7 @@ export interface ClientProfileRecord {
   email: string;
   phone?: string;
   company: string;
-  tier: "Enterprise" | "Growth" | "Starter";
+  tier: "Enterprise" | "Growth" | "Starter" | "Standard";
   status: "Active" | "Disabled" | "Under Review";
   emailVerified: boolean;
   billingAddress?: {
@@ -40,133 +41,16 @@ export interface ClientProfileRecord {
   adminNotes: ClientAdminNote[];
 }
 
-const INITIAL_CLIENT_PROFILES: ClientProfileRecord[] = [
-  {
-    id: "cl-1",
-    uid: "usr_mock_001",
-    name: "Yash Joshi",
-    company: "Studio Living Architecture",
-    email: "yash@studioliving.com",
-    phone: "+91 98765 43210",
-    tier: "Enterprise",
-    status: "Active",
-    emailVerified: true,
-    billingAddress: {
-      street: "104, Residency Chambers, Nariman Point",
-      city: "Mumbai",
-      state: "Maharashtra",
-      pincode: "400021",
-      country: "India",
-      gstin: "27AAACJ8921K1Z3",
-    },
-    driveFolderId: "drive_fld_sutra_001",
-    driveFolderLink: "https://drive.google.com/drive/folders/drive_fld_sutra_001",
-    joinedDate: "August 2026",
-    lastActive: "10 mins ago",
-    adminNotes: [
-      {
-        id: "cn_001",
-        authorName: "Executive Producer",
-        text: "Priority VIP client. Focus on teak wood shaders and dusk architectural passes.",
-        createdAt: "2026-09-28T10:00:00.000Z",
-      },
-    ],
-  },
-  {
-    id: "cl-2",
-    uid: "usr_mock_002",
-    name: "Aarav Singhania",
-    company: "Maison Aura Luxury Fragrances",
-    email: "aarav@maisonaura.com",
-    phone: "+91 98111 23456",
-    tier: "Enterprise",
-    status: "Active",
-    emailVerified: true,
-    billingAddress: {
-      street: "Plot 88, Udyog Vihar Phase IV",
-      city: "Gurugram",
-      state: "Haryana",
-      pincode: "122015",
-      country: "India",
-      gstin: "07AABCM4501D1Z9",
-    },
-    driveFolderId: "drive_fld_maison_002",
-    driveFolderLink: "https://drive.google.com/drive/folders/drive_fld_maison_002",
-    joinedDate: "July 2026",
-    lastActive: "45 mins ago",
-    adminNotes: [],
-  },
-  {
-    id: "cl-3",
-    uid: "usr_mock_003",
-    name: "Meera Patel",
-    company: "Zenith Spatial & Interiors",
-    email: "meera@zenithliving.in",
-    phone: "+91 99200 88776",
-    tier: "Growth",
-    status: "Active",
-    emailVerified: true,
-    billingAddress: {
-      street: "42, Ashoka Road",
-      city: "Ahmedabad",
-      state: "Gujarat",
-      pincode: "380009",
-      country: "India",
-    },
-    driveFolderId: "drive_fld_zenith_003",
-    driveFolderLink: "https://drive.google.com/drive/folders/drive_fld_zenith_003",
-    joinedDate: "September 2026",
-    lastActive: "3 hours ago",
-    adminNotes: [],
-  },
-  {
-    id: "cl-4",
-    uid: "usr_mock_004",
-    name: "Karan Verma",
-    company: "Shri Naturals D2C",
-    email: "growth@shrinaturals.com",
-    phone: "+91 97110 33445",
-    tier: "Starter",
-    status: "Active",
-    emailVerified: false,
-    billingAddress: {
-      city: "Bengaluru",
-      state: "Karnataka",
-      country: "India",
-    },
-    driveFolderId: "drive_fld_shri_004",
-    driveFolderLink: "https://drive.google.com/drive/folders/drive_fld_shri_004",
-    joinedDate: "September 2026",
-    lastActive: "Yesterday",
-    adminNotes: [],
-  },
-  {
-    id: "cl-5",
-    uid: "usr_mock_005",
-    name: "Devika Rao",
-    company: "Vedic Living Heritage Resorts",
-    email: "devika@vedicresorts.com",
-    phone: "+91 98450 11223",
-    tier: "Enterprise",
-    status: "Active",
-    emailVerified: true,
-    billingAddress: {
-      city: "Jaipur",
-      state: "Rajasthan",
-      country: "India",
-    },
-    driveFolderId: "drive_fld_vedic_005",
-    driveFolderLink: "https://drive.google.com/drive/folders/drive_fld_vedic_005",
-    joinedDate: "August 2026",
-    lastActive: "Just now",
-    adminNotes: [],
-  },
-];
+const INITIAL_CLIENT_PROFILES: ClientProfileRecord[] = [];
 
 const globalAny = globalThis as any;
 
 if (!globalAny.__SUTRA_CLIENT_PROFILES__) {
   globalAny.__SUTRA_CLIENT_PROFILES__ = [...INITIAL_CLIENT_PROFILES];
+}
+
+if (!globalAny.__SUTRA_CLIENTS_LAST_SYNC__) {
+  globalAny.__SUTRA_CLIENTS_LAST_SYNC__ = 0;
 }
 
 export interface ClientDossier {
@@ -189,8 +73,65 @@ export interface ClientDossier {
   driveFolderLink: string;
 }
 
+async function persistClientToFirestore(client: ClientProfileRecord): Promise<void> {
+  if (!isFirebaseAdminReady()) return;
+  try {
+    const db = adminDb();
+    await db.collection("users").doc(client.uid).set(client, { merge: true });
+  } catch (err) {
+    console.warn(`[ClientsStore] Failed to persist client ${client.uid} to Firestore:`, err);
+  }
+}
+
 export class ClientsStore {
+  public static async syncFromFirestore(force = false): Promise<ClientProfileRecord[]> {
+    if (!isFirebaseAdminReady()) {
+      return globalAny.__SUTRA_CLIENT_PROFILES__ as ClientProfileRecord[];
+    }
+
+    const now = Date.now();
+    if (!force && now - globalAny.__SUTRA_CLIENTS_LAST_SYNC__ < 3000) {
+      return globalAny.__SUTRA_CLIENT_PROFILES__ as ClientProfileRecord[];
+    }
+
+    try {
+      const db = adminDb();
+      const snapshot = await db.collection("users").get();
+      const loaded: ClientProfileRecord[] = [];
+      snapshot.forEach((doc) => {
+        const d = doc.data();
+        loaded.push({
+          id: doc.id,
+          uid: d.uid || doc.id,
+          name: d.name || d.displayName || "Client",
+          email: d.email || "",
+          phone: d.phone || "",
+          company: d.company || d.companyName || "Studio Client",
+          tier: d.tier || "Starter",
+          status: d.status === "disabled" ? "Disabled" : d.status === "under_review" ? "Under Review" : "Active",
+          emailVerified: Boolean(d.emailVerified),
+          billingAddress: d.billingAddress || d.billing,
+          driveFolderId: d.driveFolderId || "",
+          driveFolderLink: d.driveFolderLink || "",
+          joinedDate: d.createdAt ? new Date(d.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "Recent",
+          lastActive: d.lastActive || "Recently",
+          adminNotes: d.adminNotes || [],
+        });
+      });
+
+      globalAny.__SUTRA_CLIENT_PROFILES__ = loaded;
+      globalAny.__SUTRA_CLIENTS_LAST_SYNC__ = now;
+      return loaded;
+    } catch (err) {
+      console.warn("[ClientsStore] syncFromFirestore warning:", err);
+      return globalAny.__SUTRA_CLIENT_PROFILES__ as ClientProfileRecord[];
+    }
+  }
+
   public static getAll(): ClientProfileRecord[] {
+    if (Date.now() - globalAny.__SUTRA_CLIENTS_LAST_SYNC__ > 15000) {
+      this.syncFromFirestore().catch(() => {});
+    }
     return globalAny.__SUTRA_CLIENT_PROFILES__ as ClientProfileRecord[];
   }
 
@@ -203,10 +144,11 @@ export class ClientsStore {
   }
 
   public static findByEmailOrUid(emailOrUid: string): ClientProfileRecord | undefined {
+    if (!emailOrUid) return undefined;
     const list = this.getAllProfiles();
     return list.find(
       (c) =>
-        c.email.toLowerCase() === emailOrUid.toLowerCase() ||
+        (c.email && c.email.toLowerCase() === emailOrUid.toLowerCase()) ||
         c.uid === emailOrUid ||
         c.id === emailOrUid
     );
@@ -214,17 +156,21 @@ export class ClientsStore {
 
   public static upsertClient(client: Partial<ClientProfileRecord> & { email: string; name: string }): ClientProfileRecord {
     const list = this.getAllProfiles();
-    const existingIndex = list.findIndex((c) => c.email.toLowerCase() === client.email.toLowerCase());
+    const existingIndex = list.findIndex(
+      (c) => (c.email && c.email.toLowerCase() === client.email.toLowerCase()) || (client.uid && c.uid === client.uid)
+    );
 
     if (existingIndex >= 0) {
       Object.assign(list[existingIndex], client, {
         lastActive: "Just now",
       });
+      persistClientToFirestore(list[existingIndex]).catch(() => {});
       return list[existingIndex];
     } else {
+      const uid = client.uid || `usr_${Date.now()}`;
       const newRecord: ClientProfileRecord = {
-        id: `cl_${Date.now()}`,
-        uid: client.uid || `usr_${Date.now()}`,
+        id: client.id || `cl_${Date.now()}`,
+        uid,
         name: client.name,
         email: client.email,
         phone: client.phone || "",
@@ -241,6 +187,7 @@ export class ClientsStore {
         adminNotes: [],
       };
       list.unshift(newRecord);
+      persistClientToFirestore(newRecord).catch(() => {});
       return newRecord;
     }
   }
@@ -254,7 +201,7 @@ export class ClientsStore {
       (o) =>
         o.clientUid === profile.uid ||
         o.clientId === profile.uid ||
-        o.clientEmail.toLowerCase() === profile.email.toLowerCase()
+        (o.clientEmail && profile.email && o.clientEmail.toLowerCase() === profile.email.toLowerCase())
     );
 
     const activeOrders = clientOrders.filter(
@@ -313,7 +260,7 @@ export class ClientsStore {
       notificationsCount: notifs.length,
       driveFolderLink:
         profile.driveFolderLink ||
-        `https://drive.google.com/drive/folders/${profile.driveFolderId}`,
+        (profile.driveFolderId ? `https://drive.google.com/drive/folders/${profile.driveFolderId}` : ""),
     };
   }
 
@@ -329,10 +276,10 @@ export class ClientsStore {
       const q = query.toLowerCase();
       filtered = filtered.filter(
         (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.company.toLowerCase().includes(q) ||
-          p.email.toLowerCase().includes(q) ||
-          p.driveFolderId.toLowerCase().includes(q)
+          (p.name && p.name.toLowerCase().includes(q)) ||
+          (p.company && p.company.toLowerCase().includes(q)) ||
+          (p.email && p.email.toLowerCase().includes(q)) ||
+          (p.driveFolderId && p.driveFolderId.toLowerCase().includes(q))
       );
     }
 
@@ -350,6 +297,7 @@ export class ClientsStore {
 
     const beforeStatus = profile.status;
     profile.status = params.newStatus;
+    persistClientToFirestore(profile).catch(() => {});
 
     AuditLogService.record({
       who: params.adminUser,
@@ -412,6 +360,7 @@ export class ClientsStore {
 
     if (!profile.adminNotes) profile.adminNotes = [];
     profile.adminNotes.unshift(newNote);
+    persistClientToFirestore(profile).catch(() => {});
 
     AuditLogService.record({
       who: params.adminUser,

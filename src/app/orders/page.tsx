@@ -347,8 +347,8 @@ export default function OrdersPage() {
     if (!silent) setIsLoadingOrders(true);
     setOrdersError(null);
     try {
-      const clientUid = user?.uid || "usr_mock_001";
-      const res = await fetch(`/api/orders?clientUid=${encodeURIComponent(clientUid)}`);
+      const clientUid = user?.uid || "";
+      const res = await fetch(clientUid ? `/api/orders?clientUid=${encodeURIComponent(clientUid)}` : "/api/orders");
       if (!res.ok) {
         throw new Error("Failed to load orders");
       }
@@ -458,7 +458,8 @@ export default function OrdersPage() {
   // Load saved draft on mount
   const loadDraft = useCallback(async () => {
     try {
-      const clientUid = user?.uid || "usr_mock_001";
+      const clientUid = user?.uid || "";
+      if (!clientUid) return;
       const res = await fetch(`/api/orders/drafts?clientUid=${encodeURIComponent(clientUid)}`);
       if (res.ok) {
         const data = await res.json();
@@ -566,7 +567,8 @@ export default function OrdersPage() {
     const timeout = setTimeout(async () => {
       try {
         setDraftStatus("Saving draft...");
-        const clientUid = user?.uid || "usr_mock_001";
+        const clientUid = user?.uid || "";
+        if (!clientUid) return;
         await fetch("/api/orders/drafts", {
           method: "POST",
           headers: {
@@ -769,8 +771,8 @@ export default function OrdersPage() {
     try {
       const payload: any = {
         type: orderType,
-        clientUid: user?.uid || "usr_mock_001",
-        clientId: user?.uid || "usr_mock_001",
+        clientUid: user?.uid || "",
+        clientId: user?.uid || "",
         clientName: clientContact.name,
         clientEmail: clientContact.email,
         clientPhone: clientContact.phone,
@@ -823,10 +825,12 @@ export default function OrdersPage() {
 
       // Clear draft upon successful creation
       try {
-        const clientUid = user?.uid || "usr_mock_001";
-        fetch(`/api/orders/drafts?clientUid=${encodeURIComponent(clientUid)}`, {
-          method: "DELETE",
-        });
+        const clientUid = user?.uid || "";
+        if (clientUid) {
+          fetch(`/api/orders/drafts?clientUid=${encodeURIComponent(clientUid)}`, {
+            method: "DELETE",
+          });
+        }
         setHasSavedDraft(false);
         setSavedDraftData(null);
       } catch {
@@ -1386,11 +1390,13 @@ export default function OrdersPage() {
                     onClick={async () => {
                       setHasSavedDraft(false);
                       setSavedDraftData(null);
-                      const clientUid = user?.uid || "usr_mock_001";
-                      await fetch(
-                        `/api/orders/drafts?clientUid=${encodeURIComponent(clientUid)}`,
-                        { method: "DELETE" }
-                      );
+                      const clientUid = user?.uid || "";
+                      if (clientUid) {
+                        await fetch(
+                          `/api/orders/drafts?clientUid=${encodeURIComponent(clientUid)}`,
+                          { method: "DELETE" }
+                        );
+                      }
                     }}
                     className="px-3 py-1.5 rounded-xl text-xs text-[#64748B] hover:text-[#DC2626] hover:bg-[#FEF2F2] transition-colors cursor-pointer"
                   >

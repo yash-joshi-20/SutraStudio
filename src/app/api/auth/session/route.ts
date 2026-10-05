@@ -66,7 +66,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Session could not be refreshed." }, { status: 401 });
     }
 
-    const { cookie, maxAge } = await createSessionCookie(decoded.uid, {
+    const { cookie, maxAge } = await createSessionCookie(body.idToken, {
       rememberMe: body.rememberMe ?? false,
     });
     const response = ok({ success: true, authenticated: true });

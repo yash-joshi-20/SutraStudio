@@ -408,7 +408,7 @@ export function normalizeChat(raw: any): ChatDocument {
   const now = new Date().toISOString();
   return {
     id: raw.id || `chat_${raw.clientId || Date.now()}`,
-    clientId: raw.clientId || raw.clientUid || "usr_client_default",
+    clientId: raw.clientId || raw.clientUid || "client",
     clientName: raw.clientName || "Studio Client",
     lastMessage: raw.lastMessage || raw.lastPrompt || "Conversation opened",
     lastMessageAt: raw.lastMessageAt || raw.lastTime || now,
@@ -424,3 +424,233 @@ export function normalizeChat(raw: any): ChatDocument {
     workflowTag: raw.workflowTag,
   };
 }
+
+// ============================================================================
+// 6. CANONICAL FIRESTORE COLLECTION DEFINITIONS & SCHEMAS
+// ============================================================================
+
+export interface UserProfileDocument {
+  id: string;
+  uid: string;
+  name: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  role: "client" | "admin" | "staff";
+  status: "active" | "disabled" | "under_review";
+  tier?: "Enterprise" | "Growth" | "Starter" | "Standard";
+  emailVerified: boolean;
+  driveFolderId?: string;
+  driveFolderLink?: string;
+  billingAddress?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
+    country?: string;
+    gstin?: string;
+  };
+  adminNotes?: Array<{
+    id: string;
+    authorName: string;
+    text: string;
+    createdAt: string;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+  lastActive?: string;
+}
+
+export interface PaymentRecordDocument {
+  id: string;
+  orderId: string;
+  orderNumber?: string;
+  clientId: string;
+  clientEmail?: string;
+  amountINR: number;
+  currency: string;
+  status: "pending" | "paid" | "failed" | "refunded";
+  gateway: "razorpay" | "upi_manual" | "stripe" | "test";
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  razorpaySignature?: string;
+  upiUtr?: string;
+  upiScreenshotUrl?: string;
+  refundedAmountINR?: number;
+  refundReason?: string;
+  createdAt: string;
+  verifiedAt?: string;
+  verifiedBy?: string;
+}
+
+export interface NotificationDocument {
+  id: string;
+  userId: string; // target user UID or "admin"
+  recipientId?: string;
+  type: string;
+  title: string;
+  message: string;
+  orderId?: string;
+  orderNumber?: string;
+  actionUrl?: string;
+  actionLabel?: string;
+  read: boolean;
+  readAt?: string;
+  createdAt: string;
+  idempotencyKey?: string;
+}
+
+export interface LeadDocument {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  requirement?: string;
+  source: string;
+  status: "New" | "Contacted" | "Qualified" | "Converted" | "Closed";
+  client_id?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InquiryDocument {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  subject?: string;
+  message: string;
+  serviceInterest?: string;
+  source?: string;
+  status: "unread" | "read" | "replied" | "archived";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SubmissionDocument {
+  id: string;
+  client_id: string;
+  client_name: string;
+  status: "PENDING" | "APPROVED" | "REJECTED" | "CHANGES_REQUESTED";
+  version: number;
+  company: {
+    name: string;
+    tagline?: string;
+    description?: string;
+    about?: string;
+    industry?: string;
+    foundedYear?: string;
+    companySize?: string;
+    websiteUrl?: string;
+  };
+  services?: any[];
+  products?: any[];
+  pricing_plans?: any[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CustomQuoteDocument {
+  id: string;
+  quoteNumber: string;
+  clientUid?: string;
+  clientId?: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhone?: string;
+  companyName?: string;
+  service: string;
+  brief: string;
+  requestedTimeline?: string;
+  estimatedBudgetINR?: number;
+  attachments?: Array<{ name: string; url: string; size?: string }>;
+  status: "pending_review" | "quote_sent" | "accepted" | "declined" | "expired";
+  quotedAmountINR?: number;
+  scopeBreakdown?: string[];
+  deliverables?: string[];
+  revisionRoundsIncluded?: number;
+  validUntil?: string;
+  adminNotes?: string;
+  razorpayPaymentLink?: string;
+  convertedOrderId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CouponDocument {
+  id: string;
+  code: string;
+  description: string;
+  discountType: "percentage" | "fixed_inr";
+  discountValue: number;
+  minOrderINR?: number;
+  maxDiscountINR?: number;
+  active: boolean;
+  expiresAt?: string;
+  maxUses?: number;
+  currentUses: number;
+  allowedServices?: string[];
+  createdAt: string;
+}
+
+export interface StudioSettingsDocument {
+  enableGst: boolean;
+  gstPercentage: number;
+  studioGstin?: string;
+  studioLegalName: string;
+  studioState: string;
+  couponsEnabled: boolean;
+  refundPolicy: {
+    refundBeforeKickoffPercentage: number;
+    refundInDraftPercentage: number;
+    refundAfterApprovalPercentage: number;
+    processingDays: number;
+  };
+  pricingModel: {
+    allowCustomQuotes: boolean;
+    defaultCurrency: "INR";
+    expressDeliveryMultiplier: number;
+  };
+  updatedAt?: string;
+}
+
+export interface NotificationSettingsDocument {
+  monthlyReminderDays: number[];
+  draftReviewReminderDays: number;
+  unpaidReminderHours: number;
+  dueDateWarningDays: number;
+  emailNotificationsEnabled: boolean;
+  inAppNotificationsEnabled: boolean;
+  clientRemindersEnabled: boolean;
+  adminAlertsEnabled: boolean;
+  timezone: string;
+  adminEmail: string;
+  updatedAt: string;
+}
+
+export interface ShareLinkDocument {
+  shareId: string;
+  assetId: string;
+  assetName: string;
+  clientId?: string;
+  shareUrl: string;
+  createdAt: string;
+  expiresAt: string;
+  isRevoked: boolean;
+  downloadsCount: number;
+}
+
+export interface AuditLogDocument {
+  id: string;
+  event: string;
+  actor: string;
+  actorId?: string;
+  detail: string;
+  targetId?: string;
+  targetType?: string;
+  type?: "info" | "warning" | "error" | "security";
+  metadata?: Record<string, any>;
+  createdAt: string;
+}
+

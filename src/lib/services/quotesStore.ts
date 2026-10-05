@@ -1,6 +1,7 @@
 import { OrdersStore } from "./ordersStore";
 import { NotificationsStore } from "./notificationsStore";
 import { FirestoreOrderRecord } from "@/app/api/orders/route";
+import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
 
 /**
  * SUTRA STUDIO — Custom Quotes Engine
@@ -11,6 +12,7 @@ export interface CustomQuoteRecord {
   id: string;
   quoteNumber: string;
   clientUid?: string;
+  clientId?: string;
   clientName: string;
   clientEmail: string;
   clientPhone?: string;
@@ -34,32 +36,7 @@ export interface CustomQuoteRecord {
   updatedAt: string;
 }
 
-const INITIAL_QUOTES: CustomQuoteRecord[] = [
-  {
-    id: "quot_001",
-    quoteNumber: "QUO-2026-001",
-    clientUid: "usr_mock_001",
-    clientName: "Yash Joshi",
-    clientEmail: "yash@studioliving.com",
-    companyName: "Studio Living Group",
-    service: "3D Spatial Architecture & VR Experience",
-    brief: "Full architectural visualization of 12,000 sq.ft private estate with real-time WebGL walkthrough.",
-    requestedTimeline: "3 Weeks",
-    estimatedBudgetINR: 45000,
-    status: "quote_sent",
-    quotedAmountINR: 42000,
-    scopeBreakdown: [
-      "12 High-Res 4K CGI Renders (Interior & Exterior)",
-      "Interactive 360° Spatial Panorama Suite",
-      "Interactive WebGL Tour Embed for Client Website",
-    ],
-    deliverables: ["glTF Assets", "4K TIFF Renders", "Interactive Hosted Link"],
-    revisionRoundsIncluded: 3,
-    validUntil: new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString(),
-    createdAt: "2026-09-29T10:00:00.000Z",
-    updatedAt: "2026-09-29T14:30:00.000Z",
-  },
-];
+const INITIAL_QUOTES: CustomQuoteRecord[] = [];
 
 const globalAny = globalThis as any;
 
@@ -67,8 +44,53 @@ if (!globalAny.__SUTRA_QUOTES__) {
   globalAny.__SUTRA_QUOTES__ = [...INITIAL_QUOTES];
 }
 
+if (!globalAny.__SUTRA_QUOTES_LAST_SYNC__) {
+  globalAny.__SUTRA_QUOTES_LAST_SYNC__ = 0;
+}
+
+async function persistQuoteToFirestore(quote: CustomQuoteRecord): Promise<void> {
+  if (!isFirebaseAdminReady()) return;
+  try {
+    const db = adminDb();
+    await db.collection("quotes").doc(quote.id).set(quote, { merge: true });
+  } catch (err) {
+    console.warn(`[QuotesStore] Failed to persist quote ${quote.id} to Firestore:`, err);
+  }
+}
+
 export class QuotesStore {
+  public static async syncFromFirestore(force = false): Promise<CustomQuoteRecord[]> {
+    if (!isFirebaseAdminReady()) {
+      return globalAny.__SUTRA_QUOTES__;
+    }
+
+    const now = Date.now();
+    if (!force && now - globalAny.__SUTRA_QUOTES_LAST_SYNC__ < 3000) {
+      return globalAny.__SUTRA_QUOTES__;
+    }
+
+    try {
+      const db = adminDb();
+      const snapshot = await db.collection("quotes").get();
+      const loaded: CustomQuoteRecord[] = [];
+      snapshot.forEach((doc) => {
+        loaded.push(doc.data() as CustomQuoteRecord);
+      });
+
+      loaded.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      globalAny.__SUTRA_QUOTES__ = loaded;
+      globalAny.__SUTRA_QUOTES_LAST_SYNC__ = now;
+      return loaded;
+    } catch (err) {
+      console.warn("[QuotesStore] syncFromFirestore warning:", err);
+      return globalAny.__SUTRA_QUOTES__;
+    }
+  }
+
   public static getAll(): CustomQuoteRecord[] {
+    if (Date.now() - globalAny.__SUTRA_QUOTES_LAST_SYNC__ > 15000) {
+      this.syncFromFirestore().catch(() => {});
+    }
     return globalAny.__SUTRA_QUOTES__;
   }
 
@@ -98,6 +120,7 @@ export class QuotesStore {
       id,
       quoteNumber,
       clientUid: params.clientUid,
+      clientId: params.clientUid,
       clientName: params.clientName,
       clientEmail: params.clientEmail,
       clientPhone: params.clientPhone,
@@ -113,10 +136,11 @@ export class QuotesStore {
     };
 
     globalAny.__SUTRA_QUOTES__.unshift(quote);
+    persistQuoteToFirestore(quote).catch(() => {});
 
     // Notify Studio Admin
     NotificationsStore.add({
-      userId: "usr_admin_001",
+      userId: "admin",
       type: "order_placed",
       title: "New Custom Quote Request",
       message: `${params.clientName} (${params.companyName || "Direct Client"}) requested bespoke quote for ${params.service}.`,
@@ -151,10 +175,13 @@ export class QuotesStore {
     quote.adminNotes = params.adminNotes;
     quote.updatedAt = now;
 
+    persistQuoteToFirestore(quote).catch(() => {});
+
     // Notify client
-    if (quote.clientUid) {
+    const targetUid = quote.clientUid || quote.clientId;
+    if (targetUid) {
       NotificationsStore.add({
-        userId: quote.clientUid,
+        userId: targetUid,
         type: "status_update",
         title: "Bespoke Studio Proposal Ready",
         message: `Sutra Studio has prepared your custom proposal for ${quote.service} (₹${params.quotedAmountINR.toLocaleString("en-IN")}).`,
@@ -179,12 +206,14 @@ export class QuotesStore {
 
     if (quote.validUntil && new Date(quote.validUntil).getTime() < Date.now()) {
       quote.status = "expired";
+      persistQuoteToFirestore(quote).catch(() => {});
       return { success: false, error: "Proposal has expired. Please request an updated quotation." };
     }
 
     const now = new Date().toISOString();
     const orderId = `ord_quote_${Date.now()}`;
     const orderNumber = `ORD-QUO-${Math.floor(1000 + Math.random() * 9000)}`;
+    const targetClientUid = params.clientUid || quote.clientUid || quote.clientId || "";
 
     const newOrder: FirestoreOrderRecord = {
       id: orderId,
@@ -205,8 +234,8 @@ export class QuotesStore {
       statusLabel: "Quote Accepted — Awaiting Payment Settlement",
       paymentStatus: "unpaid",
       source: "dashboard",
-      clientUid: params.clientUid || quote.clientUid || "usr_client_001",
-      clientId: params.clientUid || quote.clientUid || "usr_client_001",
+      clientUid: targetClientUid,
+      clientId: targetClientUid,
       clientName: quote.clientName,
       clientEmail: quote.clientEmail,
       clientPhone: quote.clientPhone,
@@ -234,6 +263,8 @@ export class QuotesStore {
     quote.status = "accepted";
     quote.convertedOrderId = orderId;
     quote.updatedAt = now;
+
+    persistQuoteToFirestore(quote).catch(() => {});
 
     return { success: true, order: newOrder };
   }

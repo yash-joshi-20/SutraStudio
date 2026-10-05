@@ -102,7 +102,18 @@ export function sameOrigin(req: Request): boolean {
   try {
     const host = req.headers.get("host");
     if (!host) return false;
-    return new URL(origin).host === host;
+    const originHost = new URL(origin).host;
+    if (originHost === host) return true;
+    if (process.env.NODE_ENV !== "production") {
+      const isLocal = (h: string) =>
+        h.startsWith("localhost") ||
+        h.startsWith("127.0.0.1") ||
+        h.startsWith("192.168.") ||
+        h.startsWith("10.") ||
+        h.startsWith("172.");
+      if (isLocal(originHost) && isLocal(host)) return true;
+    }
+    return false;
   } catch {
     return false;
   }

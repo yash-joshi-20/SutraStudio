@@ -334,16 +334,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(next);
         setRole(resolvedRole);
         const token = await cred.user.getIdToken();
-        if (isStaff) {
-          await postJson("/api/auth/admin-login", { idToken: token, rememberMe });
-        } else {
-          await establishServerSession(token, rememberMe);
+        try {
+          if (isStaff) {
+            await postJson("/api/auth/admin-login", { idToken: token, rememberMe });
+          } else {
+            await establishServerSession(token, rememberMe);
+          }
+        } catch (serverErr: any) {
+          await signOut(getFirebaseAuth()).catch(() => {});
+          setUser(null);
+          setProfile(null);
+          setRole("guest");
+          throw new Error(serverErr?.message || "Sign-in was not accepted by the server.");
         }
         setIsSessionStale(false);
         void refreshProfile();
         return next;
       } catch (err: any) {
-        throw new Error(friendlyAuthError(err?.code, err?.message));
+        throw new Error(err?.message || friendlyAuthError(err?.code, err?.message));
       }
     },
     [configurationError, establishServerSession, refreshProfile]
@@ -377,16 +385,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(next);
         setRole(resolvedRole);
         const token = await cred.user.getIdToken();
-        if (isStaff) {
-          await postJson("/api/auth/admin-login", { idToken: token, rememberMe });
-        } else {
-          await establishServerSession(token, rememberMe);
+        try {
+          if (isStaff) {
+            await postJson("/api/auth/admin-login", { idToken: token, rememberMe });
+          } else {
+            await establishServerSession(token, rememberMe);
+          }
+        } catch (serverErr: any) {
+          await signOut(getFirebaseAuth()).catch(() => {});
+          setUser(null);
+          setProfile(null);
+          setRole("guest");
+          throw new Error(serverErr?.message || "Sign-in was not accepted by the server.");
         }
         setIsSessionStale(false);
         void refreshProfile();
         return next;
       } catch (err: any) {
-        throw new Error(friendlyAuthError(err?.code, err?.message));
+        throw new Error(err?.message || friendlyAuthError(err?.code, err?.message));
       }
     },
     [configurationError, establishServerSession, refreshProfile]

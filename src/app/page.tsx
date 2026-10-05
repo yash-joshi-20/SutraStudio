@@ -326,11 +326,10 @@ export default function HomePage() {
                     <button
                       key={cat}
                       onClick={() => setSelectedCategory(cat)}
-                      className={`interactive-pill focus-ring px-4 py-1.5 rounded-full text-xs font-medium cursor-pointer ${
-                        isActive
+                      className={`interactive-pill focus-ring px-4 py-1.5 rounded-full text-xs font-medium cursor-pointer ${isActive
                           ? "bg-[#5C3A1E] text-white shadow-xs"
                           : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A] hover:text-[#0F172A]"
-                      }`}
+                        }`}
                     >
                       {cat}
                     </button>

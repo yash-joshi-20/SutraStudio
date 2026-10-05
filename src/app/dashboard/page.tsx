@@ -62,66 +62,45 @@ export default function ClientDashboardPage() {
   const isZeroState = viewMode === "zero_state";
 
   // Orders State with Approvals & Revisions
-  const [orders, setOrders] = useState<OrderItem[]>([
-    {
-      id: "ord-1",
-      code: "#ORD-001",
-      title: "3D Spatial Architecture — Luxury Living Suite",
-      service: "3D Visualization",
-      status: "awaiting_approval",
-      statusLabel: "Awaiting Client Approval",
-      deliverable: "4K Render Pass 02 with warm teak wood materials and diffused sunlight in Google Drive.",
-      driveFolder: "drive_fld_sutra_001/3D_RENDERS",
-      revisionRound: 1,
-      maxRevisions: 2,
-      updatedAt: "2 hours ago",
-      progress: 65,
-      notes: "Please inspect material specular intensity on marble backsplash.",
-    },
-    {
-      id: "ord-2",
-      code: "#ORD-003",
-      title: "Promotional Brand Film — 15s Showreel Reel",
-      service: "Video Production",
-      status: "in_progress",
-      statusLabel: "In Production",
-      deliverable: "Color grade rough-cut in progress by lead compositor.",
-      driveFolder: "drive_fld_sutra_001/VIDEOS",
-      revisionRound: 0,
-      maxRevisions: 2,
-      updatedAt: "3 hours ago",
-      progress: 50,
-    },
-    {
-      id: "ord-3",
-      code: "#ORD-002",
-      title: "Sutra Studio Brand Identity & Sanskrit Typography",
-      service: "Brand Identity",
-      status: "completed",
-      statusLabel: "Approved & Vaulted",
-      deliverable: "Final vector pack, guidelines PDF, and font licenses packaged in Google Drive.",
-      driveFolder: "drive_fld_sutra_001/BRAND_ASSETS",
-      revisionRound: 2,
-      maxRevisions: 2,
-      updatedAt: "Yesterday",
-      progress: 100,
-    },
-    {
-      id: "ord-4",
-      code: "#ORD-004",
-      title: "Meta Ads Launch Suite — 3 Creative Ad Variants & Copy Matrix",
-      service: "Meta Ads Launcher",
-      status: "awaiting_approval",
-      statusLabel: "In Review (Awaiting Client Approval)",
-      deliverable: "3 Multi-Ratio Ad Sets (9:16 Video, 1:1 Feed, 16:9 Banner) ready for client review.",
-      driveFolder: "drive_fld_sutra_001/META_ADS_CAMPAIGN",
-      revisionRound: 1,
-      maxRevisions: 2,
-      updatedAt: "Just now",
-      progress: 75,
-      notes: "Please inspect Ad Set 1 video hook and verify audience targeting before Meta ad dispatch.",
-    },
-  ]);
+  const [orders, setOrders] = useState<OrderItem[]>([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+
+  React.useEffect(() => {
+    async function fetchOrders() {
+      try {
+        setIsLoadingOrders(true);
+        const res = await fetch("/api/orders");
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.orders)) {
+            setOrders(
+              data.orders.map((o: any) => ({
+                id: o.id,
+                code: o.code || o.orderNumber || `#ORD-${String(o.id).slice(-3)}`,
+                title: o.title || o.service || "Studio Commission",
+                service: o.service || "Creative Direction",
+                status: o.status || "in_progress",
+                statusLabel: o.statusLabel || "In Production",
+                deliverable: o.deliverablePreview || "Production files vaulted in Google Drive",
+                driveFolder: o.driveFolderPath || o.driveFolderId || "Vault",
+                revisionRound: o.revisionRound || 0,
+                maxRevisions: o.maxRevisions || 2,
+                updatedAt: o.updatedAt ? new Date(o.updatedAt).toLocaleDateString() : "Recently",
+                progress: o.status === "completed" ? 100 : o.status === "approved" ? 90 : 50,
+                notes: o.notes,
+              }))
+            );
+          }
+        }
+      } catch (err) {
+        console.warn("[Dashboard] Could not load orders:", err);
+      } finally {
+        setIsLoadingOrders(false);
+      }
+    }
+    fetchOrders();
+  }, [user]);
+
   const mockOrders = orders;
 
   // Inspection & Approval / Revision Modal

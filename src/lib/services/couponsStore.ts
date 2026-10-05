@@ -1,4 +1,5 @@
 import { StudioSettingsStore } from "./studioSettingsStore";
+import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
 
 /**
  * SUTRA STUDIO — Master Coupon & Discount Engine
@@ -21,7 +22,7 @@ export interface CouponRecord {
   createdAt: string;
 }
 
-const INITIAL_COUPONS: CouponRecord[] = [
+const CANONICAL_COUPONS: CouponRecord[] = [
   {
     id: "coup_sutra_launch",
     code: "SUTRA15",
@@ -32,7 +33,7 @@ const INITIAL_COUPONS: CouponRecord[] = [
     maxDiscountINR: 3000,
     active: true,
     maxUses: 100,
-    currentUses: 12,
+    currentUses: 0,
     createdAt: "2026-09-01T00:00:00.000Z",
   },
   {
@@ -44,39 +45,73 @@ const INITIAL_COUPONS: CouponRecord[] = [
     minOrderINR: 8000,
     active: true,
     maxUses: 50,
-    currentUses: 8,
+    currentUses: 0,
     allowedServices: ["3D Visualization", "3d-modeling", "360 Spatial Tour"],
     createdAt: "2026-09-15T00:00:00.000Z",
-  },
-  {
-    id: "coup_festive_vip",
-    code: "AURA20",
-    description: "20% VIP Commercial Retainer Discount",
-    discountType: "percentage",
-    discountValue: 20,
-    minOrderINR: 10000,
-    maxDiscountINR: 5000,
-    active: true,
-    maxUses: 25,
-    currentUses: 5,
-    createdAt: "2026-09-20T00:00:00.000Z",
   },
 ];
 
 const globalAny = globalThis as any;
 
 if (!globalAny.__SUTRA_COUPONS__) {
-  globalAny.__SUTRA_COUPONS__ = [...INITIAL_COUPONS];
+  globalAny.__SUTRA_COUPONS__ = [...CANONICAL_COUPONS];
+}
+
+if (!globalAny.__SUTRA_COUPONS_LAST_SYNC__) {
+  globalAny.__SUTRA_COUPONS_LAST_SYNC__ = 0;
+}
+
+async function persistCouponToFirestore(coupon: CouponRecord): Promise<void> {
+  if (!isFirebaseAdminReady()) return;
+  try {
+    const db = adminDb();
+    await db.collection("coupons").doc(coupon.id).set(coupon, { merge: true });
+  } catch (err) {
+    console.warn(`[CouponsStore] Failed to persist coupon ${coupon.id} to Firestore:`, err);
+  }
 }
 
 export class CouponsStore {
+  public static async syncFromFirestore(force = false): Promise<CouponRecord[]> {
+    if (!isFirebaseAdminReady()) {
+      return globalAny.__SUTRA_COUPONS__;
+    }
+
+    const now = Date.now();
+    if (!force && now - globalAny.__SUTRA_COUPONS_LAST_SYNC__ < 5000) {
+      return globalAny.__SUTRA_COUPONS__;
+    }
+
+    try {
+      const db = adminDb();
+      const snapshot = await db.collection("coupons").get();
+      if (!snapshot.empty) {
+        const loaded: CouponRecord[] = [];
+        snapshot.forEach((doc) => {
+          loaded.push(doc.data() as CouponRecord);
+        });
+        globalAny.__SUTRA_COUPONS__ = loaded;
+      }
+      globalAny.__SUTRA_COUPONS_LAST_SYNC__ = now;
+      return globalAny.__SUTRA_COUPONS__;
+    } catch (err) {
+      console.warn("[CouponsStore] syncFromFirestore warning:", err);
+      return globalAny.__SUTRA_COUPONS__;
+    }
+  }
+
   public static getAll(): CouponRecord[] {
+    if (Date.now() - globalAny.__SUTRA_COUPONS_LAST_SYNC__ > 20000) {
+      this.syncFromFirestore().catch(() => {});
+    }
     return globalAny.__SUTRA_COUPONS__;
   }
 
   public static findByCode(code: string): CouponRecord | undefined {
+    if (!code) return undefined;
+    const clean = code.trim().toUpperCase();
     return globalAny.__SUTRA_COUPONS__.find(
-      (c: CouponRecord) => c.code.toUpperCase() === code.trim().toUpperCase()
+      (c: CouponRecord) => c.code.toUpperCase() === clean
     );
   }
 
@@ -89,6 +124,7 @@ export class CouponsStore {
       createdAt: new Date().toISOString(),
     };
     globalAny.__SUTRA_COUPONS__.unshift(newCoupon);
+    persistCouponToFirestore(newCoupon).catch(() => {});
     return newCoupon;
   }
 
@@ -96,6 +132,7 @@ export class CouponsStore {
     const coupon = globalAny.__SUTRA_COUPONS__.find((c: CouponRecord) => c.id === id);
     if (coupon) {
       coupon.active = !coupon.active;
+      persistCouponToFirestore(coupon).catch(() => {});
     }
     return coupon;
   }
@@ -103,7 +140,10 @@ export class CouponsStore {
   public static delete(id: string): boolean {
     const index = globalAny.__SUTRA_COUPONS__.findIndex((c: CouponRecord) => c.id === id);
     if (index !== -1) {
-      globalAny.__SUTRA_COUPONS__.splice(index, 1);
+      const removed = globalAny.__SUTRA_COUPONS__.splice(index, 1)[0];
+      if (isFirebaseAdminReady() && removed) {
+        adminDb().collection("coupons").doc(removed.id).delete().catch(() => {});
+      }
       return true;
     }
     return false;
@@ -203,6 +243,7 @@ export class CouponsStore {
     const coupon = this.findByCode(code);
     if (coupon) {
       coupon.currentUses += 1;
+      persistCouponToFirestore(coupon).catch(() => {});
     }
   }
 }

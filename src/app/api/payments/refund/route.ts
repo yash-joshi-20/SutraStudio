@@ -79,8 +79,8 @@ export async function POST(req: Request) {
     try {
       AuditLogService.record({
         who: {
-          uid: user.uid || "usr_admin_001",
-          email: user.email || "admin@sutrastudio.com",
+          uid: user.uid || "admin",
+          email: user.email || "yashjoshi20@zohomail.in",
           name: user.name || "Studio Administrator",
           role: "admin",
         },

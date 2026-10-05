@@ -98,12 +98,31 @@ export function middleware(request: NextRequest) {
 
   const res = NextResponse.next();
   res.headers.set("x-sutra-session-present", isSessionShaped || isAdminSessionShaped ? "1" : "0");
+
+  // Refresh admin activity timestamp on active admin requests
+  if (
+    isAdminSessionShaped &&
+    (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login") || pathname.startsWith("/api/admin"))
+  ) {
+    const isSecure =
+      request.nextUrl.protocol === "https:" ||
+      request.headers.get("x-forwarded-proto") === "https";
+    res.cookies.set("sutra_admin_last_activity", Date.now().toString(), {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: isSecure,
+      path: "/",
+      maxAge: 12 * 60 * 60,
+    });
+  }
+
   return res;
 }
 
 export const config = {
   matcher: [
     "/admin/:path*",
+    "/api/admin/:path*",
     "/dashboard/:path*",
     "/orders/:path*",
     "/projects-client/:path*",

@@ -49,7 +49,7 @@ export function MoreScreen({ onLogout }: MoreScreenProps) {
           <View style={styles.userInfo}>
             <Text style={styles.userName}>Yash Joshi</Text>
             <Text style={styles.userRole}>Verified Client Member</Text>
-            <Text style={styles.userEmail}>yash@studioliving.com</Text>
+            <Text style={styles.userEmail}>client@sutrastudio.com</Text>
           </View>
         </View>
 
