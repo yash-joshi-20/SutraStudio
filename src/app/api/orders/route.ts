@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { isFirebaseAdminReady, adminMissingKeys } from "@/lib/firebase/admin";
+import { notConfigured } from "@/lib/api/response";
 import { generateOrderNumber } from "@/lib/types/database";
 import { PaymentsService } from "@/lib/services/payments";
 import { provisionOrderDriveFolders } from "@/lib/services/googleDriveService";
@@ -199,6 +201,9 @@ import { ClientsStore } from "@/lib/services/clientsStore";
 import { requestRole } from "@/lib/auth/requestRole";
 
 export async function GET(req: Request) {
+  if (!isFirebaseAdminReady()) {
+    return notConfigured("Orders API", adminMissingKeys());
+  }
   const user = await getAuthenticatedUser(req);
   const url = new URL(req.url);
 
@@ -272,6 +277,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  if (!isFirebaseAdminReady()) {
+    return notConfigured("Orders API", adminMissingKeys());
+  }
   try {
     const user = await getAuthenticatedUser(req);
     const body = await req.json();
