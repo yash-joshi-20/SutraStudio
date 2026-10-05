@@ -158,12 +158,14 @@ import {
   CatalogPlan,
   BriefFormField,
 } from "@/lib/services/catalogData";
+import { useConfirm } from "@/hooks/useConfirm";
 
 const FALLBACK_SERVICES: CatalogService[] = SEED_CATALOG_SERVICES;
 const FALLBACK_PLANS: CatalogPlan[] = SEED_CATALOG_PLANS;
 
 export default function OrdersPage() {
   const { user, profile } = useAuth();
+  const { confirm, ConfirmationDialog } = useConfirm();
 
   // Orders State with real-time updates
   const [orders, setOrders] = useState<OrderItem[]>([]);
@@ -1061,7 +1063,7 @@ export default function OrdersPage() {
       ? "Are you sure you wish to cancel your 3-Day Free Trial? No charge will be incurred."
       : "Are you sure you wish to cancel this recurring monthly studio retainer? Access remains active until the end of your billing cycle.";
 
-    if (!window.confirm(confirmMsg)) return;
+    if (!(await confirm({ title: "Cancel Plan", description: confirmMsg, isDangerous: true }))) return;
 
     try {
       const res = await fetch("/api/payments/cancel-subscription", {
@@ -3545,6 +3547,7 @@ export default function OrdersPage() {
           onClose={() => setIsReceiptOpen(false)}
         />
       </div>
+      <ConfirmationDialog />
     </RouteGuard>
   );
 }

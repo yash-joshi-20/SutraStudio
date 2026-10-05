@@ -92,6 +92,7 @@ import type { CatalogService, CatalogPlan } from "@/lib/services/catalogData";
 import { SEED_CATALOG_SERVICES, SEED_CATALOG_PLANS } from "@/lib/services/catalogData";
 import { json, jsonRaw, errorMessage } from "@/lib/api/client";
 import { uploadFileToDrive, type DriveUploadResult, type DriveUploadProgress } from "@/lib/drive/useDriveUpload";
+import { useConfirm } from "@/hooks/useConfirm";
 
 /**
  * Step 1.6 — explain a rejected admin call instead of failing silently.
@@ -452,6 +453,7 @@ function AdminHubContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { confirm, ConfirmationDialog } = useConfirm();
   const tabParam = searchParams.get("tab") as AdminTab | null;
 
   const normalizeTab = (tab: string | null): AdminTab => {
@@ -1186,7 +1188,13 @@ function AdminHubContent() {
 
   // Google Drive Order Folder Archive Action
   const handleArchiveDriveFolder = async (order: AdminOrder) => {
-    if (!window.confirm(`Archive Google Drive vault folder for order #${order.orderNumber || order.code}?`)) {
+    if (
+      !(await confirm({
+        title: "Archive Folder",
+        description: `Archive Google Drive vault folder for order #${order.orderNumber || order.code}?`,
+        isDangerous: true,
+      }))
+    ) {
       return;
     }
     setIsArchivingDrive(true);
@@ -1885,7 +1893,14 @@ const [adminDataError, setAdminDataError] = useState("");
 
   // Handler: Delete Knowledge Entry
   const handleDeleteKnowledge = async (id: string, title: string) => {
-    if (!window.confirm(`Are you sure you want to remove "${title}" from the AI Knowledge Base?`)) return;
+    if (
+      !(await confirm({
+        title: "Remove Entry",
+        description: `Are you sure you want to remove "${title}" from the AI Knowledge Base?`,
+        isDangerous: true,
+      }))
+    )
+      return;
     try {
       await callAiConsole("deleteKnowledgeEntry", { id });
       setKnowledgeEntries((prev) => prev.filter((k) => k.id !== id));
@@ -1920,7 +1935,14 @@ const [adminDataError, setAdminDataError] = useState("");
 
   // Handler: Reset AI Settings to Default
   const handleResetAiSettings = async () => {
-    if (!window.confirm("Reset AI System Prompt & Tone to official Sutra Studio defaults?")) return;
+    if (
+      !(await confirm({
+        title: "Reset AI Settings",
+        description: "Reset AI System Prompt & Tone to official Sutra Studio defaults?",
+        isDangerous: true,
+      }))
+    )
+      return;
     try {
       const { settings: reset } = await callAiConsole<{ settings: AiSettingsConfig }>(
         "resetAiSettingsToDefault"
@@ -7115,6 +7137,7 @@ const [adminDataError, setAdminDataError] = useState("");
           isOpen={isAdminReceiptOpen}
           onClose={() => setIsAdminReceiptOpen(false)}
         />
+        <ConfirmationDialog />
       </div>
     </RouteGuard>
   );

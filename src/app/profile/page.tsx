@@ -30,9 +30,11 @@ import {
   Briefcase,
   MapPin,
 } from "lucide-react";
+import { useConfirm } from "@/hooks/useConfirm";
 
 export default function ProfilePage() {
   const { user, profile: authProfile, logout, logoutEverywhere } = useAuth();
+  const { confirm, ConfirmationDialog } = useConfirm();
 
   const [isEditing, setIsEditing] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -504,11 +506,13 @@ export default function ProfilePage() {
                 type="button"
                 variant="ghost"
                 size="md"
-                onClick={() => {
+                onClick={async () => {
                   if (
-                    window.confirm(
-                      "Sign out of every device, including this one? You will need to sign in again."
-                    )
+                    await confirm({
+                      title: "Sign Out Everywhere",
+                      description: "Sign out of every device, including this one? You will need to sign in again.",
+                      isDangerous: true,
+                    })
                   ) {
                     void logoutEverywhere();
                   }
@@ -523,6 +527,7 @@ export default function ProfilePage() {
 
         <MobileBottomNav />
       </div>
+      <ConfirmationDialog />
     </RouteGuard>
   );
 }

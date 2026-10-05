@@ -1213,7 +1213,7 @@ export const SEED_CATALOG_PLANS: CatalogPlan[] = [
       "1x 10-Second Commercial Video Ad",
       "Full Commercial Copyright License",
       "48-Hour Turnaround Pipeline",
-      "Google Drive Organized Delivery",
+
       "2 Revision Rounds Included",
       "Direct AI Concierge with Studio Support",
     ],
