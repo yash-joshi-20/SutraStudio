@@ -375,7 +375,7 @@ export interface AdminOrder {
   requirements?: string;
   notes?: string;
   attachments?: AdminOrderAttachment[];
-  source?: "dashboard" | "ai_chat";
+  source?: "dashboard" | "ai_chat" | "whatsapp" | "email" | "contact_page" | "offline" | "qr_upi" | string;
   chatId?: string;
   deliverablePreview?: string;
   deliverables?: {
@@ -427,6 +427,7 @@ export interface AdminOrder {
   amountPaid?: number;
   paidAt?: string;
   paymentMethod?: string;
+  paymentReference?: string;
   failureReason?: string;
   subscriptionId?: string;
   subscriptionStatus?: string;
@@ -548,6 +549,30 @@ function AdminHubContent() {
   const [dispatchingOrderWf, setDispatchingOrderWf] = useState<string | null>(null);
   const [selectedWfId, setSelectedWfId] = useState<string>("W1_order_fulfillment_router");
   const [wfDispatchFeedback, setWfDispatchFeedback] = useState<{ success: boolean; message: string; runId?: string } | null>(null);
+  // External Manual Orders & Multi-Channel Payment Inflow State
+  const [isRecordExternalModalOpen, setIsRecordExternalModalOpen] = useState(false);
+  const [isSopGuideModalOpen, setIsSopGuideModalOpen] = useState(false);
+  const [isSubmittingExternalOrder, setIsSubmittingExternalOrder] = useState(false);
+  const [externalOrderForm, setExternalOrderForm] = useState({
+    clientName: "",
+    clientEmail: "",
+    clientPhone: "",
+    service: "Image Creation (Photorealistic AI & Art)",
+    customService: "",
+    amount: "5499",
+    source: "whatsapp",
+    paymentStatus: "paid",
+    paymentMethod: "upi_qr",
+    paymentReference: "",
+    requirements: "",
+    driveLink: "",
+  });
+  const [paymentActionFeedback, setPaymentActionFeedback] = useState<{
+    orderId: string;
+    type: "paid" | "reminder";
+    message: string;
+  } | null>(null);
+  const [isProcessingPaymentAction, setIsProcessingPaymentAction] = useState<string | null>(null);
 
   // Internal Notes & Discussion Comments State
   const [adminOrderComments, setAdminOrderComments] = useState<any[]>([]);
@@ -1075,6 +1100,170 @@ function AdminHubContent() {
       });
     } finally {
       setDispatchingOrderWf(null);
+    }
+  };
+
+  // Record External Manual Order (WhatsApp / Email / Contact / QR UPI)
+  const handleRecordExternalOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!externalOrderForm.clientName.trim() || !externalOrderForm.clientEmail.trim()) {
+      alert("Please enter client name and email.");
+      return;
+    }
+    setIsSubmittingExternalOrder(true);
+    try {
+      const selectedService =
+        externalOrderForm.service === "Custom"
+          ? externalOrderForm.customService || "Bespoke Creative Commission"
+          : externalOrderForm.service;
+      const parsedAmount = Number(externalOrderForm.amount) || 5499;
+
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: `${selectedService} (${externalOrderForm.source.toUpperCase()})`,
+          service: selectedService,
+          customServiceName: selectedService,
+          amountINR: parsedAmount,
+          clientName: externalOrderForm.clientName.trim(),
+          clientEmail: externalOrderForm.clientEmail.trim(),
+          clientPhone: externalOrderForm.clientPhone.trim(),
+          source: externalOrderForm.source,
+          paymentStatus: externalOrderForm.paymentStatus,
+          paymentMethod:
+            externalOrderForm.paymentStatus === "paid"
+              ? externalOrderForm.paymentMethod
+              : "invoice",
+          paymentReference:
+            externalOrderForm.paymentReference.trim() ||
+            (externalOrderForm.paymentStatus === "paid"
+              ? `Direct ${externalOrderForm.paymentMethod?.toUpperCase()} Verification`
+              : undefined),
+          requirements:
+            externalOrderForm.requirements.trim() ||
+            `Order logged via ${externalOrderForm.source.toUpperCase()} by Studio Admin.`,
+          isCustomOrder: true,
+          skipPayment: true,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setApprovalToast(
+          `✓ Order #${data.order?.orderNumber || "NEW"} registered successfully via ${externalOrderForm.source.toUpperCase()}.`
+        );
+        setIsRecordExternalModalOpen(false);
+        setExternalOrderForm({
+          clientName: "",
+          clientEmail: "",
+          clientPhone: "",
+          service: "Image Creation (Photorealistic AI & Art)",
+          customService: "",
+          amount: "5499",
+          source: "whatsapp",
+          paymentStatus: "paid",
+          paymentMethod: "upi_qr",
+          paymentReference: "",
+          requirements: "",
+          driveLink: "",
+        });
+        fetchRealOrders(false);
+        window.dispatchEvent(new Event("sutra_orders_changed"));
+      } else {
+        alert(`Failed to record order: ${data.error || "Unknown error"}`);
+      }
+    } catch (err: any) {
+      alert(`Error recording order: ${err.message}`);
+    } finally {
+      setIsSubmittingExternalOrder(false);
+    }
+  };
+
+  // Mark Payment as Received (Manual QR UPI / Bank Transfer / Cash)
+  const handleMarkPaymentReceived = async (
+    orderId: string,
+    paymentMethod = "upi_qr",
+    paymentReference = "Direct UPI / QR Verification"
+  ) => {
+    setIsProcessingPaymentAction(orderId);
+    try {
+      const res = await fetch("/api/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId,
+          action: "mark_paid",
+          paymentStatus: "paid",
+          paymentMethod,
+          paymentReference,
+          adminName: user?.displayName || "Studio Administrator",
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPaymentActionFeedback({
+          orderId,
+          type: "paid",
+          message: `✓ Payment marked verified for #${data.order?.orderNumber || orderId}.`,
+        });
+        fetchRealOrders(false);
+        if (inspectingAdminOrder && inspectingAdminOrder.id === orderId) {
+          setInspectingAdminOrder((prev: any) =>
+            prev
+              ? {
+                  ...prev,
+                  paymentStatus: "paid",
+                  status: "in_progress",
+                  statusLabel: "In Studio Production Queue",
+                  amountPaid: prev.totalAmount,
+                  paidAt: new Date().toISOString(),
+                  paymentMethod,
+                  paymentReference,
+                }
+              : null
+          );
+        }
+        window.dispatchEvent(new Event("sutra_orders_changed"));
+        setTimeout(() => setPaymentActionFeedback(null), 4000);
+      } else {
+        alert(`Error: ${data.error || "Failed to update payment status"}`);
+      }
+    } catch (err: any) {
+      alert(`Failed to update payment: ${err.message}`);
+    } finally {
+      setIsProcessingPaymentAction(null);
+    }
+  };
+
+  // Send Payment Reminder Notification & Email
+  const handleSendPaymentReminder = async (orderId: string) => {
+    setIsProcessingPaymentAction(orderId);
+    try {
+      const res = await fetch("/api/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId,
+          action: "send_payment_reminder",
+          adminName: user?.displayName || "Studio Administrator",
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPaymentActionFeedback({
+          orderId,
+          type: "reminder",
+          message: `✓ Payment reminder sent to client.`,
+        });
+        setTimeout(() => setPaymentActionFeedback(null), 4000);
+      } else {
+        alert(`Error: ${data.error || "Failed to dispatch reminder"}`);
+      }
+    } catch (err: any) {
+      alert(`Reminder dispatch error: ${err.message}`);
+    } finally {
+      setIsProcessingPaymentAction(null);
     }
   };
 
@@ -4376,8 +4565,26 @@ const [adminDataError, setAdminDataError] = useState("");
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2.5 shrink-0">
-                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[11px] text-[#2E7D4F] font-semibold">
+                  <div className="flex items-center gap-2.5 flex-wrap shrink-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsSopGuideModalOpen(true)}
+                      leftIcon={<BookOpen className="w-3.5 h-3.5 text-[#5C3A1E]" />}
+                      className="text-xs border-[#EADFCB] text-[#5C3A1E] bg-[#FAF9F5] hover:bg-[#F4EFE6]"
+                    >
+                      📖 Multi-Channel SOP
+                    </Button>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => setIsRecordExternalModalOpen(true)}
+                      leftIcon={<Plus className="w-3.5 h-3.5" />}
+                      className="text-xs shadow-xs"
+                    >
+                      ➕ Record External Order
+                    </Button>
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[11px] text-[#2E7D4F] font-semibold">
                       <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-pulse" />
                       <span>Firestore Sync Active</span>
                     </div>
@@ -4393,6 +4600,23 @@ const [adminDataError, setAdminDataError] = useState("");
                     </Button>
                   </div>
                 </div>
+
+                {/* Payment Action Feedback Banner */}
+                {paymentActionFeedback && (
+                  <div className="p-3.5 rounded-2xl bg-[#F0FDF4] border border-[#BBF7D0] text-[#15803D] text-xs font-semibold flex items-center justify-between shadow-2xs animate-in fade-in duration-200">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
+                      <span>{paymentActionFeedback.message}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentActionFeedback(null)}
+                      className="text-[11px] hover:underline cursor-pointer"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                )}
 
                 {/* Search & Multi-Filter Controls */}
                 <div className="space-y-3.5">
@@ -4717,6 +4941,40 @@ const [adminDataError, setAdminDataError] = useState("");
 
                                 <td className="py-3.5 px-4 text-right">
                                   <div className="flex items-center justify-end gap-1.5">
+                                    {order.paymentStatus !== "paid" && order.status !== "paid" && (
+                                      <>
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            handleMarkPaymentReceived(
+                                              order.id,
+                                              order.source === "qr_upi" ? "upi_qr" : "bank_transfer",
+                                              "Direct Settlement Confirmation"
+                                            )
+                                          }
+                                          disabled={isProcessingPaymentAction === order.id}
+                                          className="p-1.5 rounded-lg border border-[#BBF7D0] bg-[#F0FDF4] text-[#166534] hover:bg-[#DCFCE7] cursor-pointer flex items-center gap-1 text-[11px] font-semibold transition-all shadow-2xs"
+                                          title="Mark payment as received (QR UPI / Bank / Cash)"
+                                        >
+                                          {isProcessingPaymentAction === order.id ? (
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#166534]" />
+                                          ) : (
+                                            <Check className="w-3.5 h-3.5 text-[#16A34A]" />
+                                          )}
+                                          <span className="hidden xl:inline">Paid</span>
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleSendPaymentReminder(order.id)}
+                                          disabled={isProcessingPaymentAction === order.id}
+                                          className="p-1.5 rounded-lg border border-[#FDE68A] bg-[#FFFBEB] text-[#92400E] hover:bg-[#FEF3C7] cursor-pointer flex items-center gap-1 text-[11px] font-semibold transition-all shadow-2xs"
+                                          title="Send payment reminder notification to client"
+                                        >
+                                          <Bell className="w-3.5 h-3.5 text-[#D97706]" />
+                                          <span className="hidden xl:inline">Remind</span>
+                                        </button>
+                                      </>
+                                    )}
                                     {(order.paymentStatus === "paid" || order.status === "paid") && (
                                       <button
                                         type="button"
@@ -4831,7 +5089,7 @@ const [adminDataError, setAdminDataError] = useState("");
                               </div>
                             </div>
 
-                            <div className="flex items-center justify-between pt-2 border-t border-[#EADFCB]/60">
+                            <div className="flex items-center justify-between pt-2 border-t border-[#EADFCB]/60 flex-wrap gap-2">
                               <div className="space-y-0.5">
                                 <span className="text-[10px] text-[#94A3B8] block">Commission</span>
                                 <span className="font-serif font-bold text-base text-[#5C3A1E]">
@@ -4839,7 +5097,31 @@ const [adminDataError, setAdminDataError] = useState("");
                                 </span>
                               </div>
 
-                              <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                {order.paymentStatus !== "paid" && order.status !== "paid" && (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleMarkPaymentReceived(
+                                          order.id,
+                                          "upi_qr",
+                                          "Mobile Quick Payment Verification"
+                                        )
+                                      }
+                                      className="p-1 px-2 rounded-lg border border-[#BBF7D0] bg-[#F0FDF4] text-[#166534] text-[10px] font-bold"
+                                    >
+                                      ✓ Paid
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSendPaymentReminder(order.id)}
+                                      className="p-1 px-2 rounded-lg border border-[#FDE68A] bg-[#FFFBEB] text-[#92400E] text-[10px] font-bold"
+                                    >
+                                      🔔 Remind
+                                    </button>
+                                  </>
+                                )}
                                 <span
                                   className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
                                     order.paymentStatus === "paid"
@@ -5225,42 +5507,95 @@ const [adminDataError, setAdminDataError] = useState("");
                           </div>
                         )}
 
-                        {/* Payment Verification Box */}
+                        {/* Payment Verification & Settlement Box */}
                         <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#EADFCB] space-y-3">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] uppercase font-bold text-[#94A3B8]">Razorpay Settlement Verification</span>
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0]">
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            <span className="text-[10px] uppercase font-bold text-[#94A3B8]">
+                              Multi-Channel Payment Settlement & Verification
+                            </span>
+                            <span
+                              className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                                inspectingAdminOrder.paymentStatus === "paid" || inspectingAdminOrder.status === "paid"
+                                  ? "bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0]"
+                                  : "bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A]"
+                              }`}
+                            >
                               <CheckCircle2 className="w-3 h-3" />
-                              <span>{inspectingAdminOrder.paymentStatus?.toUpperCase() || "PAID"}</span>
+                              <span>
+                                {inspectingAdminOrder.paymentStatus === "paid" || inspectingAdminOrder.status === "paid"
+                                  ? `PAID (${(inspectingAdminOrder.paymentMethod || "VERIFIED").toUpperCase()})`
+                                  : "PAYMENT PENDING / UNPAID"}
+                              </span>
                             </span>
                           </div>
 
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                             <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70">
-                              <span className="text-[10px] text-[#94A3B8] font-bold block">Payment ID</span>
-                              <span className="font-mono text-[11px] font-semibold text-[#0F172A] break-all">
-                                {inspectingAdminOrder.razorpayPaymentId || "None"}
+                              <span className="text-[10px] text-[#94A3B8] font-bold block">Method / Gateway</span>
+                              <span className="font-mono text-[11px] font-semibold text-[#0F172A] capitalize">
+                                {inspectingAdminOrder.paymentMethod || (inspectingAdminOrder.razorpayPaymentId ? "Razorpay" : "Invoice / UPI")}
                               </span>
                             </div>
                             <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70">
-                              <span className="text-[10px] text-[#94A3B8] font-bold block">Order ID</span>
+                              <span className="text-[10px] text-[#94A3B8] font-bold block">Ref ID / UTR</span>
                               <span className="font-mono text-[11px] font-semibold text-[#64748B] break-all">
-                                {inspectingAdminOrder.razorpayOrderId || "None"}
+                                {inspectingAdminOrder.paymentReference || inspectingAdminOrder.razorpayPaymentId || "None"}
                               </span>
                             </div>
                             <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70">
-                              <span className="text-[10px] text-[#94A3B8] font-bold block">Amount Settled</span>
+                              <span className="text-[10px] text-[#94A3B8] font-bold block">Amount Payable / Settled</span>
                               <span className="font-serif font-bold text-xs text-[#5C3A1E]">
                                 ₹{(inspectingAdminOrder.amountPaid || inspectingAdminOrder.totalAmount || 0).toLocaleString("en-IN")}
                               </span>
                             </div>
                             <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70">
-                              <span className="text-[10px] text-[#94A3B8] font-bold block">Timestamp</span>
+                              <span className="text-[10px] text-[#94A3B8] font-bold block">Settled Timestamp</span>
                               <span className="text-[11px] text-[#0F172A]">
-                                {inspectingAdminOrder.paidAt ? new Date(inspectingAdminOrder.paidAt).toLocaleDateString("en-IN") : "Recorded"}
+                                {inspectingAdminOrder.paidAt ? new Date(inspectingAdminOrder.paidAt).toLocaleDateString("en-IN") : "Awaiting Settlement"}
                               </span>
                             </div>
                           </div>
+
+                          {/* Quick Payment Settlement Controls for Admin */}
+                          {inspectingAdminOrder.paymentStatus !== "paid" && inspectingAdminOrder.status !== "paid" && (
+                            <div className="p-3 rounded-xl bg-[#FFFBEB] border border-[#FDE68A] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                              <div>
+                                <span className="font-bold text-[#92400E] block">Payment Pending Action:</span>
+                                <p className="text-[11px] text-[#B45309]">
+                                  If client transferred funds via UPI QR scan, IMPS/NEFT, or cash, click confirm to update records.
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <Button
+                                  variant="primary"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleMarkPaymentReceived(
+                                      inspectingAdminOrder.id,
+                                      "upi_qr",
+                                      "Admin Direct QR / Bank Verification"
+                                    )
+                                  }
+                                  disabled={isProcessingPaymentAction === inspectingAdminOrder.id}
+                                  isLoading={isProcessingPaymentAction === inspectingAdminOrder.id}
+                                  leftIcon={<Check className="w-3.5 h-3.5" />}
+                                  className="text-xs !bg-[#2E7D4F] hover:!bg-[#24633F]"
+                                >
+                                  ✓ Confirm Payment Received
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleSendPaymentReminder(inspectingAdminOrder.id)}
+                                  disabled={isProcessingPaymentAction === inspectingAdminOrder.id}
+                                  leftIcon={<Bell className="w-3.5 h-3.5 text-[#D97706]" />}
+                                  className="text-xs border-[#FDE68A] text-[#92400E] bg-white hover:bg-[#FEF3C7]"
+                                >
+                                  Send Reminder
+                                </Button>
+                              </div>
+                            </div>
+                          )}
 
                           <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#EADFCB]/60">
                             <Button
@@ -7557,6 +7892,312 @@ const [adminDataError, setAdminDataError] = useState("");
               <div className="flex justify-end pt-2">
                 <Button variant="secondary" size="sm" onClick={() => setSelectedAuditLog(null)}>
                   Close Inspector
+                </Button>
+              </div>
+            </div>
+          </Modal>
+        )}
+
+        {/* Record External / Manual Order Modal (WhatsApp, Email, QR UPI, Phone) */}
+        {isRecordExternalModalOpen && (
+          <Modal
+            isOpen={true}
+            onClose={() => setIsRecordExternalModalOpen(false)}
+            title="➕ Record External / Multi-Channel Commission"
+            description="Log orders received via WhatsApp, Email, Contact Page, Phone, or Direct QR Code UPI scan."
+            maxWidth="lg"
+          >
+            <form onSubmit={handleRecordExternalOrder} className="space-y-4 text-xs">
+              <div className="p-3 rounded-2xl bg-[#FFFBEB] border border-[#FDE68A] text-[#92400E] space-y-1">
+                <span className="font-bold flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-[#D97706]" />
+                  Multi-Channel Ingestion & Automatic Vault Provisioning
+                </span>
+                <p className="text-[11px] text-[#B45309]">
+                  Saving this order will generate a unique Order ID, provision a Google Drive folder, record payment status, and dispatch sync notifications to client and admin.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-[#0F172A] block">
+                    Client Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Anand Patel"
+                    value={externalOrderForm.clientName}
+                    onChange={(e) =>
+                      setExternalOrderForm({ ...externalOrderForm, clientName: e.target.value })
+                    }
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-[#0F172A] block">
+                    Client Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="e.g. anand@pateldesign.com"
+                    value={externalOrderForm.clientEmail}
+                    onChange={(e) =>
+                      setExternalOrderForm({ ...externalOrderForm, clientEmail: e.target.value })
+                    }
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-[#0F172A] block">
+                    Phone / WhatsApp #
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. +91 98765 43210"
+                    value={externalOrderForm.clientPhone}
+                    onChange={(e) =>
+                      setExternalOrderForm({ ...externalOrderForm, clientPhone: e.target.value })
+                    }
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-[#0F172A] block">
+                    Channel Source *
+                  </label>
+                  <select
+                    value={externalOrderForm.source}
+                    onChange={(e) =>
+                      setExternalOrderForm({ ...externalOrderForm, source: e.target.value })
+                    }
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] cursor-pointer"
+                  >
+                    <option value="whatsapp">WhatsApp Business</option>
+                    <option value="email">Direct Email / RFP</option>
+                    <option value="contact_page">Contact Form Lead</option>
+                    <option value="qr_upi">Direct QR UPI Scan</option>
+                    <option value="offline">Phone / In-Person</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-[#0F172A] block">
+                    Total Amount (₹ INR) *
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    placeholder="5499"
+                    value={externalOrderForm.amount}
+                    onChange={(e) =>
+                      setExternalOrderForm({ ...externalOrderForm, amount: e.target.value })
+                    }
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs font-bold text-[#5C3A1E] focus:outline-none focus:border-[#D4A35A]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-[#0F172A] block">
+                    Service / Deliverable Type
+                  </label>
+                  <select
+                    value={externalOrderForm.service}
+                    onChange={(e) =>
+                      setExternalOrderForm({ ...externalOrderForm, service: e.target.value })
+                    }
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] cursor-pointer"
+                  >
+                    <option value="Image Creation (Photorealistic AI & Art)">Image Creation (Photorealistic AI & Art)</option>
+                    <option value="Video Creation (Cinematic AI & Motion)">Video Creation (Cinematic AI & Motion)</option>
+                    <option value="3D Modeling & Spatial Assets">3D Modeling & Spatial Assets</option>
+                    <option value="360° Interactive Architectural View">360° Interactive Architectural View</option>
+                    <option value="Interior & Spatial Design">Interior & Spatial Design</option>
+                    <option value="Window & Retail Experience Design">Window & Retail Experience Design</option>
+                    <option value="Digital Marketing & Brand Strategy">Digital Marketing & Brand Strategy</option>
+                    <option value="Meta & Google Ads Campaign Pipeline">Meta & Google Ads Campaign Pipeline</option>
+                    <option value="Website Architecture & Development">Website Architecture & Development</option>
+                    <option value="Custom">Custom Bespoke Service...</option>
+                  </select>
+                </div>
+
+                {externalOrderForm.service === "Custom" ? (
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-[#0F172A] block">
+                      Custom Service Title *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 4K Architectural VR Tour"
+                      value={externalOrderForm.customService}
+                      onChange={(e) =>
+                        setExternalOrderForm({ ...externalOrderForm, customService: e.target.value })
+                      }
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-[#0F172A] block">
+                      Payment Settlement Status *
+                    </label>
+                    <select
+                      value={externalOrderForm.paymentStatus}
+                      onChange={(e) =>
+                        setExternalOrderForm({ ...externalOrderForm, paymentStatus: e.target.value })
+                      }
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] cursor-pointer"
+                    >
+                      <option value="paid">Paid (Payment Verified via QR / Bank / Cash)</option>
+                      <option value="unpaid">Pending Invoice (Unpaid / In Progress)</option>
+                      <option value="partial">Partially Paid (Advance Received)</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-[#0F172A] block">
+                    Payment Method
+                  </label>
+                  <select
+                    value={externalOrderForm.paymentMethod}
+                    onChange={(e) =>
+                      setExternalOrderForm({ ...externalOrderForm, paymentMethod: e.target.value })
+                    }
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] cursor-pointer"
+                  >
+                    <option value="upi_qr">UPI QR Code Scan (GPay / PhonePe / Paytm)</option>
+                    <option value="bank_transfer">Direct IMPS / NEFT Bank Transfer</option>
+                    <option value="cash">Cash / Cheque</option>
+                    <option value="invoice">Pay on Invoice (Net-15)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-[#0F172A] block">
+                    Transaction Ref / UTR / Note
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. UPI Ref # 481928374928"
+                    value={externalOrderForm.paymentReference}
+                    onChange={(e) =>
+                      setExternalOrderForm({ ...externalOrderForm, paymentReference: e.target.value })
+                    }
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-[#0F172A] block">
+                  Project Scope & Client Requirements
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Describe client brief, specifications, dimensions, color palette, or milestone notes..."
+                  value={externalOrderForm.requirements}
+                  onChange={(e) =>
+                    setExternalOrderForm({ ...externalOrderForm, requirements: e.target.value })
+                  }
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#EADFCB]/60">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setIsRecordExternalModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                  isLoading={isSubmittingExternalOrder}
+                  disabled={isSubmittingExternalOrder}
+                  leftIcon={<Save className="w-3.5 h-3.5" />}
+                >
+                  Save & Create Commission
+                </Button>
+              </div>
+            </form>
+          </Modal>
+        )}
+
+        {/* Multi-Channel Orders & Payment SOP Guide Modal */}
+        {isSopGuideModalOpen && (
+          <Modal
+            isOpen={true}
+            onClose={() => setIsSopGuideModalOpen(false)}
+            title="📖 Multi-Channel Orders & Payment Ledger SOP Guide"
+            description="Standard operating procedures for managing inquiries, WhatsApp/Email orders, and external payments."
+            maxWidth="lg"
+          >
+            <div className="space-y-4 text-xs text-[#0F172A] max-h-[75vh] overflow-y-auto pr-1">
+              {/* Channel Map */}
+              <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-2">
+                <h4 className="font-serif font-bold text-sm text-[#5C3A1E]">
+                  1. Order Entry Channels & Ingestion Workflow
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                  <div className="p-2.5 rounded-xl bg-white border border-[#EADFCB]">
+                    <span className="font-bold text-[#0F172A] block">🟢 WhatsApp & Email Orders:</span>
+                    <p className="text-[#64748B]">Click &apos;Record External Order&apos; above. Enter client name, email, service amount, and set payment status as Paid (QR) or Pending Invoice.</p>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-white border border-[#EADFCB]">
+                    <span className="font-bold text-[#0F172A] block">🔵 Contact Form Submissions:</span>
+                    <p className="text-[#64748B]">Inquiries auto-sync to Admin leads and trigger real-time in-app alerts. Click &apos;Convert to Order&apos; to provision drive folders.</p>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-white border border-[#EADFCB]">
+                    <span className="font-bold text-[#0F172A] block">🟡 Unpaid / Invoice Reminders:</span>
+                    <p className="text-[#64748B]">For orders pending payment, click the &apos;🔔 Remind&apos; button to send an instant invoice reminder via in-app notification & email.</p>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-white border border-[#EADFCB]">
+                    <span className="font-bold text-[#0F172A] block">⚡ Admin-Gated n8n Execution:</span>
+                    <p className="text-[#64748B]">Client orders never auto-trigger external pipelines. Admin reviews the brief, selects workflow W1/W2/W3/W5, and clicks &apos;⚡ n8n&apos;.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step by step */}
+              <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#EADFCB] space-y-3">
+                <h4 className="font-serif font-bold text-sm text-[#5C3A1E]">
+                  2. Handling Payments Received via UPI QR / IMPS
+                </h4>
+                <ol className="list-decimal list-inside space-y-1.5 text-[11px] text-[#64748B]">
+                  <li>When client scans the studio UPI QR code or makes a direct transfer, find the order in the table.</li>
+                  <li>Click the green <strong className="text-[#166534]">✓ Paid</strong> quick button or open Inspector &gt; <strong className="text-[#0F172A]">Confirm Payment Received</strong>.</li>
+                  <li>Enter the UTR reference number or note.</li>
+                  <li>The order is instantly marked <strong className="text-[#166534]">PAID</strong>, transitioned to <strong className="text-[#5C3A1E]">In Production</strong>, and a verified payment confirmation notification is sent to the client.</li>
+                </ol>
+              </div>
+
+              {/* Documentation reference */}
+              <div className="p-3.5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between">
+                <span className="text-[11px] text-[#64748B]">Full technical SOP documentation is saved in:</span>
+                <span className="font-mono text-[10px] font-bold text-[#5C3A1E] bg-white px-2 py-1 rounded border border-[#EADFCB]">
+                  docs/ai/MANUAL_ORDERS_AND_PAYMENTS_SOP.md
+                </span>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <Button variant="primary" size="sm" onClick={() => setIsSopGuideModalOpen(false)}>
+                  Close Guide
                 </Button>
               </div>
             </div>

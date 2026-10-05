@@ -37,7 +37,20 @@ export async function POST(req: Request) {
       // Non-blocking if running offline
     }
 
-    // 2. Dispatch notification to studio support inbox with Reply-To set to the client's email
+    // 2. Dispatch real-time in-app notification to Admin
+    try {
+      const { NotificationsStore } = await import("@/lib/services/notificationsStore");
+      NotificationsStore.add({
+        userId: "usr_admin_001",
+        type: "order_comment",
+        title: `New Contact Inquiry: ${body.name}`,
+        message: `${body.name} (${body.email}) sent an inquiry: "${body.message.slice(0, 100)}..."`,
+        actionUrl: "/admin",
+        actionLabel: "Inspect Inquiries",
+      });
+    } catch {}
+
+    // 3. Dispatch notification to studio support inbox with Reply-To set to the client's email
     await EmailService.dispatchNotificationEmail({
       to: supportInbox,
       type: "new_inquiry",

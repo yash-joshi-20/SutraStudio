@@ -108,7 +108,7 @@ export interface FirestoreOrderRecord {
     fileSize?: string;
     mimeType?: string;
   }[];
-  source?: "dashboard" | "ai_chat";
+  source?: "dashboard" | "ai_chat" | "whatsapp" | "email" | "contact_page" | "offline" | "qr_upi" | string;
   chatId?: string;
   statusLabel?: string;
   deliverablePreview?: string;
@@ -127,6 +127,7 @@ export interface FirestoreOrderRecord {
   amountPaid?: number;
   paidAt?: string;
   paymentMethod?: string;
+  paymentReference?: string;
   failureReason?: string;
   subscriptionId?: string;
   subscriptionStatus?: "active" | "cancelled" | "halted" | "pending" | "trial" | "expired" | "closed";
@@ -313,18 +314,31 @@ export async function POST(req: Request) {
       }
 
       if (verifiedItems.length === 0) {
-        return NextResponse.json(
-          { error: "Validation Error: At least one active service must be selected." },
-          { status: 400 }
-        );
+        if (body.customServiceName || body.amountINR || body.totalAmount || body.source || body.isCustomOrder) {
+          const customAmount = Number(body.amountINR || body.totalAmount || body.price || 5000);
+          const customName = body.customServiceName || body.service || body.title || "Bespoke Creative Commission";
+          calculatedTotal = customAmount;
+          verifiedItems.push({
+            name: customName,
+            price: customAmount,
+            quantity: 1,
+          });
+          primaryServiceName = customName;
+          title = body.title || `${customName} Commission`;
+        } else {
+          return NextResponse.json(
+            { error: "Validation Error: At least one active service must be selected." },
+            { status: 400 }
+          );
+        }
+      } else {
+        primaryServiceName = verifiedItems[0].name;
+        title =
+          body.title ||
+          (verifiedItems.length === 1
+            ? `${verifiedItems[0].name} Commission`
+            : `${verifiedItems[0].name} + ${verifiedItems.length - 1} Creative Services`);
       }
-
-      primaryServiceName = verifiedItems[0].name;
-      title =
-        body.title ||
-        (verifiedItems.length === 1
-          ? `${verifiedItems[0].name} Commission`
-          : `${verifiedItems[0].name} + ${verifiedItems.length - 1} Creative Services`);
     } else {
       // Monthly Plan Path
       const planId = body.planId || "studio-growth";
@@ -426,12 +440,27 @@ export async function POST(req: Request) {
       body.paymentMethod === "free_test"
     );
 
-    const initialStatus = isDirectInvoice ? "confirmed" : "pending_payment";
-    const initialStatusLabel = isDirectInvoice
+    const isDirectPaid =
+      body.paymentStatus === "paid" ||
+      body.isPaid === true ||
+      body.paymentMethod === "upi_qr" ||
+      body.paymentMethod === "bank_transfer" ||
+      body.paymentMethod === "cash";
+
+    const initialStatus = isDirectPaid
+      ? "in_progress"
+      : isDirectInvoice
+      ? "confirmed"
+      : "pending_payment";
+    const initialStatusLabel = isDirectPaid
+      ? "Payment Verified — In Studio Production Queue"
+      : isDirectInvoice
       ? "Confirmed — In Studio Production Queue"
       : "Pending Payment via Razorpay";
-    const initialPaymentStatus = isDirectInvoice ? "unpaid" : "unpaid";
-    const initialDeliverablePreview = isDirectInvoice
+    const initialPaymentStatus = isDirectPaid ? "paid" : "unpaid";
+    const initialDeliverablePreview = isDirectPaid
+      ? "Payment verified via direct channel. Active in studio production queue."
+      : isDirectInvoice
       ? "Brief registered in studio queue. Pending admin workflow review."
       : "Commission registered in Firestore. Production brief is pending verified Razorpay checkout.";
 
@@ -464,7 +493,7 @@ export async function POST(req: Request) {
       attachments: Array.isArray(body.attachments) ? body.attachments : [],
       status: initialStatus,
       statusLabel: initialStatusLabel,
-      source: body.source === "ai_chat" ? "ai_chat" : "dashboard",
+      source: body.source || (body.source === "ai_chat" ? "ai_chat" : "dashboard"),
       chatId: body.chatId,
       clientUid,
       clientId: clientUid,
@@ -477,6 +506,10 @@ export async function POST(req: Request) {
       maxRevisions: body.maxRevisions || (firstService?.revisionsIncluded ?? 2),
       deliverables: [],
       paymentStatus: initialPaymentStatus,
+      amountPaid: isDirectPaid ? finalPayableAmount : Number(body.amountPaid || 0),
+      paidAt: isDirectPaid ? now : undefined,
+      paymentMethod: body.paymentMethod || (isDirectPaid ? "upi_qr" : undefined),
+      paymentReference: body.paymentReference || body.utrNumber || (isDirectPaid ? "Direct Verification" : undefined),
       estimatedDeliveryDays: estDays,
       estimatedDueDate: estDueDate,
       comments: [],
@@ -485,8 +518,10 @@ export async function POST(req: Request) {
         {
           status: initialStatus,
           changedAt: now,
-          changedBy: "client",
-          note: isDirectInvoice
+          changedBy: body.source === "admin_manual" ? "admin" : "client",
+          note: isDirectPaid
+            ? `Order created with verified payment (${body.paymentMethod || "UPI / Direct"}). Placed in production queue.`
+            : isDirectInvoice
             ? `Commission placed directly (Pay on Invoice / Direct Brief). Added to studio queue.`
             : `Order placed with server-recomputed catalog pricing (₹${finalPayableAmount.toLocaleString("en-IN")}${appliedCouponCode ? `, Coupon ${appliedCouponCode} applied` : ""}). Awaiting Razorpay payment.`,
         },
@@ -557,22 +592,24 @@ export async function POST(req: Request) {
       // Client Notification
       NotificationsStore.add({
         userId: clientUid,
-        type: "order_placed",
-        title: "Order Placed Successfully",
-        message: `Your commission #${newOrder.orderNumber} for ${newOrder.service} is confirmed. Awaiting payment settlement.`,
+        type: isDirectPaid ? "order_paid" : "order_placed",
+        title: isDirectPaid ? "Payment Received & Confirmed" : "Order Placed Successfully",
+        message: isDirectPaid
+          ? `Your commission #${newOrder.orderNumber} for ${newOrder.service} is confirmed and payment is verified (₹${newOrder.totalAmount?.toLocaleString("en-IN")}). In production!`
+          : `Your commission #${newOrder.orderNumber} for ${newOrder.service} is registered. In production queue.`,
         orderId: newOrder.id,
         orderNumber: newOrder.orderNumber,
         actionUrl: "/orders",
-        actionLabel: "View Order & Pay",
+        actionLabel: "View Order",
         recipientEmail: newOrder.clientEmail,
       });
 
       // Admin Alert
       NotificationsStore.add({
-        userId: "admin",
+        userId: "usr_admin_001",
         type: "order_placed",
-        title: "New Commission Placed",
-        message: `${newOrder.clientName || "Client"} placed order #${newOrder.orderNumber} (₹${(newOrder.totalAmount || 0).toLocaleString("en-IN")}).`,
+        title: `New Order (${newOrder.source?.toUpperCase() || "PORTAL"}): #${newOrder.orderNumber}`,
+        message: `${newOrder.clientName || "Client"} placed order #${newOrder.orderNumber} (₹${(newOrder.totalAmount || 0).toLocaleString("en-IN")}) via ${newOrder.source || "dashboard"}.`,
         orderId: newOrder.id,
         orderNumber: newOrder.orderNumber,
         actionUrl: "/admin",
@@ -640,6 +677,76 @@ export async function PATCH(req: Request) {
     const targetOrder = OrdersStore.findById(targetOrderId);
 
     if (targetOrder) {
+      // Payment Reminder Action
+      if (body.action === "send_payment_reminder") {
+        try {
+          NotificationsStore.add({
+            userId: targetOrder.clientUid || targetOrder.clientId || targetOrder.clientEmail,
+            type: "unpaid_reminder",
+            title: `Payment Reminder: #${targetOrder.orderNumber}`,
+            message: `Invoice for ${targetOrder.service} (#${targetOrder.orderNumber}) is pending (₹${(targetOrder.totalAmount || 0).toLocaleString("en-IN")}). Please complete payment via UPI QR or Bank Transfer.`,
+            orderId: targetOrder.id,
+            orderNumber: targetOrder.orderNumber,
+            actionUrl: "/orders",
+            actionLabel: "View Invoice & Pay",
+            recipientEmail: targetOrder.clientEmail,
+          });
+        } catch {}
+
+        return NextResponse.json({
+          success: true,
+          message: `Payment reminder notification dispatched to ${targetOrder.clientName} (${targetOrder.clientEmail}).`,
+        });
+      }
+
+      // Mark Payment Received Action (Manual QR / Bank / Cash)
+      if (body.action === "mark_paid" || body.paymentStatus === "paid") {
+        targetOrder.paymentStatus = "paid";
+        targetOrder.amountPaid = Number(body.amountPaid || targetOrder.totalAmount || 0);
+        targetOrder.paidAt = now;
+        targetOrder.paymentMethod = body.paymentMethod || "upi_qr";
+        targetOrder.paymentReference = body.paymentReference || body.utrNumber || "Admin Manual Verification";
+
+        if (targetOrder.status === "pending_payment") {
+          targetOrder.status = "in_progress";
+          targetOrder.statusLabel = "In Studio Production Queue";
+        }
+
+        targetOrder.updatedAt = now;
+        targetOrder.statusHistory = [
+          ...(targetOrder.statusHistory || []),
+          {
+            status: targetOrder.status,
+            changedAt: now,
+            changedBy: body.adminName || "Studio Administrator",
+            note: `Payment of ₹${targetOrder.amountPaid.toLocaleString("en-IN")} confirmed via ${targetOrder.paymentMethod}. Ref: ${targetOrder.paymentReference}.`,
+          },
+        ];
+
+        OrdersStore.update(targetOrder.id, targetOrder);
+
+        // Dispatch Confirmation Notification to Client
+        try {
+          NotificationsStore.add({
+            userId: targetOrder.clientUid || targetOrder.clientId || targetOrder.clientEmail,
+            type: "order_paid",
+            title: "Payment Received & Confirmed",
+            message: `Your payment of ₹${targetOrder.amountPaid.toLocaleString("en-IN")} for Order #${targetOrder.orderNumber} has been verified (${targetOrder.paymentMethod}). Order is active in studio production.`,
+            orderId: targetOrder.id,
+            orderNumber: targetOrder.orderNumber,
+            actionUrl: "/orders",
+            actionLabel: "Track Order",
+            recipientEmail: targetOrder.clientEmail,
+          });
+        } catch {}
+
+        return NextResponse.json({
+          success: true,
+          order: targetOrder,
+          message: `Payment marked as received for Order #${targetOrder.orderNumber}.`,
+        });
+      }
+
       const rawStatus = String(body.status || "confirmed").toLowerCase();
       let normalizedStatus: FirestoreOrderRecord["status"] = "in_progress";
       let statusLabel = "In Production";
