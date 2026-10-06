@@ -1,12 +1,15 @@
 /**
- * SUTRA STUDIO - Order Progress Computation (Client Safe)
+ * SUTRA STUDIO - Order Progress & n8n Workflow Progress Computation (Client & Admin Safe)
  *
- * Pure function that maps an order's status onto a percentage, a stage label
- * and a status category for the client portal timeline and the admin list.
+ * Pure function that maps an order's status and n8n autonomous workflow execution onto:
+ * - A percentage (0% to 100%)
+ * - A stage label and category
+ * - Live step-by-step breakdown of active n8n workflows (W1, W2, W3, W5)
  *
  * No imports on purpose: this module is rendered in client components, so it
- * must stay free of irebase-admin, route handlers and in-memory stores.
+ * must stay free of firebase-admin, route handlers and in-memory stores.
  */
+
 export interface OrderProgressInfo {
   percentage: number;
   stageName: string;
@@ -197,4 +200,283 @@ export function computeOrderProgress(order: any): OrderProgressInfo {
         statusCategory: "active",
       };
   }
+}
+
+export interface N8nWorkflowStage {
+  id: string;
+  name: string;
+  description: string;
+  percentage: number;
+  isPassed: boolean;
+  isCurrent: boolean;
+}
+
+export interface N8nWorkflowProgressInfo {
+  workflowId: string;
+  workflowName: string;
+  shortCode: string;
+  percentage: number;
+  currentStepLabel: string;
+  statusBadge: "queued" | "running" | "draft_ready" | "completed" | "generation_failed" | "published" | "idle";
+  stages: N8nWorkflowStage[];
+  runId?: string;
+  lastDispatchedAt?: string;
+  deliverablesCount: number;
+}
+
+export function computeN8nWorkflowProgress(order?: any, workflowIdOverride?: string): N8nWorkflowProgressInfo {
+  const wfId =
+    workflowIdOverride ||
+    order?.workflowId ||
+    (order?.type === "monthly_plan" ? "W3_monthly_plan_content" : "W1_order_fulfillment_router");
+
+  const wfStatus = order?.workflowStatus || "idle";
+  const orderStatus = order?.status || "pending";
+  const deliverablesCount = Array.isArray(order?.deliverables) ? order.deliverables.length : 0;
+  const hasDrafts = deliverablesCount > 0 || orderStatus === "draft_delivered" || wfStatus === "draft_ready";
+
+  let percentage = 0;
+  let currentStepLabel = "Ready for execution";
+
+  if (wfStatus === "generation_failed") {
+    percentage = 35;
+    currentStepLabel = "Pipeline Error — Admin intervention required";
+  } else if (orderStatus === "completed" || wfStatus === "completed" || wfStatus === "published") {
+    percentage = 100;
+    currentStepLabel = "Workflow Pipeline Fully Executed (100%)";
+  } else if (orderStatus === "approved") {
+    percentage = 90;
+    currentStepLabel = "Deliverables Approved — Ready for Meta Social Multi-Publishing";
+  } else if (hasDrafts) {
+    percentage = 80;
+    currentStepLabel = "Draft Vaulted in Drive '02 Drafts' — Awaiting Studio Admin Review (80%)";
+  } else if (wfStatus === "running" || orderStatus === "in_production") {
+    percentage = 50;
+    currentStepLabel = "AI Multi-Model & Spatial Synthesis Active in Container (50%)";
+  } else if (wfStatus === "queued") {
+    percentage = 20;
+    currentStepLabel = "Queued in n8n Task Buffer & Mapped to Google Drive (20%)";
+  } else {
+    percentage = 10;
+    currentStepLabel = "Order Intake & Payment Verified (10%)";
+  }
+
+  let workflowName = "Sutra Master Autonomous Pipeline";
+  let shortCode = "MASTER";
+  let stages: N8nWorkflowStage[] = [];
+
+  if (wfId === "SUTRA_MASTER_AUTONOMOUS_PIPELINE" || wfId === "sutra-master-pipeline" || !wfId) {
+    workflowName = "Sutra Master Autonomous Creative Pipeline";
+    shortCode = "MASTER";
+    stages = [
+      {
+        id: "master_s1",
+        name: "Context & Asset Ingestion",
+        description: "Ingest client requirements, brief, and reference brand assets",
+        percentage: 10,
+        isPassed: percentage >= 10,
+        isCurrent: percentage > 0 && percentage < 25,
+      },
+      {
+        id: "master_s2",
+        name: "Autonomous Brand & Market Research",
+        description: "Gemini 2.5 / SerpApi trend intelligence & prompt architecture",
+        percentage: 25,
+        isPassed: percentage >= 25,
+        isCurrent: percentage >= 25 && percentage < 50,
+      },
+      {
+        id: "master_s3",
+        name: "Multi-Modal Generative Synthesis",
+        description: "FLUX 4K renders, Kling cinematic video, Tripo3D meshes & Meta Ads",
+        percentage: 50,
+        isPassed: percentage >= 50,
+        isCurrent: percentage >= 50 && percentage < 80,
+      },
+      {
+        id: "master_s4",
+        name: "Google Drive Cloud Vaulting",
+        description: "Upload draft files into /DELIVERABLES/02_DRAFTS with SHA-256",
+        percentage: 80,
+        isPassed: percentage >= 80,
+        isCurrent: percentage >= 80 && percentage < 100,
+      },
+      {
+        id: "master_s5",
+        name: "Studio Admin Quality Review Gate",
+        description: "Lead Producer inspects quality, approves, and releases to client",
+        percentage: 100,
+        isPassed: percentage >= 100,
+        isCurrent: percentage >= 100,
+      },
+    ];
+  } else if (wfId === "W2_approval_and_publish") {
+    workflowName = "W2: Client Approval & Social Media Multi-Publisher";
+    shortCode = "W2";
+    stages = [
+      {
+        id: "w2_s1",
+        name: "Client Approval Check",
+        description: "Verify client approval in Firestore",
+        percentage: 25,
+        isPassed: percentage >= 25,
+        isCurrent: percentage > 0 && percentage < 50,
+      },
+      {
+        id: "w2_s2",
+        name: "Meta Container Creation",
+        description: "Initialize Instagram Graph container & upload media",
+        percentage: 50,
+        isPassed: percentage >= 50,
+        isCurrent: percentage >= 50 && percentage < 75,
+      },
+      {
+        id: "w2_s3",
+        name: "Multi-Feed Publishing",
+        description: "Publish to connected Instagram & Facebook accounts",
+        percentage: 75,
+        isPassed: percentage >= 75,
+        isCurrent: percentage >= 75 && percentage < 100,
+      },
+      {
+        id: "w2_s4",
+        name: "Live Verification & Client Alert",
+        description: "Record audit log and dispatch notification",
+        percentage: 100,
+        isPassed: percentage >= 100,
+        isCurrent: percentage >= 100,
+      },
+    ];
+  } else if (wfId === "W3_monthly_plan_content") {
+    workflowName = "W3: Monthly Retainer Automated Calendar Generator";
+    shortCode = "W3";
+    stages = [
+      {
+        id: "w3_s1",
+        name: "Subscription & Trial Audit",
+        description: "Fetch active retainer quotas & client brief history",
+        percentage: 20,
+        isPassed: percentage >= 20,
+        isCurrent: percentage > 0 && percentage < 40,
+      },
+      {
+        id: "w3_s2",
+        name: "Gemini Editorial Matrix",
+        description: "Generate 15-post multi-format calendar & captions",
+        percentage: 45,
+        isPassed: percentage >= 45,
+        isCurrent: percentage >= 40 && percentage < 70,
+      },
+      {
+        id: "w3_s3",
+        name: "Sprint 1 Vault Staging",
+        description: "Package creative visual batches into Drive '02 Drafts'",
+        percentage: 70,
+        isPassed: percentage >= 70,
+        isCurrent: percentage >= 70 && percentage < 85,
+      },
+      {
+        id: "w3_s4",
+        name: "Admin Review Gate",
+        description: "Admin inspects & verifies sprint deliverables",
+        percentage: 85,
+        isPassed: percentage >= 85,
+        isCurrent: percentage >= 85 && percentage < 100,
+      },
+      {
+        id: "w3_s5",
+        name: "Client Sprint Release",
+        description: "Live deliverables synced to client retainer vault",
+        percentage: 100,
+        isPassed: percentage >= 100,
+        isCurrent: percentage >= 100,
+      },
+    ];
+  } else if (wfId === "W5_agency_daily_autopost") {
+    workflowName = "W5: Agency Daily Automated Social Publisher";
+    shortCode = "W5";
+    stages = [
+      {
+        id: "w5_s1",
+        name: "Showcase Synthesis",
+        description: "Generate daily Studio artwork & editorial copy",
+        percentage: 30,
+        isPassed: percentage >= 30,
+        isCurrent: percentage > 0 && percentage < 60,
+      },
+      {
+        id: "w5_s2",
+        name: "Admin Vault Draft Gate",
+        description: "Store in Admin showcase vault for pre-publish check",
+        percentage: 70,
+        isPassed: percentage >= 70,
+        isCurrent: percentage >= 60 && percentage < 90,
+      },
+      {
+        id: "w5_s3",
+        name: "Scheduled Broadcast",
+        description: "Publish live on Sutra Studio official channels",
+        percentage: 100,
+        isPassed: percentage >= 100,
+        isCurrent: percentage >= 90,
+      },
+    ];
+  } else {
+    // Default W1: Order Fulfillment Router
+    stages = [
+      {
+        id: "w1_s1",
+        name: "Intake & Drive Mapping",
+        description: "Verify payment and map 4 Google Drive subfolders",
+        percentage: 20,
+        isPassed: percentage >= 20,
+        isCurrent: percentage > 0 && percentage < 40,
+      },
+      {
+        id: "w1_s2",
+        name: "AI & Spatial Synthesis",
+        description: "Flux / Kling / Tripo3D generative asset rendering",
+        percentage: 50,
+        isPassed: percentage >= 50,
+        isCurrent: percentage >= 40 && percentage < 70,
+      },
+      {
+        id: "w1_s3",
+        name: "Drive Vault Packaging",
+        description: "Compress & vault deliverables into Drive '02 Drafts'",
+        percentage: 75,
+        isPassed: percentage >= 75,
+        isCurrent: percentage >= 70 && percentage < 85,
+      },
+      {
+        id: "w1_s4",
+        name: "Studio Admin Review Gate",
+        description: "Draft ready for Admin quality check before release",
+        percentage: 85,
+        isPassed: percentage >= 85,
+        isCurrent: percentage >= 85 && percentage < 100,
+      },
+      {
+        id: "w1_s5",
+        name: "Client Approval & Handoff",
+        description: "Final delivery approved and moved to '03 Final Delivery'",
+        percentage: 100,
+        isPassed: percentage >= 100,
+        isCurrent: percentage >= 100,
+      },
+    ];
+  }
+
+  return {
+    workflowId: wfId,
+    workflowName,
+    shortCode,
+    percentage,
+    currentStepLabel,
+    statusBadge: wfStatus as any,
+    stages,
+    runId: order?.workflowRunId,
+    lastDispatchedAt: order?.workflowLastDispatchedAt,
+    deliverablesCount,
+  };
 }

@@ -296,10 +296,10 @@ export default function ClientDashboardPage() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#D4A35A]">
-                  STUDIO CLIENT PIPELINE
+                  STUDIO CLIENT SANCTUM
                 </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#EADFCB]/60 text-[#5C3A1E] font-medium">
-                  Vault ID: {profile?.driveFolderId || "Not provisioned"}
+                <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[#5C3A1E] font-medium">
+                  Workspace Active
                 </span>
               </div>
               <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-[#0F172A] mt-1">
@@ -312,7 +312,7 @@ export default function ClientDashboardPage() {
                   ? "Track creative workflows, review draft deliverables, and request revision passes."
                   : viewMode === "zero_state"
                   ? "Your private studio sanctum is ready. Follow the onboarding roadmap below to commission your first deliverable."
-                  : "Track creative workflows, review draft deliverables, and request revision passes."}
+                  : "Track creative workflows, review draft deliverables, and download high-resolution masters."}
               </p>
             </div>
 
@@ -386,13 +386,13 @@ export default function ClientDashboardPage() {
             <KPITile
               label="Completed"
               value={viewMode === "zero_state" ? 0 : orders.filter(o => o.status === "completed").length}
-              sublabel={viewMode === "zero_state" ? "0 deliverables" : "Delivered to Drive vault"}
+              sublabel={viewMode === "zero_state" ? "0 deliverables" : "Finalized & Delivered"}
               variant="completed"
             />
             <KPITile
-              label="Vault Storage"
-              value={viewMode === "zero_state" ? "0 MB" : "4.8 GB"}
-              sublabel="Encrypted Google Drive"
+              label="Turnaround SLA"
+              value="24-48h"
+              sublabel="High-resolution masters"
               variant="ink"
             />
             <KPITile
@@ -424,7 +424,7 @@ export default function ClientDashboardPage() {
                   {[
                     { num: 1, label: "Service" },
                     { num: 2, label: "Brief" },
-                    { num: 3, label: "Drive Assets" },
+                    { num: 3, label: "Brand Assets" },
                     { num: 4, label: "Confirm" },
                   ].map((s) => (
                     <div key={s.num} className="flex items-center gap-2">

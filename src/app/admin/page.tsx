@@ -81,7 +81,7 @@ import { RouteGuard } from "@/components/auth/RouteGuard";
 import { OrderReceiptModal, ReceiptOrderData } from "@/components/orders/OrderReceiptModal";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { AdminBrandPromptsView } from "@/components/admin/AdminBrandPromptsView";
-import { computeOrderProgress } from "@/lib/services/orderProgress";
+import { computeOrderProgress, computeN8nWorkflowProgress } from "@/lib/services/orderProgress";
 import type {
   KnowledgeBaseEntry,
   KnowledgeCategory,
@@ -435,6 +435,20 @@ export interface AdminOrder {
   subscriptionStatus?: string;
   currentPeriodStart?: string;
   currentPeriodEnd?: string;
+  workflowStatus?: "queued" | "running" | "draft_ready" | "generation_failed" | "completed" | "published" | "idle" | string;
+  workflowRunId?: string;
+  workflowId?: string;
+  workflowLastDispatchedAt?: string;
+  workflowRetryCount?: number;
+  workflowLastError?: string;
+  workflowHistory?: Array<{
+    runId: string;
+    workflowId: string;
+    status: string;
+    timestamp: string;
+    deliverableUrl?: string;
+    error?: string;
+  }>;
 }
 
 type AdminTab =
@@ -547,10 +561,19 @@ function AdminHubContent() {
   const [isArchivingDrive, setIsArchivingDrive] = useState(false);
   const [assignedMemberId, setAssignedMemberId] = useState("");
 
-  // n8n Autonomous Workflow Execution State
   const [dispatchingOrderWf, setDispatchingOrderWf] = useState<string | null>(null);
-  const [selectedWfId, setSelectedWfId] = useState<string>("W1_order_fulfillment_router");
+  const [selectedWfId, setSelectedWfId] = useState<string>("SUTRA_MASTER_AUTONOMOUS_PIPELINE");
   const [wfDispatchFeedback, setWfDispatchFeedback] = useState<{ success: boolean; message: string; runId?: string } | null>(null);
+
+  // Auto-select corresponding n8n workflow based on order category and status
+  useEffect(() => {
+    if (!inspectingAdminOrder) return;
+    if (inspectingAdminOrder.status === "approved") {
+      setSelectedWfId("W2_approval_and_publish");
+    } else {
+      setSelectedWfId("SUTRA_MASTER_AUTONOMOUS_PIPELINE");
+    }
+  }, [inspectingAdminOrder?.id, inspectingAdminOrder?.status, inspectingAdminOrder?.service, inspectingAdminOrder?.title, inspectingAdminOrder?.type]);
   // External Manual Orders & Multi-Channel Payment Inflow State
   const [isRecordExternalModalOpen, setIsRecordExternalModalOpen] = useState(false);
   const [isSopGuideModalOpen, setIsSopGuideModalOpen] = useState(false);
@@ -575,6 +598,47 @@ function AdminHubContent() {
     message: string;
   } | null>(null);
   const [isProcessingPaymentAction, setIsProcessingPaymentAction] = useState<string | null>(null);
+
+  // Studio Self-Marketing & Promo Engine State
+  const [isSelfMarketingModalOpen, setIsSelfMarketingModalOpen] = useState(false);
+  const [selfMarketingCampaign, setSelfMarketingCampaign] = useState("Sutra Studio Luxury Brand Promo");
+  const [selfMarketingPrompt, setSelfMarketingPrompt] = useState(
+    "Sutra Studio Brand Campaign: Showcase 4K photorealistic architectural daylight renders, cinematic 1080p ProRes reel, 3D luxury pavilion model, and 3-ratio Meta Ads creative pack with warm ivory (#FAF9F5) and muted brass (#A98B57) branding."
+  );
+  const [isDispatchingSelfMarketing, setIsDispatchingSelfMarketing] = useState(false);
+
+  const handleDispatchSelfMarketing = async () => {
+    setIsDispatchingSelfMarketing(true);
+    try {
+      const res = await fetch("/api/n8n/dispatch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          workflowId: "SUTRA_MASTER_AUTONOMOUS_PIPELINE",
+          isStudioSelfMarketing: true,
+          campaignName: selfMarketingCampaign,
+          service: "Studio Brand Advertising",
+          brief: selfMarketingPrompt,
+          isAdminDispatch: true,
+          force: true,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setDispatchSuccess(
+          `✓ Studio Self-Marketing Campaign [${selfMarketingCampaign}] dispatched to Master Autonomous Engine. Run ID: ${data.runId}`
+        );
+        setIsSelfMarketingModalOpen(false);
+        setTimeout(() => setDispatchSuccess(""), 5000);
+      } else {
+        alert(data.error || "Failed to dispatch marketing campaign");
+      }
+    } catch (err: any) {
+      alert(`Marketing campaign error: ${err.message}`);
+    } finally {
+      setIsDispatchingSelfMarketing(false);
+    }
+  };
 
   // Internal Notes & Discussion Comments State
   const [adminOrderComments, setAdminOrderComments] = useState<any[]>([]);
@@ -1052,47 +1116,78 @@ function AdminHubContent() {
         body: JSON.stringify({
           workflowId: wfId,
           orderId: order.id,
-          service: order.service,
+          service: order.service || order.title,
           brief: order.requirements || order.notes,
           clientId: order.clientUid || order.clientId,
           driveFolderId: order.driveFolderId,
+          isAdminDispatch: true,
+          force: true,
         }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
+        const newStatus =
+          data.status === "draft_ready"
+            ? "draft_delivered"
+            : data.status === "completed" || data.status === "published"
+            ? "completed"
+            : "in_production";
+
+        const newStatusLabel =
+          data.status === "draft_ready"
+            ? "Draft Vaulted — Awaiting Admin Review"
+            : data.status === "published"
+            ? "Published Live"
+            : "In Production (n8n Pipeline Running)";
+
+        const newlyGeneratedDeliverables = data.output?.deliverables || [];
+
         setWfDispatchFeedback({
           success: true,
-          message: `✓ Pipeline ${wfId} authorized & dispatched. Container Run: ${data.runId}.`,
+          message: data.message || `✓ Pipeline ${wfId} dispatched successfully. Run ID: ${data.runId}.`,
           runId: data.runId,
         });
+
         setRealOrders((prev) =>
-          prev.map((o) =>
-            o.id === order.id
-              ? {
-                  ...o,
-                  status: "in_production",
-                  statusLabel: "In Production (n8n Pipeline Running)",
-                }
-              : o
-          )
+          prev.map((o) => {
+            if (o.id === order.id) {
+              const existingDeliverables = o.deliverables || [];
+              const mergedDeliverables = [...existingDeliverables, ...newlyGeneratedDeliverables];
+              return {
+                ...o,
+                status: newStatus,
+                statusLabel: newStatusLabel,
+                workflowStatus: data.status || "draft_ready",
+                workflowRunId: data.runId,
+                deliverables: mergedDeliverables,
+              };
+            }
+            return o;
+          })
         );
+
         if (inspectingAdminOrder?.id === order.id) {
-          setInspectingAdminOrder((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  status: "in_production",
-                  statusLabel: "In Production (n8n Pipeline Running)",
-                }
-              : null
-          );
+          setInspectingAdminOrder((prev) => {
+            if (!prev) return null;
+            const existingDeliverables = prev.deliverables || [];
+            const mergedDeliverables = [...existingDeliverables, ...newlyGeneratedDeliverables];
+            return {
+              ...prev,
+              status: newStatus,
+              statusLabel: newStatusLabel,
+              workflowStatus: data.status || "draft_ready",
+              workflowRunId: data.runId,
+              deliverables: mergedDeliverables,
+            };
+          });
         }
+
         setApprovalToast(`Workflow ${wfId} dispatched for ${order.code || order.orderNumber || order.id}.`);
         setTimeout(() => setApprovalToast(""), 4000);
       } else {
         setWfDispatchFeedback({
           success: false,
-          message: `Dispatch failed: ${data.error || data.details || "Failed to trigger pipeline."}`,
+          message: `Dispatch failed: ${data.details || data.error || "Failed to trigger pipeline."}`,
         });
       }
     } catch (err: any) {
@@ -4213,6 +4308,110 @@ const [adminDataError, setAdminDataError] = useState("");
                 </div>
               )}
 
+              {/* LIVE N8N AUTOMATION PIPELINE MONITOR ACROSS ACTIVE ORDERS */}
+              <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EADFCB]/60 pb-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-[#5C3A1E] text-white flex items-center justify-center shadow-xs">
+                      <Zap className="w-5 h-5 text-[#D4A35A]" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-serif text-lg sm:text-xl font-semibold text-[#0F172A]">
+                          Live n8n Pipeline & Execution Tracker
+                        </h3>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#F0FDF4] text-[#166534] border border-[#BBF7D0]">
+                          Live Synced
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#64748B]">
+                        Real-time execution percentages, active workflow nodes, and Google Drive vault stages across all client commissions and monthly packages.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono font-medium text-[#64748B]">
+                      {realOrders.filter((o) => o.status !== "cancelled" && o.status !== "refunded").length} Tracked Orders
+                    </span>
+                  </div>
+                </div>
+
+                {/* Orders List with Progress Bars */}
+                {realOrders.filter((o) => o.status !== "cancelled" && o.status !== "refunded").length === 0 ? (
+                  <div className="py-8 text-center text-xs text-[#64748B]">
+                    No active pipelines running. Dispatched orders and subscriptions will appear here with live progress percentages.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {realOrders
+                      .filter((o) => o.status !== "cancelled" && o.status !== "refunded")
+                      .slice(0, 6)
+                      .map((ord) => {
+                        const wfProg = computeN8nWorkflowProgress(ord);
+                        return (
+                          <div
+                            key={ord.id}
+                            className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] hover:border-[#D4A35A] transition-all space-y-3 flex flex-col justify-between shadow-2xs"
+                          >
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-mono text-xs font-bold text-[#0F172A]">
+                                    #{ord.code || ord.orderNumber || ord.id.slice(0, 8)}
+                                  </span>
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-white text-[#5C3A1E] border border-[#EADFCB]">
+                                    {wfProg.shortCode}
+                                  </span>
+                                </div>
+                                <span className="font-mono text-xs font-bold text-[#5C3A1E] px-2 py-0.5 rounded-md bg-[#FFFDF9] border border-[#EADFCB]">
+                                  {wfProg.percentage}%
+                                </span>
+                              </div>
+
+                              <div>
+                                <h5 className="font-semibold text-xs text-[#0F172A] truncate">
+                                  {ord.service || ord.title}
+                                </h5>
+                                <p className="text-[11px] text-[#64748B] truncate mt-0.5">
+                                  Client: {ord.clientName || ord.clientEmail || "Studio Client"}
+                                </p>
+                              </div>
+
+                              {/* Progress Bar */}
+                              <div className="w-full h-2 bg-[#EADFCB]/60 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-[#D4A35A] to-[#5C3A1E]"
+                                  style={{ width: `${Math.max(8, wfProg.percentage)}%` }}
+                                />
+                              </div>
+
+                              <div className="flex items-center justify-between text-[10px] text-[#64748B]">
+                                <span className="truncate max-w-[200px] text-[#5C3A1E] font-medium" title={wfProg.currentStepLabel}>
+                                  {wfProg.currentStepLabel}
+                                </span>
+                                <span>{wfProg.deliverablesCount} file(s)</span>
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setInspectingAdminOrder(ord);
+                                setAdminOrderModalTab("details");
+                              }}
+                              className="w-full py-2 px-3 rounded-xl bg-white hover:bg-[#F5F2EB] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                            >
+                              <Zap className="w-3.5 h-3.5 text-[#D4A35A]" />
+                              Inspect Pipeline & Stages
+                            </button>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+              </div>
+
               {/* Main Panel */}
               <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#EADFCB]/60 pb-6">
@@ -4667,9 +4866,9 @@ const [adminDataError, setAdminDataError] = useState("");
 
                 {/* Search & Multi-Filter Controls */}
                 <div className="space-y-3.5">
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                  <div className="flex flex-wrap items-center gap-2.5">
                     {/* Search Input */}
-                    <div className="md:col-span-3 relative flex items-center">
+                    <div className="relative flex items-center min-w-[220px] flex-1">
                       <Search className="w-4 h-4 text-[#94A3B8] absolute left-3.5 pointer-events-none" />
                       <input
                         type="text"
@@ -4684,7 +4883,7 @@ const [adminDataError, setAdminDataError] = useState("");
                     </div>
 
                     {/* Status Filter */}
-                    <div className="md:col-span-2">
+                    <div className="min-w-[140px] shrink-0">
                       <select
                         value={orderStatusFilter}
                         onChange={(e) => {
@@ -4711,8 +4910,8 @@ const [adminDataError, setAdminDataError] = useState("");
                       </select>
                     </div>
 
-                    {/* Payment Status Filter (Requirement 9) */}
-                    <div className="md:col-span-2">
+                    {/* Payment Status Filter */}
+                    <div className="min-w-[140px] shrink-0">
                       <select
                         value={orderPaymentFilter}
                         onChange={(e) => {
@@ -4731,7 +4930,7 @@ const [adminDataError, setAdminDataError] = useState("");
                     </div>
 
                     {/* Type Filter */}
-                    <div className="md:col-span-2">
+                    <div className="min-w-[125px] shrink-0">
                       <select
                         value={orderTypeFilter}
                         onChange={(e) => {
@@ -4747,24 +4946,25 @@ const [adminDataError, setAdminDataError] = useState("");
                     </div>
 
                     {/* Source Filter */}
-                    <div className="md:col-span-1">
+                    <div className="min-w-[105px] shrink-0">
                       <select
                         value={orderSourceFilter}
                         onChange={(e) => {
                           setOrderSourceFilter(e.target.value);
                           setOrderCurrentPage(1);
                         }}
-                        className="w-full px-2 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] cursor-pointer"
+                        className="w-full px-2.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] cursor-pointer"
                         title="Source Channel"
                       >
-                        <option value="all">All</option>
+                        <option value="all">All Sources</option>
                         <option value="dashboard">Web</option>
-                        <option value="ai_chat">AI</option>
+                        <option value="ai_chat">AI Chat</option>
+                        <option value="whatsapp">WhatsApp</option>
                       </select>
                     </div>
 
                     {/* Date Filter & Sort */}
-                    <div className="md:col-span-2 flex items-center gap-2">
+                    <div className="min-w-[145px] shrink-0">
                       <select
                         value={orderSortBy}
                         onChange={(e) => setOrderSortBy(e.target.value)}
@@ -4835,19 +5035,19 @@ const [adminDataError, setAdminDataError] = useState("");
                   </div>
                 ) : (
                   <>
-                    {/* Desktop View: Full Data Table */}
-                    <div className="hidden lg:block overflow-hidden rounded-2xl border border-[#EADFCB] bg-[#FFFFFF]">
-                      <table className="w-full text-left text-xs">
+                    {/* Desktop View: Full Data Table with safe horizontal scroll */}
+                    <div className="hidden lg:block overflow-x-auto rounded-2xl border border-[#EADFCB] bg-[#FFFFFF] shadow-2xs">
+                      <table className="w-full text-left text-xs min-w-[960px]">
                         <thead className="bg-[#FAF9F5] border-b border-[#EADFCB] text-[10px] uppercase font-bold text-[#64748B] tracking-wider">
                           <tr>
-                            <th className="py-3.5 px-4">Commission Code</th>
-                            <th className="py-3.5 px-4">Client</th>
-                            <th className="py-3.5 px-4">Service & Type</th>
-                            <th className="py-3.5 px-4">Amount</th>
-                            <th className="py-3.5 px-4">Payment</th>
-                            <th className="py-3.5 px-4">Lifecycle & Progress</th>
-                            <th className="py-3.5 px-4">SLA / Due</th>
-                            <th className="py-3.5 px-4 text-right">Actions</th>
+                            <th className="py-3.5 px-4 min-w-[130px]">Commission Code</th>
+                            <th className="py-3.5 px-4 min-w-[170px]">Client</th>
+                            <th className="py-3.5 px-4 min-w-[190px]">Service & Type</th>
+                            <th className="py-3.5 px-4 min-w-[95px]">Amount</th>
+                            <th className="py-3.5 px-4 min-w-[110px]">Payment</th>
+                            <th className="py-3.5 px-4 min-w-[150px]">Lifecycle & Progress</th>
+                            <th className="py-3.5 px-4 min-w-[95px]">SLA / Due</th>
+                            <th className="py-3.5 px-4 min-w-[160px] text-right">Actions</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-[#EADFCB]/60">
@@ -4862,6 +5062,13 @@ const [adminDataError, setAdminDataError] = useState("");
                                 })
                               : "Recent";
                             const progress = computeOrderProgress(order);
+
+                            const serviceDisplayName =
+                              order.title && order.title.length > 3 && order.title.toLowerCase() !== "ys"
+                                ? order.title
+                                : order.service && order.service.length > 2
+                                ? order.service
+                                : "Studio Creative Direction";
 
                             return (
                               <tr key={order.id} className="hover:bg-[#FAF9F5]/70 transition-colors">
@@ -4894,7 +5101,7 @@ const [adminDataError, setAdminDataError] = useState("");
 
                                 <td className="py-3.5 px-4">
                                   <div>
-                                    <p className="font-semibold text-[#0F172A]">
+                                    <p className="font-semibold text-[#0F172A] truncate max-w-[160px]">
                                       {order.clientName || "Studio Client"}
                                     </p>
                                     <p className="text-[11px] text-[#64748B] truncate max-w-[160px]">
@@ -4911,8 +5118,8 @@ const [adminDataError, setAdminDataError] = useState("");
 
                                 <td className="py-3.5 px-4">
                                   <div className="space-y-0.5">
-                                    <span className="font-medium text-[#0F172A] truncate max-w-[180px] block">
-                                      {order.title || order.service || "Creative Direction"}
+                                    <span className="font-semibold text-[#0F172A] truncate max-w-[200px] block" title={serviceDisplayName}>
+                                      {serviceDisplayName}
                                     </span>
                                     <div className="flex items-center gap-2 text-[10px] text-[#64748B]">
                                       <span className="capitalize">
@@ -4924,42 +5131,42 @@ const [adminDataError, setAdminDataError] = useState("");
                                   </div>
                                 </td>
 
-                                <td className="py-3.5 px-4 font-serif font-bold text-sm text-[#5C3A1E]">
+                                <td className="py-3.5 px-4 font-serif font-bold text-sm text-[#5C3A1E] whitespace-nowrap">
                                   ₹{(order.totalAmount || 0).toLocaleString("en-IN")}
                                 </td>
 
                                 <td className="py-3.5 px-4">
                                   {order.paymentStatus === "paid" || order.status === "paid" ? (
                                     <div className="space-y-0.5">
-                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0]">
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0] whitespace-nowrap">
                                         <Check className="w-2.5 h-2.5 text-[#059669]" />
                                         <span>Paid</span>
                                       </span>
                                       {order.razorpayPaymentId && (
-                                        <span className="block font-mono text-[9px] text-[#64748B] truncate max-w-[100px]" title={order.razorpayPaymentId}>
+                                        <span className="block font-mono text-[9px] text-[#64748B] truncate max-w-[95px]" title={order.razorpayPaymentId}>
                                           {order.razorpayPaymentId}
                                         </span>
                                       )}
                                     </div>
                                   ) : order.paymentStatus === "refunded" || order.status === "refunded" ? (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FAF5FF] text-[#6B21A8] border border-[#E9D5FF]">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FAF5FF] text-[#6B21A8] border border-[#E9D5FF] whitespace-nowrap">
                                       Refunded
                                     </span>
                                   ) : order.paymentStatus === "failed" ? (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA]">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA] whitespace-nowrap">
                                       Failed
                                     </span>
                                   ) : (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FFFDF0] text-[#9A6700] border border-[#F1E0A6]">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FFFDF0] text-[#9A6700] border border-[#F1E0A6] whitespace-nowrap">
                                       Unpaid
                                     </span>
                                   )}
                                 </td>
 
                                 <td className="py-3.5 px-4">
-                                  <div className="space-y-1.5 min-w-[140px]">
+                                  <div className="space-y-1.5 min-w-[130px]">
                                     <div className="flex items-center justify-between text-[11px]">
-                                      <span className="font-semibold text-[#0F172A] truncate max-w-[100px]">
+                                      <span className="font-semibold text-[#0F172A] truncate max-w-[95px]">
                                         {progress.stageName}
                                       </span>
                                       <span className="font-mono text-[10px] font-bold text-[#A98B57]">
@@ -4975,7 +5182,7 @@ const [adminDataError, setAdminDataError] = useState("");
                                   </div>
                                 </td>
 
-                                <td className="py-3.5 px-4 text-[#64748B] text-[11px]">
+                                <td className="py-3.5 px-4 text-[#64748B] text-[11px] whitespace-nowrap">
                                   {order.estimatedDueDate ? (
                                     <span className="inline-flex items-center gap-1 text-[#5C3A1E] font-medium">
                                       <Calendar className="w-3 h-3 text-[#A98B57]" />
@@ -4986,7 +5193,7 @@ const [adminDataError, setAdminDataError] = useState("");
                                   )}
                                 </td>
 
-                                <td className="py-3.5 px-4 text-right">
+                                <td className="py-3.5 px-4 text-right whitespace-nowrap">
                                   <div className="flex items-center justify-end gap-1.5">
                                     {order.paymentStatus !== "paid" && order.status !== "paid" && (
                                       <>
@@ -5353,10 +5560,15 @@ const [adminDataError, setAdminDataError] = useState("");
                     {/* 4 Modal Sub-Tabs */}
                     <div className="flex items-center gap-1 border-b border-[#EADFCB] pb-1">
                       {[
-                        { id: "details", label: "Scope & Brief", icon: FileText },
-                        { id: "deliverables", label: "Vault Deliverables", icon: HardDrive },
-                        { id: "internal", label: "Internal Notes & Team", icon: Lock },
-                        { id: "discussion", label: "Discussion & Timeline", icon: MessageSquare },
+                        { id: "details", label: "Scope & Brief", icon: FileText, count: null },
+                        {
+                          id: "deliverables",
+                          label: "Vault Deliverables",
+                          icon: HardDrive,
+                          count: Array.isArray(inspectingAdminOrder.deliverables) ? inspectingAdminOrder.deliverables.length : 0,
+                        },
+                        { id: "internal", label: "Internal Notes & Team", icon: Lock, count: null },
+                        { id: "discussion", label: "Discussion & Timeline", icon: MessageSquare, count: null },
                       ].map((tab) => {
                         const Icon = tab.icon;
                         const isActive = adminOrderModalTab === tab.id;
@@ -5365,14 +5577,25 @@ const [adminDataError, setAdminDataError] = useState("");
                             key={tab.id}
                             type="button"
                             onClick={() => setAdminOrderModalTab(tab.id as any)}
-                            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                               isActive
                                 ? "bg-[#5C3A1E] text-white shadow-2xs"
+                                : tab.id === "deliverables" && (tab.count || 0) > 0
+                                ? "bg-[#FFFBEB] text-[#92400E] border border-[#FDE68A] hover:bg-[#FEF3C7]"
                                 : "text-[#64748B] hover:text-[#0F172A] hover:bg-[#FAF9F5]"
                             }`}
                           >
                             <Icon className="w-3.5 h-3.5" />
                             <span>{tab.label}</span>
+                            {typeof tab.count === "number" && tab.count > 0 && (
+                              <span
+                                className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+                                  isActive ? "bg-white/20 text-white" : "bg-[#D4A35A] text-white"
+                                }`}
+                              >
+                                {tab.count}
+                              </span>
+                            )}
                           </button>
                         );
                       })}
@@ -5443,87 +5666,201 @@ const [adminDataError, setAdminDataError] = useState("");
                           </p>
                         </div>
 
-                        {/* N8N AUTONOMOUS WORKFLOW EXECUTION GATE */}
-                        <div className="p-4 rounded-2xl bg-[#FFFDF9] border-2 border-[#D4A35A] space-y-3 shadow-xs">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-center text-[#5C3A1E]">
-                                <Zap className="w-4 h-4 text-[#D4A35A]" />
+                        {/* N8N AUTONOMOUS WORKFLOW EXECUTION GATE & LIVE PROGRESS MONITOR */}
+                        {(() => {
+                          const wfProg = computeN8nWorkflowProgress(inspectingAdminOrder, selectedWfId);
+                          return (
+                            <div className="p-5 rounded-2xl bg-[#FFFDF9] border-2 border-[#D4A35A] space-y-4 shadow-sm">
+                              {/* Gate Header */}
+                              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#EADFCB]/70 pb-3">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-9 h-9 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-center text-[#5C3A1E] shadow-2xs">
+                                    <Zap className="w-4 h-4 text-[#D4A35A]" />
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <h5 className="font-serif font-bold text-sm text-[#0F172A]">
+                                        n8n Autonomous Pipeline Execution Gate
+                                      </h5>
+                                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#FAF9F5] text-[#A98B57] border border-[#EADFCB]">
+                                        {wfProg.shortCode} Active
+                                      </span>
+                                    </div>
+                                    <p className="text-[11px] text-[#64748B]">
+                                      Admin Review Gated: Direct client orders require admin approval before dispatching to n8n.
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-[#5C3A1E] text-white shadow-2xs">
+                                    {wfProg.percentage}% Completed
+                                  </span>
+                                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF9F5] text-[#5C3A1E] border border-[#EADFCB]">
+                                    Admin Gated
+                                  </span>
+                                </div>
                               </div>
-                              <div>
-                                <h5 className="font-serif font-bold text-sm text-[#0F172A]">
-                                  n8n Autonomous Pipeline Execution Gate
-                                </h5>
-                                <p className="text-[11px] text-[#64748B]">
-                                  Admin Review Gated: Direct client orders require admin approval before dispatching to n8n.
-                                </p>
+
+                              {/* Progress Bar & Current Phase */}
+                              <div className="p-3.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] space-y-2">
+                                <div className="flex items-center justify-between text-xs">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-semibold text-[#0F172A]">{wfProg.workflowName}</span>
+                                    {dispatchingOrderWf === inspectingAdminOrder.id && (
+                                      <span className="flex items-center gap-1 text-[10px] font-mono text-[#D97706] font-bold animate-pulse">
+                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                        Executing in container...
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="font-mono text-[11px] font-bold text-[#5C3A1E]">
+                                    {wfProg.percentage}%
+                                  </span>
+                                </div>
+
+                                {/* Visual Progress Bar */}
+                                <div className="w-full h-3 bg-[#EADFCB]/50 rounded-full overflow-hidden p-0.5">
+                                  <div
+                                    className="h-full rounded-full transition-all duration-700 bg-gradient-to-r from-[#D4A35A] via-[#A98B57] to-[#5C3A1E]"
+                                    style={{ width: `${Math.max(5, wfProg.percentage)}%` }}
+                                  />
+                                </div>
+
+                                <div className="flex items-center justify-between text-[11px] text-[#64748B] pt-0.5">
+                                  <span className="font-medium text-[#5C3A1E] flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[#D4A35A]" />
+                                    {wfProg.currentStepLabel}
+                                  </span>
+                                  {inspectingAdminOrder.workflowRunId && (
+                                    <span className="font-mono text-[10px] text-[#94A3B8]">
+                                      Run ID: {inspectingAdminOrder.workflowRunId}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF9F5] text-[#5C3A1E] border border-[#EADFCB]">
-                              Admin Gated
-                            </span>
-                          </div>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-1">
-                            <div className="sm:col-span-8 space-y-1">
-                              <label className="text-[11px] font-bold text-[#64748B] block">
-                                Target n8n Autonomous Workflow Engine:
-                              </label>
-                              <select
-                                value={selectedWfId}
-                                onChange={(e) => setSelectedWfId(e.target.value)}
-                                className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] font-medium focus:outline-none focus:border-[#D4A35A]"
-                              >
-                                <option value="W1_order_fulfillment_router">
-                                  W1: Order Fulfillment Router (4K Render / Video Reel / 3D / Ads)
-                                </option>
-                                <option value="W2_approval_and_publish">
-                                  W2: Client Approval & Social Media Multi-Publisher
-                                </option>
-                                <option value="W3_monthly_plan_content">
-                                  W3: Monthly Retainer Automated Calendar Generator
-                                </option>
-                                <option value="W5_agency_daily_autopost">
-                                  W5: Agency Daily Automated Social Publisher
-                                </option>
-                              </select>
-                            </div>
+                              {/* Step-by-Step Workflow Pipeline Tracker */}
+                              <div className="space-y-2 pt-1">
+                                <span className="text-[10px] uppercase tracking-wider font-bold text-[#94A3B8] block">
+                                  Pipeline Stage Breakdown & Milestones ({wfProg.shortCode})
+                                </span>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+                                  {wfProg.stages.map((stg, idx) => (
+                                    <div
+                                      key={stg.id}
+                                      className={`p-2.5 rounded-xl border text-left transition-all ${
+                                        stg.isPassed
+                                          ? "bg-[#F0FDF4] border-[#BBF7D0] text-[#166534]"
+                                          : stg.isCurrent
+                                          ? "bg-[#FFFBEB] border-[#FDE68A] text-[#92400E] ring-1 ring-[#D97706]/30"
+                                          : "bg-white border-[#EADFCB] text-[#94A3B8]"
+                                      }`}
+                                    >
+                                      <div className="flex items-center justify-between gap-1 mb-1">
+                                        <span className="text-[10px] font-mono font-bold">
+                                          0{idx + 1}. {stg.percentage}%
+                                        </span>
+                                        {stg.isPassed ? (
+                                          <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A]" />
+                                        ) : stg.isCurrent ? (
+                                          <span className="w-2 h-2 rounded-full bg-[#D97706] animate-ping" />
+                                        ) : (
+                                          <Clock className="w-3.5 h-3.5 text-[#CBD5E1]" />
+                                        )}
+                                      </div>
+                                      <div className="font-semibold text-[11px] truncate" title={stg.name}>
+                                        {stg.name}
+                                      </div>
+                                      <p className="text-[10px] line-clamp-2 mt-0.5 leading-tight opacity-85">
+                                        {stg.description}
+                                      </p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
 
-                            <div className="sm:col-span-4 flex items-end">
-                              <Button
-                                variant="primary"
-                                size="md"
-                                className="w-full justify-center text-xs"
-                                disabled={dispatchingOrderWf === inspectingAdminOrder.id}
-                                isLoading={dispatchingOrderWf === inspectingAdminOrder.id}
-                                onClick={() => handleDispatchOrderToN8n(inspectingAdminOrder)}
-                                leftIcon={<Zap className="w-3.5 h-3.5 text-[#D4A35A]" />}
-                              >
-                                ⚡ Dispatch to n8n
-                              </Button>
-                            </div>
-                          </div>
+                              {/* Workflow Engine Dispatch Controls */}
+                              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-2 border-t border-[#EADFCB]/70">
+                                <div className="sm:col-span-8 space-y-1">
+                                  <label className="text-[11px] font-bold text-[#64748B] block">
+                                    Target n8n Autonomous Workflow Engine:
+                                  </label>
+                                  <select
+                                    value={selectedWfId}
+                                    onChange={(e) => setSelectedWfId(e.target.value)}
+                                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] font-medium focus:outline-none focus:border-[#D4A35A]"
+                                  >
+                                    <option value="SUTRA_MASTER_AUTONOMOUS_PIPELINE">
+                                      ★ Master Autonomous Creative Pipeline (All 12 Services + Retainers)
+                                    </option>
+                                    <option value="W1_order_fulfillment_router">
+                                      W1: Order Fulfillment Router (4K Render / Video Reel / 3D / Ads)
+                                    </option>
+                                    <option value="W2_approval_and_publish">
+                                      W2: Client Approval & Social Media Multi-Publisher
+                                    </option>
+                                    <option value="W3_monthly_plan_content">
+                                      W3: Monthly Retainer Automated Calendar Generator
+                                    </option>
+                                    <option value="W5_agency_daily_autopost">
+                                      W5: Agency Daily Automated Social Publisher
+                                    </option>
+                                  </select>
+                                </div>
 
-                          {/* Execution Feedback */}
-                          {wfDispatchFeedback && (
-                            <div
-                              className={`p-3 rounded-xl border text-xs flex items-center justify-between ${
-                                wfDispatchFeedback.success
-                                  ? "bg-[#F0FDF4] border-[#BBF7D0] text-[#166534]"
-                                  : "bg-[#FEF2F2] border-[#FECACA] text-[#991B1B]"
-                              }`}
-                            >
-                              <span>{wfDispatchFeedback.message}</span>
-                              <button
-                                type="button"
-                                onClick={() => setWfDispatchFeedback(null)}
-                                className="text-[11px] font-bold underline cursor-pointer"
-                              >
-                                Dismiss
-                              </button>
+                                <div className="sm:col-span-4 flex items-end">
+                                  <Button
+                                    variant="primary"
+                                    size="md"
+                                    className="w-full justify-center text-xs"
+                                    disabled={dispatchingOrderWf === inspectingAdminOrder.id}
+                                    isLoading={dispatchingOrderWf === inspectingAdminOrder.id}
+                                    onClick={() => handleDispatchOrderToN8n(inspectingAdminOrder)}
+                                    leftIcon={<Zap className="w-3.5 h-3.5 text-[#D4A35A]" />}
+                                  >
+                                    {inspectingAdminOrder.workflowStatus === "draft_ready" || inspectingAdminOrder.status === "draft_delivered"
+                                      ? "🔄 Re-trigger Workflow"
+                                      : "⚡ Dispatch to n8n"}
+                                  </Button>
+                                </div>
+                              </div>
+
+                              {/* Execution Feedback */}
+                              {wfDispatchFeedback && (
+                                <div
+                                  className={`p-3.5 rounded-xl border text-xs flex flex-wrap items-center justify-between gap-2.5 ${
+                                    wfDispatchFeedback.success
+                                      ? "bg-[#F0FDF4] border-[#BBF7D0] text-[#166534]"
+                                      : "bg-[#FEF2F2] border-[#FECACA] text-[#991B1B]"
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <span>{wfDispatchFeedback.message}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {wfDispatchFeedback.success && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setAdminOrderModalTab("deliverables")}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#166534] text-white font-semibold text-[11px] hover:bg-[#14532d] transition-all shadow-2xs cursor-pointer shrink-0"
+                                      >
+                                        <HardDrive className="w-3.5 h-3.5" />
+                                        <span>View & Approve in Deliverables Tab &rarr;</span>
+                                      </button>
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() => setWfDispatchFeedback(null)}
+                                      className="text-[11px] font-bold underline cursor-pointer text-[#64748B] hover:text-[#0F172A]"
+                                    >
+                                      Dismiss
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
+                          );
+                        })()}
 
                         {/* Scope Breakdown */}
                         {inspectingAdminOrder.items && inspectingAdminOrder.items.length > 0 && (
@@ -5741,38 +6078,152 @@ const [adminDataError, setAdminDataError] = useState("");
                           </div>
                         </div>
 
-                        {/* Existing Deliverables List */}
-                        {Array.isArray(inspectingAdminOrder.deliverables) && inspectingAdminOrder.deliverables.length > 0 && (
-                          <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#EADFCB] space-y-2.5">
-                            <span className="text-[10px] uppercase font-bold text-[#94A3B8] block">Vaulted Deliverables (Versions)</span>
-                            {inspectingAdminOrder.deliverables.map((del: any, idx: number) => (
-                              <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/60 text-xs">
-                                <div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-semibold text-[#0F172A]">{del.filename}</span>
-                                    <span className="px-1.5 py-0.5 rounded bg-white border border-[#EADFCB] text-[#5C3A1E] text-[10px] font-mono uppercase">
-                                      {del.version || "v1.0"}
-                                    </span>
-                                    {del.category && (
-                                      <span className="px-1.5 py-0.5 rounded bg-[#FAF9F5] text-[#64748B] text-[10px] font-mono">
-                                        {del.category}
-                                      </span>
-                                    )}
-                                  </div>
-                                  <span className="text-[10px] text-[#94A3B8] block mt-0.5">{del.fileSize || "100 MB"}</span>
-                                </div>
-                                {del.previewUrl && (
-                                  <a
-                                    href={del.previewUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="px-3 py-1 bg-white border border-[#EADFCB] rounded-lg text-[#5C3A1E] font-semibold text-xs hover:border-[#D4A35A]"
-                                  >
-                                    Download / View
-                                  </a>
-                                )}
+                        {/* Admin Approval & Quality Gate Banner */}
+                        {inspectingAdminOrder.status === "draft_delivered" || inspectingAdminOrder.workflowStatus === "draft_ready" ? (
+                          <div className="p-4 rounded-2xl bg-[#FFFBEB] border-2 border-[#D97706]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-9 h-9 rounded-xl bg-white border border-[#FDE68A] flex items-center justify-center text-[#92400E] shrink-0 shadow-2xs">
+                                <ShieldCheck className="w-5 h-5 text-[#D97706]" />
                               </div>
-                            ))}
+                              <div>
+                                <h5 className="font-serif font-bold text-xs text-[#92400E]">
+                                  Studio Admin Quality Review Gate
+                                </h5>
+                                <p className="text-[11px] text-[#B45309]">
+                                  Autonomous drafts are vaulted in '02 Drafts'. Review the media files below and authorize client release.
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={() => handleAdminUpdateOrderStatus(inspectingAdminOrder.id, "approved", "Admin verified and approved autonomous creative drafts.")}
+                                leftIcon={<CheckCircle2 className="w-3.5 h-3.5 text-[#BBF7D0]" />}
+                                className="bg-[#166534] hover:bg-[#14532d] text-white text-xs"
+                              >
+                                ✓ Approve Drafts & Release
+                              </Button>
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => handleDispatchOrderToN8n(inspectingAdminOrder, "W2_approval_and_publish")}
+                                leftIcon={<Zap className="w-3.5 h-3.5 text-[#D4A35A]" />}
+                                className="text-xs"
+                              >
+                                Publish to Meta
+                              </Button>
+                            </div>
+                          </div>
+                        ) : inspectingAdminOrder.status === "approved" || inspectingAdminOrder.status === "completed" ? (
+                          <div className="p-3.5 rounded-2xl bg-[#F0FDF4] border border-[#BBF7D0] flex items-center justify-between text-xs text-[#166534]">
+                            <div className="flex items-center gap-2 font-medium">
+                              <CheckCircle2 className="w-4 h-4 text-[#16A34A]" />
+                              <span>Deliverables Approved & Released to Client Vault.</span>
+                            </div>
+                            <span className="font-mono text-[11px] font-bold text-[#15803D]">Admin Authorized</span>
+                          </div>
+                        ) : null}
+
+                        {/* Existing Deliverables Visual Gallery */}
+                        {Array.isArray(inspectingAdminOrder.deliverables) && inspectingAdminOrder.deliverables.length > 0 ? (
+                          <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#EADFCB] space-y-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] uppercase font-bold text-[#94A3B8] block">
+                                Vaulted Deliverables ({inspectingAdminOrder.deliverables.length} Items)
+                              </span>
+                              <span className="text-[10px] font-mono text-[#64748B]">Google Drive 02 Drafts Vault</span>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              {inspectingAdminOrder.deliverables.map((del: any, idx: number) => {
+                                const isImg = del.mimeType?.startsWith("image") || del.filename?.match(/\.(png|jpg|jpeg|webp)$/i);
+                                const isPdf = del.mimeType?.includes("pdf") || del.filename?.endsWith(".pdf");
+                                const isVideo = del.mimeType?.startsWith("video") || del.filename?.match(/\.(mp4|mov|webm)$/i);
+                                const is3D = del.filename?.match(/\.(glb|gltf|obj|fbx)$/i);
+
+                                return (
+                                  <div
+                                    key={idx}
+                                    className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] hover:border-[#D4A35A] transition-all flex flex-col justify-between space-y-2.5 shadow-2xs group"
+                                  >
+                                    {/* Visual Image / Media Thumbnail Preview */}
+                                    {isImg && del.previewUrl && (
+                                      <div className="w-full h-36 rounded-lg overflow-hidden bg-white border border-[#EADFCB] relative group">
+                                        <img
+                                          src={del.previewUrl}
+                                          alt={del.filename}
+                                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                        />
+                                        <span className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-xs text-white text-[10px] font-mono">
+                                          Image Preview
+                                        </span>
+                                      </div>
+                                    )}
+
+                                    {/* File Header & Badge Info */}
+                                    <div className="flex items-start justify-between gap-2">
+                                      <div className="flex items-start gap-2 min-w-0">
+                                        <div className="w-8 h-8 rounded-lg bg-white border border-[#EADFCB] flex items-center justify-center text-[#5C3A1E] shrink-0 mt-0.5">
+                                          {isImg ? (
+                                            <ImageIcon className="w-4 h-4 text-[#A98B57]" />
+                                          ) : isVideo ? (
+                                            <Video className="w-4 h-4 text-[#A98B57]" />
+                                          ) : is3D ? (
+                                            <Box className="w-4 h-4 text-[#A98B57]" />
+                                          ) : (
+                                            <FileText className="w-4 h-4 text-[#A98B57]" />
+                                          )}
+                                        </div>
+                                        <div className="min-w-0">
+                                          <div className="font-semibold text-xs text-[#0F172A] truncate" title={del.filename}>
+                                            {del.filename}
+                                          </div>
+                                          <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-[#64748B] font-mono">
+                                            <span>{del.fileSize || "12 MB"}</span>
+                                            <span>•</span>
+                                            <span className="text-[#5C3A1E] font-bold">{del.version || "v1.0"}</span>
+                                            {del.uploadedAt && (
+                                              <>
+                                                <span>•</span>
+                                                <span>{new Date(del.uploadedAt).toLocaleDateString("en-IN")}</span>
+                                              </>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      <span className="px-2 py-0.5 rounded-full bg-white border border-[#EADFCB] text-[#5C3A1E] text-[10px] font-mono uppercase shrink-0">
+                                        {del.category || "draft"}
+                                      </span>
+                                    </div>
+
+                                    {/* Action Links */}
+                                    <div className="flex items-center gap-2 pt-1 border-t border-[#EADFCB]/60">
+                                      {del.previewUrl && (
+                                        <a
+                                          href={del.previewUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="w-full py-1.5 px-2.5 bg-white hover:bg-[#F5F2EB] border border-[#EADFCB] rounded-lg text-[#5C3A1E] font-semibold text-xs transition-all flex items-center justify-center gap-1.5"
+                                        >
+                                          <ExternalLink className="w-3.5 h-3.5 text-[#D4A35A]" />
+                                          <span>Preview / Download Media</span>
+                                        </a>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="p-8 rounded-2xl bg-[#FFFFFF] border border-[#EADFCB] text-center space-y-2">
+                            <HardDrive className="w-8 h-8 text-[#D4A35A] mx-auto opacity-70" />
+                            <h5 className="font-semibold text-xs text-[#0F172A]">No Vault Deliverables Staged Yet</h5>
+                            <p className="text-xs text-[#64748B] max-w-sm mx-auto">
+                              Execute the n8n pipeline in the Scope & Brief tab or upload manual production files below to stage drafts in Google Drive.
+                            </p>
                           </div>
                         )}
 
@@ -8248,6 +8699,132 @@ const [adminDataError, setAdminDataError] = useState("");
               <div className="flex justify-end pt-2">
                 <Button variant="primary" size="sm" onClick={() => setIsSopGuideModalOpen(false)}>
                   Close Guide
+                </Button>
+              </div>
+            </div>
+          </Modal>
+        )}
+
+        {/* Studio Self-Marketing Campaign Launch Modal */}
+        {isSelfMarketingModalOpen && (
+          <Modal
+            isOpen={true}
+            onClose={() => setIsSelfMarketingModalOpen(false)}
+            title="✨ Launch Studio Self-Marketing & Advertising Campaign"
+            description="Autonomous Multi-Modal Engine produces official 4K Renders, Cinematic Reels, 3D Models & Meta Ads (1:1, 9:16, 16:9) to promote Sutra Studio."
+            maxWidth="lg"
+          >
+            <div className="space-y-4 text-xs text-[#0F172A]">
+              <div className="p-3.5 rounded-2xl bg-[#FFFDF9] border border-[#D4A35A]/50 space-y-2">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-[#A98B57] block">
+                  Select Campaign Preset
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelfMarketingCampaign("Sutra Studio Luxury Architectural Promo");
+                      setSelfMarketingPrompt(
+                        "Luxury Indian architectural heritage studio showcase: 4K warm ivory courtyard, golden hour brass reflections, photorealistic lighting, cinematic 1080p ProRes flythrough reel, and GLTF 3D heritage pavilion."
+                      );
+                    }}
+                    className={`p-2.5 rounded-xl border text-left transition-all ${
+                      selfMarketingCampaign.includes("Architectural")
+                        ? "bg-[#FAF9F5] border-[#D4A35A] ring-1 ring-[#D4A35A]"
+                        : "bg-white border-[#EADFCB] hover:border-[#D4A35A]/60"
+                    }`}
+                  >
+                    <span className="font-bold text-[11px] text-[#5C3A1E] block">🏛 ArchViz Showcase</span>
+                    <span className="text-[10px] text-[#64748B]">Luxury Interiors & Daylight 4K</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelfMarketingCampaign("Sutra Studio Meta Ads Acquisition Pack");
+                      setSelfMarketingPrompt(
+                        "High-converting Meta Ads creative pack for SutraStudio creative services: 1:1 Feed Post, 9:16 Story/Reel, 16:9 Video Ad with headline 'Where Heritage Meets Next-Gen Creative AI', crisp typography and muted brass accents."
+                      );
+                    }}
+                    className={`p-2.5 rounded-xl border text-left transition-all ${
+                      selfMarketingCampaign.includes("Meta Ads")
+                        ? "bg-[#FAF9F5] border-[#D4A35A] ring-1 ring-[#D4A35A]"
+                        : "bg-white border-[#EADFCB] hover:border-[#D4A35A]/60"
+                    }`}
+                  >
+                    <span className="font-bold text-[11px] text-[#5C3A1E] block">📱 Meta Ads Pack</span>
+                    <span className="text-[10px] text-[#64748B]">Multi-ratio 1:1, 9:16, 16:9 Ads</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelfMarketingCampaign("Sutra Studio Festival / Festive Heritage Campaign");
+                      setSelfMarketingPrompt(
+                        "Festive brand identity campaign: traditional Indian motifs modernized with 3D brass lanterns, festive luxury lighting, warm ivory palettes, cinematic slow-motion video, and spatial soundscape."
+                      );
+                    }}
+                    className={`p-2.5 rounded-xl border text-left transition-all ${
+                      selfMarketingCampaign.includes("Festive")
+                        ? "bg-[#FAF9F5] border-[#D4A35A] ring-1 ring-[#D4A35A]"
+                        : "bg-white border-[#EADFCB] hover:border-[#D4A35A]/60"
+                    }`}
+                  >
+                    <span className="font-bold text-[11px] text-[#5C3A1E] block">🪔 Festive Brand Reel</span>
+                    <span className="text-[10px] text-[#64748B]">Festive 3D & Cinematic Video</span>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#0F172A] mb-1">Campaign Title</label>
+                <input
+                  type="text"
+                  value={selfMarketingCampaign}
+                  onChange={(e) => setSelfMarketingCampaign(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#0F172A] mb-1">
+                  Creative Generation Brief / AI Prompt
+                </label>
+                <textarea
+                  rows={4}
+                  value={selfMarketingPrompt}
+                  onChange={(e) => setSelfMarketingPrompt(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                  placeholder="Enter custom prompt instructions for the Master Autonomous Pipeline..."
+                />
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between text-[11px]">
+                <div className="flex items-center gap-2">
+                  <HardDrive className="w-4 h-4 text-[#A98B57]" />
+                  <span className="text-[#64748B]">Target Google Drive Output:</span>
+                  <span className="font-mono font-bold text-[#5C3A1E]">/BRAND_ASSETS & /META_ADS_CAMPAIGN</span>
+                </div>
+                <Badge variant="outline" className="text-[10px]">Auto-Vaulted</Badge>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#EADFCB]/60">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setIsSelfMarketingModalOpen(false)}
+                  disabled={isDispatchingSelfMarketing}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleDispatchSelfMarketing}
+                  isLoading={isDispatchingSelfMarketing}
+                  disabled={isDispatchingSelfMarketing}
+                  leftIcon={<Sparkles className="w-3.5 h-3.5" />}
+                  className="bg-[#5C3A1E] hover:bg-[#4A2E17] text-white"
+                >
+                  {isDispatchingSelfMarketing ? "Synthesizing Assets..." : "Launch Master Pipeline"}
                 </Button>
               </div>
             </div>

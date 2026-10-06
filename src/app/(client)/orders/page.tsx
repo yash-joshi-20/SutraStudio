@@ -43,6 +43,8 @@ import {
   Lock,
   MessageSquare,
   Send,
+  Video,
+  Box,
 } from "lucide-react";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { openRazorpayCheckout } from "@/lib/services/razorpayClient";
@@ -3220,85 +3222,200 @@ export default function OrdersPage() {
               {/* =======================================================
                   SUB-TAB 2: DELIVERABLES & DRIVE VAULT
                   ======================================================= */}
+              {/* =======================================================
+                  SUB-TAB 2: DELIVERABLES & MEDIA VAULT
+                  ======================================================= */}
               {activeModalTab === "deliverables" && (
                 <div className="space-y-4 text-xs">
-                  {/* Google Drive Vault Banner */}
-                  <div className="p-4 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5 text-[#5C3A1E]">
-                      <HardDrive className="w-5 h-5 text-[#A98B57] shrink-0" />
-                      <div>
-                        <span className="font-bold text-xs block text-[#0F172A]">
-                          Google Drive Cloud Vault
+                  {/* Luxury Studio Deliverables Header */}
+                  <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#D4A35A]/40 space-y-3 shadow-2xs">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5 text-[#5C3A1E]">
+                        <div className="w-8 h-8 rounded-xl bg-white border border-[#EADFCB] flex items-center justify-center text-[#5C3A1E] shadow-2xs">
+                          <Sparkles className="w-4 h-4 text-[#A98B57]" />
+                        </div>
+                        <div>
+                          <span className="font-bold text-xs block text-[#0F172A]">
+                            High-Resolution Deliverables & Masters
+                          </span>
+                          <span className="font-mono text-[11px] text-[#64748B]">
+                            {Array.isArray(inspectingOrder.deliverables) ? inspectingOrder.deliverables.length : 0} Production Asset(s) Ready for Download
+                          </span>
+                        </div>
+                      </div>
+                      <Link
+                        href="/media"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white hover:bg-[#F4EFE6] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] transition-colors shrink-0 shadow-2xs"
+                      >
+                        <span>Open Media Vault</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
+
+                    {/* Deliverable Status Pills */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 text-[11px]">
+                      <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70">
+                        <span className="text-[10px] text-[#94A3B8] font-bold block">Deliverable Version</span>
+                        <span className="font-semibold text-[#0F172A]">
+                          v{inspectingOrder.revisionRound ? inspectingOrder.revisionRound + 1 : 1}.0 Master
                         </span>
-                        <span className="font-mono text-[11px] text-[#64748B]">
-                          {inspectingOrder.driveFolder}
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70">
+                        <span className="text-[10px] text-[#94A3B8] font-bold block">Production State</span>
+                        <span className="font-semibold text-[#0F172A]">
+                          {inspectingOrder.status === "completed" || inspectingOrder.status === "approved" ? "Master Finalized" : "Draft under Review"}
+                        </span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70 col-span-2 sm:col-span-1">
+                        <span className="text-[10px] text-[#94A3B8] font-bold block">Revision Rounds</span>
+                        <span className="font-semibold text-[#5C3A1E]">
+                          Round {inspectingOrder.revisionRound || 0} of {inspectingOrder.maxRevisions || 2}
                         </span>
                       </div>
                     </div>
-                    <Link
-                      href="/media"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FFFFFF] hover:bg-[#F4EFE6] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] transition-colors shrink-0"
-                    >
-                      <span>Open Vault</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </Link>
                   </div>
 
-                  {/* Delivered Assets List with Version Tags */}
+                  {/* Client Approval Action Banner */}
+                  {inspectingOrder.status === "draft_delivered" || inspectingOrder.status === "awaiting_approval" ? (
+                    <div className="p-4 rounded-2xl bg-[#FFFBEB] border-2 border-[#D97706]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-white border border-[#FDE68A] flex items-center justify-center text-[#92400E] shrink-0">
+                          <CheckCircle2 className="w-4 h-4 text-[#D97706]" />
+                        </div>
+                        <div>
+                          <h5 className="font-semibold text-xs text-[#92400E]">
+                            Draft Deliverables Ready for Your Review
+                          </h5>
+                          <p className="text-[11px] text-[#B45309]">
+                            Review the concept media files below. Approve to receive high-res master files or request a revision.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleApproveDeliverable(inspectingOrder.id)}
+                          leftIcon={<CheckCircle2 className="w-3.5 h-3.5 text-[#BBF7D0]" />}
+                          className="bg-[#166534] hover:bg-[#14532d] text-white text-xs"
+                        >
+                          ✓ Approve Deliverables
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => setIsRevisionMode(true)}
+                          className="text-xs"
+                        >
+                          Request Revision
+                        </Button>
+                      </div>
+                    </div>
+                  ) : inspectingOrder.status === "approved" || inspectingOrder.status === "completed" ? (
+                    <div className="p-3.5 rounded-2xl bg-[#F0FDF4] border border-[#BBF7D0] flex items-center justify-between text-xs text-[#166534]">
+                      <div className="flex items-center gap-2 font-medium">
+                        <CheckCircle2 className="w-4 h-4 text-[#16A34A]" />
+                        <span>Deliverables Approved & Vaulted in Google Drive Final Delivery.</span>
+                      </div>
+                      <span className="font-mono text-[11px] font-bold text-[#15803D]">Approved</span>
+                    </div>
+                  ) : null}
+
+                  {/* Delivered Assets Visual Gallery */}
                   <div className="space-y-2">
                     <h4 className="text-[10px] font-bold uppercase tracking-wider text-[#A98B57] flex items-center justify-between">
                       <span>Vaulted Deliverables & Master Files ({inspectingOrder.deliverables?.length || 0})</span>
                       {inspectingOrder.deliveredAt && (
                         <span className="text-[10px] text-[#64748B] font-normal">
-                          Last Delivery: {new Date(inspectingOrder.deliveredAt).toLocaleDateString()}
+                          Last Delivery: {new Date(inspectingOrder.deliveredAt).toLocaleDateString("en-IN")}
                         </span>
                       )}
                     </h4>
 
                     {Array.isArray(inspectingOrder.deliverables) && inspectingOrder.deliverables.length > 0 ? (
-                      <div className="rounded-xl border border-[#EADFCB] bg-[#FFFDF9] divide-y divide-[#EADFCB]/60 overflow-hidden text-xs">
-                        {inspectingOrder.deliverables.map((del, idx) => (
-                          <div key={idx} className="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-9 h-9 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-center shrink-0 text-[#5C3A1E]">
-                                <FileCheck className="w-4 h-4 text-[#A98B57]" />
-                              </div>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-semibold text-[#0F172A] truncate block">{del.filename}</span>
-                                  {del.version && (
-                                    <span className="font-mono text-[10px] font-bold text-[#5C3A1E] px-1.5 py-0.5 rounded bg-[#FAF9F5] border border-[#EADFCB]">
-                                      {del.version}
-                                    </span>
-                                  )}
-                                  {del.category && (
-                                    <span className="text-[9px] uppercase font-bold text-[#A98B57] px-1.5 py-0.5 rounded bg-[#FFFDF0] border border-[#F1E0A6]">
-                                      {del.category}
-                                    </span>
-                                  )}
-                                </div>
-                                <span className="text-[10px] text-[#64748B] block mt-0.5">
-                                  {del.fileSize || "Cloud Master Asset"} {del.mimeType ? `• ${del.mimeType}` : ""}
-                                </span>
-                              </div>
-                            </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {inspectingOrder.deliverables.map((del: any, idx: number) => {
+                          const isImg = del.mimeType?.startsWith("image") || del.filename?.match(/\.(png|jpg|jpeg|webp)$/i);
+                          const isPdf = del.mimeType?.includes("pdf") || del.filename?.endsWith(".pdf");
+                          const isVideo = del.mimeType?.startsWith("video") || del.filename?.match(/\.(mp4|mov|webm)$/i);
+                          const is3D = del.filename?.match(/\.(glb|gltf|obj|fbx)$/i);
 
-                            {del.previewUrl && (
-                              <a
-                                href={del.previewUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF9F5] hover:bg-[#F4EFE6] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] transition-colors shrink-0"
-                              >
-                                <Download className="w-3.5 h-3.5" />
-                                <span>Download Asset</span>
-                              </a>
-                            )}
-                          </div>
-                        ))}
+                          return (
+                            <div
+                              key={idx}
+                              className="p-3 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] hover:border-[#D4A35A] transition-all flex flex-col justify-between space-y-2.5 shadow-2xs group"
+                            >
+                              {/* Visual Image / Thumbnail Preview */}
+                              {isImg && del.previewUrl && (
+                                <div className="w-full h-36 rounded-xl overflow-hidden bg-white border border-[#EADFCB] relative group">
+                                  <img
+                                    src={del.previewUrl}
+                                    alt={del.filename}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                  />
+                                  <span className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-xs text-white text-[10px] font-mono">
+                                    Image Preview
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* File Details & Badges */}
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex items-start gap-2.5 min-w-0">
+                                  <div className="w-8 h-8 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-center shrink-0 text-[#5C3A1E] mt-0.5">
+                                    {isImg ? (
+                                      <FileCheck className="w-4 h-4 text-[#A98B57]" />
+                                    ) : isVideo ? (
+                                      <Video className="w-4 h-4 text-[#A98B57]" />
+                                    ) : is3D ? (
+                                      <Box className="w-4 h-4 text-[#A98B57]" />
+                                    ) : (
+                                      <FileText className="w-4 h-4 text-[#A98B57]" />
+                                    )}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <span className="font-semibold text-xs text-[#0F172A] truncate block" title={del.filename}>
+                                      {del.filename}
+                                    </span>
+                                    <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-[#64748B] font-mono">
+                                      <span>{del.fileSize || "12 MB"}</span>
+                                      {del.version && (
+                                        <>
+                                          <span>•</span>
+                                          <span className="text-[#5C3A1E] font-bold">{del.version}</span>
+                                        </>
+                                      )}
+                                      {del.category && (
+                                        <>
+                                          <span>•</span>
+                                          <span className="uppercase text-[#A98B57]">{del.category}</span>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Download & Preview Actions */}
+                              {del.previewUrl && (
+                                <div className="pt-1 border-t border-[#EADFCB]/60">
+                                  <a
+                                    href={del.previewUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full py-1.5 px-2.5 bg-[#FAF9F5] hover:bg-[#F4EFE6] border border-[#EADFCB] rounded-xl text-xs font-semibold text-[#5C3A1E] transition-all flex items-center justify-center gap-1.5"
+                                  >
+                                    <Download className="w-3.5 h-3.5" />
+                                    <span>Download Deliverable</span>
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     ) : (
-                      <div className="p-8 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-center text-xs text-[#64748B] space-y-1">
+                      <div className="p-8 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] text-center text-xs text-[#64748B] space-y-1">
                         <Sparkles className="w-6 h-6 text-[#A98B57] mx-auto opacity-60" />
                         <p className="font-semibold text-[#0F172A]">Deliverables in Production</p>
                         <p className="text-[11px]">

@@ -233,13 +233,14 @@ export function isFirebaseAdminConfigured(): boolean {
   return email.length > 0 && key.includes("PRIVATE KEY") && isEnvSet("NEXT_PUBLIC_FIREBASE_PROJECT_ID");
 }
 
-/** Google Drive via OAuth refresh token (personal/shared Drive). No service account needed. */
+/** Google Drive via OAuth refresh token or Google Service Account. */
 export function isGoogleDriveConfigured(): boolean {
-  return (
+  const hasOAuth =
     isEnvSet("GOOGLE_DRIVE_CLIENT_ID") &&
     isEnvSet("GOOGLE_DRIVE_CLIENT_SECRET") &&
-    isEnvSet("GOOGLE_DRIVE_REFRESH_TOKEN")
-  );
+    isEnvSet("GOOGLE_DRIVE_REFRESH_TOKEN");
+  const hasServiceAccount = isFirebaseAdminConfigured();
+  return hasOAuth || hasServiceAccount;
 }
 
 export function isRazorpayConfigured(): boolean {

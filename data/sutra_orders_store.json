@@ -1,0 +1,375 @@
+[
+  {
+    "id": "ord_1791280690847",
+    "code": "#ORD-348",
+    "orderNumber": "ORD-2026-7070",
+    "title": "ys",
+    "service": "Starter Creative",
+    "type": "monthly_plan",
+    "items": [
+      {
+        "planId": "studio-starter",
+        "name": "Starter Creative (MONTHLY RETAINER)",
+        "price": 5999,
+        "quantity": 1
+      }
+    ],
+    "totalAmount": 5999,
+    "discountAmount": 0,
+    "gstAmount": 0,
+    "consentAgreed": true,
+    "consentTimestamp": "2026-10-06T09:58:10.755Z",
+    "termsVersion": "2.1",
+    "billingCycle": "monthly",
+    "requirements": "hi",
+    "attachments": [
+      {
+        "name": "logo_horizontal_white_bg.svg",
+        "size": "0.0 MB"
+      }
+    ],
+    "status": "approved",
+    "statusLabel": "3 day(s) left in trial authorization",
+    "source": "dashboard",
+    "clientUid": "1buODTA7RAbpXMSwBDCmJMRUyeF3",
+    "clientId": "1buODTA7RAbpXMSwBDCmJMRUyeF3",
+    "clientName": "Studio Client",
+    "clientEmail": "client@sutrastudio.com",
+    "clientPhone": "",
+    "driveFolderId": "drive_fld_sutra_001",
+    "driveFolderPath": "drive_fld_sutra_001/NEW_ORDERS",
+    "revisionRound": 0,
+    "maxRevisions": 2,
+    "deliverables": [
+      {
+        "driveFileId": "drive_n8n_sutra_run_1791280796013_b1wpe_cal",
+        "filename": "Starter_Creative_Sprint1_Editorial_Matrix.pdf",
+        "checksum": "sha256:fsamk334ux",
+        "fileSize": "8.6 MB",
+        "mimeType": "application/pdf",
+        "previewUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
+        "category": "draft",
+        "version": "v1.0",
+        "uploadedAt": "2026-10-06T09:59:56.140Z"
+      },
+      {
+        "driveFileId": "drive_n8n_sutra_run_1791280796013_b1wpe_batch",
+        "filename": "Starter_Creative_Creative_Batch_01.zip",
+        "checksum": "sha256:jr4sqzae0ij",
+        "fileSize": "42.1 MB",
+        "mimeType": "application/zip",
+        "previewUrl": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
+        "category": "draft",
+        "version": "v1.0",
+        "uploadedAt": "2026-10-06T09:59:56.140Z"
+      }
+    ],
+    "paymentStatus": "paid",
+    "amountPaid": 5999,
+    "paidAt": "2026-10-06T09:58:50.344Z",
+    "paymentMethod": "razorpay_checkout",
+    "estimatedDeliveryDays": 3,
+    "estimatedDueDate": "2026-10-09T09:58:10.847Z",
+    "comments": [],
+    "internalNotes": [],
+    "statusHistory": [
+      {
+        "status": "pending_payment",
+        "changedAt": "2026-10-06T09:58:10.755Z",
+        "changedBy": "client",
+        "note": "Order placed with server-recomputed catalog pricing (₹5,999). Awaiting Razorpay payment."
+      },
+      {
+        "status": "paid",
+        "changedAt": "2026-10-06T09:58:50.344Z",
+        "changedBy": "system",
+        "note": "Payment verified via Razorpay (pay_mock_1791280720938) via checkout."
+      },
+      {
+        "status": "draft_delivered",
+        "changedAt": "2026-10-06T09:59:56.140Z",
+        "changedBy": "sutra_automation_engine",
+        "note": "Autonomous pipeline [W3_monthly_plan_content] executed: Retainer Sprint 1 Content Pack & 15-Post Content Calendar synthesized for Starter Creative. Drafts vaulted for Admin review."
+      },
+      {
+        "status": "approved",
+        "changedAt": "2026-10-06T10:00:47.505Z",
+        "changedBy": "Studio Executive Producer",
+        "note": "Admin verified and approved autonomous creative drafts."
+      }
+    ],
+    "createdAt": "2026-10-06T09:58:10.755Z",
+    "updatedAt": "2026-10-06T10:00:47.505Z",
+    "deliverablePreview": "Commission registered in Firestore. Production brief is pending verified Razorpay checkout.",
+    "razorpayOrderId": "mock_rp_ord17912806908_2947",
+    "subscriptionId": "sub_ord1791280_2953",
+    "subscriptionStatus": "trial",
+    "trialEndsAt": "2026-10-09T09:58:12.952Z",
+    "currentPeriodStart": "2026-10-06T09:58:12.952Z",
+    "currentPeriodEnd": "2026-11-08T09:58:12.952Z",
+    "nextBillingDate": "2026-10-09T09:58:12.952Z",
+    "autoRenew": true,
+    "razorpayPaymentId": "pay_mock_1791280720938",
+    "razorpaySignature": "mock_signature_for_testing",
+    "workflowStatus": "draft_ready",
+    "workflowRunId": "sutra_run_1791280796013_b1wpe",
+    "workflowId": "W3_monthly_plan_content",
+    "workflowLastDispatchedAt": "2026-10-06T09:59:56.013Z",
+    "workflowRetryCount": 1,
+    "workflowHistory": [
+      {
+        "runId": "sutra_run_1791280732390_t51o2",
+        "workflowId": "W1_order_fulfillment_router",
+        "status": "queued",
+        "timestamp": "2026-10-06T09:58:52.390Z"
+      },
+      {
+        "runId": "sutra_run_1791280777987_84ut3",
+        "workflowId": "W1_order_fulfillment_router",
+        "status": "queued",
+        "timestamp": "2026-10-06T09:59:37.987Z"
+      },
+      {
+        "runId": "sutra_run_1791280796013_b1wpe",
+        "workflowId": "W3_monthly_plan_content",
+        "status": "queued",
+        "timestamp": "2026-10-06T09:59:56.013Z"
+      },
+      {
+        "runId": "sutra_run_1791280796013_b1wpe",
+        "workflowId": "W3_monthly_plan_content",
+        "status": "draft_ready",
+        "timestamp": "2026-10-06T09:59:56.140Z",
+        "deliverableUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80"
+      }
+    ]
+  },
+  {
+    "id": "ord_1791276910407",
+    "code": "#ORD-659",
+    "orderNumber": "ORD-2026-2659",
+    "title": "ys",
+    "service": "Studio Growth",
+    "type": "monthly_plan",
+    "items": [
+      {
+        "planId": "studio-growth",
+        "name": "Studio Growth (MONTHLY RETAINER)",
+        "price": 12999,
+        "quantity": 1
+      }
+    ],
+    "totalAmount": 12999,
+    "discountAmount": 0,
+    "gstAmount": 0,
+    "consentAgreed": true,
+    "consentTimestamp": "2026-10-06T08:55:09.815Z",
+    "termsVersion": "2.1",
+    "billingCycle": "monthly",
+    "requirements": "Existing working functionality must remain working. Modify incrementally. Do not rebuild from scratch.",
+    "attachments": [
+      {
+        "name": "sutra-logo-horizontal-dark@4x.png",
+        "size": "0.4 MB"
+      }
+    ],
+    "status": "completed",
+    "statusLabel": "3 day(s) left in trial authorization",
+    "source": "dashboard",
+    "clientUid": "1buODTA7RAbpXMSwBDCmJMRUyeF3",
+    "clientId": "1buODTA7RAbpXMSwBDCmJMRUyeF3",
+    "clientName": "yash joshi",
+    "clientEmail": "yashjoshi7355@gmail.com",
+    "clientPhone": "+919327265422",
+    "driveFolderId": "mock_drive_order_c0ynevg",
+    "driveFolderPath": "Clients/yash joshi-1buODTA7RA/ORD-2026-2659-Studio Growth",
+    "revisionRound": 0,
+    "maxRevisions": 2,
+    "deliverables": [
+      {
+        "driveFileId": "drive_n8n_sutra_run_1791278677262_zj665_cal",
+        "filename": "Studio_Growth_Sprint1_Editorial_Matrix.pdf",
+        "checksum": "sha256:xx0qlm1yejn",
+        "fileSize": "8.6 MB",
+        "mimeType": "application/pdf",
+        "previewUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
+        "category": "draft",
+        "version": "v1.0",
+        "uploadedAt": "2026-10-06T09:24:37.792Z"
+      },
+      {
+        "driveFileId": "drive_n8n_sutra_run_1791278677262_zj665_batch",
+        "filename": "Studio_Growth_Creative_Batch_01.zip",
+        "checksum": "sha256:8smbzao30fl",
+        "fileSize": "42.1 MB",
+        "mimeType": "application/zip",
+        "previewUrl": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
+        "category": "draft",
+        "version": "v1.0",
+        "uploadedAt": "2026-10-06T09:24:37.792Z"
+      },
+      {
+        "driveFileId": "drive_n8n_sutra_run_1791278781371_v7ipl_cal",
+        "filename": "Studio_Growth_Sprint1_Editorial_Matrix.pdf",
+        "checksum": "sha256:xau3sqsm1g",
+        "fileSize": "8.6 MB",
+        "mimeType": "application/pdf",
+        "previewUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
+        "category": "draft",
+        "version": "v1.0",
+        "uploadedAt": "2026-10-06T09:26:21.514Z"
+      },
+      {
+        "driveFileId": "drive_n8n_sutra_run_1791278781371_v7ipl_batch",
+        "filename": "Studio_Growth_Creative_Batch_01.zip",
+        "checksum": "sha256:kbhlimy6hfd",
+        "fileSize": "42.1 MB",
+        "mimeType": "application/zip",
+        "previewUrl": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
+        "category": "draft",
+        "version": "v1.0",
+        "uploadedAt": "2026-10-06T09:26:21.514Z"
+      }
+    ],
+    "paymentStatus": "paid",
+    "amountPaid": 12999,
+    "paidAt": "2026-10-06T08:55:28.389Z",
+    "paymentMethod": "razorpay_checkout",
+    "estimatedDeliveryDays": 3,
+    "estimatedDueDate": "2026-10-09T08:55:10.407Z",
+    "comments": [],
+    "internalNotes": [],
+    "statusHistory": [
+      {
+        "status": "pending_payment",
+        "changedAt": "2026-10-06T08:55:09.815Z",
+        "changedBy": "client",
+        "note": "Order placed with server-recomputed catalog pricing (₹12,999). Awaiting Razorpay payment."
+      },
+      {
+        "status": "paid",
+        "changedAt": "2026-10-06T08:55:28.389Z",
+        "changedBy": "system",
+        "note": "Payment verified via Razorpay (pay_mock_1791276924328) via checkout."
+      },
+      {
+        "status": "draft_delivered",
+        "changedAt": "2026-10-06T09:24:37.792Z",
+        "changedBy": "sutra_automation_engine",
+        "note": "Autonomous pipeline [W3_monthly_plan_content] executed: Retainer Sprint 1 Content Pack & 15-Post Content Calendar synthesized for Studio Growth. Drafts vaulted for Admin review."
+      },
+      {
+        "status": "draft_delivered",
+        "changedAt": "2026-10-06T09:26:21.514Z",
+        "changedBy": "sutra_automation_engine",
+        "note": "Autonomous pipeline [W3_monthly_plan_content] executed: Retainer Sprint 1 Content Pack & 15-Post Content Calendar synthesized for Studio Growth. Drafts vaulted for Admin review."
+      },
+      {
+        "status": "approved",
+        "changedAt": "2026-10-06T09:36:07.679Z",
+        "changedBy": "Studio Executive Producer",
+        "note": "Admin verified and approved autonomous creative drafts."
+      },
+      {
+        "status": "draft_delivered",
+        "changedAt": "2026-10-06T09:37:20.928Z",
+        "changedBy": "Yash Joshi",
+        "note": "Production master (final_delivery) verified and uploaded to the client Drive folder."
+      },
+      {
+        "status": "completed",
+        "changedAt": "2026-10-06T09:38:57.578Z",
+        "changedBy": "Studio Executive Producer",
+        "note": "Status transitioned to completed by Studio Administrator."
+      }
+    ],
+    "createdAt": "2026-10-06T08:55:09.815Z",
+    "updatedAt": "2026-10-06T09:38:57.578Z",
+    "deliverablePreview": "Production master (final_delivery) verified and uploaded to the client Drive folder.",
+    "driveFolderLink": "https://drive.google.com/drive/folders/mock_drive_order_c0ynevg",
+    "driveSubfolders": {
+      "clientAssets": {
+        "id": "mock_drive_assets_scnxxla",
+        "name": "01 Client Assets",
+        "link": "https://drive.google.com/drive/folders/mock_drive_assets_nki4w6t"
+      },
+      "drafts": {
+        "id": "mock_drive_drafts_i3hohmh",
+        "name": "02 Drafts",
+        "link": "https://drive.google.com/drive/folders/mock_drive_drafts_pv4ws4z"
+      },
+      "finalDelivery": {
+        "id": "mock_drive_finals_jk8ud2d",
+        "name": "03 Final",
+        "link": "https://drive.google.com/drive/folders/mock_drive_finals_di4zob5"
+      },
+      "revisions": {
+        "id": "mock_drive_revisions_6cpfntj",
+        "name": "04 Revisions",
+        "link": "https://drive.google.com/drive/folders/mock_drive_revisions_1bgofjm"
+      }
+    },
+    "razorpayOrderId": "mock_rp_ord17912769104_0429",
+    "subscriptionId": "sub_ord1791276_0436",
+    "subscriptionStatus": "trial",
+    "trialEndsAt": "2026-10-09T08:55:10.436Z",
+    "currentPeriodStart": "2026-10-06T08:55:10.436Z",
+    "currentPeriodEnd": "2026-11-08T08:55:10.436Z",
+    "nextBillingDate": "2026-10-09T08:55:10.436Z",
+    "autoRenew": true,
+    "razorpayPaymentId": "pay_mock_1791276924328",
+    "razorpaySignature": "mock_signature_for_testing",
+    "workflowStatus": "draft_ready",
+    "workflowRunId": "sutra_run_1791278781371_v7ipl",
+    "workflowId": "W3_monthly_plan_content",
+    "workflowLastDispatchedAt": "2026-10-06T09:26:21.371Z",
+    "workflowRetryCount": 1,
+    "workflowHistory": [
+      {
+        "runId": "sutra_run_1791276928543_q96p5",
+        "workflowId": "W1_order_fulfillment_router",
+        "status": "queued",
+        "timestamp": "2026-10-06T08:55:28.543Z"
+      },
+      {
+        "runId": "sutra_run_1791277232605_8v2iq",
+        "workflowId": "W1_order_fulfillment_router",
+        "status": "queued",
+        "timestamp": "2026-10-06T09:00:32.605Z"
+      },
+      {
+        "runId": "sutra_run_1791277961775_44psn",
+        "workflowId": "W1_order_fulfillment_router",
+        "status": "queued",
+        "timestamp": "2026-10-06T09:12:41.775Z"
+      },
+      {
+        "runId": "sutra_run_1791278677262_zj665",
+        "workflowId": "W3_monthly_plan_content",
+        "status": "queued",
+        "timestamp": "2026-10-06T09:24:37.262Z"
+      },
+      {
+        "runId": "sutra_run_1791278677262_zj665",
+        "workflowId": "W3_monthly_plan_content",
+        "status": "draft_ready",
+        "timestamp": "2026-10-06T09:24:37.792Z",
+        "deliverableUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "runId": "sutra_run_1791278781371_v7ipl",
+        "workflowId": "W3_monthly_plan_content",
+        "status": "queued",
+        "timestamp": "2026-10-06T09:26:21.371Z"
+      },
+      {
+        "runId": "sutra_run_1791278781371_v7ipl",
+        "workflowId": "W3_monthly_plan_content",
+        "status": "draft_ready",
+        "timestamp": "2026-10-06T09:26:21.514Z",
+        "deliverableUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80"
+      }
+    ],
+    "deliveredAt": "2026-10-06T09:37:20.928Z"
+  }
+]

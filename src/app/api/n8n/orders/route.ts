@@ -22,7 +22,10 @@ export async function GET(req: Request) {
       );
     }
 
-    const order = OrdersStore.findById(orderId);
+    let order = OrdersStore.findById(orderId);
+    if (!order) {
+      order = await OrdersStore.findByIdAsync(orderId);
+    }
     if (!order) {
       return NextResponse.json({ error: "Order not found." }, { status: 404 });
     }

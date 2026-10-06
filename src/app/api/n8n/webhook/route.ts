@@ -37,7 +37,10 @@ export async function POST(req: Request) {
     );
 
     if (orderId) {
-      const order = OrdersStore.findById(orderId);
+      let order = OrdersStore.findById(orderId);
+      if (!order) {
+        order = await OrdersStore.findByIdAsync(orderId);
+      }
       if (order) {
         // Track workflow history
         if (!order.workflowHistory) order.workflowHistory = [];

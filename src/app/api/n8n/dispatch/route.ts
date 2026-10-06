@@ -8,16 +8,24 @@ export async function POST(req: Request) {
 
     if (!payload.workflowId) {
       return NextResponse.json(
-        { error: "Missing required workflowId in request payload." },
+        { success: false, error: "Missing required workflowId in request payload.", details: "Missing workflowId" },
         { status: 400 }
       );
     }
 
+    // Default to admin dispatch if not specified
+    if (payload.isAdminDispatch === undefined) {
+      payload.isAdminDispatch = true;
+    }
+
     // If orderId is provided, enrich payload from OrdersStore if brief or service is missing
     if (payload.orderId) {
-      const order = OrdersStore.findById(payload.orderId);
+      let order = OrdersStore.findById(payload.orderId);
+      if (!order) {
+        order = await OrdersStore.findByIdAsync(payload.orderId);
+      }
       if (order) {
-        if (!payload.service) payload.service = order.service;
+        if (!payload.service) payload.service = order.service || order.title;
         if (!payload.brief) payload.brief = order.requirements || order.notes;
         if (!payload.clientId) payload.clientId = order.clientUid || order.clientId;
         if (!payload.driveFolderId) payload.driveFolderId = order.driveFolderId;
@@ -27,10 +35,12 @@ export async function POST(req: Request) {
     const result = await N8nAutomationService.dispatchWorkflow(payload);
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : "Failed to dispatch automation pipeline.";
     return NextResponse.json(
       {
-        error: "Failed to dispatch n8n automation pipeline.",
-        details: error instanceof Error ? error.message : "Unknown error",
+        success: false,
+        error: errorMsg,
+        details: errorMsg,
       },
       { status: 500 }
     );

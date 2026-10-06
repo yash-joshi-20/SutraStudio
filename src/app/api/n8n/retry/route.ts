@@ -14,7 +14,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const order = OrdersStore.findById(orderId);
+    let order = OrdersStore.findById(orderId);
+    if (!order) {
+      order = await OrdersStore.findByIdAsync(orderId);
+    }
     if (!order) {
       return NextResponse.json({ error: "Order not found." }, { status: 404 });
     }
@@ -27,9 +30,11 @@ export async function POST(req: Request) {
       workflowId: workflowId || order.workflowId || "W1_order_fulfillment_router",
       orderId: order.id,
       clientId: order.clientUid || order.clientId,
-      service: order.service,
+      service: order.service || order.title,
       brief: order.requirements || order.notes,
       driveFolderId: order.driveFolderId,
+      isAdminDispatch: true,
+      force: true,
     });
 
     return NextResponse.json(result, { status: 200 });

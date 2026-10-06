@@ -80,13 +80,13 @@ export function PortalSidebarInner({ contained = false }: { contained?: boolean 
   const isAdmin = role === "admin";
   const navItems = isAdmin ? ADMIN_NAV_ITEMS : CLIENT_NAV_ITEMS;
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // `contained` mode is used by PortalShell, which supplies its own frame,
-  // its own header, its own notification bell and its own drawer. Rendering
-  // them twice is what previously produced two stacked bars and two sidebars.
+  // Responsive desktop classes with collapsible width toggle
+  const desktopWidthClass = isCollapsed ? "w-20" : "w-64";
   const desktopClass = contained
-    ? "flex flex-col h-full p-5"
-    : "w-64 shrink-0 border-r border-[#E5E1D8] bg-[#FAF9F5] min-h-screen p-6 flex flex-col justify-between hidden md:flex";
+    ? "flex flex-col h-full p-4"
+    : `${desktopWidthClass} shrink-0 border-r border-[#E5E1D8] bg-[#FAF9F5] min-h-screen p-4 flex flex-col justify-between hidden md:flex transition-all duration-300 ease-in-out`;
 
   return (
     <>
@@ -97,7 +97,7 @@ export function PortalSidebarInner({ contained = false }: { contained?: boolean 
         <div className="flex items-center gap-3">
           <button
             onClick={() => setMobileDrawerOpen(true)}
-            className="p-2 rounded-lg text-[#171717] hover:bg-[#F0ECE1] transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#A98B57]"
+            className="p-2 rounded-lg text-[#171717] hover:bg-[#F0ECE1] transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#A98B57] cursor-pointer"
             aria-label="Open Navigation Menu"
           >
             <Menu className="w-5 h-5 text-[#171717]" />
@@ -126,7 +126,7 @@ export function PortalSidebarInner({ contained = false }: { contained?: boolean 
               <SutraLogo variant="horizontal" size="md" href={isAdmin ? "/admin" : "/dashboard"} />
               <button
                 onClick={() => setMobileDrawerOpen(false)}
-                className="p-1.5 rounded-lg text-[#737373] hover:text-[#171717] hover:bg-[#F0ECE1]"
+                className="p-1.5 rounded-lg text-[#737373] hover:text-[#171717] hover:bg-[#F0ECE1] cursor-pointer"
                 aria-label="Close Navigation"
               >
                 <X className="w-5 h-5" />
@@ -187,7 +187,7 @@ export function PortalSidebarInner({ contained = false }: { contained?: boolean 
               <button
                 onClick={() => void logout()}
                 title="Sign Out"
-                className="text-[#737373] hover:text-[#171717] p-1.5 rounded-lg hover:bg-[#F0ECE1]"
+                className="text-[#737373] hover:text-[#171717] p-1.5 rounded-lg hover:bg-[#F0ECE1] cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -198,31 +198,51 @@ export function PortalSidebarInner({ contained = false }: { contained?: boolean 
       </>
       )}
 
-      {/* Desktop / tablet Persistent Sidebar */}
+      {/* Desktop / Tablet Persistent Collapsible Sidebar */}
       <aside className={desktopClass}>
         <div>
-          {/* Brand Header */}
-          <div className="pb-5 border-b border-[#E5E1D8] flex flex-col gap-3">
+          {/* Brand Header & Toggle Button */}
+          <div className="pb-4 border-b border-[#E5E1D8] flex flex-col gap-2.5">
             <div className="flex items-center justify-between">
-              <SutraLogo variant="horizontal" size="md" href={isAdmin ? "/admin" : "/dashboard"} />
-              {!contained && <NotificationBell />}
+              {!isCollapsed ? (
+                <SutraLogo variant="horizontal" size="md" href={isAdmin ? "/admin" : "/dashboard"} />
+              ) : (
+                <Link href={isAdmin ? "/admin" : "/dashboard"} className="p-1 rounded-lg hover:bg-[#F0ECE1]">
+                  <SutraLogo variant="symbol" size="sm" />
+                </Link>
+              )}
+              <div className="flex items-center gap-1">
+                {!contained && !isCollapsed && <NotificationBell />}
+                <button
+                  type="button"
+                  onClick={() => setIsCollapsed(!isCollapsed)}
+                  title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+                  className="p-1.5 rounded-lg text-[#737373] hover:text-[#171717] hover:bg-[#F0ECE1] transition-colors cursor-pointer"
+                  aria-label={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+                >
+                  <Menu className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-            <Link
-              href="/"
-              className="inline-flex items-center justify-between px-3 py-1.5 rounded-xl bg-[#FFFFFF] border border-[#E5E1D8] text-xs font-semibold text-[#171717] hover:border-[#A98B57] hover:bg-[#F0ECE1] transition-all"
-              title="Return to Public Website"
-            >
-              <span className="flex items-center gap-1.5">
-                <Globe className="w-3.5 h-3.5 text-[#A98B57]" />
-                <span>Public Website</span>
-              </span>
-              <span className="text-[10px] text-[#737373]">↗</span>
-            </Link>
+
+            {!isCollapsed && (
+              <Link
+                href="/"
+                className="inline-flex items-center justify-between px-3 py-1.5 rounded-xl bg-[#FFFFFF] border border-[#E5E1D8] text-xs font-semibold text-[#171717] hover:border-[#A98B57] hover:bg-[#F0ECE1] transition-all"
+                title="Return to Public Website"
+              >
+                <span className="flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5 text-[#A98B57]" />
+                  <span>Public Website</span>
+                </span>
+                <span className="text-[10px] text-[#737373]">↗</span>
+              </Link>
+            )}
           </div>
 
           {/* Portal Scope Indicator (Admin Only) */}
-          {isAdmin && (
-            <div className="mt-4 p-2.5 rounded-xl bg-[#171717] text-white flex items-center justify-between text-xs shadow-xs">
+          {isAdmin && !isCollapsed && (
+            <div className="mt-3 p-2.5 rounded-xl bg-[#171717] text-white flex items-center justify-between text-xs shadow-xs">
               <div>
                 <span className="text-[10px] text-[#A98B57] block uppercase font-mono font-semibold">Executive Terminal</span>
                 <span className="font-bold text-white uppercase tracking-wider">Supervisor Mode</span>
@@ -232,7 +252,7 @@ export function PortalSidebarInner({ contained = false }: { contained?: boolean 
           )}
 
           {/* Navigation Items */}
-          <nav className="mt-5 space-y-1">
+          <nav className="mt-4 space-y-1">
             {navItems.map((item: any) => {
               const Icon = item.icon;
               let isActive = false;
@@ -247,6 +267,7 @@ export function PortalSidebarInner({ contained = false }: { contained?: boolean 
                 <Link
                   key={item.name}
                   href={item.href}
+                  title={isCollapsed ? item.name : undefined}
                   onClick={(e) => {
                     if (item.href === "/chat") {
                       e.preventDefault();
@@ -255,18 +276,20 @@ export function PortalSidebarInner({ contained = false }: { contained?: boolean 
                       }
                     }
                   }}
-                  className={`flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-medium transition-all ${
+                  className={`flex items-center ${
+                    isCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2"
+                  } rounded-xl text-xs font-medium transition-all ${
                     isActive
                       ? "bg-[#FFFFFF] text-[#A98B57] font-semibold shadow-xs border border-[#E5E1D8]"
                       : "text-[#525252] hover:bg-[#FFFFFF]/60 hover:text-[#171717]"
                   }`}
                 >
                   <Icon
-                    className={`w-3.5 h-3.5 ${
+                    className={`w-4 h-4 shrink-0 ${
                       isActive ? "text-[#A98B57]" : "text-[#737373]"
                     }`}
                   />
-                  <span>{item.name}</span>
+                  {!isCollapsed && <span className="truncate">{item.name}</span>}
                 </Link>
               );
             })}
@@ -274,18 +297,26 @@ export function PortalSidebarInner({ contained = false }: { contained?: boolean 
         </div>
 
         {/* Footer / Account */}
-        <div className="pt-5 border-t border-[#E5E1D8] flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className={`pt-4 border-t border-[#E5E1D8] flex items-center ${isCollapsed ? "justify-center" : "justify-between"}`}>
+          {!isCollapsed ? (
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Avatar
+                name={user?.displayName || (isAdmin ? "Studio Producer" : "Studio Client")}
+                size="sm"
+                status="online"
+              />
+              <div className="text-xs min-w-0">
+                <p className="font-semibold text-[#171717] truncate max-w-[110px]">{user?.displayName || (isAdmin ? "Studio Producer" : "Studio Client")}</p>
+                <p className="text-[#737373] text-[10px] truncate">{isAdmin ? "Lead Producer" : "Client Workspace"}</p>
+              </div>
+            </div>
+          ) : (
             <Avatar
               name={user?.displayName || (isAdmin ? "Studio Producer" : "Studio Client")}
               size="sm"
               status="online"
             />
-            <div className="text-xs">
-              <p className="font-semibold text-[#171717] truncate max-w-[120px]">{user?.displayName || (isAdmin ? "Studio Producer" : "Studio Client")}</p>
-              <p className="text-[#737373] text-[11px]">{isAdmin ? "Executive Producer" : "Client Workspace"}</p>
-            </div>
-          </div>
+          )}
           <button
             onClick={() => void logout()}
             title="Sign Out"

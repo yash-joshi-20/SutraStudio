@@ -158,6 +158,8 @@ export interface DrivePermissionSnapshot {
 // Credentials & token
 // ---------------------------------------------------------------------------
 
+import crypto from "node:crypto";
+
 export interface DriveOAuthConfig {
   clientId: string;
   clientSecret: string;
@@ -174,9 +176,9 @@ export function getDriveOAuthConfig(): DriveOAuthConfig {
   const rootFolderId = readEnv("GOOGLE_DRIVE_ROOT_FOLDER_ID");
 
   const missingKeys: string[] = [];
-  if (!clientId) missingKeys.push("GOOGLE_DRIVE_CLIENT_ID");
-  if (!clientSecret) missingKeys.push("GOOGLE_DRIVE_CLIENT_SECRET");
-  if (!refreshToken) missingKeys.push("GOOGLE_DRIVE_REFRESH_TOKEN");
+  if (!clientId && !readEnv("FIREBASE_CLIENT_EMAIL")) missingKeys.push("GOOGLE_DRIVE_CLIENT_ID");
+  if (!clientSecret && !readEnv("FIREBASE_PRIVATE_KEY")) missingKeys.push("GOOGLE_DRIVE_CLIENT_SECRET");
+  if (!refreshToken && !readEnv("FIREBASE_PRIVATE_KEY")) missingKeys.push("GOOGLE_DRIVE_REFRESH_TOKEN");
 
   return {
     clientId,
@@ -203,8 +205,8 @@ function requireDrive(): DriveOAuthConfig {
 let cachedToken: { token: string; expiresAtMs: number } | null = null;
 
 /**
- * Exchanges the refresh token for an access token. Cached until 60 s before
- * expiry. `force` is used after a 401 so a revoked/rotated token re-negotiates.
+ * Exchanges the refresh token or Service Account JWT for an access token.
+ * Cached until 60 s before expiry.
  */
 export async function getDriveAccessToken(force = false): Promise<string> {
   const cfg = requireDrive();
@@ -213,35 +215,82 @@ export async function getDriveAccessToken(force = false): Promise<string> {
     return cachedToken.token;
   }
 
-  const res = await fetch(TOKEN_ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "refresh_token",
-      client_id: cfg.clientId,
-      client_secret: cfg.clientSecret,
-      refresh_token: cfg.refreshToken,
-    }).toString(),
-  });
+  // 1. Try OAuth Refresh Token if fully provided
+  if (cfg.clientId && cfg.clientSecret && cfg.refreshToken) {
+    const res = await fetch(TOKEN_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        client_id: cfg.clientId,
+        client_secret: cfg.clientSecret,
+        refresh_token: cfg.refreshToken,
+      }).toString(),
+    });
 
-  if (!res.ok) {
-    const detail = await res.text().catch(() => "");
-    throw new Error(
-      `Google Drive token exchange failed (${res.status}). ` +
-        `Check GOOGLE_DRIVE_CLIENT_ID / GOOGLE_DRIVE_CLIENT_SECRET / GOOGLE_DRIVE_REFRESH_TOKEN. ${detail.slice(0, 200)}`
-    );
+    if (res.ok) {
+      const data = (await res.json()) as { access_token?: string; expires_in?: number };
+      if (data.access_token) {
+        cachedToken = {
+          token: data.access_token,
+          expiresAtMs: now + (data.expires_in ?? 3600) * 1000,
+        };
+        return data.access_token;
+      }
+    }
   }
 
-  const data = (await res.json()) as { access_token?: string; expires_in?: number };
-  if (!data.access_token) {
-    throw new Error("Google Drive token exchange returned no access_token.");
+  // 2. Fall back to Google Service Account JWT exchange
+  const clientEmail = readEnv("FIREBASE_CLIENT_EMAIL");
+  const privateKeyRaw = readEnv("FIREBASE_PRIVATE_KEY");
+  if (clientEmail && privateKeyRaw && privateKeyRaw.includes("PRIVATE KEY")) {
+    try {
+      const privateKey = privateKeyRaw.replace(/\\n/g, "\n");
+      const nowSec = Math.floor(Date.now() / 1000);
+      const header = Buffer.from(JSON.stringify({ alg: "RS256", typ: "JWT" })).toString("base64url");
+      const claimSet = Buffer.from(
+        JSON.stringify({
+          iss: clientEmail,
+          scope: "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.file",
+          aud: TOKEN_ENDPOINT,
+          exp: nowSec + 3600,
+          iat: nowSec,
+        })
+      ).toString("base64url");
+
+      const signer = crypto.createSign("RSA-SHA256");
+      signer.update(`${header}.${claimSet}`);
+      const signature = signer.sign(privateKey, "base64url");
+      const assertion = `${header}.${claimSet}.${signature}`;
+
+      const res = await fetch(TOKEN_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+          assertion,
+        }).toString(),
+      });
+
+      if (res.ok) {
+        const data = (await res.json()) as { access_token?: string; expires_in?: number };
+        if (data.access_token) {
+          cachedToken = {
+            token: data.access_token,
+            expiresAtMs: now + (data.expires_in ?? 3600) * 1000,
+          };
+          return data.access_token;
+        }
+      }
+    } catch {
+      // quiet fallback
+    }
   }
 
-  cachedToken = {
-    token: data.access_token,
-    expiresAtMs: now + (data.expires_in ?? 3600) * 1000,
-  };
-  return data.access_token;
+  // If both failed or unavailable, throw informative error
+  throw new Error(
+    "Google Drive token exchange failed. Please verify OAuth or Service Account credentials in .env.local."
+  );
 }
 
 function invalidateTokenCache(): void {

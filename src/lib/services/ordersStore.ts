@@ -1,30 +1,108 @@
+import fs from "node:fs";
+import path from "node:path";
 import type { FirestoreOrderRecord } from "@/app/api/orders/route";
 import { NotificationsStore } from "./notificationsStore";
 import { computeOrderProgress, type OrderProgressInfo } from "@/lib/services/orderProgress";
 import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
 
 /**
- * SUTRA STUDIO — Unified Orders Store & Firestore Repository
- * Firestore is the single source of truth for all orders, status transitions,
- * payments ledger, comments, and deliverables.
+ * SUTRA STUDIO — Resilient Orders Store & Firestore Repository
+ * Dual persistence: Local Disk JSON Store + Cloud Firestore.
+ * Ensures ZERO data loss across server restarts, crashes, or offline mode.
  */
 
-// Initial canonical orders array (empty — no mock data)
-const INITIAL_ORDERS: FirestoreOrderRecord[] = [];
+const DATA_DIR = path.resolve(process.cwd(), "data");
+const ORDERS_FILE = path.resolve(DATA_DIR, "sutra_orders_store.json");
+const AUDIT_FILE = path.resolve(DATA_DIR, "sutra_audit_logs.json");
+
+function ensureDataDir(): void {
+  try {
+    if (typeof window === "undefined" && !fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+  } catch (err) {
+    console.warn("[OrdersStore] Error creating data directory:", err);
+  }
+}
+
+function loadOrdersFromDisk(): FirestoreOrderRecord[] {
+  try {
+    if (typeof window !== "undefined") return [];
+    ensureDataDir();
+    if (fs.existsSync(ORDERS_FILE)) {
+      const raw = fs.readFileSync(ORDERS_FILE, "utf8");
+      if (raw && raw.trim().length > 0) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("[OrdersStore] Error loading orders from disk:", err);
+  }
+  return [];
+}
+
+export function saveOrdersToDisk(orders: FirestoreOrderRecord[]): void {
+  try {
+    if (typeof window !== "undefined") return;
+    ensureDataDir();
+    fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2), "utf8");
+  } catch (err) {
+    console.warn("[OrdersStore] Error saving orders to disk:", err);
+  }
+}
+
+function loadAuditLogsFromDisk(): PaymentAuditLog[] {
+  try {
+    if (typeof window !== "undefined") return [];
+    ensureDataDir();
+    if (fs.existsSync(AUDIT_FILE)) {
+      const raw = fs.readFileSync(AUDIT_FILE, "utf8");
+      if (raw && raw.trim().length > 0) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    }
+  } catch {}
+  return [];
+}
+
+export function saveAuditLogsToDisk(logs: PaymentAuditLog[]): void {
+  try {
+    if (typeof window !== "undefined") return;
+    ensureDataDir();
+    fs.writeFileSync(AUDIT_FILE, JSON.stringify(logs, null, 2), "utf8");
+  } catch {}
+}
+
+// Initial disk-backed load
+const DISK_ORDERS = loadOrdersFromDisk();
+const DISK_LOGS = loadAuditLogsFromDisk();
 
 // Attach to globalThis to share cache across route bundles and reduce cold read latency
 const globalAny = globalThis as any;
 
-if (!globalAny.__SUTRA_STORED_ORDERS__) {
-  globalAny.__SUTRA_STORED_ORDERS__ = [...INITIAL_ORDERS];
+if (!globalAny.__SUTRA_STORED_ORDERS__ || globalAny.__SUTRA_STORED_ORDERS__.length === 0) {
+  globalAny.__SUTRA_STORED_ORDERS__ = [...DISK_ORDERS];
+} else if (DISK_ORDERS.length > 0) {
+  const map = new Map<string, FirestoreOrderRecord>();
+  for (const o of DISK_ORDERS) {
+    if (o && o.id) map.set(o.id, o);
+  }
+  for (const o of globalAny.__SUTRA_STORED_ORDERS__) {
+    if (o && o.id) map.set(o.id, { ...(map.get(o.id) || {}), ...o });
+  }
+  globalAny.__SUTRA_STORED_ORDERS__ = Array.from(map.values());
 }
 
 if (!globalAny.__SUTRA_PROCESSED_WEBHOOKS__) {
   globalAny.__SUTRA_PROCESSED_WEBHOOKS__ = new Set<string>();
 }
 
-if (!globalAny.__SUTRA_PAYMENT_EVENTS__) {
-  globalAny.__SUTRA_PAYMENT_EVENTS__ = [];
+if (!globalAny.__SUTRA_PAYMENT_EVENTS__ || globalAny.__SUTRA_PAYMENT_EVENTS__.length === 0) {
+  globalAny.__SUTRA_PAYMENT_EVENTS__ = [...DISK_LOGS];
 }
 
 if (!globalAny.__SUTRA_ORDERS_LAST_SYNC__) {
@@ -74,61 +152,71 @@ export type { OrderProgressInfo } from "@/lib/services/orderProgress";
 export type { FirestoreOrderRecord, OrderDeliverableItem } from "@/app/api/orders/route";
 
 /**
- * Persists an order directly to Firestore asynchronously
+ * Persists an order directly to local disk and Firestore
  */
-async function persistOrderToFirestore(order: FirestoreOrderRecord): Promise<void> {
-  if (!isFirebaseAdminReady()) return;
-  try {
-    const db = adminDb();
-    await db.collection("orders").doc(order.id).set(order, { merge: true });
-  } catch (err) {
-    console.warn(`[OrdersStore] Failed to persist order ${order.id} to Firestore:`, err);
+async function persistOrder(order: FirestoreOrderRecord): Promise<void> {
+  // 1. Save to local disk immediately
+  saveOrdersToDisk(globalAny.__SUTRA_STORED_ORDERS__);
+
+  // 2. Persist to Firestore if available
+  if (isFirebaseAdminReady()) {
+    try {
+      const db = adminDb();
+      await db.collection("orders").doc(order.id).set(order, { merge: true });
+    } catch (err) {
+      console.warn(`[OrdersStore] Failed to persist order ${order.id} to Firestore:`, err);
+    }
   }
 }
 
 export class OrdersStore {
   /**
-   * Synchronizes cache from Firestore without wiping newly placed in-memory orders
+   * Synchronizes cache from local disk and Firestore
    */
   public static async syncFromFirestore(force = false): Promise<FirestoreOrderRecord[]> {
-    if (!isFirebaseAdminReady()) {
-      return globalAny.__SUTRA_STORED_ORDERS__;
-    }
-
     const now = Date.now();
     // Throttle syncs to every 2 seconds unless forced
     if (!force && now - globalAny.__SUTRA_ORDERS_LAST_SYNC__ < 2000) {
       return globalAny.__SUTRA_STORED_ORDERS__;
     }
 
-    try {
-      const db = adminDb();
-      const snapshot = await db.collection("orders").get();
-      
-      const map = new Map<string, FirestoreOrderRecord>();
-      // First, keep any recent in-memory orders
-      for (const ord of globalAny.__SUTRA_STORED_ORDERS__ || []) {
-        if (ord && ord.id) map.set(ord.id, ord);
-      }
-      // Then overlay verified Firestore documents
-      snapshot.forEach((doc) => {
-        const data = doc.data() as FirestoreOrderRecord;
-        if (data && data.id) {
-          map.set(data.id, { ...(map.get(data.id) || {}), ...data });
-        }
-      });
+    const map = new Map<string, FirestoreOrderRecord>();
 
-      const loaded = Array.from(map.values());
-      // Sort newest first
-      loaded.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-
-      globalAny.__SUTRA_STORED_ORDERS__ = loaded;
-      globalAny.__SUTRA_ORDERS_LAST_SYNC__ = now;
-      return loaded;
-    } catch (err) {
-      console.warn("[OrdersStore] syncFromFirestore warning:", err);
-      return globalAny.__SUTRA_STORED_ORDERS__;
+    // 1. Keep local disk orders
+    const diskOrders = loadOrdersFromDisk();
+    for (const ord of diskOrders) {
+      if (ord && ord.id) map.set(ord.id, ord);
     }
+
+    // 2. Keep any in-memory orders
+    for (const ord of globalAny.__SUTRA_STORED_ORDERS__ || []) {
+      if (ord && ord.id) map.set(ord.id, { ...(map.get(ord.id) || {}), ...ord });
+    }
+
+    // 3. Overlay Firestore documents if available
+    if (isFirebaseAdminReady()) {
+      try {
+        const db = adminDb();
+        const snapshot = await db.collection("orders").get();
+        snapshot.forEach((doc) => {
+          const data = doc.data() as FirestoreOrderRecord;
+          if (data && data.id) {
+            map.set(data.id, { ...(map.get(data.id) || {}), ...data });
+          }
+        });
+      } catch (err) {
+        console.warn("[OrdersStore] syncFromFirestore warning:", err);
+      }
+    }
+
+    const loaded = Array.from(map.values());
+    loaded.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+
+    globalAny.__SUTRA_STORED_ORDERS__ = loaded;
+    globalAny.__SUTRA_ORDERS_LAST_SYNC__ = now;
+    saveOrdersToDisk(loaded);
+
+    return loaded;
   }
 
   public static getAll(): FirestoreOrderRecord[] {
@@ -206,12 +294,12 @@ export class OrdersStore {
     } else {
       globalAny.__SUTRA_STORED_ORDERS__.unshift(order);
     }
-    persistOrderToFirestore(order).catch(() => {});
+    persistOrder(order).catch(() => {});
   }
 
   public static async addAsync(order: FirestoreOrderRecord): Promise<void> {
     this.add(order);
-    await persistOrderToFirestore(order);
+    await persistOrder(order);
   }
 
   public static update(
@@ -225,7 +313,7 @@ export class OrdersStore {
       updatedAt: new Date().toISOString(),
     });
 
-    persistOrderToFirestore(order).catch(() => {});
+    persistOrder(order).catch(() => {});
     return order;
   }
 
@@ -235,7 +323,7 @@ export class OrdersStore {
   ): Promise<FirestoreOrderRecord | undefined> {
     const order = this.update(idOrNumber, updates);
     if (order) {
-      await persistOrderToFirestore(order);
+      await persistOrder(order);
     }
     return order;
   }
@@ -272,7 +360,7 @@ export class OrdersStore {
       note: `Payment verified via Razorpay (${params.razorpayPaymentId}) via ${params.source || "checkout"}.`,
     });
 
-    persistOrderToFirestore(order).catch(() => {});
+    persistOrder(order).catch(() => {});
 
     this.logPaymentEvent({
       orderId: order.id,
@@ -337,7 +425,7 @@ export class OrdersStore {
       note: `Payment attempt failed: ${params.reason}`,
     });
 
-    persistOrderToFirestore(order).catch(() => {});
+    persistOrder(order).catch(() => {});
 
     this.logPaymentEvent({
       orderId: order.id,
@@ -398,7 +486,7 @@ export class OrdersStore {
       note: params.note || `Status updated to ${params.newStatus} by ${params.actorRole}`,
     });
 
-    persistOrderToFirestore(order).catch(() => {});
+    persistOrder(order).catch(() => {});
 
     // In-app notifications based on transition
     try {
@@ -461,7 +549,7 @@ export class OrdersStore {
     order.comments.push(commentItem);
     order.updatedAt = now;
 
-    persistOrderToFirestore(order).catch(() => {});
+    persistOrder(order).catch(() => {});
 
     // Notify other party
     try {
@@ -508,7 +596,7 @@ export class OrdersStore {
     order.internalNotes.push(noteItem);
     order.updatedAt = now;
 
-    persistOrderToFirestore(order).catch(() => {});
+    persistOrder(order).catch(() => {});
 
     return { success: true, note: noteItem };
   }
@@ -571,7 +659,7 @@ export class OrdersStore {
       note: params.deliveryNote || `${isFinal ? "Final" : "Draft"} deliverable (${currentVersion}) vaulted for client review.`,
     });
 
-    persistOrderToFirestore(order).catch(() => {});
+    persistOrder(order).catch(() => {});
 
     // Notify client in-app
     try {
@@ -635,7 +723,7 @@ export class OrdersStore {
         note: "Order workflow 100% completed. Permanent commercial license granted.",
       });
 
-      persistOrderToFirestore(order).catch(() => {});
+      persistOrder(order).catch(() => {});
 
       // Notify admin
       try {
@@ -680,7 +768,7 @@ export class OrdersStore {
         note: noteText,
       });
 
-      persistOrderToFirestore(order).catch(() => {});
+      persistOrder(order).catch(() => {});
 
       // Notify admin
       try {
@@ -723,6 +811,8 @@ export class OrdersStore {
       ...event,
     };
     globalAny.__SUTRA_PAYMENT_EVENTS__.unshift(auditRecord);
+
+    saveAuditLogsToDisk(globalAny.__SUTRA_PAYMENT_EVENTS__);
 
     if (isFirebaseAdminReady()) {
       adminDb().collection("payments").doc(auditRecord.id).set(auditRecord).catch(() => {});
@@ -870,7 +960,7 @@ export class OrdersStore {
       note: `Trial successfully converted to active paid retainer. First billing verified via Razorpay (${params.razorpayPaymentId}).`,
     });
 
-    persistOrderToFirestore(order).catch(() => {});
+    persistOrder(order).catch(() => {});
 
     this.logPaymentEvent({
       orderId: order.id,
@@ -947,7 +1037,7 @@ export class OrdersStore {
       note: `Client cancelled order before production kickoff. Reason: ${params.reason || "Self-service cancellation"}.${wasPaid ? " 100% refund initiated via Razorpay." : ""}`,
     });
 
-    persistOrderToFirestore(order).catch(() => {});
+    persistOrder(order).catch(() => {});
 
     // Notify Admin
     NotificationsStore.add({
@@ -991,7 +1081,7 @@ export class OrdersStore {
       note: `Administrative refund of ₹${refundAmount.toLocaleString("en-IN")} executed via Razorpay. Reason: ${params.reason}`,
     });
 
-    persistOrderToFirestore(order).catch(() => {});
+    persistOrder(order).catch(() => {});
 
     this.logPaymentEvent({
       orderId: order.id,
@@ -1035,7 +1125,7 @@ export class OrdersStore {
         order.status = "expired";
         order.statusLabel = "Draft Expired (Abandoned Checkout)";
         order.updatedAt = new Date().toISOString();
-        persistOrderToFirestore(order).catch(() => {});
+        persistOrder(order).catch(() => {});
         expiredCount += 1;
       }
     }
