@@ -51,6 +51,7 @@ import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { computeOrderProgress, type OrderProgressInfo } from "@/lib/services/orderProgress";
 import { uploadFileToDrive } from "@/lib/drive/useDriveUpload";
 import { soundSystem } from "@/lib/audio/soundSystem";
+import { AnimatedCheckSuccess, AnimatedReminderClock } from "@/components/ui/AnimatedStatusIcons";
 
 // Unified Order Item representing both legacy and modern Firestore orders
 interface OrderItem {
@@ -2906,9 +2907,7 @@ export default function OrdersPage() {
             {/* STEP 5: SUCCESS CONFIRMATION SCREEN */}
             {flowStep === "success" && createdOrderResult && (
               <div className="py-6 text-center space-y-5">
-                <div className="w-16 h-16 rounded-full bg-[#EDF7F0] border-2 border-[#A3E635] text-[#2E7D4F] flex items-center justify-center mx-auto shadow-xs">
-                  <CheckCircle2 className="w-10 h-10" />
-                </div>
+                <AnimatedCheckSuccess size={68} className="mx-auto" />
 
                 <div className="space-y-1">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[11px] font-mono font-bold text-[#5C3A1E] uppercase">
@@ -2995,9 +2994,7 @@ export default function OrdersPage() {
             {/* DISMISSED / PENDING PAYMENT NOTICE */}
             {flowStep === "dismissed" && createdOrderResult && (
               <div className="py-6 text-center space-y-5">
-                <div className="w-16 h-16 rounded-full bg-[#FFFDF0] border-2 border-[#F1E0A6] text-[#9A6700] flex items-center justify-center mx-auto shadow-xs">
-                  <Clock className="w-10 h-10" />
-                </div>
+                <AnimatedReminderClock size={64} className="mx-auto" />
 
                 <div className="space-y-1">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[11px] font-mono font-bold text-[#5C3A1E] uppercase">

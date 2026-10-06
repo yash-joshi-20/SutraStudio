@@ -26,6 +26,7 @@ import { TextField, Checkbox, FormAlert } from "@/components/ui/FormField";
 import { NotConfiguredState } from "@/components/ui/States";
 import { ArrowLeft, CheckCircle2, Lock, PlugZap, ShieldCheck } from "lucide-react";
 import { soundSystem } from "@/lib/audio/soundSystem";
+import { AnimatedWelcomeBadge } from "@/components/ui/AnimatedStatusIcons";
 
 /** Only same-site, non-protocol-relative paths are ever honoured. */
 function safeReturnTo(raw: string | null, userRole?: string): string {
@@ -266,7 +267,8 @@ function ClientLoginForm() {
         <div className="flex justify-center pb-1">
           <SutraLogo variant="horizontal" size="lg" href="/" />
         </div>
-        <h2 className="pt-2 font-serif text-2xl font-bold tracking-tight text-[#0F172A] sm:text-3xl">
+        <AnimatedWelcomeBadge size={52} className="mx-auto my-1" />
+        <h2 className="pt-1 font-serif text-2xl font-bold tracking-tight text-[#0F172A] sm:text-3xl">
           {mode === "signin" ? "Client Workspace" : "Create Studio Account"}
         </h2>
         <p className="mx-auto max-w-sm text-xs leading-relaxed text-[#64748B]">

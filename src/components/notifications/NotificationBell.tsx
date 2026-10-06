@@ -20,9 +20,10 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { useAuth } from "@/lib/auth/authContext";
+import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { soundSystem } from "@/lib/audio/soundSystem";
+import { AnimatedBellIcon } from "@/components/ui/AnimatedStatusIcons";
 
 export interface StudioNotificationItem {
   id: string;
@@ -212,18 +213,15 @@ export function NotificationBell({ className = "" }: { className?: string }) {
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
-      {/* Bell Trigger Button */}
+      {/* Bell Trigger Button with subtle luxury micro-animation */}
       <button
         type="button"
-        onClick={() => {
-          soundSystem.play("tap");
-          setIsOpen(!isOpen);
-        }}
+        onClick={() => setIsOpen(!isOpen)}
         aria-label="View Studio Notifications"
         aria-expanded={isOpen}
         className="relative p-2 rounded-xl text-[#5C3A1E] hover:bg-[#F8F5EF] border border-[#EADFCB] bg-[#FFFDF9] transition-all cursor-pointer shadow-2xs focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D4A35A] min-h-[44px] min-w-[44px] flex items-center justify-center"
       >
-        <Bell className="w-4 h-4 text-[#5C3A1E]" />
+        <AnimatedBellIcon hasUnread={unreadCount > 0} className="w-4 h-4 text-[#5C3A1E]" />
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-[#B91C1C] text-[10px] font-bold text-white shadow-xs animate-pulse">
             {unreadCount > 9 ? "9+" : unreadCount}

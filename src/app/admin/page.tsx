@@ -96,6 +96,7 @@ import { json, jsonRaw, errorMessage } from "@/lib/api/client";
 import { uploadFileToDrive, type DriveUploadResult, type DriveUploadProgress } from "@/lib/drive/useDriveUpload";
 import { useConfirm } from "@/hooks/useConfirm";
 import { soundSystem } from "@/lib/audio/soundSystem";
+import { AnimatedPaymentBadge, AnimatedCheckSuccess } from "@/components/ui/AnimatedStatusIcons";
 
 /**
  * Step 1.6 — explain a rejected admin call instead of failing silently.
@@ -5514,9 +5515,12 @@ const [adminDataError, setAdminDataError] = useState("");
                         {/* Payment Verification & Settlement Box */}
                         <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#EADFCB] space-y-3">
                           <div className="flex items-center justify-between flex-wrap gap-2">
-                            <span className="text-[10px] uppercase font-bold text-[#94A3B8]">
-                              Multi-Channel Payment Settlement & Verification
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <AnimatedPaymentBadge size={32} />
+                              <span className="text-[10px] uppercase font-bold text-[#94A3B8]">
+                                Multi-Channel Payment Settlement & Verification
+                              </span>
+                            </div>
                             <span
                               className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
                                 inspectingAdminOrder.paymentStatus === "paid" || inspectingAdminOrder.status === "paid"
