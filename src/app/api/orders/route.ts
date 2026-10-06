@@ -584,8 +584,8 @@ export async function POST(req: Request) {
       }
     }
 
-    // Store in collection
-    OrdersStore.add(newOrder);
+    // Store in collection & persist to Firestore
+    await OrdersStore.addAsync(newOrder);
 
     // Dispatch event notifications (Client & Admin)
     try {

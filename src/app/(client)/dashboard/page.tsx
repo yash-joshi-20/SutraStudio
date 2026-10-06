@@ -85,7 +85,9 @@ export default function ClientDashboardPage() {
     async function fetchOrders() {
       try {
         setIsLoadingOrders(true);
-        const res = await fetch("/api/orders");
+        const clientUid = user?.uid || (user?.email ? user.email : "");
+        const url = clientUid ? `/api/orders?clientUid=${encodeURIComponent(clientUid)}` : "/api/orders";
+        const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data.orders)) {
@@ -115,7 +117,11 @@ export default function ClientDashboardPage() {
       }
     }
     fetchOrders();
-  }, [user]);
+
+    const handleOrdersChanged = () => fetchOrders();
+    window.addEventListener("sutra_orders_changed", handleOrdersChanged);
+    return () => window.removeEventListener("sutra_orders_changed", handleOrdersChanged);
+  }, [user?.uid, user?.email]);
 
   const mockOrders = orders;
 

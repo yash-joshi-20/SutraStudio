@@ -2505,26 +2505,39 @@ const [adminDataError, setAdminDataError] = useState("");
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 <KPITile
                   label="Registered Clients"
-                  value="48"
-                  sublabel="+5 onboarded this month"
+                  value={String(liveClients.length)}
+                  sublabel="Verified client accounts"
                   variant="ink"
                 />
                 <KPITile
-                  label="Running Workflows"
-                  value="12"
-                  sublabel="Isolated n8n containers"
+                  label="In Production"
+                  value={String(
+                    realOrders.filter(
+                      (o) => o.status === "in_production" || o.status === "in_progress"
+                    ).length
+                  )}
+                  sublabel="Active studio pipeline"
                   variant="progress"
                 />
                 <KPITile
-                  label="Deliverables Ready"
-                  value="7"
-                  sublabel="Awaiting review/sign-off"
+                  label="Deliverables Review"
+                  value={String(
+                    realOrders.filter(
+                      (o) =>
+                        o.status === "draft_delivered" ||
+                        o.status === "delivered" ||
+                        o.status === "awaiting_approval"
+                    ).length
+                  )}
+                  sublabel="Awaiting client/producer sign-off"
                   variant="completed"
                 />
                 <KPITile
-                  label="Monthly Volume"
-                  value="₹4,28,000"
-                  sublabel="Active pipeline value"
+                  label="Total Pipeline Volume"
+                  value={`₹${realOrders
+                    .reduce((sum, o) => sum + (o.totalAmount || 0), 0)
+                    .toLocaleString("en-IN")}`}
+                  sublabel="Verified live commissions"
                   variant="pending"
                 />
               </div>
@@ -2539,42 +2552,71 @@ const [adminDataError, setAdminDataError] = useState("");
                       <span>Deliverables Pending Producer Review</span>
                     </h3>
                     <Badge variant="gold" size="sm">
-                      3 Urgent
+                      {
+                        realOrders.filter(
+                          (o) =>
+                            o.status === "draft_delivered" ||
+                            o.status === "delivered" ||
+                            o.status === "awaiting_approval" ||
+                            o.status === "revision_requested"
+                        ).length
+                      }{" "}
+                      Pending
                     </Badge>
                   </div>
 
                   <div className="space-y-3">
-                    <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between gap-4">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs font-bold text-[#5C3A1E]">#ORD-001</span>
-                          <span className="text-xs font-semibold text-[#0F172A]">Luxury Living Suite 3D</span>
-                        </div>
-                        <p className="text-[11px] text-[#64748B] mt-0.5">
-                          Client requested revision on wood texture specularity. Draft 02 ready for QA.
-                        </p>
+                    {realOrders.filter(
+                      (o) =>
+                        o.status === "draft_delivered" ||
+                        o.status === "delivered" ||
+                        o.status === "awaiting_approval" ||
+                        o.status === "revision_requested"
+                    ).length === 0 ? (
+                      <div className="p-8 text-center rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] text-xs text-[#64748B]">
+                        No deliverables currently pending producer review.
                       </div>
-                      <Link href="/orders">
-                        <Button variant="primary" size="sm">
-                          Review QA
-                        </Button>
-                      </Link>
-                    </div>
-
-                    <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between gap-4">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs font-bold text-[#5C3A1E]">#ORD-003</span>
-                          <span className="text-xs font-semibold text-[#0F172A]">Commercial Brand Reel 15s</span>
-                        </div>
-                        <p className="text-[11px] text-[#64748B] mt-0.5">
-                          ProRes 422 color pass complete. Ready to dispatch to Google Drive vault.
-                        </p>
-                      </div>
-                      <Button variant="secondary" size="sm">
-                        Approve Release
-                      </Button>
-                    </div>
+                    ) : (
+                      realOrders
+                        .filter(
+                          (o) =>
+                            o.status === "draft_delivered" ||
+                            o.status === "delivered" ||
+                            o.status === "awaiting_approval" ||
+                            o.status === "revision_requested"
+                        )
+                        .slice(0, 5)
+                        .map((ord) => (
+                          <div
+                            key={ord.id}
+                            className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between gap-4"
+                          >
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-xs font-bold text-[#5C3A1E]">
+                                  {ord.orderNumber || ord.code}
+                                </span>
+                                <span className="text-xs font-semibold text-[#0F172A]">
+                                  {ord.title || ord.service}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-[#64748B] mt-0.5">
+                                Client: {ord.clientName} ({ord.clientEmail}) • {ord.statusLabel}
+                              </p>
+                            </div>
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => {
+                                setInspectingAdminOrder(ord);
+                                handleTabChange("approvals");
+                              }}
+                            >
+                              Inspect
+                            </Button>
+                          </div>
+                        ))
+                    )}
                   </div>
                 </div>
 

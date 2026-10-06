@@ -351,7 +351,7 @@ export default function OrdersPage() {
     if (!silent) setIsLoadingOrders(true);
     setOrdersError(null);
     try {
-      const clientUid = user?.uid || "";
+      const clientUid = user?.uid || (user?.email ? user.email : "");
       const res = await fetch(clientUid ? `/api/orders?clientUid=${encodeURIComponent(clientUid)}` : "/api/orders");
       if (!res.ok) {
         throw new Error("Failed to load orders");
@@ -779,13 +779,14 @@ export default function OrdersPage() {
     setSubmitError(null);
 
     try {
+      const effectiveClientUid = user?.uid || (user?.email ? user.email : (clientContact.email ? clientContact.email : "usr_client_001"));
       const payload: any = {
         type: orderType,
-        clientUid: user?.uid || "",
-        clientId: user?.uid || "",
-        clientName: clientContact.name,
-        clientEmail: clientContact.email,
-        clientPhone: clientContact.phone,
+        clientUid: effectiveClientUid,
+        clientId: effectiveClientUid,
+        clientName: clientContact.name || user?.displayName || "Studio Client",
+        clientEmail: clientContact.email || user?.email || "client@sutrastudio.com",
+        clientPhone: clientContact.phone || "",
         requirements,
         attachments: [
           ...uploadedFiles.map((f) => ({ name: f.name, size: f.size })),

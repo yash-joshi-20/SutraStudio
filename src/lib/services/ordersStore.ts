@@ -88,7 +88,7 @@ async function persistOrderToFirestore(order: FirestoreOrderRecord): Promise<voi
 
 export class OrdersStore {
   /**
-   * Synchronizes cache from Firestore
+   * Synchronizes cache from Firestore without wiping newly placed in-memory orders
    */
   public static async syncFromFirestore(force = false): Promise<FirestoreOrderRecord[]> {
     if (!isFirebaseAdminReady()) {
@@ -104,11 +104,21 @@ export class OrdersStore {
     try {
       const db = adminDb();
       const snapshot = await db.collection("orders").get();
-      const loaded: FirestoreOrderRecord[] = [];
+      
+      const map = new Map<string, FirestoreOrderRecord>();
+      // First, keep any recent in-memory orders
+      for (const ord of globalAny.__SUTRA_STORED_ORDERS__ || []) {
+        if (ord && ord.id) map.set(ord.id, ord);
+      }
+      // Then overlay verified Firestore documents
       snapshot.forEach((doc) => {
-        loaded.push(doc.data() as FirestoreOrderRecord);
+        const data = doc.data() as FirestoreOrderRecord;
+        if (data && data.id) {
+          map.set(data.id, { ...(map.get(data.id) || {}), ...data });
+        }
       });
 
+      const loaded = Array.from(map.values());
       // Sort newest first
       loaded.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 

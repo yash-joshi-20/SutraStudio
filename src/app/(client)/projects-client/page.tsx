@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { PortalSidebar } from "@/components/dashboard/PortalSidebar";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { RouteGuard } from "@/components/auth/RouteGuard";
+import { useAuth } from "@/lib/auth/authContext";
 import {
   FolderGit2,
   Calendar,
@@ -67,6 +68,7 @@ export interface ProjectItem {
 }
 
 export default function ClientProjectsPage() {
+  const { user } = useAuth();
   const [filter, setFilter] = useState<"all" | "review" | "progress" | "completed">("all");
   const [selectedProject, setSelectedProject] = useState<ProjectItem | null>(null);
   const [revisionFeedback, setRevisionFeedback] = useState("");
@@ -76,51 +78,58 @@ export default function ClientProjectsPage() {
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  React.useEffect(() => {
-    async function fetchProjects() {
-      try {
-        setIsLoading(true);
-        const res = await fetch("/api/orders");
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data.orders)) {
-            setProjects(
-              data.orders.map((o: any) => ({
-                id: o.id,
-                title: o.title || o.service || "Studio Commission",
-                service: o.service || "Creative Direction",
-                progress: o.status === "completed" ? 100 : o.status === "approved" ? 90 : 65,
-                currentMilestone: o.statusLabel || "Production in progress",
-                dueDate: o.estimatedDueDate ? new Date(o.estimatedDueDate).toLocaleDateString() : "Standard SLA",
-                status: o.status === "completed" ? "completed" : o.status === "awaiting_approval" || o.status === "draft_delivered" ? "review" : "progress",
-                statusLabel: o.statusLabel || "In Production",
-                revisionRound: o.revisionRound || 0,
-                maxRevisions: o.maxRevisions || 2,
-                milestones: o.statusHistory?.map((sh: any) => ({
-                  name: sh.note || `Status: ${sh.status}`,
-                  completed: true,
-                  date: new Date(sh.changedAt).toLocaleDateString(),
-                })) || [
-                  { name: "Order Placed & Brief Staged", completed: true, date: "Initiated" },
-                  { name: "Creative Production & Master Rendering", completed: o.status === "completed", date: "Active" },
-                ],
-                documents: o.deliverables?.map((d: any) => ({
-                  name: d.filename || "Deliverable Master",
-                  size: d.fileSize || "45 MB",
-                  type: d.mimeType || "Deliverable",
-                })) || [],
-              }))
-            );
-          }
+  const fetchProjects = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const clientUid = user?.uid || (user?.email ? user.email : "");
+      const url = clientUid ? `/api/orders?clientUid=${encodeURIComponent(clientUid)}` : "/api/orders";
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.orders)) {
+          setProjects(
+            data.orders.map((o: any) => ({
+              id: o.id,
+              title: o.title || o.service || "Studio Commission",
+              service: o.service || "Creative Direction",
+              progress: o.status === "completed" ? 100 : o.status === "approved" ? 90 : o.status === "in_production" ? 65 : 40,
+              currentMilestone: o.statusLabel || "Production in progress",
+              dueDate: o.estimatedDueDate ? new Date(o.estimatedDueDate).toLocaleDateString() : "Standard SLA",
+              status: o.status === "completed" ? "completed" : o.status === "awaiting_approval" || o.status === "draft_delivered" || o.status === "delivered" ? "review" : "progress",
+              statusLabel: o.statusLabel || "In Production",
+              revisionRound: o.revisionRound || 0,
+              maxRevisions: o.maxRevisions || 2,
+              milestones: o.statusHistory?.map((sh: any) => ({
+                name: sh.note || `Status: ${sh.status}`,
+                completed: true,
+                date: sh.changedAt ? new Date(sh.changedAt).toLocaleDateString() : "Recently",
+              })) || [
+                { name: "Order Placed & Brief Staged", completed: true, date: "Initiated" },
+                { name: "Creative Production & Master Rendering", completed: o.status === "completed", date: "Active" },
+              ],
+              documents: o.deliverables?.map((d: any) => ({
+                name: d.filename || "Deliverable Master",
+                size: d.fileSize || "45 MB",
+                type: d.mimeType || "Deliverable",
+              })) || [],
+            }))
+          );
         }
-      } catch (err) {
-        console.warn("[ProjectsClient] Error loading orders:", err);
-      } finally {
-        setIsLoading(false);
       }
+    } catch (err) {
+      console.warn("[ProjectsClient] Error loading orders:", err);
+    } finally {
+      setIsLoading(false);
     }
+  }, [user?.uid, user?.email]);
+
+  useEffect(() => {
     fetchProjects();
-  }, []);
+
+    const handleOrdersChanged = () => fetchProjects();
+    window.addEventListener("sutra_orders_changed", handleOrdersChanged);
+    return () => window.removeEventListener("sutra_orders_changed", handleOrdersChanged);
+  }, [fetchProjects]);
 
   const handleUpdateAdSetState = (
     projectId: string,
