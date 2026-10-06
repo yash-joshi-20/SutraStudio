@@ -254,7 +254,7 @@ export function NotificationBell({ className = "" }: { className?: string }) {
               transition={{ duration: 0.18 }}
               role="dialog"
               aria-label="Notifications"
-              className="fixed inset-x-0 bottom-0 sm:bottom-auto sm:inset-x-auto sm:absolute sm:right-0 sm:top-full sm:mt-2 w-full sm:w-96 rounded-t-3xl sm:rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] shadow-2xl z-[var(--z-modal)] sm:z-[var(--z-dropdown)] overflow-hidden text-xs text-[#0F172A] flex flex-col max-h-[80dvh] sm:max-h-[520px] pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:pb-0"
+              className="fixed inset-x-2 bottom-2 sm:bottom-auto sm:inset-x-auto sm:absolute sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-96 max-w-[calc(100vw-1rem)] rounded-3xl sm:rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] shadow-2xl z-[var(--z-modal)] sm:z-[var(--z-dropdown)] overflow-hidden text-xs text-[#0F172A] flex flex-col max-h-[80dvh] sm:max-h-[520px] pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:pb-0"
             >
               {/* Mobile Drag Indicator Handle */}
               <div className="sm:hidden pt-2.5 pb-1 flex justify-center cursor-grab active:cursor-grabbing">
@@ -286,7 +286,7 @@ export function NotificationBell({ className = "" }: { className?: string }) {
                           soundSystem.play("notification");
                         }
                       }}
-                      className="p-1 rounded-md text-[#64748B] hover:text-[#5C3A1E] hover:bg-[#EADFCB]/40 transition-colors cursor-pointer"
+                      className="p-1.5 rounded-md text-[#64748B] hover:text-[#5C3A1E] hover:bg-[#EADFCB]/40 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#D4A35A]"
                       title={isMuted ? "Unmute Studio Sounds" : "Mute Studio Sounds"}
                       aria-label={isMuted ? "Unmute audio" : "Mute audio"}
                     >
@@ -298,7 +298,7 @@ export function NotificationBell({ className = "" }: { className?: string }) {
                         type="button"
                         onClick={handleMarkAllAsRead}
                         disabled={isLoading}
-                        className="text-[11px] font-semibold text-[#5C3A1E] hover:text-[#432813] transition-colors cursor-pointer flex items-center gap-1 ml-1"
+                        className="text-[11px] font-semibold text-[#5C3A1E] hover:text-[#432813] transition-colors cursor-pointer flex items-center gap-1 ml-1 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#D4A35A] rounded px-1"
                       >
                         <CheckCheck className="w-3.5 h-3.5" />
                         <span>Mark all read</span>
@@ -320,7 +320,7 @@ export function NotificationBell({ className = "" }: { className?: string }) {
                   <button
                     type="button"
                     onClick={() => setTab("unread")}
-                    className={`flex-1 py-1 rounded-md font-medium transition-all cursor-pointer ${
+                    className={`flex-1 py-1 rounded-md font-medium transition-all cursor-pointer text-center ${
                       tab === "unread"
                         ? "bg-[#5C3A1E] text-white shadow-2xs font-semibold"
                         : "text-[#64748B] hover:text-[#0F172A]"
@@ -331,7 +331,7 @@ export function NotificationBell({ className = "" }: { className?: string }) {
                   <button
                     type="button"
                     onClick={() => setTab("all")}
-                    className={`flex-1 py-1 rounded-md font-medium transition-all cursor-pointer ${
+                    className={`flex-1 py-1 rounded-md font-medium transition-all cursor-pointer text-center ${
                       tab === "all"
                         ? "bg-[#5C3A1E] text-white shadow-2xs font-semibold"
                         : "text-[#64748B] hover:text-[#0F172A]"
@@ -369,23 +369,23 @@ export function NotificationBell({ className = "" }: { className?: string }) {
                         {getIcon(item.type)}
                       </div>
 
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center justify-between gap-1">
-                          <span className="font-semibold text-xs text-[#0F172A] leading-tight">
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-start justify-between gap-1.5">
+                          <span className="font-semibold text-xs text-[#0F172A] leading-tight line-clamp-2">
                             {item.title}
                           </span>
-                          <span className="text-[10px] font-mono text-[#94A3B8] shrink-0">
+                          <span className="text-[10px] font-mono text-[#94A3B8] shrink-0 whitespace-nowrap">
                             {formatRelativeTime(item.createdAt)}
                           </span>
                         </div>
 
-                        <p className="text-[11px] text-[#64748B] leading-relaxed break-words">
+                        <p className="text-[11px] text-[#64748B] leading-relaxed break-words line-clamp-3">
                           {item.message}
                         </p>
 
                         <div className="flex items-center justify-between pt-1 gap-2 flex-wrap">
                           {item.orderNumber ? (
-                            <span className="font-mono text-[10px] text-[#5C3A1E] bg-[#F8F5EF] px-1.5 py-0.5 rounded border border-[#EADFCB]">
+                            <span className="font-mono text-[10px] text-[#5C3A1E] bg-[#F8F5EF] px-1.5 py-0.5 rounded border border-[#EADFCB] shrink-0">
                               #{item.orderNumber}
                             </span>
                           ) : (
@@ -400,9 +400,9 @@ export function NotificationBell({ className = "" }: { className?: string }) {
                                 if (!item.read) handleMarkAsRead(item.id);
                                 setIsOpen(false);
                               }}
-                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#5C3A1E] hover:text-[#D4A35A] transition-colors"
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#5C3A1E] hover:text-[#D4A35A] transition-colors shrink-0"
                             >
-                              <span>{item.actionLabel || "View Action"}</span>
+                              <span>{item.actionLabel || "Inspect Order"}</span>
                               <ExternalLink className="w-3 h-3" />
                             </Link>
                           )}
@@ -414,7 +414,7 @@ export function NotificationBell({ className = "" }: { className?: string }) {
                           type="button"
                           onClick={(e) => handleMarkAsRead(item.id, e)}
                           title="Mark as read"
-                          className="text-[#D4A35A] hover:text-[#5C3A1E] p-1 rounded transition-colors"
+                          className="text-[#D4A35A] hover:text-[#5C3A1E] p-1 rounded transition-colors shrink-0"
                         >
                           <span className="w-2 h-2 rounded-full bg-[#D4A35A] block" />
                         </button>
