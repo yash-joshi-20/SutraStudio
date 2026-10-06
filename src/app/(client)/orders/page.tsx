@@ -565,10 +565,10 @@ export default function OrdersPage() {
     return orders;
   }, [activeFilterTab, activeOrders, historyOrders, orders]);
 
-  // Auto-Save Draft Debounced to Firebase (Silent background sync without disrupting typing)
+  // Manual Save Draft to Firebase (Triggered on-demand when client clicks 'Save Draft' or advances flow)
   const isSavingDraftRef = useRef(false);
   const saveDraftToCloud = useCallback(
-    async (silent = true) => {
+    async (silent = false) => {
       try {
         const clientUid = user?.uid || "";
         if (!clientUid || isSavingDraftRef.current) return;
@@ -602,7 +602,10 @@ export default function OrdersPage() {
           setTimeout(() => setDraftStatus(""), 2000);
         }
       } catch {
-        if (!silent) setDraftStatus("");
+        if (!silent) {
+          setDraftStatus("Save failed");
+          setTimeout(() => setDraftStatus(""), 2000);
+        }
       } finally {
         isSavingDraftRef.current = false;
       }
@@ -623,15 +626,6 @@ export default function OrdersPage() {
       uploadedFiles,
     ]
   );
-
-  useEffect(() => {
-    if (!isNewOrderOpen || flowStep === "choose_type" || flowStep === "success") return;
-    const timeout = setTimeout(() => {
-      saveDraftToCloud(true);
-    }, 2500);
-
-    return () => clearTimeout(timeout);
-  }, [isNewOrderOpen, flowStep, saveDraftToCloud]);
 
   // Handle toggling / selecting an individual service
   const handleToggleService = (srvId: string) => {

@@ -27,6 +27,11 @@ export function Modal({
 }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   // Esc key and focus trap
   useEffect(() => {
@@ -36,7 +41,7 @@ export function Modal({
 
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
-          onClose();
+          onCloseRef.current();
         }
       };
 
@@ -49,7 +54,7 @@ export function Modal({
     } else {
       document.body.style.overflow = "";
     }
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   const maxWidthClasses = {
     sm: "sm:max-w-sm",
