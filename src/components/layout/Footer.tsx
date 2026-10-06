@@ -31,6 +31,7 @@ export function Footer() {
   ];
 
   const studioLinks = [
+    { label: "Studio Home", href: "/home" },
     { label: "Heritage & Philosophy", href: "/about" },
     { label: "Craft & Technology", href: "/studio" },
     { label: "Curated Projects", href: "/projects" },
