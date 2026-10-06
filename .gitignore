@@ -95,4 +95,19 @@ backups/
 SutraStudio-Full.zip
 SutraStudio-Project.zip
 
-
+# QA & Test Automation Artifacts (Git Hygiene)
+QA/
+test-results/
+playwright-report/
+.playwright/
+screenshots/
+*.report.md
+NEEDS_BACKEND.md
+/*PROMPT*.md
+/PROMPTS_CHAIN.md
+/UI_PROMPTS.md
+/RESPONSIVE_PROMPTS.md
+tests/ui/
+scripts/ui-*
+*.log
+tmp/
