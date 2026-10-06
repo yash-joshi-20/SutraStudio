@@ -19,7 +19,6 @@ import {
   MessageSquare,
   Bell,
   Sliders,
-  KeyRound,
   Menu,
   X,
   CreditCard,
@@ -69,7 +68,7 @@ export const ADMIN_NAV_ITEMS: PortalNavItem[] = [
   { name: "Notifications Settings", href: "/admin?tab=notifications", tabKey: "notifications", icon: Bell },
   { name: "Workflows (n8n)", href: "/admin?tab=workflows", tabKey: "workflows", icon: FolderGit2 },
   { name: "Studio Settings & GST", href: "/admin?tab=settings", tabKey: "settings", icon: Sliders },
-  { name: "Integrations & Keys", href: "/admin/integrations", icon: KeyRound },
+  { name: "Integrations & Keys", href: "/admin/integrations", icon: Sliders },
   { name: "Security Audit Log", href: "/admin?tab=audit", tabKey: "audit", icon: ShieldCheck },
 ];
 
@@ -87,14 +86,14 @@ export function PortalSidebarInner({ contained = false }: { contained?: boolean 
   // them twice is what previously produced two stacked bars and two sidebars.
   const desktopClass = contained
     ? "flex flex-col h-full p-5"
-    : "w-64 shrink-0 border-r border-[#E5E1D8] bg-[#FAF9F5] min-h-screen p-6 flex flex-col justify-between hidden lg:flex";
+    : "w-64 shrink-0 border-r border-[#E5E1D8] bg-[#FAF9F5] min-h-screen p-6 flex flex-col justify-between hidden md:flex";
 
   return (
     <>
       {!contained && (
       <>
-      {/* Mobile Top Bar with Drawer Toggle (<1024px) */}
-      <div className="lg:hidden sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-[#FAF9F5] border-b border-[#E5E1D8] backdrop-blur-md">
+      {/* Mobile Top Bar with Drawer Toggle */}
+      <div className="md:hidden sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-[#FAF9F5] border-b border-[#E5E1D8] backdrop-blur-md">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setMobileDrawerOpen(true)}
@@ -117,7 +116,7 @@ export function PortalSidebarInner({ contained = false }: { contained?: boolean 
 
       {/* Mobile Slide-Over Drawer */}
       {mobileDrawerOpen && (
-        <div className="lg:hidden fixed inset-0 z-[var(--z-drawer)] flex">
+        <div className="md:hidden fixed inset-0 z-[var(--z-drawer)] flex">
           <div
             className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
             onClick={() => setMobileDrawerOpen(false)}

@@ -352,7 +352,7 @@ export default function AdminIntegrationsPage() {
                 {totalMissing} Integration{totalMissing === 1 ? "" : "s"} Unconfigured ({data.summary.allMissingKeys?.length ?? totalMissing} Variables Missing)
               </h2>
               <p className="mt-1 text-sm text-[#78350F]">
-                Features requiring these keys remain inactive until environment credentials are provided, safeguarding live workflows.
+                Features requiring these keys will gracefully respond with <code className="rounded bg-white/80 px-1 py-0.5 text-xs font-mono">503 Service Unavailable</code> without producing fake data or crashing.
               </p>
 
               <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">

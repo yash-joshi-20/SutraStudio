@@ -4,7 +4,6 @@ import React from "react";
 import { AuthProvider } from "@/lib/auth/authContext";
 import { ToastProvider } from "@/components/ui/Toast";
 import { FloatingChatModal } from "@/components/chat/FloatingChatModal";
-import { CommandPalette } from "@/components/ui/CommandPalette";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
@@ -12,7 +11,6 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       <ToastProvider>
         {children}
         <FloatingChatModal />
-        <CommandPalette />
       </ToastProvider>
     </AuthProvider>
   );

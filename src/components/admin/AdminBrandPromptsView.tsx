@@ -925,7 +925,7 @@ export function AdminBrandPromptsView() {
               </div>
 
               {/* Prompt Text Box */}
-              <div className="relative rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8] p-3.5 font-mono text-xs text-[#171717] leading-relaxed max-h-56 overflow-y-auto overflow-x-hidden break-words whitespace-pre-wrap select-all">
+              <div className="relative rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8] p-3.5 font-mono text-xs text-[#171717] leading-relaxed max-h-56 overflow-y-auto whitespace-pre-wrap select-all">
                 {item.promptText}
               </div>
 

@@ -4597,9 +4597,9 @@ const [adminDataError, setAdminDataError] = useState("");
 
               {/* Real Firebase Client Orders Registry */}
               <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-6">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#EADFCB]/60 pb-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#EADFCB]/60 pb-6">
                   <div>
-                    <div className="flex items-center gap-2.5 flex-wrap">
+                    <div className="flex items-center gap-2.5">
                       <h3 className="font-serif text-xl sm:text-2xl font-semibold text-[#0F172A]">
                         Client Orders & Production Registry
                       </h3>
@@ -4607,12 +4607,12 @@ const [adminDataError, setAdminDataError] = useState("");
                         {realOrders.length} Total Orders
                       </Badge>
                     </div>
-                    <p className="text-xs text-[#64748B] mt-1 max-w-2xl leading-relaxed">
-                      Live client commissions. Filter by status, type, source, or date, inspect client specifications, access AI chat logs, and transition production states.
+                    <p className="text-xs text-[#64748B] mt-1">
+                      Real-time Firestore synchronized commissions. Filter by status, type, source, or date, inspect client specifications, access AI chat logs, and transition production states.
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2 flex-wrap shrink-0">
+                  <div className="flex items-center gap-2.5 flex-wrap shrink-0">
                     <Button
                       variant="outline"
                       size="sm"
@@ -4620,7 +4620,7 @@ const [adminDataError, setAdminDataError] = useState("");
                       leftIcon={<BookOpen className="w-3.5 h-3.5 text-[#5C3A1E]" />}
                       className="text-xs border-[#EADFCB] text-[#5C3A1E] bg-[#FAF9F5] hover:bg-[#F4EFE6]"
                     >
-                      Multi-Channel SOP
+                      📖 Multi-Channel SOP
                     </Button>
                     <Button
                       variant="primary"
@@ -4629,11 +4629,11 @@ const [adminDataError, setAdminDataError] = useState("");
                       leftIcon={<Plus className="w-3.5 h-3.5" />}
                       className="text-xs shadow-xs"
                     >
-                      Record External Order
+                      ➕ Record External Order
                     </Button>
                     <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[11px] text-[#2E7D4F] font-semibold">
                       <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-pulse" />
-                      <span>Live Sync</span>
+                      <span>Firestore Sync Active</span>
                     </div>
                     <Button
                       variant="secondary"
