@@ -75,6 +75,7 @@ export interface TextFieldProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  name?: string;
   type?: "text" | "email" | "tel" | "url" | "password" | "number" | "date";
   placeholder?: string;
   hint?: string;
@@ -94,6 +95,7 @@ export function TextField({
   label,
   value,
   onChange,
+  name,
   type = "text",
   placeholder,
   hint,
@@ -118,6 +120,7 @@ export function TextField({
         <div className="relative">
           <input
             id={id}
+            name={name}
             type={resolvedType}
             value={value}
             onChange={(e) => onChange(e.target.value)}

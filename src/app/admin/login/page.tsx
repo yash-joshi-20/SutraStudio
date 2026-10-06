@@ -25,6 +25,8 @@ import { Modal } from "@/components/ui/Modal";
 import { getFirebaseAuth, firebaseClientConfigured, applyPersistence } from "@/lib/firebase/client";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { ArrowLeft, ArrowRight, ShieldCheck, Terminal, CheckCircle2 } from "lucide-react";
+import { soundSystem } from "@/lib/audio/soundSystem";
+import { AnimatedWelcomeBadge } from "@/components/ui/AnimatedStatusIcons";
 
 const FIREBASE_NOT_CONFIGURED =
   "Firebase is not configured. Missing environment key(s): NEXT_PUBLIC_FIREBASE_API_KEY, NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN, NEXT_PUBLIC_FIREBASE_PROJECT_ID.";
@@ -57,7 +59,7 @@ function AdminLoginForm() {
     null;
   const returnTo = safeReturnTo(rawParam);
 
-  const { isAuthenticated, role, isLoading: authLoading, requestPasswordReset, loginWithGoogle } = useAuth();
+  const { isAuthenticated, role, isLoading: authLoading, requestPasswordReset } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -119,11 +121,14 @@ function AdminLoginForm() {
         setErrorMsg(
           typeof data.error === "string" && data.error
             ? data.error
-            : "Administrative clearance required."
+            : "Administrative clearance required. This account does not possess admin privileges."
         );
         setLoading(false);
         return;
       }
+
+      // Play welcome chime upon successful admin authorization
+      soundSystem.play("welcome");
 
       // The server set an httpOnly session cookie carrying the admin role claim.
       window.location.replace(returnTo);
@@ -132,34 +137,12 @@ function AdminLoginForm() {
       const code = (err as { code?: string })?.code ?? "";
       setErrorMsg(
         code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found"
-          ? "Those sign-in details were not recognised. Please verify your email and passkey."
+          ? "Those sign-in details were not recognised. Please verify your administrator email and passkey."
           : code === "auth/too-many-requests"
             ? "Too many failed attempts. Please wait a moment and try again."
             : err instanceof Error && err.message
               ? err.message
               : "Access denied: administrative clearance required."
-      );
-      setLoading(false);
-    }
-  }
-
-  async function handleGoogleAdmin() {
-    setErrorMsg("");
-    setLoading(true);
-    try {
-      const loggedIn = await loginWithGoogle(true);
-      if (loggedIn.role === "admin") {
-        window.location.replace(returnTo);
-      } else {
-        await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(() => undefined);
-        setErrorMsg("Access denied: This Google account does not carry administrative clearance.");
-        setLoading(false);
-      }
-    } catch (err) {
-      setErrorMsg(
-        err instanceof Error
-          ? err.message
-          : "Google sign-in was cancelled or unavailable. Please use email and passkey."
       );
       setLoading(false);
     }
@@ -228,6 +211,7 @@ function AdminLoginForm() {
         <div className="flex justify-center pb-1">
           <SutraLogo variant="horizontal" size="lg" href="/" />
         </div>
+        <AnimatedWelcomeBadge size={52} className="mx-auto my-1" />
         <div className="pt-1">
           <span className="inline-flex items-center gap-2 rounded-full bg-[#171717] px-3 py-1 font-mono text-[11px] font-semibold uppercase tracking-wider text-white shadow-xs">
             <Terminal className="w-3 h-3 text-[#D4A35A]" aria-hidden="true" />
@@ -238,41 +222,18 @@ function AdminLoginForm() {
           Administrative Clearance
         </h2>
         <p className="mx-auto max-w-sm text-xs leading-relaxed text-[#64748B]">
-          Restricted to Studio Administrators and Executive Producers. A valid client account cannot
-          authenticate here.
+          Restricted exclusively to Studio Administrators. Client accounts cannot authenticate here.
         </p>
       </div>
 
       <div className="mt-8 space-y-6 rounded-3xl border border-[#EADFCB] bg-[#FFFDF9] px-6 py-8 shadow-warm sm:px-10">
         {errorMsg ? <FormAlert tone="error" message={errorMsg} /> : null}
 
-        <button
-          type="button"
-          onClick={handleGoogleAdmin}
-          disabled={loading}
-          className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-xl border border-[#EADFCB] bg-[#FFFDF9] px-4 py-2.5 text-xs font-semibold text-[#0F172A] shadow-2xs transition-all hover:border-[#D4A35A] hover:bg-[#F8F5EF] disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-          </svg>
-          <span>Continue with Google Workspace (Admin)</span>
-        </button>
-
-        <div className="relative flex items-center py-1">
-          <div className="grow border-t border-[#EADFCB]" />
-          <span className="mx-4 shrink-0 text-[11px] font-medium uppercase tracking-wider text-[#94A3B8]">
-            Or with admin credentials
-          </span>
-          <div className="grow border-t border-[#EADFCB]" />
-        </div>
-
-        <form onSubmit={handleAdminSubmit} noValidate className="space-y-4">
+        <form onSubmit={handleAdminSubmit} method="post" noValidate className="space-y-4">
           <TextField
             label="Admin Email Address"
             required
+            name="username"
             type="email"
             inputMode="email"
             value={email}
@@ -286,6 +247,7 @@ function AdminLoginForm() {
             <TextField
               label="Security Passkey"
               required
+              name="password"
               type="password"
               value={password}
               onChange={setPassword}
@@ -322,54 +284,60 @@ function AdminLoginForm() {
 
         <div className="border-t border-[#EADFCB]/60 pt-4 text-center">
           <p className="text-[11px] leading-relaxed text-[#94A3B8]">
-            Clearance is granted only by the <code>role: &quot;admin&quot;</code> custom claim on your
-            Firebase account. It cannot be self-assigned from this page.
+            Clearance is strictly enforced server-side. Passwords and credentials can be saved securely in your browser.
           </p>
         </div>
       </div>
 
-      <Modal isOpen={forgotOpen} onClose={() => setForgotOpen(false)} title="Reset Passkey">
-        <div className="space-y-4 pt-1">
+      {/* Forgot password modal */}
+      <Modal
+        isOpen={forgotOpen}
+        onClose={() => setForgotOpen(false)}
+        title="Reset Administrative Passkey"
+      >
+        <div className="space-y-4">
+          <p className="text-xs leading-relaxed text-[#64748B]">
+            Enter the administrator email. A secure password reset link will be dispatched via Firebase Auth.
+          </p>
+
           {resetNotice ? (
-            <div className="space-y-3 py-4 text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-[#BBF7D0] bg-[#F0FDF4] text-[#16A34A]">
-                <CheckCircle2 className="w-6 h-6" aria-hidden="true" />
-              </div>
-              <h4 className="font-serif text-base font-bold text-[#0F172A]">Check your inbox</h4>
-              <p className="text-xs leading-relaxed text-[#64748B] break-anywhere">{resetNotice}</p>
-              <Button
-                variant="primary"
-                size="sm"
-                className="mt-2 w-full !bg-[#171717] !text-[#FAF9F5] hover:!bg-[#262626] border-transparent"
-                onClick={() => setForgotOpen(false)}
-              >
-                Back to Sign In
-              </Button>
+            <div className="flex items-start gap-2 rounded-2xl border border-[#D4A35A]/60 bg-[#FAF9F5] p-3.5 text-xs text-[#5C3A1E]">
+              <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-[#D4A35A]" aria-hidden="true" />
+              <span>{resetNotice}</span>
             </div>
           ) : (
-            <form onSubmit={handlePasswordReset} noValidate className="space-y-4">
-              <p className="text-xs leading-relaxed text-[#64748B]">
-                Enter your administrator email address. We will send a secure link to reset your passkey.
-              </p>
+            <form onSubmit={handlePasswordReset} noValidate className="space-y-3">
               <TextField
-                label="Email Address"
+                label="Admin Email"
                 required
+                name="email"
                 type="email"
-                inputMode="email"
                 value={resetEmail}
                 onChange={setResetEmail}
-                placeholder="Enter your email"
+                placeholder="yashjoshi20@zohomail.in"
+                autoComplete="email"
                 disabled={resetLoading}
               />
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                className="w-full justify-center !bg-[#171717] !text-[#FAF9F5] hover:!bg-[#262626] border-transparent"
-                isLoading={resetLoading}
-              >
-                Send Reset Link
-              </Button>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setForgotOpen(false)}
+                  disabled={resetLoading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                  isLoading={resetLoading}
+                  disabled={!resetEmail.trim()}
+                >
+                  Send Reset Link
+                </Button>
+              </div>
             </form>
           )}
         </div>
@@ -380,11 +348,22 @@ function AdminLoginForm() {
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex min-h-dvh flex-col justify-center overflow-hidden bg-[#F8F5EF] py-12 sm:px-6 lg:px-8">
-      <div className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 opacity-[0.025]">
-        <LotusSymbol className="w-[850px] h-[850px]" color="watermark-dark" />
-      </div>
-      <div className="px-4 sm:mx-auto sm:w-full sm:max-w-md">{children}</div>
+    <div className="relative flex min-h-screen flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
+      <main
+        id="main-content"
+        className="relative flex flex-1 items-center justify-center px-4 py-12 sm:px-6 lg:px-8"
+      >
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03]"
+          aria-hidden="true"
+        >
+          <LotusSymbol className="h-[600px] w-[600px]" color="gold" />
+        </div>
+        <div className="relative z-10 w-full max-w-md">{children}</div>
+      </main>
+      <footer className="border-t border-[#EADFCB] py-4 text-center text-xs text-[#94A3B8]">
+        © {new Date().getFullYear()} Sutra Studio. All rights reserved. Executive Terminal Clearance.
+      </footer>
     </div>
   );
 }
@@ -393,8 +372,8 @@ export default function AdminLoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-dvh items-center justify-center bg-[#F8F5EF]">
-          <div className="w-8 h-8 rounded-full border-2 border-[#D4A35A] border-t-transparent animate-spin" />
+        <div className="flex min-h-screen items-center justify-center bg-[#F8F5EF] text-[#5C3A1E]">
+          Loading Terminal...
         </div>
       }
     >
