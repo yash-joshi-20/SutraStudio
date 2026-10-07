@@ -9,19 +9,13 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/brand/sutra-app-icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "/brand/sutra-app-icon@4x.png",
+      "src": "/brand/sutra-app-icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/brand/sutra-app-icon@4x.png",
+      "src": "/brand/sutra-app-icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

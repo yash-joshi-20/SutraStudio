@@ -56,7 +56,7 @@ export function DynamicUPIQRCode({
             level="H"
             includeMargin={false}
             imageSettings={{
-              src: "/brand/logo.svg",
+              src: "/brand/sutra-app-icon.png",
               x: undefined,
               y: undefined,
               height: 28,

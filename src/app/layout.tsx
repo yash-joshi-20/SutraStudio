@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     siteName: "Sutra Studio",
     images: [
       {
-        url: "/brand/logo.svg",
+        url: "/brand/sutra-logo-primary.png",
         width: 1200,
         height: 630,
         alt: "Sutra Studio — Computational Art & 3D Atelier",
@@ -70,7 +70,7 @@ export const metadata: Metadata = {
     title: "Sutra Studio — Autonomous AI Creative & 3D Engineering",
     description:
       "High-precision 4K renders, spatial 3D architecture, and cinematic video reels delivered directly to your Sutra Cloud Vault.",
-    images: ["/brand/logo.svg"],
+    images: ["/brand/sutra-logo-primary.png"],
   },
   manifest: "/manifest.json",
   appleWebApp: {
@@ -79,8 +79,8 @@ export const metadata: Metadata = {
     title: "Sutra Studio",
   },
   icons: {
-    icon: "/favicon.svg",
-    apple: "/brand/app_icon.svg",
+    icon: "/brand/sutra-favicon.png",
+    apple: "/brand/sutra-app-icon.png",
   },
 };
 
@@ -93,7 +93,7 @@ const organizationSchema = {
       "@id": `${baseUrl}/#organization`,
       name: "Sutra Studio",
       url: baseUrl,
-      logo: `${baseUrl}/brand/logo.svg`,
+      logo: `${baseUrl}/brand/sutra-logo-primary.png`,
       description:
         "High-precision creative technology studio combining Indian artistic heritage with cutting-edge AI and spatial 3D engineering.",
       founder: {

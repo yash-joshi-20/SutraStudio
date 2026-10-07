@@ -34,7 +34,7 @@ const DEFAULT_SITE_CONTENT = {
     },
   },
   branding: {
-    logoUrl: "/brand/logo.svg",
+    logoUrl: "/brand/sutra-logo-primary.png",
     studioTitle: "Sutra Studio",
   },
 };

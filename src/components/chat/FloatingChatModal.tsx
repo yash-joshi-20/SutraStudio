@@ -771,7 +771,7 @@ export function FloatingChatModal() {
         >
           <div className="relative shrink-0">
             <img
-              src="/brand/sutra-app-icon@4x.png"
+              src="/brand/sutra-app-icon.png"
               alt="Sutra Studio"
               className="w-6 h-6 rounded-full object-cover border border-[#A98B57]/60 group-hover:rotate-12 transition-transform duration-500 shadow-xs"
             />
@@ -803,7 +803,7 @@ export function FloatingChatModal() {
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-full overflow-hidden border border-[#A98B57]/60 flex items-center justify-center shrink-0 bg-[#262626] shadow-xs">
                   <img
-                    src="/brand/sutra-app-icon@4x.png"
+                    src="/brand/sutra-app-icon.png"
                     alt="Sutra Studio"
                     className="w-full h-full object-cover"
                   />
@@ -877,7 +877,7 @@ export function FloatingChatModal() {
                       {isBot && (
                         <div className="w-6 h-6 rounded-full overflow-hidden border border-[#A98B57]/50 shrink-0 bg-[#171717] mt-0.5 shadow-2xs">
                           <img
-                            src="/brand/sutra-app-icon@4x.png"
+                            src="/brand/sutra-app-icon.png"
                             alt="Sutra Studio"
                             className="w-full h-full object-cover"
                           />
@@ -1045,7 +1045,7 @@ export function FloatingChatModal() {
                 <div className="flex items-center gap-2 p-3 bg-white border border-[#E5E1D8] rounded-2xl rounded-tl-xs max-w-[80%] shadow-xs">
                   <div className="w-5 h-5 rounded-full overflow-hidden border border-[#A98B57]/50 shrink-0 bg-[#171717]">
                     <img
-                      src="/brand/sutra-app-icon@4x.png"
+                      src="/brand/sutra-app-icon.png"
                       alt="Sutra Studio"
                       className="w-full h-full object-cover"
                     />
