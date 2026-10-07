@@ -769,11 +769,11 @@ export function FloatingChatModal() {
           aria-label="Open Sutra Studio Concierge"
           className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-[var(--z-launcher)] flex items-center gap-2.5 px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-full bg-[#171717]/95 backdrop-blur-md text-[#FAF9F5] border border-[#A98B57]/50 shadow-2xl hover:bg-[#262626] hover:scale-105 active:scale-95 transition-all cursor-pointer group"
         >
-          <div className="relative shrink-0">
+          <div className="relative shrink-0 w-8 h-8 rounded-full bg-[#262626] border border-[#A98B57]/60 flex items-center justify-center p-1.5 group-hover:rotate-12 transition-transform duration-500 shadow-xs">
             <img
-              src="/brand/sutra-app-icon.png"
+              src="/brand/sutra-symbol.png"
               alt="Sutra Studio"
-              className="w-6 h-6 rounded-full object-cover border border-[#A98B57]/60 group-hover:rotate-12 transition-transform duration-500 shadow-xs"
+              className="w-full h-full object-contain"
             />
             <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#2E7D4F] border-2 border-[#171717]" />
           </div>
@@ -801,11 +801,11 @@ export function FloatingChatModal() {
             {/* Header */}
             <div className="px-4 py-3 bg-[#171717] text-[#FAF9F5] flex items-center justify-between border-b border-[#A98B57]/30 shrink-0">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full overflow-hidden border border-[#A98B57]/60 flex items-center justify-center shrink-0 bg-[#262626] shadow-xs">
+                <div className="w-8 h-8 rounded-full border border-[#A98B57]/60 flex items-center justify-center shrink-0 bg-[#262626] shadow-xs p-1.5">
                   <img
-                    src="/brand/sutra-app-icon.png"
+                    src="/brand/sutra-symbol.png"
                     alt="Sutra Studio"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                   />
                 </div>
                 <div>
@@ -875,11 +875,11 @@ export function FloatingChatModal() {
                   >
                     <div className={`flex items-start gap-2 ${isBot ? "" : "flex-row-reverse"}`}>
                       {isBot && (
-                        <div className="w-6 h-6 rounded-full overflow-hidden border border-[#A98B57]/50 shrink-0 bg-[#171717] mt-0.5 shadow-2xs">
+                        <div className="w-6 h-6 rounded-full border border-[#A98B57]/50 shrink-0 bg-[#171717] mt-0.5 shadow-2xs flex items-center justify-center p-1">
                           <img
-                            src="/brand/sutra-app-icon.png"
+                            src="/brand/sutra-symbol.png"
                             alt="Sutra Studio"
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain"
                           />
                         </div>
                       )}

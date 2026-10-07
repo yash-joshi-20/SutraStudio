@@ -1,57 +1,70 @@
+"use client";
+
 import React from "react";
-import { ChevronDown } from "lucide-react";
+import { CustomDropdown, DropdownOption } from "./CustomDropdown";
 
-export interface Option {
-  label: string;
-  value: string;
-}
+export type Option = DropdownOption;
 
-export interface SelectProps
-  extends React.SelectHTMLAttributes<HTMLSelectElement> {
+export interface SelectProps {
   label?: string;
   error?: string;
-  options: Option[];
+  options: (DropdownOption | string)[];
+  value?: string;
+  onChange?: (e: any) => void;
+  placeholder?: string;
+  className?: string;
+  disabled?: boolean;
+  id?: string;
+  name?: string;
 }
 
-export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, options, className = "", id, ...props }, ref) => {
-    const selectId =
-      id || (label ? label.toLowerCase().replace(/[^a-z0-9]/g, "-") : undefined);
-    const errorId = selectId && error ? `${selectId}-error` : undefined;
+export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
+  (
+    {
+      label,
+      error,
+      options,
+      value = "",
+      onChange,
+      placeholder = "Select an option...",
+      className = "",
+      disabled = false,
+      id,
+      name,
+    },
+    ref
+  ) => {
+    const handleChange = (newVal: string) => {
+      if (!onChange) return;
+      // Synthesize event-like object for compatibility with (e) => setForm({ ...form, field: e.target.value })
+      const syntheticEvent = {
+        target: {
+          name: name || id || "",
+          value: newVal,
+        },
+      };
+      onChange(syntheticEvent);
+    };
 
     return (
-      <div className="w-full space-y-1.5 text-left">
-        {label && (
-          <label
-            htmlFor={selectId}
-            className="block text-xs font-semibold uppercase tracking-wider text-[#0F172A]"
-          >
-            {label}
-          </label>
-        )}
-        <div className="relative">
-          <select
-            ref={ref}
-            id={selectId}
-            aria-invalid={error ? "true" : undefined}
-            aria-describedby={errorId}
-            className={`w-full min-h-[44px] appearance-none rounded-xl bg-[#FFFDF9] border border-[#EADFCB] px-4 py-2.5 pr-10 text-base sm:text-sm text-[#0F172A] transition-all duration-200 focus:border-[#D4A35A] focus:outline-none focus:ring-2 focus:ring-[#D4A35A]/35 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
-              error ? "border-[#B42318] focus:ring-[#B42318]/20" : ""
-            } ${className}`}
-            {...props}
-          >
-            {options.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
-        </div>
-        {error && <p id={errorId} role="alert" className="text-xs text-[#B42318] font-medium">{error}</p>}
+      <div ref={ref} className={className}>
+        <CustomDropdown
+          label={label}
+          options={options}
+          value={value}
+          onChange={handleChange}
+          placeholder={placeholder}
+          error={error}
+          disabled={disabled}
+          id={id}
+        />
+        {/* Hidden input for standard form submission if needed */}
+        {name && <input type="hidden" name={name} value={value} />}
       </div>
     );
   }
 );
 
 Select.displayName = "Select";
+
+export { CustomDropdown };

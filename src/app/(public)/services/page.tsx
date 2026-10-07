@@ -13,6 +13,7 @@ import { Modal } from "@/components/ui/Modal";
 import { VideoCard } from "@/components/media/VideoCard";
 import { SUTRA_SERVICES, ServiceItem } from "@/data/servicesData";
 import { LotusSymbol } from "@/components/brand/SutraLogo";
+import { CustomDropdown } from "@/components/ui/CustomDropdown";
 import {
   Image as ImageIcon,
   Video,
@@ -111,13 +112,14 @@ export default function ServicesPage() {
               your brand growth.
             </p>
 
-            {/* Search Input Bar */}
-            <div className="pt-4 max-w-md mx-auto">
-              <div className="relative flex items-center">
+            {/* Dual Filter Controls: Search & Custom Dropdown Filter */}
+            <div className="pt-4 max-w-2xl mx-auto flex flex-col sm:flex-row items-center gap-3">
+              {/* Search Input Bar */}
+              <div className="relative flex-1 w-full flex items-center">
                 <Search className="w-4 h-4 text-[#94A3B8] absolute left-4 pointer-events-none" />
                 <input
                   type="text"
-                  placeholder="Search service, keyword or deliverable..."
+                  placeholder="Search service, deliverable or keyword..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-11 pr-4 py-2.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30 transition-all shadow-xs"
@@ -125,16 +127,35 @@ export default function ServicesPage() {
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery("")}
-                    className="absolute right-4 text-xs font-semibold text-[#94A3B8] hover:text-[#0F172A]"
+                    className="absolute right-4 text-xs font-semibold text-[#94A3B8] hover:text-[#0F172A] cursor-pointer"
                   >
                     Clear
                   </button>
                 )}
               </div>
+
+              {/* Custom Category Dropdown Selector */}
+              <div className="w-full sm:w-64 shrink-0">
+                <CustomDropdown
+                  options={CATEGORIES.map((cat) => ({
+                    label: cat === "All" ? "All Disciplines" : `${cat} Solutions`,
+                    value: cat,
+                    badge: `${
+                      cat === "All"
+                        ? SUTRA_SERVICES.length
+                        : SUTRA_SERVICES.filter((s) => s.category === cat).length
+                    }`,
+                  }))}
+                  value={activeCategory}
+                  onChange={(val) => setActiveCategory(val)}
+                  placeholder="Filter by Discipline"
+                  buttonClassName="!rounded-full !bg-[#FFFDF9] !border-[#EADFCB] py-2"
+                />
+              </div>
             </div>
 
-            {/* Category Filter Pills */}
-            <div className="flex flex-wrap items-center justify-center gap-2 pt-4">
+            {/* Quick Category Filter Pills */}
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
               {CATEGORIES.map((cat) => {
                 const isActive = activeCategory === cat;
                 const count =
@@ -146,7 +167,7 @@ export default function ServicesPage() {
                   <button
                     key={cat}
                     onClick={() => setActiveCategory(cat)}
-                    className={`interactive-pill focus-ring px-4 py-2 rounded-full text-xs font-medium cursor-pointer flex items-center gap-1.5 ${
+                    className={`interactive-pill focus-ring px-3.5 py-1.5 rounded-full text-xs font-medium cursor-pointer flex items-center gap-1.5 transition-all ${
                       isActive
                         ? "bg-[#5C3A1E] text-white shadow-xs border border-[#5C3A1E]"
                         : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A] hover:text-[#0F172A]"

@@ -17,6 +17,7 @@ import { BackgroundVideo } from "@/components/media/BackgroundVideo";
 import { VideoCard } from "@/components/media/VideoCard";
 import { SutraParticleWings } from "@/components/canvas/SutraParticleWings";
 import { LotusSymbol } from "@/components/brand/SutraLogo";
+import { SutraStudioIntroLanding } from "@/components/motion/SutraStudioIntroLanding";
 import { SUTRA_SERVICES } from "@/data/servicesData";
 import { SUTRA_PROJECTS } from "@/data/projectsData";
 import { PER_PROJECT_TIERS, MONTHLY_RETAINER_TIERS } from "@/config/pricing";
@@ -86,6 +87,9 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
+      {/* First-Visit Atelier Cinematic Landing Splash with Animated 'S' Emblem */}
+      <SutraStudioIntroLanding />
+
       <Navbar />
 
       <main id="main-content" className="flex-1 pb-16 md:pb-0">

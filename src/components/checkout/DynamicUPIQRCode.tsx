@@ -56,11 +56,11 @@ export function DynamicUPIQRCode({
             level="H"
             includeMargin={false}
             imageSettings={{
-              src: "/brand/sutra-app-icon.png",
+              src: "/brand/sutra-symbol.png",
               x: undefined,
               y: undefined,
-              height: 28,
-              width: 28,
+              height: 32,
+              width: 32,
               excavate: true,
             }}
             className="w-48 h-48 sm:w-52 sm:h-52"
