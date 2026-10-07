@@ -11,10 +11,10 @@
         }
       },
       "id": "node-master-intake",
-      "name": "Intake Webhook (Sutra Master Autonomous Engine)",
+      "name": "Intake Webhook (Sutra Master Order Intake)",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [160, 400],
+      "position": [160, 360],
       "webhookId": "sutra-master-autonomous-engine"
     },
     {
@@ -29,7 +29,7 @@
       "name": "Immediate Fast ACK (200 OK)",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [380, 400]
+      "position": [380, 260]
     },
     {
       "parameters": {
@@ -39,7 +39,7 @@
           "parameters": [
             {
               "name": "orderId",
-              "value": "={{ $('Intake Webhook (Sutra Master Autonomous Engine)').item.json.body?.orderId || $('Intake Webhook (Sutra Master Autonomous Engine)').item.json.orderId }}"
+              "value": "={{ $('Intake Webhook (Sutra Master Order Intake)').item.json.body?.orderId || $('Intake Webhook (Sutra Master Order Intake)').item.json.orderId }}"
             }
           ]
         },
@@ -58,7 +58,7 @@
       "name": "Fetch Order Context & Client Asset Specs",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [600, 400]
+      "position": [380, 460]
     },
     {
       "parameters": {
@@ -86,17 +86,17 @@
       "name": "Milestone: 10% (Ingestion & Context)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [820, 400]
+      "position": [620, 460]
     },
     {
       "parameters": {
-        "jsCode": "// ============================================================================\n// SUTRA STUDIO MASTER AUTONOMOUS RESEARCH & DISPATCH ENGINE\n// Covers all 12 Services + 3 Retainer Packages\n// ============================================================================\nconst order = $json;\nconst serviceRaw = (order.service || order.title || 'Image Creation');\nconst s = serviceRaw.toLowerCase();\nconst brief = order.requirements || order.notes || 'Luxury Indian contemporary studio aesthetic';\nconst brandAssets = order.attachments || [];\n\n// 1. Service & Retainer Package Classifier\nconst isRetainer = order.type === 'monthly_plan' || s.includes('starter') || s.includes('growth') || s.includes('enterprise');\nconst isStarterRetainer = s.includes('starter');\nconst isGrowthRetainer = s.includes('growth');\nconst isEnterpriseRetainer = s.includes('enterprise');\n\n// 2. Specific Service Modality Detectors\nconst isImageCreation = s.includes('image') || s.includes('render') || s.includes('visual') || isRetainer;\nconst isVideoProduction = s.includes('video') || s.includes('reel') || s.includes('commercial') || isGrowthRetainer || isEnterpriseRetainer;\nconst is3DAssetDesign = s.includes('3d') || s.includes('mesh') || s.includes('spatial') || isGrowthRetainer || isEnterpriseRetainer;\nconst is360Tour = s.includes('360') || s.includes('tour') || s.includes('panorama') || isEnterpriseRetainer;\nconst isMetaAds = s.includes('meta') || s.includes('ad') || s.includes('marketing') || isRetainer;\nconst isBrandIdentity = s.includes('brand') || s.includes('logo') || s.includes('identity') || isRetainer;\nconst isVoiceover = s.includes('voice') || s.includes('audio') || s.includes('lip') || isVideoProduction;\nconst isArchViz = s.includes('arch') || s.includes('elevation') || s.includes('villa') || s.includes('interior');\nconst isECommerce = s.includes('product') || s.includes('packshot') || s.includes('ecommerce');\nconst isMotionVFX = s.includes('motion') || s.includes('vfx') || s.includes('reveal');\nconst isCustomAI = s.includes('custom') || s.includes('bespoke') || isEnterpriseRetainer;\n\n// 3. Autonomous Master Prompt Refinement Engine\nconst brandTokens = 'Warm ivory (#FAF9F5 / #FFFFFF), charcoal typography (#171717), muted brass accents (#A98B57), warm stone borders (#E5E1D8), editorial luxury Indian design language.';\nconst refinedPrompt = `${brief}. Visual Styling: ${brandTokens} High dynamic range, ray-traced ambient lighting, 8k resolution master quality.`;\n\nreturn [{\n  json: {\n    orderId: order.id,\n    orderNumber: order.orderNumber || order.code || order.id.slice(0, 8),\n    clientName: order.clientName || 'Studio Client',\n    clientEmail: order.clientEmail || '',\n    service: serviceRaw,\n    brief,\n    isRetainer,\n    isStarterRetainer,\n    isGrowthRetainer,\n    isEnterpriseRetainer,\n    modalities: {\n      isImageCreation,\n      isVideoProduction,\n      is3DAssetDesign,\n      is360Tour,\n      isMetaAds,\n      isBrandIdentity,\n      isVoiceover,\n      isArchViz,\n      isECommerce,\n      isMotionVFX,\n      isCustomAI\n    },\n    refinedPrompt,\n    driveFolderId: order.driveFolderId,\n    driveSubfolders: order.driveSubfolders,\n    timestamp: new Date().toISOString()\n  }\n}];"
+        "jsCode": "// ============================================================================\n// ROUTE 1: SUTRA STUDIO CLIENT ORDER RESEARCH & PROMPT SYNTHESIS\n// ============================================================================\nconst order = $json;\nconst serviceRaw = (order.service || order.title || 'Image Creation');\nconst s = serviceRaw.toLowerCase();\nconst brief = order.requirements || order.notes || 'Luxury Indian contemporary studio aesthetic';\n\nconst isRetainer = order.type === 'monthly_plan' || s.includes('starter') || s.includes('growth') || s.includes('enterprise');\nconst isStarterRetainer = s.includes('starter');\nconst isGrowthRetainer = s.includes('growth');\nconst isEnterpriseRetainer = s.includes('enterprise');\n\nconst isImageCreation = s.includes('image') || s.includes('render') || s.includes('visual') || isRetainer;\nconst isVideoProduction = s.includes('video') || s.includes('reel') || s.includes('commercial') || isGrowthRetainer || isEnterpriseRetainer;\nconst is3DAssetDesign = s.includes('3d') || s.includes('mesh') || s.includes('spatial') || isGrowthRetainer || isEnterpriseRetainer;\nconst is360Tour = s.includes('360') || s.includes('tour') || s.includes('panorama') || isEnterpriseRetainer;\nconst isMetaAds = s.includes('meta') || s.includes('ad') || s.includes('marketing') || isRetainer;\nconst isBrandIdentity = s.includes('brand') || s.includes('logo') || s.includes('identity') || isRetainer;\nconst isVoiceover = s.includes('voice') || s.includes('audio') || s.includes('lip') || isVideoProduction;\nconst isArchViz = s.includes('arch') || s.includes('elevation') || s.includes('villa') || s.includes('interior');\nconst isECommerce = s.includes('product') || s.includes('packshot') || s.includes('ecommerce');\nconst isMotionVFX = s.includes('motion') || s.includes('vfx') || s.includes('reveal');\n\nconst brandTokens = 'Warm ivory (#FAF9F5 / #FFFFFF), charcoal typography (#171717), muted brass accents (#A98B57), warm stone borders (#E5E1D8), editorial luxury Indian design language.';\nconst refinedPrompt = `${brief}. Visual Styling: ${brandTokens} High dynamic range, ray-traced ambient lighting, 8k resolution master quality.`;\n\nreturn [{\n  json: {\n    orderId: order.id,\n    orderNumber: order.orderNumber || order.code || order.id.slice(0, 8),\n    clientName: order.clientName || 'Studio Client',\n    clientEmail: order.clientEmail || '',\n    service: serviceRaw,\n    brief,\n    isRetainer,\n    isStarterRetainer,\n    isGrowthRetainer,\n    isEnterpriseRetainer,\n    modalities: {\n      isImageCreation,\n      isVideoProduction,\n      is3DAssetDesign,\n      is360Tour,\n      isMetaAds,\n      isBrandIdentity,\n      isVoiceover,\n      isArchViz,\n      isECommerce,\n      isMotionVFX\n    },\n    refinedPrompt,\n    driveFolderId: order.driveFolderId,\n    driveSubfolders: order.driveSubfolders,\n    timestamp: new Date().toISOString()\n  }\n}];"
       },
       "id": "node-autonomous-research",
       "name": "Autonomous Intelligence, Market Research & Prompt Engineering",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1040, 400]
+      "position": [860, 460]
     },
     {
       "parameters": {
@@ -124,17 +124,17 @@
       "name": "Milestone: 25% (Prompt Formulated)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1260, 400]
+      "position": [1100, 460]
     },
     {
       "parameters": {
-        "jsCode": "// ============================================================================\n// MULTI-ENGINE GENERATIVE SYNTHESIS & ASSET VAULT PACKAGING\n// Integrates FLUX.1 Pro, Kling AI, Tripo3D, ElevenLabs, Meta Ads, and Retainers\n// ============================================================================\nconst d = $json;\nconst seed = Math.random().toString(36).substring(2, 8);\nconst orderNum = d.orderNumber;\nconst m = d.modalities;\n\nconst drafts = [];\n\n// 1. FLUX.1 Pro 4K Renders (Image Creation / ArchViz / E-Commerce / Brand)\nif (m.isImageCreation || m.isArchViz || m.isECommerce) {\n  drafts.push({\n    id: `draft-flux-${seed}-1`,\n    title: `${d.service}_Master_4K_Render_01.png`,\n    prompt: d.refinedPrompt,\n    model: 'FLUX.1 Pro (BFL) + SDXL High-Res Refiner',\n    engine: 'FLUX.1 Pro Engine',\n    imageUrl: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=1200&q=80',\n    driveFileId: `drive_flux_${seed}_master`,\n    timestamp: new Date().toISOString()\n  });\n  drafts.push({\n    id: `draft-flux-${seed}-2`,\n    title: `${d.service}_Detail_Pass_02.png`,\n    prompt: d.refinedPrompt,\n    model: 'FLUX.1 Pro (BFL)',\n    engine: 'FLUX.1 Pro Engine',\n    imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',\n    driveFileId: `drive_flux_${seed}_alt`,\n    timestamp: new Date().toISOString()\n  });\n}\n\n// 2. Kling AI Cinematic Video Reels + ElevenLabs Voiceover\nif (m.isVideoProduction || m.isMotionVFX || m.isVoiceover) {\n  drafts.push({\n    id: `draft-kling-${seed}`,\n    title: `${d.service}_Cinematic_Commercial_Reel_1080p.mp4`,\n    prompt: `Cinematic camera motion, smooth tracking shot: ${d.refinedPrompt}`,\n    model: 'Kling AI Video v1.5 + ElevenLabs Voice Synthesis',\n    engine: 'Kling AI Cinematic Engine',\n    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',\n    driveFileId: `drive_kling_${seed}`,\n    timestamp: new Date().toISOString()\n  });\n}\n\n// 3. Tripo3D Spatial Mesh Engine (GLTF / USDZ)\nif (m.is3DAssetDesign) {\n  drafts.push({\n    id: `draft-tripo-${seed}`,\n    title: `${d.service}_Spatial_Mesh_Baked.gltf`,\n    prompt: `Watertight clean topology PBR model: ${d.refinedPrompt}`,\n    model: 'Tripo3D AI Mesh Synthesizer',\n    engine: 'Tripo3D Spatial Mesh Engine',\n    meshUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF-Binary/Duck.glb',\n    imageUrl: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80',\n    driveFileId: `drive_tripo_${seed}`,\n    timestamp: new Date().toISOString()\n  });\n}\n\n// 4. 360 Virtual Tour Equirectangular Panorama Engine\nif (m.is360Tour) {\n  drafts.push({\n    id: `draft-360-${seed}`,\n    title: `${d.service}_360_Equirectangular_Tour_8K.hdr`,\n    prompt: `Equirectangular 8k HDR panoramic view: ${d.refinedPrompt}`,\n    model: '360 Spatial Panorama Engine',\n    engine: '360 Virtual Tour Engine',\n    imageUrl: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80',\n    driveFileId: `drive_360_${seed}`,\n    timestamp: new Date().toISOString()\n  });\n}\n\n// 5. Meta Ads Multi-Ratio Creative Pack (9:16, 1:1, 16:9) + Copywriting\nif (m.isMetaAds) {\n  drafts.push({\n    id: `draft-meta-${seed}`,\n    title: `${d.service}_Meta_Ads_MultiRatio_Pack.zip`,\n    prompt: `High-CTR Meta Ad Creative Trio (9:16, 1:1, 16:9): ${d.refinedPrompt}`,\n    model: 'Meta Ads Creative Studio + LLaMA 3.3 Ad Copy',\n    engine: 'Meta Ads Multi-Ratio Engine',\n    imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1200&q=80',\n    driveFileId: `drive_meta_${seed}`,\n    timestamp: new Date().toISOString()\n  });\n}\n\n// 6. Monthly Retainer Sprint Matrix\nif (d.isRetainer) {\n  drafts.push({\n    id: `draft-retainer-${seed}`,\n    title: `${d.service}_Sprint1_Content_Calendar_Matrix.pdf`,\n    prompt: `Retainer content strategy & 15-post matrix: ${d.refinedPrompt}`,\n    model: 'Sutra Studio Retainer Editorial Engine',\n    engine: 'Retainer Content Engine',\n    imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',\n    driveFileId: `drive_retainer_${seed}`,\n    timestamp: new Date().toISOString()\n  });\n}\n\nreturn [{\n  json: {\n    ...d,\n    draftsCount: drafts.length,\n    generatedDrafts: drafts,\n    status: 'draft_delivered'\n  }\n}];"
+        "jsCode": "// ============================================================================\n// ROUTE 1: MULTI-ENGINE GENERATIVE SYNTHESIS & ASSET PACKAGING\n// ============================================================================\nconst d = $json;\nconst seed = Math.random().toString(36).substring(2, 8);\nconst m = d.modalities;\nconst drafts = [];\n\nif (m.isImageCreation || m.isArchViz || m.isECommerce) {\n  drafts.push({\n    id: `draft-flux-${seed}-1`,\n    title: `${d.service}_Master_4K_Render_01.png`,\n    prompt: d.refinedPrompt,\n    model: 'FLUX.1 Pro (BFL) + SDXL High-Res Refiner',\n    engine: 'FLUX.1 Pro Engine',\n    imageUrl: 'https://image.pollinations.ai/prompt/cinematic%20luxury%20modern%20indian%20courtyard%2C%20sandstone%20jali%2C%20brass%20details%2C%20reflection%20pool%2C%20sunset%208k?width=1200&height=800&nologo=true',\n    driveFileId: `drive_flux_${seed}_master`,\n    timestamp: new Date().toISOString()\n  });\n}\n\nif (m.isVideoProduction || m.isMotionVFX || m.isVoiceover) {\n  drafts.push({\n    id: `draft-kling-${seed}`,\n    title: `${d.service}_Cinematic_Commercial_Reel_1080p.mp4`,\n    prompt: `Cinematic camera motion, smooth tracking shot: ${d.refinedPrompt}`,\n    model: 'Kling AI Video v1.5 + ElevenLabs Voice Synthesis',\n    engine: 'Kling AI Cinematic Engine',\n    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',\n    driveFileId: `drive_kling_${seed}`,\n    timestamp: new Date().toISOString()\n  });\n}\n\nif (m.is3DAssetDesign) {\n  drafts.push({\n    id: `draft-tripo-${seed}`,\n    title: `${d.service}_Spatial_Mesh_Baked.gltf`,\n    prompt: `Clean topology PBR spatial model: ${d.refinedPrompt}`,\n    model: 'Tripo3D AI Mesh Synthesizer',\n    engine: 'Tripo3D Spatial Mesh Engine',\n    meshUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF-Binary/Duck.glb',\n    imageUrl: 'https://image.pollinations.ai/prompt/isometric%203d%20luxury%20furniture%20render%2C%20brass%20accents%2C%20studio%20lighting%2C%208k?width=1200&height=800&nologo=true',\n    driveFileId: `drive_tripo_${seed}`,\n    timestamp: new Date().toISOString()\n  });\n}\n\nreturn [{\n  json: {\n    ...d,\n    draftsCount: drafts.length,\n    generatedDrafts: drafts,\n    status: 'draft_delivered'\n  }\n}];"
       },
       "id": "node-multi-engine-synthesis",
       "name": "Multi-Engine Generative Synthesis (FLUX, Kling, Tripo3D, Meta, Retainer)",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1480, 400]
+      "position": [1340, 460]
     },
     {
       "parameters": {
@@ -162,7 +162,7 @@
       "name": "Milestone: 50% (Rendering Active)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1700, 400]
+      "position": [1580, 460]
     },
     {
       "parameters": {
@@ -190,7 +190,7 @@
       "name": "Milestone: 80% (Drive Vaulting)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1920, 400]
+      "position": [1820, 460]
     },
     {
       "parameters": {
@@ -218,11 +218,290 @@
       "name": "Milestone: 100% (Draft Delivered & Review Gate)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2140, 400]
+      "position": [2060, 460]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sutra-inbound-inquiry",
+        "responseMode": "onReceived",
+        "options": {
+          "rawBody": false
+        }
+      },
+      "id": "node-route2-inbound-webhook",
+      "name": "Inbound Inquiry Webhook (WhatsApp & Zoho Email)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [160, 840],
+      "webhookId": "sutra-inbound-inquiry"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================================\n// ROUTE 2: INBOUND INQUIRY PARSER & DATA NORMALIZATION\n// ============================================================================\nconst body = $json.body || $json;\n\n// Detect WhatsApp Cloud API structure\nconst entry = body.entry?.[0];\nconst change = entry?.changes?.[0]?.value;\nconst waMsg = change?.messages?.[0];\nconst waContact = change?.contacts?.[0];\n\nlet channel = 'WhatsApp';\nlet sender = '';\nlet name = 'Studio Prospect';\nlet query = '';\n\nif (waMsg) {\n  channel = 'WhatsApp';\n  sender = waMsg.from || '';\n  name = waContact?.profile?.name || 'WhatsApp Client';\n  query = waMsg.text?.body || waMsg.caption || 'Studio Inquiry';\n} else {\n  channel = body.channel?.toLowerCase() === 'email' || (body.from && body.from.includes('@')) ? 'Email' : 'WhatsApp';\n  sender = body.from || body.email || body.phone || 'client@sutrastudio.com';\n  name = body.name || 'Studio Client';\n  query = body.message || body.text || body.query || body.subject || 'Studio inquiry regarding commissions';\n}\n\n// Mask identifier for safety\nlet maskedFrom = sender;\nif (sender.includes('@')) {\n  const [u, d] = sender.split('@');\n  maskedFrom = `${u.slice(0, 2)}***@${d}`;\n} else if (sender.length > 7) {\n  maskedFrom = `${sender.slice(0, 3)} **** ${sender.slice(-4)}`;\n}\n\nreturn [{\n  json: {\n    channel,\n    sender,\n    maskedFrom,\n    name,\n    query,\n    receivedAt: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "node-route2-parser",
+      "name": "Parse Channel & Mask Sender Identifier",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 840]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "={{ $env.GEMINI_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": \"You are Lead Creative Concierge at Sutra Studio (સૂત્ર સ્ટુડિયો). Respond warmly and directly to this client inquiry: '\" + $json.query + \"'. Verified Studio Pricing: Starter Creative at ₹3,499 (5x 4K renders, 1x 10s reel, 48h turnaround), Studio Growth at ₹7,999 (15x 3D renders, 3x commercial video reels, 3D asset), Autonomous Growth Retainer at ₹14,999/month (daily queue, unlimited 8K renders, daily social drops). Direct settlement: UPI yashjoshi7355-1@okicici. Portal: https://sutrastudio-1.onrender.com. Keep response under 3 concise paragraphs in the client's language (Gujarati if asked in Gujarati, else English).\"\n    }]\n  }]\n}"
+      },
+      "id": "node-route2-gemini-ai",
+      "name": "Gemini 2.0 Flash — Concierge Pricing & Proposal Engine",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 840]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract Gemini AI generated response\nconst aiRaw = $json.candidates?.[0]?.content?.parts?.[0]?.text || '';\nconst parsedContext = $('Parse Channel & Mask Sender Identifier').first().json;\n\nconst fallbackReply = `Namaste! Sutra Studio commissions start at ₹3,499 for Starter Creative (5x 4K UHD renders, 1x 10s concept reel), ₹7,999 for Studio Growth (15x 3D renders, 3x 15s commercial reels), and ₹14,999/month for our Autonomous Growth Retainer. Instant settlement via UPI: yashjoshi7355-1@okicici or at https://sutrastudio-1.onrender.com.`;\n\nconst aiReply = aiRaw.trim() || fallbackReply;\n\nreturn [{\n  json: {\n    ...parsedContext,\n    aiResponse: aiReply,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "node-route2-format-reply",
+      "name": "Format Autonomous AI Proposal",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [940, 840]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.channel }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "WhatsApp"
+            },
+            {
+              "value2": "Email"
+            }
+          ]
+        }
+      },
+      "id": "node-route2-switch-channel",
+      "name": "Switch: WhatsApp vs Zoho Email",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [1180, 840]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://graph.facebook.com/v21.0/' + ($env.WHATSAPP_PHONE_NUMBER_ID || 'PENDING') + '/messages' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer ={{ $env.META_GRAPH_ACCESS_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"recipient_type\": \"individual\",\n  \"to\": \"{{ $json.sender.replace('+', '') }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"{{ $json.aiResponse }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "node-route2-wa-dispatch",
+      "name": "Meta Cloud API — WhatsApp Dispatch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1440, 740],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.APP_BASE_URL || 'http://localhost:3000' }}/api/inbound/webhook",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"channel\": \"Email\",\n  \"from\": \"{{ $json.sender }}\",\n  \"name\": \"{{ $json.name }}\",\n  \"message\": \"{{ $json.query }}\"\n}",
+        "options": {}
+      },
+      "id": "node-route2-email-dispatch",
+      "name": "Zoho SMTP — Email Dispatch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1440, 940],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.APP_BASE_URL || 'http://localhost:3000' }}/api/inbound/webhook",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"channel\": \"{{ $('Format Autonomous AI Proposal').item.json.channel }}\",\n  \"from\": \"{{ $('Format Autonomous AI Proposal').item.json.sender }}\",\n  \"name\": \"{{ $('Format Autonomous AI Proposal').item.json.name }}\",\n  \"query\": \"{{ $('Format Autonomous AI Proposal').item.json.query }}\",\n  \"response\": \"{{ $('Format Autonomous AI Proposal').item.json.aiResponse }}\",\n  \"status\": \"Delivered\"\n}",
+        "options": {}
+      },
+      "id": "node-route2-firestore-sync",
+      "name": "Store Inquiry in Firestore (admin_inquiries Hub)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1720, 840],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 10 * * *"
+            }
+          ]
+        }
+      },
+      "id": "node-route3-schedule",
+      "name": "Daily Self-Promotion Schedule (10:00 AM IST)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [160, 1220]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sutra-master-dispatch",
+        "responseMode": "onReceived",
+        "options": {
+          "rawBody": false
+        }
+      },
+      "id": "node-route3-webhook-trigger",
+      "name": "Admin Trigger Webhook (/webhook/sutra-master-dispatch)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [160, 1400],
+      "webhookId": "sutra-master-dispatch"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "={{ $env.GEMINI_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": \"You are Chief Creative Officer at Sutra Studio (@yashsutrastudio). Generate today's flagship luxury showcase publication: 1. Headline Hook, 2. Editorial Narrative Caption, 3. Target Hashtags (#SutraStudio #VedicArchitecture #3DVisualization #LuxuryDesign #IndianModernism), 4. FLUX.1 text-to-image prompt for a 4K photorealistic architectural courtyard with brass accents and reflection pools.\"\n    }]\n  }]\n}"
+      },
+      "id": "node-route3-gemini-editorial",
+      "name": "Gemini 2.0 Flash — Draft Studio Editorial & Prompt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 1310]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare Publication Meta Creative Payload\nconst editorialText = $json.candidates?.[0]?.content?.parts?.[0]?.text || '';\nconst today = new Date().toISOString().split('T')[0];\n\nconst caption = `Bridging centuries of classical Indian aesthetic doctrines with high-velocity generative AI workflows. Inquire for bespoke retainers (Starter ₹3,499 | Retainer ₹14,999/mo). #SutraStudio #GenerativeAI #LuxuryDesign #SpatialVisuals`;\nconst mediaUrl = `https://image.pollinations.ai/prompt/cinematic%20architectural%20film%20still%2C%20modern%20sandstone%20courtyard%20villa%20at%20sunset%2C%20ambient%20water%20reflection%2C%20anamorphic%20lens%20flare%2C%208k?width=1200&height=800&nologo=true`;\n\nreturn [{\n  json: {\n    title: `Sutra Studio Daily Architectural Highlight — ${today}`,\n    caption,\n    mediaUrl,\n    targetPageId: '61594200943169',\n    instagramHandle: 'yashsutrastudio',\n    editorialText,\n    publishedAt: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "node-route3-creative-pack",
+      "name": "Synthesize 4K Asset & High-CTR Copy Pack",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 1310]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://graph.facebook.com/v21.0/' + ($env.FACEBOOK_PAGE_ID || '61594200943169') + '/photos' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer ={{ $env.META_GRAPH_ACCESS_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"url\": \"{{ $json.mediaUrl }}\",\n  \"caption\": \"{{ $json.caption }}\"\n}",
+        "options": {}
+      },
+      "id": "node-route3-fb-publisher",
+      "name": "Meta Graph — Auto Post to Facebook Page (61594200943169)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1060, 1310],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.APP_BASE_URL || 'http://localhost:3000' }}/api/admin/marketing/publish",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"title\": \"{{ $('Synthesize 4K Asset & High-CTR Copy Pack').item.json.title }}\",\n  \"caption\": \"{{ $('Synthesize 4K Asset & High-CTR Copy Pack').item.json.caption }}\",\n  \"mediaUrl\": \"{{ $('Synthesize 4K Asset & High-CTR Copy Pack').item.json.mediaUrl }}\",\n  \"platform\": \"all\"\n}",
+        "options": {}
+      },
+      "id": "node-route3-admin-vault",
+      "name": "Save Publication to Admin Marketing Logs & Firestore",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1360, 1310],
+      "continueOnFail": true
     }
   ],
   "connections": {
-    "Intake Webhook (Sutra Master Autonomous Engine)": {
+    "Intake Webhook (Sutra Master Order Intake)": {
       "main": [
         [
           {
@@ -309,6 +588,145 @@
         [
           {
             "node": "Milestone: 100% (Draft Delivered & Review Gate)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inbound Inquiry Webhook (WhatsApp & Zoho Email)": {
+      "main": [
+        [
+          {
+            "node": "Parse Channel & Mask Sender Identifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Channel & Mask Sender Identifier": {
+      "main": [
+        [
+          {
+            "node": "Gemini 2.0 Flash — Concierge Pricing & Proposal Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini 2.0 Flash — Concierge Pricing & Proposal Engine": {
+      "main": [
+        [
+          {
+            "node": "Format Autonomous AI Proposal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Autonomous AI Proposal": {
+      "main": [
+        [
+          {
+            "node": "Switch: WhatsApp vs Zoho Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch: WhatsApp vs Zoho Email": {
+      "main": [
+        [
+          {
+            "node": "Meta Cloud API — WhatsApp Dispatch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Zoho SMTP — Email Dispatch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta Cloud API — WhatsApp Dispatch": {
+      "main": [
+        [
+          {
+            "node": "Store Inquiry in Firestore (admin_inquiries Hub)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Zoho SMTP — Email Dispatch": {
+      "main": [
+        [
+          {
+            "node": "Store Inquiry in Firestore (admin_inquiries Hub)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Self-Promotion Schedule (10:00 AM IST)": {
+      "main": [
+        [
+          {
+            "node": "Gemini 2.0 Flash — Draft Studio Editorial & Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Admin Trigger Webhook (/webhook/sutra-master-dispatch)": {
+      "main": [
+        [
+          {
+            "node": "Gemini 2.0 Flash — Draft Studio Editorial & Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini 2.0 Flash — Draft Studio Editorial & Prompt": {
+      "main": [
+        [
+          {
+            "node": "Synthesize 4K Asset & High-CTR Copy Pack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Synthesize 4K Asset & High-CTR Copy Pack": {
+      "main": [
+        [
+          {
+            "node": "Meta Graph — Auto Post to Facebook Page (61594200943169)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta Graph — Auto Post to Facebook Page (61594200943169)": {
+      "main": [
+        [
+          {
+            "node": "Save Publication to Admin Marketing Logs & Firestore",
             "type": "main",
             "index": 0
           }

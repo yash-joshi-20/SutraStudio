@@ -85,6 +85,10 @@ export type EnvKey =
   | "SMTP_PORT"
   | "SMTP_USER"
   | "SMTP_APP_PASSWORD"
+  | "ZOHO_MAIL_USER"
+  | "ZOHO_MAIL_PASSWORD"
+  | "IMAP_HOST"
+  | "IMAP_PORT"
   | "EMAIL_FROM"
   | "EMAIL_REPLY_TO"
   | "RESEND_API_KEY"
@@ -96,6 +100,8 @@ export type EnvKey =
   | "META_GRAPH_ACCESS_TOKEN"
   | "META_IG_USER_ID"
   | "META_AD_ACCOUNT_ID"
+  | "WHATSAPP_PHONE_NUMBER_ID"
+  | "WHATSAPP_VERIFY_TOKEN"
   | "FACEBOOK_PAGE_ID"
   | "INSTAGRAM_HANDLE"
   | "NEXT_PUBLIC_INSTAGRAM_URL"
@@ -106,6 +112,8 @@ export type EnvKey =
   | "N8N_HOST"
   | "N8N_API_KEY"
   | "N8N_WEBHOOK_SECRET"
+  | "N8N_MASTER_DISPATCH_WEBHOOK"
+  | "N8N_INBOUND_WEBHOOK"
   | "NEXT_PUBLIC_GA_MEASUREMENT_ID";
 
 let cachedDiskEnv: Record<string, string> | null = null;
@@ -176,11 +184,33 @@ function getDiskEnv(): Record<string, string> {
 
 /** Read a raw value. Server-only. Returns "" when unset. */
 export function readEnv(key: EnvKey): string {
-  if (process.env[key] !== undefined) {
-    return (process.env[key] ?? "").trim();
+  const getVal = (k: string) => {
+    if (process.env[k] !== undefined && process.env[k] !== "") {
+      return (process.env[k] ?? "").trim();
+    }
+    const disk = getDiskEnv();
+    return disk[k]?.trim() ?? "";
+  };
+
+  const primary = getVal(key);
+  if (primary) return primary;
+
+  // Safe fallback aliases
+  if (key === "SMTP_USER") return getVal("ZOHO_MAIL_USER");
+  if (key === "ZOHO_MAIL_USER") return getVal("SMTP_USER") || getVal("ADMIN_EMAIL");
+  if (key === "SMTP_APP_PASSWORD") return getVal("ZOHO_MAIL_PASSWORD");
+  if (key === "ZOHO_MAIL_PASSWORD") return getVal("SMTP_APP_PASSWORD");
+  if (key === "N8N_BASE_URL") return getVal("N8N_HOST") || "http://localhost:5678";
+  if (key === "N8N_MASTER_DISPATCH_WEBHOOK") {
+    const base = getVal("N8N_BASE_URL") || getVal("N8N_HOST") || "http://localhost:5678";
+    return `${base.replace(/\/$/, "")}/webhook/sutra-master-dispatch`;
   }
-  const disk = getDiskEnv();
-  return disk[key]?.trim() ?? "";
+  if (key === "N8N_INBOUND_WEBHOOK") {
+    const base = getVal("N8N_BASE_URL") || getVal("N8N_HOST") || "http://localhost:5678";
+    return `${base.replace(/\/$/, "")}/webhook/sutra-inbound-inquiry`;
+  }
+
+  return "";
 }
 
 /** Boolean presence check. Never leaks the value. */

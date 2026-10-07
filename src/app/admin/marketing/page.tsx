@@ -27,6 +27,7 @@ import {
   ShieldCheck,
   Globe,
   Bot,
+  MessageSquare,
 } from "lucide-react";
 
 export default function AdminMarketingPage() {
@@ -221,7 +222,14 @@ export default function AdminMarketingPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link
+              href="/admin/inquiries"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] hover:border-[#D4A35A] hover:bg-[#FFFFFF] text-xs font-semibold text-[#8C6D32] transition-all shadow-2xs"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-[#A98B57]" />
+              <span>Inquiries Hub</span>
+            </Link>
             <Link
               href="/admin"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] hover:border-[#D4A35A] hover:bg-[#FFFFFF] text-xs font-semibold text-[#5C3A1E] transition-all shadow-2xs"
