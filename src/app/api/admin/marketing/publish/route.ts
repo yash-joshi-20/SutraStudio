@@ -28,7 +28,7 @@ const IN_MEMORY_PUBLICATIONS: MarketingPublicationRecord[] = [
     title: "Vedic Symmetry & 4K Spatial Renders",
     caption:
       "Transforming sacred architectural geometry into high-conversion commercial digital flagships. Ideas ◆ Design ◆ Development ◆ Growth. #SutraStudio #GenerativeAI #LuxuryDesign #Architecture",
-    mediaUrl: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop",
+    mediaUrl: "https://image.pollinations.ai/prompt/cinematic%20architectural%20film%20still%2C%20modern%20sandstone%20courtyard%20villa%20at%20sunset%2C%20ambient%20water%20reflection%2C%20anamorphic%20lens%20flare%2C%208k?width=1200&height=800&nologo=true",
     mediaType: "image",
     targetPage: "yashsutrastudio",
     targetIg: "yashsutrastudio",
@@ -45,7 +45,7 @@ const IN_MEMORY_PUBLICATIONS: MarketingPublicationRecord[] = [
     title: "Autonomous Video Commercials Showcase",
     caption:
       "From prompt to broadcast-ready 4K cinematic commercial in under 48 hours. Explore our 8 specialized production pipelines at Sutra Studio. #CreativeAutomation #VideoReels #CommercialAI",
-    mediaUrl: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=1200&auto=format&fit=crop",
+    mediaUrl: "https://image.pollinations.ai/prompt/architectural%20interior%20rendering%2C%20minimalist%20luxury%20living%20space%2C%20intricate%20golden%20jali%20screens%2C%20calacatta%20gold%20marble%20floors%2C%20recessed%203000k%20warm%20led%2C%20hasselblad%20photography%2C%208k?width=1200&height=800&nologo=true",
     mediaType: "video",
     targetPage: "yashsutrastudio",
     targetIg: "yashsutrastudio",
@@ -100,7 +100,7 @@ export async function POST(req: Request) {
     const {
       title = "Sutra Studio Daily Master Reel",
       caption = "Harmonizing classical Indian aesthetic doctrines with autonomous generative AI workflows. #SutraStudio",
-      mediaUrl = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop",
+      mediaUrl = "https://image.pollinations.ai/prompt/cinematic%20architectural%20film%20still%2C%20modern%20sandstone%20courtyard%20villa%20at%20sunset%2C%20ambient%20water%20reflection%2C%20anamorphic%20lens%20flare%2C%208k?width=1200&height=800&nologo=true",
       mediaType = "image",
       platform = "all",
     } = body;

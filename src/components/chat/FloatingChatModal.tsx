@@ -767,15 +767,15 @@ export function FloatingChatModal() {
         <button
           onClick={() => setIsOpen(true)}
           aria-label="Open Sutra Studio Concierge"
-          className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-[var(--z-launcher)] flex items-center gap-2.5 px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-full bg-[#171717]/95 backdrop-blur-md text-[#FAF9F5] border border-[#A98B57]/50 shadow-2xl hover:bg-[#262626] hover:scale-105 active:scale-95 transition-all cursor-pointer group"
+          className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-[var(--z-launcher)] w-14 h-14 sm:w-auto sm:h-auto rounded-full flex items-center justify-center p-0 sm:px-4 sm:py-2.5 sm:gap-3 bg-[#171717]/95 backdrop-blur-md text-[#FAF9F5] border border-[#A98B57]/60 shadow-2xl hover:bg-[#262626] hover:scale-105 active:scale-95 transition-all cursor-pointer group"
         >
-          <div className="relative shrink-0 w-8 h-8 rounded-full bg-[#262626] border border-[#A98B57]/60 flex items-center justify-center p-1.5 group-hover:rotate-12 transition-transform duration-500 shadow-xs">
+          <div className="relative w-full h-full sm:w-8 sm:h-8 flex items-center justify-center shrink-0 p-2 sm:p-0">
             <img
               src="/brand/sutra-symbol.png"
               alt="Sutra Studio"
-              className="w-full h-full object-contain"
+              className="w-8 h-8 object-contain drop-shadow-sm group-hover:rotate-6 transition-transform duration-300"
             />
-            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#2E7D4F] border-2 border-[#171717]" />
+            <span className="absolute top-1.5 right-1.5 sm:-top-0.5 sm:-right-0.5 w-2.5 h-2.5 rounded-full bg-[#2E7D4F] border-2 border-[#171717] ring-1 ring-[#2E7D4F]/50 shadow-xs" />
           </div>
           <div className="text-left hidden sm:block">
             <div className="text-xs font-serif font-bold text-[#FAF9F5] leading-tight">

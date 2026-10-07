@@ -18,6 +18,7 @@ import { VideoCard } from "@/components/media/VideoCard";
 import { SutraParticleWings } from "@/components/canvas/SutraParticleWings";
 import { LotusSymbol } from "@/components/brand/SutraLogo";
 import { SutraStudioIntroLanding } from "@/components/motion/SutraStudioIntroLanding";
+import { CustomDropdown } from "@/components/ui/CustomDropdown";
 import { SUTRA_SERVICES } from "@/data/servicesData";
 import { SUTRA_PROJECTS } from "@/data/projectsData";
 import { PER_PROJECT_TIERS, MONTHLY_RETAINER_TIERS } from "@/config/pricing";
@@ -837,8 +838,27 @@ export default function HomePage() {
                 </h2>
               </div>
 
-              {/* Category Filter Chips */}
-              <div className="flex flex-wrap items-center gap-2">
+              {/* Mobile View: Category Dropdown */}
+              <div className="w-full sm:hidden pt-2">
+                <CustomDropdown
+                  options={FILTER_CATEGORIES.map((cat) => ({
+                    label: cat === "All" ? "All Disciplines" : `${cat} Creations`,
+                    value: cat,
+                    badge: `${
+                      cat === "All"
+                        ? SUTRA_PROJECTS.length
+                        : SUTRA_PROJECTS.filter((p) => p.category === cat).length
+                    }`,
+                  }))}
+                  value={selectedCategory}
+                  onChange={(val) => setSelectedCategory(val)}
+                  placeholder="Filter Creations"
+                  buttonClassName="!rounded-full !bg-[#FFFDF9] !border-[#EADFCB] py-2 shadow-xs"
+                />
+              </div>
+
+              {/* Desktop / Tablet View: Tab Pills System */}
+              <div className="hidden sm:flex flex-wrap items-center gap-2">
                 {FILTER_CATEGORIES.map((cat) => {
                   const isActive = selectedCategory === cat;
                   return (

@@ -5,6 +5,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ProjectCard } from "@/components/portfolio/ProjectCard";
+import { CustomDropdown } from "@/components/ui/CustomDropdown";
 import { SUTRA_PROJECTS } from "@/data/projectsData";
 
 const PROJECT_CATEGORIES = [
@@ -29,8 +30,8 @@ export default function ProjectsPage() {
     <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A]">
       <Navbar />
 
-      <main id="main-content" className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 w-full">
-        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12 space-y-3 sm:space-y-4">
+      <main id="main-content" className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14 w-full">
+        <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-12 space-y-3 sm:space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] shadow-xs">
             <span className="text-[#D4A35A] text-xs">◆</span>
             <span className="text-[10px] md:text-xs font-semibold tracking-[0.22em] text-[#5C3A1E] uppercase">
@@ -47,7 +48,27 @@ export default function ProjectsPage() {
             architectural films, brand portals, and Meta growth campaigns.
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 pt-4">
+          {/* Mobile View: Custom Dropdown Filter */}
+          <div className="w-full max-w-xs mx-auto pt-3 sm:hidden">
+            <CustomDropdown
+              options={PROJECT_CATEGORIES.map((cat) => ({
+                label: cat === "All" ? "All Disciplines" : `${cat} Projects`,
+                value: cat,
+                badge: `${
+                  cat === "All"
+                    ? SUTRA_PROJECTS.length
+                    : SUTRA_PROJECTS.filter((p) => p.category === cat).length
+                }`,
+              }))}
+              value={selectedCat}
+              onChange={(val) => setSelectedCat(val)}
+              placeholder="Filter by Discipline"
+              buttonClassName="!rounded-full !bg-[#FFFDF9] !border-[#EADFCB] py-2.5 shadow-xs"
+            />
+          </div>
+
+          {/* Desktop / Tablet View: Tab Pills System */}
+          <div className="hidden sm:flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 pt-4">
             {PROJECT_CATEGORIES.map((cat) => {
               const isActive = selectedCat === cat;
               return (

@@ -63,7 +63,7 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="Mobile app bottom navigation"
-      className="fixed bottom-0 inset-x-0 z-40 bg-[#FFFDF9]/95 backdrop-blur-md border-t border-[#EADFCB] px-2 pt-1.5 pb-safe pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] flex items-center justify-around md:hidden shadow-lg"
+      className="fixed bottom-0 inset-x-0 z-40 bg-[#FFFDF9]/95 backdrop-blur-md border-t border-[#EADFCB] px-2 pt-1.5 pb-[max(0.35rem,env(safe-area-inset-bottom,0px))] flex items-center justify-around md:hidden shadow-lg"
     >
       {tabs.map((tab) => {
         const Icon = tab.icon;

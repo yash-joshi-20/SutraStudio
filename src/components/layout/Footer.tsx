@@ -58,7 +58,7 @@ export function Footer() {
   ];
 
   return (
-    <footer className="w-full bg-[#FAF9F5] text-[#0F172A] border-t border-[#EADFCB] relative overflow-hidden pb-28 md:pb-16">
+    <footer className="w-full bg-[#FAF9F5] text-[#0F172A] border-t border-[#EADFCB] relative overflow-hidden pb-18 md:pb-10">
       {/* Background lotus watermark accent */}
       <div className="absolute -bottom-20 -right-20 pointer-events-none opacity-[0.04] hidden sm:block">
         <LotusSymbol className="w-[500px] h-[500px]" color="gold" />
@@ -95,9 +95,9 @@ export function Footer() {
       </div>
 
       {/* Main Footer Links Container */}
-      <div className="app-container-cap px-4 sm:px-6 lg:px-8 pt-12 lg:pt-16 pb-36 md:pb-20 relative z-10">
+      <div className="app-container-cap px-4 sm:px-6 lg:px-8 pt-10 lg:pt-14 pb-8 md:pb-10 relative z-10">
         {/* Desktop Grid Layout (Hidden on Mobile) */}
-        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-6 gap-8 mb-16">
+        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-6 gap-8 mb-12">
           {/* Studio Brand Column (Span 2) */}
           <div className="lg:col-span-2 space-y-4">
             <SutraLogo variant="horizontal" size="md" href="/" />

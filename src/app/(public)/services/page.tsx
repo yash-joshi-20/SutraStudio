@@ -14,6 +14,10 @@ import { VideoCard } from "@/components/media/VideoCard";
 import { SUTRA_SERVICES, ServiceItem } from "@/data/servicesData";
 import { LotusSymbol } from "@/components/brand/SutraLogo";
 import { CustomDropdown } from "@/components/ui/CustomDropdown";
+import { Interactive3DViewer } from "@/components/spatial/Interactive3DViewer";
+import { PanoramicTourViewer } from "@/components/spatial/PanoramicTourViewer";
+import { DeviceMockupShowcase } from "@/components/showcase/DeviceMockupShowcase";
+import { MetaAdCreativeMockup } from "@/components/showcase/MetaAdCreativeMockup";
 import {
   Image as ImageIcon,
   Video,
@@ -84,7 +88,7 @@ export default function ServicesPage() {
     <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
       <Navbar />
 
-      <main id="main-content" className="flex-1 pb-20">
+      <main id="main-content" className="flex-1 pb-10 sm:pb-16">
         {/* Subtle Background Lotus Watermark */}
         <div className="absolute top-10 right-10 -z-10 opacity-[0.03] pointer-events-none">
           <LotusSymbol className="w-[700px] h-[700px]" color="gold" />
@@ -93,7 +97,7 @@ export default function ServicesPage() {
         {/* ===================================================
             1. HEADER INTRO & SEARCH BAR
             =================================================== */}
-        <section className="pt-12 pb-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="pt-12 pb-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto space-y-4">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] shadow-xs">
               <span className="text-[#D4A35A] text-xs">◆</span>
@@ -112,10 +116,10 @@ export default function ServicesPage() {
               your brand growth.
             </p>
 
-            {/* Dual Filter Controls: Search & Custom Dropdown Filter */}
-            <div className="pt-4 max-w-2xl mx-auto flex flex-col sm:flex-row items-center gap-3">
+            {/* Filter Controls: Search & Responsive Filter System */}
+            <div className="pt-4 max-w-2xl mx-auto space-y-3">
               {/* Search Input Bar */}
-              <div className="relative flex-1 w-full flex items-center">
+              <div className="relative w-full flex items-center">
                 <Search className="w-4 h-4 text-[#94A3B8] absolute left-4 pointer-events-none" />
                 <input
                   type="text"
@@ -134,8 +138,8 @@ export default function ServicesPage() {
                 )}
               </div>
 
-              {/* Custom Category Dropdown Selector */}
-              <div className="w-full sm:w-64 shrink-0">
+              {/* Mobile View: Clean Custom Dropdown Filter (Hidden on Desktop) */}
+              <div className="w-full sm:hidden">
                 <CustomDropdown
                   options={CATEGORIES.map((cat) => ({
                     label: cat === "All" ? "All Disciplines" : `${cat} Solutions`,
@@ -149,43 +153,43 @@ export default function ServicesPage() {
                   value={activeCategory}
                   onChange={(val) => setActiveCategory(val)}
                   placeholder="Filter by Discipline"
-                  buttonClassName="!rounded-full !bg-[#FFFDF9] !border-[#EADFCB] py-2"
+                  buttonClassName="!rounded-full !bg-[#FFFDF9] !border-[#EADFCB] py-2.5 shadow-xs"
                 />
               </div>
-            </div>
 
-            {/* Quick Category Filter Pills */}
-            <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-              {CATEGORIES.map((cat) => {
-                const isActive = activeCategory === cat;
-                const count =
-                  cat === "All"
-                    ? SUTRA_SERVICES.length
-                    : SUTRA_SERVICES.filter((s) => s.category === cat).length;
+              {/* Desktop / Tablet View: Tab Pills System (Hidden on Mobile) */}
+              <div className="hidden sm:flex flex-wrap items-center justify-center gap-2 pt-1">
+                {CATEGORIES.map((cat) => {
+                  const isActive = activeCategory === cat;
+                  const count =
+                    cat === "All"
+                      ? SUTRA_SERVICES.length
+                      : SUTRA_SERVICES.filter((s) => s.category === cat).length;
 
-                return (
-                  <button
-                    key={cat}
-                    onClick={() => setActiveCategory(cat)}
-                    className={`interactive-pill focus-ring px-3.5 py-1.5 rounded-full text-xs font-medium cursor-pointer flex items-center gap-1.5 transition-all ${
-                      isActive
-                        ? "bg-[#5C3A1E] text-white shadow-xs border border-[#5C3A1E]"
-                        : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A] hover:text-[#0F172A]"
-                    }`}
-                  >
-                    <span>{cat}</span>
-                    <span
-                      className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => setActiveCategory(cat)}
+                      className={`interactive-pill focus-ring px-3.5 py-1.5 rounded-full text-xs font-medium cursor-pointer flex items-center gap-1.5 transition-all ${
                         isActive
-                          ? "bg-white/20 text-white"
-                          : "bg-[#F8F5EF] text-[#64748B]"
+                          ? "bg-[#5C3A1E] text-white shadow-xs border border-[#5C3A1E]"
+                          : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A] hover:text-[#0F172A]"
                       }`}
                     >
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
+                      <span>{cat}</span>
+                      <span
+                        className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                          isActive
+                            ? "bg-white/20 text-white"
+                            : "bg-[#F8F5EF] text-[#64748B]"
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </section>
@@ -466,10 +470,31 @@ export default function ServicesPage() {
       >
         {selectedService && (
           <div className="space-y-6">
-            {/* Visual Media Preview Banner / Video Reel */}
-            {selectedService.mediaType === "video" || selectedService.mediaType === "3d" || selectedService.mediaType === "360" ? (
+            {/* Interactive Spatial / Real Device / Media Preview */}
+            {selectedService.mediaType === "3d" ? (
+              <Interactive3DViewer
+                height="340px"
+                title={`${selectedService.name} • 3D Mesh`}
+                subtitle="Interactive WebGL 2.0 PBR Orbit"
+                allowPresetSwitch={true}
+              />
+            ) : selectedService.mediaType === "360" ? (
+              <PanoramicTourViewer
+                height="340px"
+                title={`${selectedService.name} • 360° VR`}
+                subtitle="Interactive Equirectangular Spatial Tour"
+              />
+            ) : selectedService.slug === "website-development" || selectedService.slug === "mobile-app-setup" ? (
+              <DeviceMockupShowcase initialMode={selectedService.slug === "mobile-app-setup" ? "mobile" : "laptop"} />
+            ) : selectedService.slug === "meta-ads-launcher" ? (
+              <MetaAdCreativeMockup
+                headline={selectedService.description}
+                ctaText="Book Pipeline"
+                ctaHref={`/orders?service=${selectedService.slug}`}
+              />
+            ) : selectedService.mediaType === "video" ? (
               <VideoCard
-                video={selectedService.mediaType === "video" ? "service-ai-video" : "service-spatial-3d"}
+                video="service-ai-video"
                 badgeText={`${selectedService.category.toUpperCase()} REEL`}
                 allowExpand
               />
