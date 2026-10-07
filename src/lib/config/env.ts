@@ -21,6 +21,10 @@ const CLIENT_SAFE_ENV_KEYS = new Set([
   "NEXT_PUBLIC_RAZORPAY_KEY_ID",
   "NEXT_PUBLIC_APP_URL",
   "NEXT_PUBLIC_GA_MEASUREMENT_ID",
+  "NEXT_PUBLIC_INSTAGRAM_URL",
+  "NEXT_PUBLIC_FACEBOOK_PAGE_URL",
+  "NEXT_PUBLIC_FACEBOOK_PROFILE_URL",
+  "NEXT_PUBLIC_WHATSAPP_NUMBER",
 ]);
 
 export type EnvKey =
@@ -89,9 +93,15 @@ export type EnvKey =
   | "META_APP_SECRET"
   | "META_PAGE_ACCESS_TOKEN"
   | "META_ACCESS_TOKEN"
+  | "META_GRAPH_ACCESS_TOKEN"
   | "META_IG_USER_ID"
   | "META_AD_ACCOUNT_ID"
   | "FACEBOOK_PAGE_ID"
+  | "INSTAGRAM_HANDLE"
+  | "NEXT_PUBLIC_INSTAGRAM_URL"
+  | "NEXT_PUBLIC_FACEBOOK_PAGE_URL"
+  | "NEXT_PUBLIC_FACEBOOK_PROFILE_URL"
+  | "NEXT_PUBLIC_WHATSAPP_NUMBER"
   | "N8N_BASE_URL"
   | "N8N_HOST"
   | "N8N_API_KEY"
@@ -205,6 +215,26 @@ export function readPublicEnv(key: EnvKey): string {
       return (process.env.NEXT_PUBLIC_APP_URL ?? "").trim();
     case "NEXT_PUBLIC_GA_MEASUREMENT_ID":
       return (process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? "").trim();
+    case "NEXT_PUBLIC_INSTAGRAM_URL":
+      return (
+        process.env.NEXT_PUBLIC_INSTAGRAM_URL ??
+        "https://www.instagram.com/yashsutrastudio/"
+      ).trim();
+    case "NEXT_PUBLIC_FACEBOOK_PAGE_URL":
+      return (
+        process.env.NEXT_PUBLIC_FACEBOOK_PAGE_URL ??
+        "https://www.facebook.com/yashsutrastudio/"
+      ).trim();
+    case "NEXT_PUBLIC_FACEBOOK_PROFILE_URL":
+      return (
+        process.env.NEXT_PUBLIC_FACEBOOK_PROFILE_URL ??
+        "https://www.facebook.com/yashjoshisutrastudio/"
+      ).trim();
+    case "NEXT_PUBLIC_WHATSAPP_NUMBER":
+      return (
+        process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ??
+        "918200192781"
+      ).trim();
     default:
       return "";
   }
@@ -276,5 +306,9 @@ export function isN8nAuthConfigured(): boolean {
 }
 
 export function isMetaConfigured(): boolean {
-  return isEnvSet("META_APP_ID") && isEnvSet("META_APP_SECRET");
+  return isEnvSet("META_APP_ID") && (isEnvSet("META_APP_SECRET") || isEnvSet("META_GRAPH_ACCESS_TOKEN"));
+}
+
+export function isMetaAdsConfigured(): boolean {
+  return isEnvSet("META_AD_ACCOUNT_ID") && isEnvSet("META_GRAPH_ACCESS_TOKEN");
 }

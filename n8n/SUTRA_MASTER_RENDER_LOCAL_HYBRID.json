@@ -1,0 +1,361 @@
+{
+  "name": "Sutra Studio — Master Engine (Render Live + Local n8n)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sutra-master-dispatch",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-master-webhook",
+      "name": "Admin Trigger: Order Dispatch",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        100,
+        360
+      ],
+      "webhookId": "sutra-master-dispatch"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * *"
+            }
+          ]
+        }
+      },
+      "id": "node-cron-schedule",
+      "name": "Daily 6AM Engine (30-Day Retainer)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        100,
+        580
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "appBaseUrl",
+              "value": "https://sutrastudio-1.onrender.com"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-global-config",
+      "name": "Global Studio Config (Domain Controller)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        320,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"orderId\": \"{{ $json.body?.orderId }}\",\n  \"status\": \"processing_in_local_engine\",\n  \"message\": \"Local n8n engine active for order\"\n}",
+        "options": {}
+      },
+      "id": "node-instant-ack",
+      "name": "Instant Webhook ACK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        520,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://serpapi.com/search.json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "engine",
+              "value": "google_trends"
+            },
+            {
+              "name": "q",
+              "value": "={{ $('Admin Trigger: Order Dispatch').first()?.json?.body?.serviceDetails?.niche || 'luxury interior architecture' }}"
+            },
+            {
+              "name": "geo",
+              "value": "IN"
+            },
+            {
+              "name": "api_key",
+              "value": "={{ $env.SERPAPI_API_KEY || 'a7d0b49630c8cb9eb3ce4bc63b2ee9537677149e1749954dc39522064a395a59' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-serpapi-trends",
+      "name": "Step 1: SerpApi Autonomous Trend Research",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "={{ $env.GEMINI_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": \"You are Chief AI Creative Director for Sutra Studio. Industry: \" + ($('Admin Trigger: Order Dispatch').first()?.json?.body?.serviceDetails?.niche || 'Luxury Living') + \". Client: \" + ($('Admin Trigger: Order Dispatch').first()?.json?.body?.client?.brandName || 'Sutra Client') + \". Market Data: \" + JSON.stringify($json) + \". Generate an ad blueprint. Output JSON strictly with: { \\\"headline\\\": \\\"High-CTR headline\\\", \\\"caption\\\": \\\"Engaging caption with hashtags\\\", \\\"fluxImagePrompt\\\": \\\"Ultra-detailed 4K photorealistic prompt for FLUX.1 Pro, cinematic lighting, 8k\\\", \\\"klingVideoPrompt\\\": \\\"Cinematic slow drone camera forward push, 9:16 vertical 60fps\\\", \\\"voiceoverScript\\\": \\\"15-second emotional hook voiceover\\\", \\\"tripo3dPrompt\\\": \\\"High resolution 3D asset model\\\" }\"\n    }]\n  }],\n  \"generationConfig\": {\n    \"responseMimeType\": \"application/json\"\n  }\n}",
+        "options": {}
+      },
+      "id": "node-gemini-director",
+      "name": "Step 2: Gemini 2.0 Blueprint & Scripting",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        940,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const geminiRaw = $input.first().json;\nlet blueprint = {};\ntry {\n  blueprint = JSON.parse(geminiRaw.candidates[0].content.parts[0].text);\n} catch(e) {\n  blueprint = {\n    headline: 'Bespoke Luxury Architecture',\n    caption: 'Curated elegance engineered for modern living. #SutraStudio',\n    fluxImagePrompt: 'luxury villa interior, modern marble floors, floor-to-ceiling glass, golden hour volumetric lighting, 8k',\n    klingVideoPrompt: 'smooth camera dolly forward into contemporary luxury space, 4k 60fps',\n    voiceoverScript: 'Step into architectural distinction crafted exclusively for you.',\n    tripo3dPrompt: 'modern luxury architectural centerpiece chair'\n  };\n}\n\nconst order = $('Admin Trigger: Order Dispatch').first()?.json?.body || {};\nconst encodedPrompt = encodeURIComponent(blueprint.fluxImagePrompt);\nconst imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1080&height=1350&model=flux&nologo=true&seed=${Math.floor(Math.random() * 999999)}`;\n\nreturn [{\n  json: {\n    orderId: order.orderId || ('ORD-' + Date.now().toString().slice(-6)),\n    clientName: order.client?.name || 'Sutra Client',\n    clientEmail: order.client?.email || 'client@sutrastudio.com',\n    brandName: order.client?.brandName || 'Sutra Luxe',\n    blueprint,\n    imageUrl,\n    appBaseUrl: $('Global Studio Config (Domain Controller)').first()?.json?.appBaseUrl || 'https://sutrastudio-1.onrender.com',\n    fbPageId: $env.FACEBOOK_PAGE_ID || '61594200943169',\n    pageAccessToken:$env.META_GRAPH_ACCESS_TOKEN || ''\n  }\n}];"
+      },
+      "id": "node-flux-pipeline",
+      "name": "Step 3: FLUX.1 4K Visual Generator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.klingai.com/v1/videos/image2video",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer ={{ $env.KLING_API_KEY || 'api-key-kling-4g2eRmjBaOld1wzfZKRvOBbUEwoofOtg9XwePV1bG5I' }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model_name\": \"kling-v1-6\",\n  \"image\": \"{{ $json.imageUrl }}\",\n  \"prompt\": \"{{ $json.blueprint.klingVideoPrompt }}\",\n  \"duration\": \"5\",\n  \"aspect_ratio\": \"9:16\",\n  \"mode\": \"std\"\n}",
+        "options": {}
+      },
+      "id": "node-kling-video",
+      "name": "Step 4: Kling AI Video Reel Synthesizer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "xi-api-key",
+              "value": "={{ $env.ELEVENLABS_API_KEY || 'sk_11d94d4a3f09a8b3cbfe5e3a490daed96a65306129a44918' }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"{{ $('Step 3: FLUX.1 4K Visual Generator').first().json.blueprint.voiceoverScript }}\",\n  \"model_id\": \"eleven_multilingual_v2\",\n  \"voice_settings\": { \"stability\": 0.5, \"similarity_boost\": 0.8 }\n}",
+        "options": {}
+      },
+      "id": "node-elevenlabs-voice",
+      "name": "Step 5: ElevenLabs Voiceover Engine",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $('Step 3: FLUX.1 4K Visual Generator').first().json;\nconst kling =$('Step 4: Kling AI Video Reel Synthesizer').first()?.json || {};\nconst videoUrl = kling.data?.video_url || 'https://assets.mixkit.co/videos/preview/mixkit-modern-apartment-with-panoramic-view-40742-large.mp4';\n\nreturn [{\n  json: {\n    deliverableId: 'DELIV-' + Date.now().toString().slice(-6),\n    orderId: base.orderId,\n    clientName: base.clientName,\n    clientEmail: base.clientEmail,\n    brandName: base.brandName,\n    headline: base.blueprint.headline,\n    caption: base.blueprint.caption,\n    imageUrl: base.imageUrl,\n    videoUrl: videoUrl,\n    voiceoverScript: base.blueprint.voiceoverScript,\n    status: 'in_admin_review',\n    appBaseUrl: base.appBaseUrl,\n    generatedAt: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "node-bundle-assets",
+      "name": "Step 6: Bundle Deliverables for Admin Review",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1640,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.appBaseUrl }}/api/admin/deliverables",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "node-return-to-render",
+      "name": "Step 7: Post Deliverable to Render Admin Queue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1880,
+        460
+      ]
+    }
+  ],
+  "connections": {
+    "Admin Trigger: Order Dispatch": {
+      "main": [
+        [
+          {
+            "node": "Global Studio Config (Domain Controller)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Instant Webhook ACK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily 6AM Engine (30-Day Retainer)": {
+      "main": [
+        [
+          {
+            "node": "Global Studio Config (Domain Controller)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Global Studio Config (Domain Controller)": {
+      "main": [
+        [
+          {
+            "node": "Step 1: SerpApi Autonomous Trend Research",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 1: SerpApi Autonomous Trend Research": {
+      "main": [
+        [
+          {
+            "node": "Step 2: Gemini 2.0 Blueprint & Scripting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 2: Gemini 2.0 Blueprint & Scripting": {
+      "main": [
+        [
+          {
+            "node": "Step 3: FLUX.1 4K Visual Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 3: FLUX.1 4K Visual Generator": {
+      "main": [
+        [
+          {
+            "node": "Step 4: Kling AI Video Reel Synthesizer",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Step 5: ElevenLabs Voiceover Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 4: Kling AI Video Reel Synthesizer": {
+      "main": [
+        [
+          {
+            "node": "Step 6: Bundle Deliverables for Admin Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 5: ElevenLabs Voiceover Engine": {
+      "main": [
+        [
+          {
+            "node": "Step 6: Bundle Deliverables for Admin Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 6: Bundle Deliverables for Admin Review": {
+      "main": [
+        [
+          {
+            "node": "Step 7: Post Deliverable to Render Admin Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -25,11 +25,12 @@ const DEFAULT_SITE_CONTENT = {
     brandTagline: "High-precision computational design and luxury 3D visual engineering atelier.",
     copyrightText: "© 2026 Sutra Studio. All rights reserved. Registered Creative Atelier.",
     contactEmail: "yashjoshi20@zohomail.in",
-    contactPhone: "+91 93134 00000",
+    contactPhone: "Studio WhatsApp Concierge",
     socialLinks: {
-      instagram: "https://instagram.com/sutrastudio",
-      linkedin: "https://linkedin.com/company/sutrastudio",
-      twitter: "https://x.com/sutrastudio",
+      instagram: "https://www.instagram.com/yashsutrastudio/",
+      facebookPage: "https://www.facebook.com/yashsutrastudio/",
+      facebookProfile: "https://www.facebook.com/yashjoshisutrastudio/",
+      whatsapp: "https://wa.me/918200192781?text=Hello%20Sutra%20Studio%2C%20I%20would%20like%20to%20discuss%20a%20project.",
     },
   },
   branding: {

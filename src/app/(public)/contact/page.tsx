@@ -186,14 +186,14 @@ export default function ContactPage() {
                       W
                     </div>
                     <div className="flex-1">
-                      <p className="font-semibold text-[#0F172A]">Instant WhatsApp Concierge</p>
+                      <p className="font-semibold text-[#0F172A]">Studio WhatsApp Concierge</p>
                       <a
-                        href="https://wa.me/919820012345?text=Hello%20Sutra%20Studio%2C%20I%20would%20like%20to%20discuss%20a%20project."
+                        href="https://wa.me/918200192781?text=Hello%20Sutra%20Studio%2C%20I%20would%20like%20to%20discuss%20a%20project."
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs text-[#2E7D4F] hover:underline font-semibold block"
                       >
-                        Message on WhatsApp →
+                        Connect with Sutra Studio →
                       </a>
                     </div>
                   </div>
