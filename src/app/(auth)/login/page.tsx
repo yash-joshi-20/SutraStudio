@@ -282,7 +282,7 @@ function ClientLoginForm() {
         <div
           role="tablist"
           aria-label="Sign in or register"
-          className="flex rounded-2xl border border-[#EADFCB] bg-[#F8F5EF] p-1"
+          className="grid grid-cols-2 rounded-2xl border border-[#EADFCB] bg-[#F8F5EF] p-1 gap-1"
         >
           {(["signin", "register"] as const).map((tab) => (
             <button
@@ -291,13 +291,13 @@ function ClientLoginForm() {
               role="tab"
               aria-selected={mode === tab}
               onClick={() => switchMode(tab)}
-              className={`min-h-[40px] flex-1 cursor-pointer rounded-xl text-xs font-semibold transition-all ${
+              className={`min-h-[40px] px-2 py-2 cursor-pointer rounded-xl text-xs font-semibold transition-all text-center ${
                 mode === tab
                   ? "border border-[#EADFCB]/80 bg-[#FFFDF9] text-[#5C3A1E] shadow-xs"
                   : "text-[#64748B] hover:text-[#0F172A]"
               }`}
             >
-              {tab === "signin" ? "Sign In" : "Register New Workspace"}
+              {tab === "signin" ? "Sign In" : "Register Workspace"}
             </button>
           ))}
         </div>

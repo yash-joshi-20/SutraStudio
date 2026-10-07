@@ -225,11 +225,11 @@ export default function HomePage() {
                 {/* Right Column: Interactive Video & Particle Matrix Spotlight Card */}
                 <div className="hero-visual-card lg:col-span-5 relative space-y-3">
                   {/* Mode Switcher Tabs (Showreel vs 3D Vector Matrix) */}
-                  <div className="flex items-center justify-between px-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
                     <span className="text-[11px] font-bold uppercase tracking-wider text-[#A98B57]">
                       Atelier Interactive Spotlight
                     </span>
-                    <div className="inline-flex rounded-full bg-[#FFFDF9] border border-[#EADFCB] p-0.5 shadow-2xs text-[11px]">
+                    <div className="inline-flex rounded-full bg-[#FFFDF9] border border-[#EADFCB] p-0.5 shadow-2xs text-[11px] self-start sm:self-auto">
                       <button
                         type="button"
                         onClick={() => setHeroRightTab("video")}
@@ -622,34 +622,38 @@ export default function HomePage() {
 
               {/* Billing Cycle Toggle */}
               <div className="pt-2 flex items-center justify-center">
-                <div role="tablist" aria-label="Billing frequency" className="inline-flex rounded-full bg-[#FFFDF9] border border-[#EADFCB] p-1 shadow-xs">
+                <div
+                  role="tablist"
+                  aria-label="Billing frequency"
+                  className="grid grid-cols-2 w-full max-w-xs sm:max-w-md rounded-2xl sm:rounded-full bg-[#FFFDF9] border border-[#EADFCB] p-1 shadow-xs"
+                >
                   <button
                     type="button"
                     role="tab"
                     aria-selected={pricingCycle === "project"}
                     onClick={() => setPricingCycle("project")}
-                    className={`interactive-pill focus-ring px-5 py-2 rounded-full text-xs font-semibold cursor-pointer ${
+                    className={`py-2 px-2 sm:px-4 rounded-xl sm:rounded-full text-xs font-semibold cursor-pointer transition-all text-center ${
                       pricingCycle === "project"
                         ? "bg-[#5C3A1E] text-white shadow-xs"
                         : "text-[#64748B] hover:text-[#0F172A]"
                     }`}
                   >
-                    Per-Project Commission
+                    Per-Project
                   </button>
                   <button
                     type="button"
                     role="tab"
                     aria-selected={pricingCycle === "monthly"}
                     onClick={() => setPricingCycle("monthly")}
-                    className={`interactive-pill focus-ring px-5 py-2 rounded-full text-xs font-semibold cursor-pointer flex items-center gap-1.5 ${
+                    className={`py-2 px-2 sm:px-4 rounded-xl sm:rounded-full text-xs font-semibold cursor-pointer flex items-center justify-center gap-1.5 transition-all text-center ${
                       pricingCycle === "monthly"
                         ? "bg-[#5C3A1E] text-white shadow-xs"
                         : "text-[#64748B] hover:text-[#0F172A]"
                     }`}
                   >
-                    <span>30-Day Autonomous Retainer</span>
-                    <span className="text-[10px] bg-[#D4A35A] text-[#0F172A] px-2 py-0.5 rounded-full font-bold">
-                      Daily Queue
+                    <span>30-Day Retainer</span>
+                    <span className="text-[10px] bg-[#D4A35A] text-[#0F172A] px-1.5 py-0.2 rounded-full font-bold hidden sm:inline">
+                      Daily
                     </span>
                   </button>
                 </div>
@@ -880,8 +884,8 @@ export default function HomePage() {
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="rounded-3xl bg-[#FAF9F5] border border-[#EADFCB] p-8 sm:p-10 shadow-warm">
               <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
-                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-br from-[#5C3A1E] to-[#2B1810] flex items-center justify-center text-white shadow-md shrink-0 border-2 border-[#D4A35A]/40">
-                  <LotusSymbol className="w-14 h-14" color="gold" />
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-[#0F172A] flex items-center justify-center text-white shadow-md shrink-0 border border-[#D4A35A]/50 p-4">
+                  <LotusSymbol className="w-full h-full" color="gold" />
                 </div>
 
                 <div className="flex-1 space-y-4 text-center md:text-left">

@@ -155,10 +155,10 @@ export function SutraAppIcon({
 }) {
   return (
     <div
-      className={`relative inline-flex items-center justify-center rounded-[22%] bg-[#0F172A] shadow-md overflow-hidden ${className}`}
+      className={`relative inline-flex items-center justify-center rounded-[22%] bg-[#0F172A] border border-[#D4A35A]/50 shadow-md overflow-hidden p-2 ${className}`}
       style={{ width: size, height: size }}
     >
-      <LotusSymbol className="w-[68%] h-[68%]" color="gold" />
+      <LotusSymbol className="w-full h-full object-contain" color="gold" />
     </div>
   );
 }
@@ -172,10 +172,10 @@ export function SutraFavicon({
 }) {
   return (
     <div
-      className={`relative inline-flex items-center justify-center rounded-[22%] bg-[#FFFDF9] border border-[#EADFCB] shadow-sm overflow-hidden ${className}`}
+      className={`relative inline-flex items-center justify-center rounded-[22%] bg-[#0F172A] border border-[#D4A35A]/50 shadow-sm overflow-hidden p-1 ${className}`}
       style={{ width: size, height: size }}
     >
-      <LotusSymbol className="w-[72%] h-[72%]" color="gold" />
+      <LotusSymbol className="w-full h-full object-contain" color="gold" />
     </div>
   );
 }

@@ -334,14 +334,14 @@ export default function MobileAppLandingPage() {
             </div>
 
             {/* Screen Selector Tabs */}
-            <div className="flex items-center justify-start sm:justify-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+            <div className="flex items-center justify-start sm:justify-center gap-2 overflow-x-auto pb-2 px-1 scrollbar-none">
               {appScreenshots.map((item, index) => (
                 <button
                   key={item.title}
                   onClick={() => setActiveScreenTab(index)}
-                  className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all touch-target cursor-pointer ${
+                  className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all touch-target cursor-pointer shrink-0 ${
                     activeScreenTab === index
-                      ? "bg-[#5C3A1E] text-white shadow-xs"
+                      ? "bg-[#5C3A1E] text-white shadow-xs font-bold ring-1 ring-[#D4A35A]"
                       : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:text-[#0F172A]"
                   }`}
                 >
@@ -351,28 +351,29 @@ export default function MobileAppLandingPage() {
             </div>
 
             {/* Active Screen Showcase Card */}
-            <div className="max-w-2xl mx-auto p-6 sm:p-8 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-sm space-y-4">
+            <div className="max-w-2xl mx-auto p-5 sm:p-8 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-sm space-y-4">
               <div className="flex items-center justify-between">
                 <Badge variant="gold">{appScreenshots[activeScreenTab].badge}</Badge>
                 <span className="text-xs font-mono text-[#94A3B8]">Screen {activeScreenTab + 1} of 4</span>
               </div>
-              <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#0F172A]">
+              <h3 className="font-serif text-lg sm:text-2xl font-bold text-[#0F172A]">
                 {appScreenshots[activeScreenTab].subtitle}
               </h3>
-              <p className="text-sm text-[#64748B] leading-relaxed">
+              <p className="text-xs sm:text-sm text-[#64748B] leading-relaxed">
                 {appScreenshots[activeScreenTab].desc}
               </p>
-              <div className="pt-2 flex items-center gap-3">
+              <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <Button
                   variant="secondary"
                   size="sm"
                   onClick={handleInstallClick}
                   leftIcon={<Download className="w-3.5 h-3.5 text-[#5C3A1E]" />}
+                  className="w-full sm:w-auto justify-center"
                 >
                   Test On Your Device
                 </Button>
-                <Link href="/dashboard">
-                  <Button variant="ghost" size="sm" withArrow>
+                <Link href="/dashboard" className="w-full sm:w-auto">
+                  <Button variant="ghost" size="sm" withArrow className="w-full sm:w-auto justify-center">
                     Open Live Portal
                   </Button>
                 </Link>

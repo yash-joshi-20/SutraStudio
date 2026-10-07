@@ -2,6 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { LotusSymbol } from "@/components/brand/SutraLogo";
 
 /**
  * High-End Luxury Animated Status Icons for Sutra Studio
@@ -196,41 +197,10 @@ export function AnimatedWelcomeBadge({
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="relative z-10 flex items-center justify-center rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] shadow-sm"
+        className="relative z-10 flex items-center justify-center rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] shadow-sm p-1.5"
         style={{ width: size, height: size }}
       >
-        <motion.svg
-          width={size * 0.65}
-          height={size * 0.65}
-          viewBox="0 0 100 100"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {/* Central Petal */}
-          <motion.path
-            d="M50 15 C45 35, 45 65, 50 85 C55 65, 55 35, 50 15 Z"
-            fill="#D4A35A"
-            initial={{ pathLength: 0, scale: 0.8 }}
-            animate={{ pathLength: 1, scale: 1 }}
-            transition={{ duration: 0.8 }}
-          />
-          {/* Left Petal */}
-          <motion.path
-            d="M50 35 C30 45, 20 60, 25 78 C35 72, 45 58, 50 35 Z"
-            fill="#5C3A1E"
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 0.9, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.15 }}
-          />
-          {/* Right Petal */}
-          <motion.path
-            d="M50 35 C70 45, 80 60, 75 78 C65 72, 55 58, 50 35 Z"
-            fill="#5C3A1E"
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 0.9, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.15 }}
-          />
-        </motion.svg>
+        <LotusSymbol className="w-full h-full object-contain" color="gold" />
       </motion.div>
     </div>
   );

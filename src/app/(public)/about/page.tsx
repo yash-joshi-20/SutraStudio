@@ -157,41 +157,49 @@ export default function AboutPage() {
             =================================================== */}
         <section className="py-12 bg-[#FAF9F5] border-y border-[#EADFCB]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="p-6 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] text-center shadow-xs">
-                <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center mx-auto mb-3">
-                  <Award className="w-5 h-5 text-[#5C3A1E]" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
+              <div className="p-4 sm:p-6 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] text-center shadow-xs flex flex-col justify-between">
+                <div>
+                  <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center mx-auto mb-2.5">
+                    <Award className="w-5 h-5 text-[#5C3A1E]" />
+                  </div>
+                  <p className="font-serif text-base sm:text-lg md:text-2xl font-bold text-[#5C3A1E] leading-tight">High-Precision</p>
+                  <p className="text-xs font-semibold text-[#0F172A] mt-1">Studio Architecture</p>
                 </div>
-                <p className="font-serif text-2xl font-bold text-[#5C3A1E]">High-Precision</p>
-                <p className="text-xs font-semibold text-[#0F172A] mt-1">Studio Architecture</p>
-                <p className="text-[11px] text-[#64748B]">Tradition meets computation</p>
+                <p className="text-[10px] sm:text-[11px] text-[#64748B] mt-1">Tradition meets computation</p>
               </div>
 
-              <div className="p-6 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] text-center shadow-xs">
-                <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center mx-auto mb-3">
-                  <Users className="w-5 h-5 text-[#5C3A1E]" />
+              <div className="p-4 sm:p-6 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] text-center shadow-xs flex flex-col justify-between">
+                <div>
+                  <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center mx-auto mb-2.5">
+                    <Users className="w-5 h-5 text-[#5C3A1E]" />
+                  </div>
+                  <p className="font-serif text-base sm:text-lg md:text-2xl font-bold text-[#5C3A1E] leading-tight">Autonomous</p>
+                  <p className="text-xs font-semibold text-[#0F172A] mt-1">Creative Pipelines</p>
                 </div>
-                <p className="font-serif text-2xl font-bold text-[#5C3A1E]">Autonomous</p>
-                <p className="text-xs font-semibold text-[#0F172A] mt-1">Creative Pipelines</p>
-                <p className="text-[11px] text-[#64748B]">Tailored client sanctum</p>
+                <p className="text-[10px] sm:text-[11px] text-[#64748B] mt-1">Tailored client sanctum</p>
               </div>
 
-              <div className="p-6 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] text-center shadow-xs">
-                <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center mx-auto mb-3">
-                  <Clock className="w-5 h-5 text-[#5C3A1E]" />
+              <div className="p-4 sm:p-6 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] text-center shadow-xs flex flex-col justify-between">
+                <div>
+                  <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center mx-auto mb-2.5">
+                    <Clock className="w-5 h-5 text-[#5C3A1E]" />
+                  </div>
+                  <p className="font-serif text-base sm:text-lg md:text-2xl font-bold text-[#5C3A1E] leading-tight">24-48h SLA</p>
+                  <p className="text-xs font-semibold text-[#0F172A] mt-1">Production Turnaround</p>
                 </div>
-                <p className="font-serif text-2xl font-bold text-[#5C3A1E]">24-48h SLA</p>
-                <p className="text-xs font-semibold text-[#0F172A] mt-1">Production Turnaround</p>
-                <p className="text-[11px] text-[#64748B]">Rapid iterative studio cycles</p>
+                <p className="text-[10px] sm:text-[11px] text-[#64748B] mt-1">Rapid iterative studio cycles</p>
               </div>
 
-              <div className="p-6 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] text-center shadow-xs">
-                <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center mx-auto mb-3">
-                  <Shield className="w-5 h-5 text-[#5C3A1E]" />
+              <div className="p-4 sm:p-6 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] text-center shadow-xs flex flex-col justify-between">
+                <div>
+                  <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center mx-auto mb-2.5">
+                    <Shield className="w-5 h-5 text-[#5C3A1E]" />
+                  </div>
+                  <p className="font-serif text-base sm:text-lg md:text-2xl font-bold text-[#5C3A1E] leading-tight">100%</p>
+                  <p className="text-xs font-semibold text-[#0F172A] mt-1">Commercial Rights</p>
                 </div>
-                <p className="font-serif text-2xl font-bold text-[#5C3A1E]">100%</p>
-                <p className="text-xs font-semibold text-[#0F172A] mt-1">Commercial Rights</p>
-                <p className="text-[11px] text-[#64748B]">Full IP transfer & Sutra Cloud Vault delivery</p>
+                <p className="text-[10px] sm:text-[11px] text-[#64748B] mt-1">Full IP transfer &amp; Sutra Cloud Vault</p>
               </div>
             </div>
           </div>
@@ -285,8 +293,8 @@ export default function AboutPage() {
 
             <div className="rounded-3xl bg-[#FAF9F5] border border-[#EADFCB] p-8 sm:p-10 shadow-warm">
               <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
-                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-br from-[#5C3A1E] to-[#2B1810] flex items-center justify-center text-white shadow-md shrink-0 border-2 border-[#D4A35A]/40">
-                  <LotusSymbol className="w-14 h-14" color="gold" />
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-[#0F172A] flex items-center justify-center text-white shadow-md shrink-0 border border-[#D4A35A]/50 p-4">
+                  <LotusSymbol className="w-full h-full" color="gold" />
                 </div>
 
                 <div className="flex-1 space-y-4 text-center md:text-left">

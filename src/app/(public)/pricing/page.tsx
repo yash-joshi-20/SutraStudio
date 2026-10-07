@@ -64,34 +64,38 @@ export default function PricingPage() {
 
           {/* Billing Cycle Toggle */}
           <div className="pt-4 flex items-center justify-center">
-            <div role="tablist" aria-label="Billing frequency" className="inline-flex flex-wrap items-center justify-center rounded-2xl sm:rounded-full bg-[#FFFDF9] border border-[#EADFCB] p-1 shadow-xs max-w-full gap-1">
+            <div
+              role="tablist"
+              aria-label="Billing frequency"
+              className="grid grid-cols-2 w-full max-w-xs sm:max-w-md rounded-2xl sm:rounded-full bg-[#FFFDF9] border border-[#EADFCB] p-1 shadow-xs"
+            >
               <button
                 type="button"
                 role="tab"
                 aria-selected={billingCycle === "project"}
                 onClick={() => setBillingCycle("project")}
-                className={`interactive-pill focus-ring px-3.5 sm:px-4 py-2 rounded-xl sm:rounded-full text-xs font-semibold cursor-pointer transition-all ${
+                className={`py-2 px-2 sm:px-4 rounded-xl sm:rounded-full text-xs font-semibold cursor-pointer transition-all text-center ${
                   billingCycle === "project"
                     ? "bg-[#5C3A1E] text-white shadow-xs"
                     : "text-[#64748B] hover:text-[#0F172A]"
                 }`}
               >
-                Per-Project Commission
+                Per-Project
               </button>
               <button
                 type="button"
                 role="tab"
                 aria-selected={billingCycle === "monthly"}
                 onClick={() => setBillingCycle("monthly")}
-                className={`interactive-pill focus-ring px-3.5 sm:px-4 py-2 rounded-xl sm:rounded-full text-xs font-semibold cursor-pointer flex items-center gap-1.5 transition-all ${
+                className={`py-2 px-2 sm:px-4 rounded-xl sm:rounded-full text-xs font-semibold cursor-pointer flex items-center justify-center gap-1.5 transition-all text-center ${
                   billingCycle === "monthly"
                     ? "bg-[#5C3A1E] text-white shadow-xs"
                     : "text-[#64748B] hover:text-[#0F172A]"
                 }`}
               >
                 <span>30-Day Retainer</span>
-                <span className="text-[10px] bg-[#D4A35A] text-[#0F172A] px-2 py-0.5 rounded-full font-bold hidden xs:inline">
-                  Daily Active
+                <span className="text-[10px] bg-[#D4A35A] text-[#0F172A] px-1.5 py-0.2 rounded-full font-bold hidden sm:inline">
+                  Daily
                 </span>
               </button>
             </div>
