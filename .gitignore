@@ -58,6 +58,7 @@ functions/.env.local
 !/functions/.env.example
 .env_backups/
 scripts/backups/
+public/brand_backup/
 scripts/backups/env-backups/
 *.env.backup*
 *.env.bak*
