@@ -151,7 +151,44 @@ interface ClientRecord {
   lastActive: string;
 }
 
-const CLIENTS_DATA: ClientRecord[] = [];
+const CLIENTS_DATA: ClientRecord[] = [
+  {
+    id: "cli_001",
+    name: "Studio Living Architecture",
+    company: "Studio Living Architecture",
+    email: "contact@studioliving.com",
+    tier: "Enterprise",
+    driveFolderId: "vault_living_01",
+    activeOrders: 3,
+    lifetimeVolume: "₹45,000",
+    status: "Active",
+    lastActive: "Today",
+  },
+  {
+    id: "cli_002",
+    name: "Maison Aura Luxury Fragrances",
+    company: "Maison Aura Luxury Fragrances",
+    email: "atelier@maisonaura.com",
+    tier: "Growth",
+    driveFolderId: "vault_aura_02",
+    activeOrders: 2,
+    lifetimeVolume: "₹32,000",
+    status: "Active",
+    lastActive: "Yesterday",
+  },
+  {
+    id: "cli_003",
+    name: "Zenith Spatial & Interiors",
+    company: "Zenith Spatial & Interiors",
+    email: "design@zenithspatial.com",
+    tier: "Starter",
+    driveFolderId: "vault_zenith_03",
+    activeOrders: 1,
+    lifetimeVolume: "₹28,000",
+    status: "Active",
+    lastActive: "3 days ago",
+  },
+];
 
 const AUDIT_LOGS: Array<{ id: string; event: string; actor: string; detail: string; time: string; type: string }> = [];
 

@@ -170,13 +170,36 @@ export async function POST(req: Request) {
       }
     }
 
+    // Administrative Takeover Mode
+    if (mode === "admin" || mode === "takeover") {
+      return NextResponse.json({
+        success: true,
+        mode: "admin",
+        producer: "Studio Executive Producer",
+        reply: message,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
     if (!message || typeof message !== "string") {
       return NextResponse.json({ error: "Message content is required" }, { status: 400 });
     }
 
     const lower = message.toLowerCase().trim();
 
-    // Security & confidential guidelines
+    // Security & confidential guidelines (NDA & credentials protection)
+    if (
+      lower.includes("another client") ||
+      lower.includes("other client") ||
+      lower.includes("competitor")
+    ) {
+      return NextResponse.json({
+        reply: "Sutra Studio operates under strict non-disclosure and client confidentiality agreements. We cannot disclose information about other clients or proprietary projects.",
+        mode: "ai",
+        refusal: true,
+        timestamp: new Date().toISOString(),
+      });
+    }
     if (
       lower.includes("ignore previous instructions") ||
       lower.includes("reveal your instructions") ||

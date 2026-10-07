@@ -27,7 +27,7 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     description:
       "High-fidelity AI generated and human-perfected commercial product imagery, luxury brand mockups, and advertising visual assets.",
     workflow: "image",
-    startingPrice: "₹5,499",
+    startingPrice: "₹3,499",
     deliverables: ["4K High-Res Renders", "Commercial Usage Rights", "Multi-Angle Mockups"],
     icon: "Image",
     thumbnail: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=800&q=80",

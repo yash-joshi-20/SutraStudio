@@ -45,10 +45,13 @@ import {
   Send,
   Video,
   Box,
+  QrCode,
 } from "lucide-react";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { openRazorpayCheckout } from "@/lib/services/razorpayClient";
 import { OrderReceiptModal, ReceiptOrderData } from "@/components/orders/OrderReceiptModal";
+import { PaymentModal } from "@/components/checkout/PaymentModal";
+import { MasterOrderForm } from "@/components/orders/MasterOrderForm";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { computeOrderProgress, type OrderProgressInfo } from "@/lib/services/orderProgress";
 import { uploadFileToDrive } from "@/lib/drive/useDriveUpload";
@@ -184,6 +187,9 @@ export default function OrdersPage() {
 
   // New Order Modal Flow State
   const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
+  const [isMasterOrderModalOpen, setIsMasterOrderModalOpen] = useState(false);
+  const [initialMasterService, setInitialMasterService] = useState<string | undefined>(undefined);
+  const [initialMasterTier, setInitialMasterTier] = useState<string | undefined>(undefined);
   const [flowStep, setFlowStep] = useState<
     | "choose_type"
     | "services_select"
@@ -247,6 +253,7 @@ export default function OrdersPage() {
   const [receiptOrder, setReceiptOrder] = useState<ReceiptOrderData | null>(null);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [retryingOrderId, setRetryingOrderId] = useState<string | null>(null);
+  const [paymentModalOrder, setPaymentModalOrder] = useState<OrderItem | null>(null);
 
   // Tab Filtering: Active Orders vs Order History
   const [activeFilterTab, setActiveFilterTab] = useState<"active" | "history" | "all">("active");
@@ -326,6 +333,22 @@ export default function OrdersPage() {
       }));
     }
   }, [user]);
+
+  // Deep-link detection for package / service preselection
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const pkg = params.get("package") || params.get("tier");
+      const srv = params.get("service");
+      const isNew = params.get("new") === "true" || params.get("action") === "commission";
+
+      if (pkg || srv || isNew) {
+        if (srv) setInitialMasterService(srv);
+        if (pkg) setInitialMasterTier(pkg);
+        setIsMasterOrderModalOpen(true);
+      }
+    }
+  }, []);
 
   // Load Catalogs from Firebase API
   const loadCatalogs = useCallback(async () => {
@@ -504,7 +527,7 @@ export default function OrdersPage() {
       if (qty > 0) {
         const item = servicesCatalog.find((s) => s.id === srvId);
         if (item) {
-          const unitPrice = item.startingPrice ?? (item as any).price ?? 5499;
+          const unitPrice = item.startingPrice ?? (item as any).price ?? 3499;
           total += unitPrice * qty;
         }
       }
@@ -523,7 +546,7 @@ export default function OrdersPage() {
 
   const livePlanTotal = useMemo(() => {
     if (!selectedPlan) return 0;
-    const base = selectedPlan.monthlyPrice ?? selectedPlan.price ?? 5999;
+    const base = selectedPlan.monthlyPrice ?? selectedPlan.price ?? 14999;
     if (billingCycle === "quarterly") {
       return Math.round(base * 3 * 0.9); // 10% savings
     }
@@ -655,8 +678,12 @@ export default function OrdersPage() {
     });
   };
 
-  // Open New Order Flow from Scratch
+  // Open New Order Flow from Scratch (Launches Master Order Form)
   const handleOpenNewOrder = () => {
+    setIsMasterOrderModalOpen(true);
+  };
+
+  const handleOpenLegacyWizard = () => {
     setFlowStep("choose_type");
     setSelectedServices({ "img-creation": 1 });
     setSelectedPlanId("studio-growth");
@@ -1700,16 +1727,28 @@ export default function OrdersPage() {
                         <div className="flex flex-wrap items-center gap-2">
                           {/* Pay Now for Unpaid */}
                           {(ord.status === "pending_payment" || ord.paymentStatus === "unpaid") && (
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              onClick={() => handleRetryPayment(ord)}
-                              isLoading={retryingOrderId === ord.id}
-                              disabled={retryingOrderId !== null}
-                              leftIcon={<Lock className="w-3.5 h-3.5 text-[#EADFCB]" />}
-                            >
-                              Pay Now
-                            </Button>
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => setPaymentModalOrder(ord)}
+                                className="px-3 py-1.5 rounded-xl bg-[#FFFDF9] border border-[#2E7D4F] text-xs font-semibold text-[#2E7D4F] hover:bg-[#F0FDF4] transition-all cursor-pointer flex items-center gap-1.5 min-h-[36px]"
+                                title="Scan & Pay via Google Pay / PhonePe (0% Fee)"
+                              >
+                                <QrCode className="w-3.5 h-3.5" />
+                                <span>Zero-Fee UPI</span>
+                              </button>
+
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={() => handleRetryPayment(ord)}
+                                isLoading={retryingOrderId === ord.id}
+                                disabled={retryingOrderId !== null}
+                                leftIcon={<Lock className="w-3.5 h-3.5 text-[#EADFCB]" />}
+                              >
+                                Pay Online
+                              </Button>
+                            </>
                           )}
 
                           {/* Official Receipt */}
@@ -2737,7 +2776,7 @@ export default function OrdersPage() {
                         .map(([srvId, qty]) => {
                           const srv = servicesCatalog.find((s) => s.id === srvId);
                           if (!srv) return null;
-                          const srvPrice = srv.startingPrice ?? (srv as any).price ?? 5499;
+                          const srvPrice = srv.startingPrice ?? (srv as any).price ?? 3499;
                           return (
                             <div key={srvId} className="pt-2 flex justify-between items-center">
                               <div>
@@ -2823,14 +2862,14 @@ export default function OrdersPage() {
                   )}
 
                   <div className="pt-2 border-t border-[#EADFCB]/60 flex items-center justify-between text-[11px] text-[#64748B]">
-                    <span>Vault Sync: Google Drive Encrypted</span>
+                    <span>Vault Sync: Sutra Cloud Vault (Encrypted)</span>
                     <span>
                       {uploadedFiles.length > 0
                         ? isUploadingAttachments
-                          ? `Uploading ${uploadedFiles.length} file(s) → Google Drive…`
+                          ? `Uploading ${uploadedFiles.length} file(s) → Sutra Cloud Vault…`
                           : `${uploadedFiles.length} file(s) staged`
                         : driveLink
-                        ? "External Drive link attached"
+                        ? "External Cloud link attached"
                         : "No reference files"}
                     </span>
                   </div>
@@ -2845,7 +2884,7 @@ export default function OrdersPage() {
                     className="rounded text-[#5C3A1E] focus:ring-[#D4A35A]"
                   />
                   <span>
-                    I agree to the Studio Production Terms, SLA, and Google Drive vault storage policy.
+                    I agree to the Studio Production Terms, SLA, and Sutra Cloud Vault storage policy.
                   </span>
                 </label>
 
@@ -3665,17 +3704,32 @@ export default function OrdersPage() {
                     )}
 
                     {(inspectingOrder.status === "pending_payment" || inspectingOrder.paymentStatus === "unpaid") && (
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => {
-                          handleRetryPayment(inspectingOrder);
-                          setInspectingOrder(null);
-                        }}
-                        leftIcon={<Lock className="w-3.5 h-3.5 text-[#EADFCB]" />}
-                      >
-                        Pay Now
-                      </Button>
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPaymentModalOrder(inspectingOrder);
+                            setInspectingOrder(null);
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-[#FFFDF9] border border-[#2E7D4F] text-xs font-semibold text-[#2E7D4F] hover:bg-[#F0FDF4] transition-all cursor-pointer flex items-center gap-1.5 min-h-[36px]"
+                          title="Scan & Pay via Google Pay / PhonePe (0% Fee)"
+                        >
+                          <QrCode className="w-3.5 h-3.5" />
+                          <span>Zero-Fee UPI</span>
+                        </button>
+
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => {
+                            handleRetryPayment(inspectingOrder);
+                            setInspectingOrder(null);
+                          }}
+                          leftIcon={<Lock className="w-3.5 h-3.5 text-[#EADFCB]" />}
+                        >
+                          Pay Online
+                        </Button>
+                      </>
                     )}
 
                     {(inspectingOrder.status === "delivered" ||
@@ -3718,6 +3772,48 @@ export default function OrdersPage() {
           isOpen={isReceiptOpen}
           onClose={() => setIsReceiptOpen(false)}
         />
+
+        {/* Zero-Fee UPI & GPay Payment Modal */}
+        {paymentModalOrder && (
+          <PaymentModal
+            isOpen={!!paymentModalOrder}
+            onClose={() => setPaymentModalOrder(null)}
+            orderId={paymentModalOrder.id}
+            orderCode={paymentModalOrder.code || paymentModalOrder.orderNumber}
+            clientName={paymentModalOrder.clientName || clientContact.name}
+            clientEmail={paymentModalOrder.clientEmail || clientContact.email}
+            clientPhone={paymentModalOrder.clientPhone || clientContact.phone}
+            serviceTitle={paymentModalOrder.service || paymentModalOrder.title}
+            amount={paymentModalOrder.totalAmount || 3499}
+            onPaymentSuccess={() => {
+              window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
+            }}
+          />
+        )}
+
+        {/* Master Intake Order Form Modal (All 12 Services + Conditional Accordions + Zero-Fee Checkout) */}
+        {isMasterOrderModalOpen && (
+          <Modal
+            isOpen={isMasterOrderModalOpen}
+            onClose={() => setIsMasterOrderModalOpen(false)}
+            title="Commission Creative Project"
+            description="Select from 12 Studio Disciplines • Autonomous n8n Workflow Dispatch • Zero-Fee UPI & Razorpay"
+            maxWidth="2xl"
+            variant="auto"
+          >
+            <div className="pt-2">
+              <MasterOrderForm
+                initialServiceId={initialMasterService}
+                initialTierId={initialMasterTier}
+                onOrderSuccess={() => {
+                  setIsMasterOrderModalOpen(false);
+                  loadOrders();
+                  window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
+                }}
+              />
+            </div>
+          </Modal>
+        )}
       </div>
       <ConfirmationDialog />
     </RouteGuard>

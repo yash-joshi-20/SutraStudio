@@ -39,7 +39,7 @@ export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
     title: "12 Specialized Studio Capabilities & Pricing Matrix",
     content: `Here are our official 12 Specialized Studio Capabilities and starting investment rates:
 
-1. 🎨 **Image Creation** — Starting at **₹5,499**
+1. 🎨 **Image Creation** — Starting at **₹3,499**
    • Product imagery, luxury advertising visuals, 4K renders, multi-angle mockups.
 2. 🎬 **Video Creation** — Starting at **₹7,999**
    • 10-30s cinematic video ads, social reels, AI motion sequences, studio voiceovers.
@@ -79,25 +79,21 @@ export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
     client_id: "client_sutra",
     category: "Pricing",
     title: "Monthly Agency Retainers & Subscription Tiers",
-    content: `We offer three transparent monthly subscription retainers:
+    content: `We offer transparent commissions and retainers:
 
-1. 🚀 **Startup Tier** — **₹5,999 / month** ($750)
-   • Up to 5,000 inquiries/month
-   • 50 Approved Knowledge Chunks
-   • Email & Lead Alerts
-   • Standard Support & 48h Turnaround
+1. ⚡ **Autonomous Growth Retainer** — **₹14,999 / month** [Daily Active Queue]
+   • Daily 1x 4K Brand Graphic (30 Assets/month)
+   • Daily 1x Commercial Motion Short/Reel (30 Assets/month)
+   • Dedicated 3D Spatial Renders, 360° Tours, and Meta Ads Creative Packs
+   • Private Sutra Cloud Vault with Auto-Sync & Instant Downloads
 
-2. ⚡ **Growth Enterprise Tier** — **₹12,999 / month** ($1,850) [Most Popular]
-   • Unlimited Customer Inquiries
-   • Instant Live Human Takeover & Lead Routing
-   • Full Document Vector Processing (PDF/DOCX)
-   • Dedicated Senior Account Lead
+2. 🚀 **Starter Creative Commission** — **₹3,499**
+   • Up to 5x 4K UHD Master Renders + 1x 10-Second Video Commercial Ad
+   • 48-Hour Rapid Turnaround & 2 Revision Rounds
 
-3. 🏛️ **Bespoke Enterprise Atelier** — **₹19,999+ / month** ($3,800+)
-   • Custom Multi-Modal RAG Pipelines
-   • Custom n8n Autonomous Automation Workflows
-   • Private Google Drive 4K Media Vault with Dedicated SLA
-   • Direct Art Director & Engineering Concierge`,
+3. 🎨 **Studio Growth Commission** — **₹7,999**
+   • 15x 3D & Product Renders + 3x 15s Video Ads + 360° Tour + 3x Meta Ad Variations
+   • Priority 24-72 Hour Delivery Pipeline`,
     source: "SUTRA_STUDIO_UI_MASTER_PROMPT_PACK / Commercial Pricing",
     status: "approved",
     approved_by: "Supervisor Admin",

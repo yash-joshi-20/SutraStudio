@@ -175,8 +175,8 @@ export async function generateChatResponse(o: Opts): Promise<string> {
     lastUserMsg.includes("કિંમત")
   ) {
     return isGujarati
-      ? "અમારા સૂત્ર સ્ટુડિયોના પ્રાઈસિંગ પ્લાન્સ અને સર્વિસ રેટ્સ:\n\n• **ઇમેજ ક્રિએશન**: ₹5,499 થી શરૂ\n• **વિડિયો ક્રિએશન**: ₹7,999 થી શરૂ\n• **3D મોડેલિંગ & સ્પેસિયલ વિઝ્યુઅલાઇઝેશન**: ₹9,499 થી શરૂ\n• **360° વર્ચ્યુઅલ ટૂર**: ₹11,999 થી શરૂ\n• **વેબસાઇટ ડેવલપમેન્ટ**: ₹19,999 થી શરૂ\n• **AI ઓટોમેશન**: ₹17,999 થી શરૂ\n\nતમે તમારા પ્રોજેક્ટ માટે કઈ સર્વિસ સિલેક્ટ કરવા માંગો છો?"
-      : "Here are Sutra Studio's verified service starting prices:\n\n• **Image Creation**: From ₹5,499\n• **Video Creation**: From ₹7,999\n• **3D Modeling & Spatial Visualization**: From ₹9,499\n• **360° Virtual Tours**: From ₹11,999\n• **Website Development**: From ₹19,999\n• **AI Automation & n8n Workflows**: From ₹17,999\n\nWhich service best matches your project requirements?";
+      ? "અમારા સૂત્ર સ્ટુડિયોના પ્રાઈસિંગ પ્લાન્સ અને સર્વિસ રેટ્સ:\n\n• **ઇમેજ ક્રિએશન**: ₹3,499 થી શરૂ\n• **વિડિયો ક્રિએશન**: ₹7,999 થી શરૂ\n• **3D મોડેલિંગ & સ્પેસિયલ વિઝ્યુઅલાઇઝેશન**: ₹9,499 થી શરૂ\n• **360° વર્ચ્યુઅલ ટૂર**: ₹11,999 થી શરૂ\n• **વેબસાઇટ ડેવલપમેન્ટ**: ₹19,999 થી શરૂ\n• **AI ઓટોમેશન**: ₹17,999 થી શરૂ\n\nતમે તમારા પ્રોજેક્ટ માટે કઈ સર્વિસ સિલેક્ટ કરવા માંગો છો?"
+      : "Here are Sutra Studio's verified service starting prices:\n\n• **Image Creation**: From ₹3,499\n• **Video Creation**: From ₹7,999\n• **3D Modeling & Spatial Visualization**: From ₹9,499\n• **360° Virtual Tours**: From ₹11,999\n• **Website Development**: From ₹19,999\n• **AI Automation & n8n Workflows**: From ₹17,999\n\nWhich service best matches your project requirements?";
   }
 
   return isGujarati

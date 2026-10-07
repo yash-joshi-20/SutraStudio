@@ -83,7 +83,7 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
     tagline: "Product, Ads, Mockups",
     shortDescription:
       "High-fidelity AI-generated and human-perfected commercial product imagery, luxury brand mockups, and advertising visual assets.",
-    startingPrice: 5499,
+    startingPrice: 3499,
     currency: "INR",
     icon: "Image",
     active: true,
@@ -1197,25 +1197,55 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
 ];
 
 // ----------------------------------------------------------------------------
-// SEED CORPUS: ALL 3 CANONICAL MONTHLY RETAINER PLANS
+// SEED CORPUS: ALL CANONICAL MONTHLY RETAINER PLANS
 // ----------------------------------------------------------------------------
 export const SEED_CATALOG_PLANS: CatalogPlan[] = [
+  {
+    id: "autonomous-growth-retainer",
+    name: "Autonomous Growth Retainer",
+    tier: "Growth",
+    price: 14999,
+    monthlyPrice: 14999,
+    quarterlyPrice: 42747, // 5% discount
+    annualPrice: 152989, // 15% discount
+    features: [
+      "Daily 1x 4K Brand Image / Graphic (30 Assets/month) powered by trend research",
+      "Daily 1x Commercial Video Reel / Short (30 Assets/month) with voiceover and motion typography",
+      "Dedicated 3D Asset Modeling & Spatial Renders",
+      "Interactive 360° Virtual Panoramic Tour",
+      "Interior / Spatial Visualizations",
+      "Meta Ads Creative Variation Pack (Multi-Ratio)",
+      "Private Sutra Cloud Vault with Auto-Sync & Instant Downloads",
+      "Executive Producer Direct Access & Priority Daily Active Queue",
+    ],
+    includedServices: {
+      "img-creation": 30,
+      "vid-creation": 30,
+      "3d-modeling": 4,
+      "360-view": 2,
+      "meta-ads": 6,
+    },
+    freeTrialDays: 3,
+    active: true,
+    sortIndex: 1,
+    razorpayPlanId: "plan_autonomous_retainer_01",
+    updatedAt: "2026-10-01T00:00:00.000Z",
+  },
   {
     id: "studio-starter",
     name: "Starter Creative",
     tier: "Starter",
-    price: 5999,
-    monthlyPrice: 5999,
-    quarterlyPrice: 17097, // 5% discount
-    annualPrice: 61189, // 15% discount
+    price: 3499,
+    monthlyPrice: 3499,
+    quarterlyPrice: 9972,
+    annualPrice: 35689,
     features: [
       "Up to 5 Photorealistic 4K Renders per month",
       "1x 10-Second Commercial Video Ad",
       "Full Commercial Copyright License",
       "48-Hour Turnaround Pipeline",
-
+      "Sutra Cloud Vault Delivery & Master Archive",
       "2 Revision Rounds Included",
-      "Direct AI Concierge with Studio Support",
     ],
     includedServices: {
       "img-creation": 5,
@@ -1223,7 +1253,7 @@ export const SEED_CATALOG_PLANS: CatalogPlan[] = [
     },
     freeTrialDays: 3,
     active: true,
-    sortIndex: 1,
+    sortIndex: 2,
     razorpayPlanId: "plan_starter_monthly_01",
     updatedAt: "2026-10-01T00:00:00.000Z",
   },
@@ -1231,10 +1261,10 @@ export const SEED_CATALOG_PLANS: CatalogPlan[] = [
     id: "studio-growth",
     name: "Studio Growth",
     tier: "Growth",
-    price: 12999,
-    monthlyPrice: 12999,
-    quarterlyPrice: 37047,
-    annualPrice: 132589,
+    price: 7999,
+    monthlyPrice: 7999,
+    quarterlyPrice: 22797,
+    annualPrice: 81589,
     features: [
       "15x High-Resolution 3D & Product Renders",
       "3x 15-Second Video Ads with Voiceover",
@@ -1249,45 +1279,12 @@ export const SEED_CATALOG_PLANS: CatalogPlan[] = [
       "vid-creation": 3,
       "3d-modeling": 3,
       "360-view": 1,
-      "meta-ads": 1,
-    },
-    freeTrialDays: 3,
-    active: true,
-    sortIndex: 2,
-    razorpayPlanId: "plan_growth_monthly_02",
-    updatedAt: "2026-10-01T00:00:00.000Z",
-  },
-  {
-    id: "studio-enterprise",
-    name: "Bespoke Enterprise",
-    tier: "Enterprise",
-    price: 19999,
-    monthlyPrice: 19999,
-    quarterlyPrice: 56997,
-    annualPrice: 203989,
-    features: [
-      "Bespoke Next.js 16 Web Application Build",
-      "Intelligent Production Automation Pipelines",
-      "Unlimited 3D Modeling & Spatial Renders",
-      "Cross-Platform Mobile App Setup (Expo/PWA)",
-      "Custom AI Classifier & Real-Time Sync",
-      "Same-Day Priority Turnaround",
-      "Dedicated Senior Art Director & SLA",
-    ],
-    includedServices: {
-      "img-creation": 25,
-      "vid-creation": 6,
-      "3d-modeling": 10,
-      "360-view": 3,
-      "interior-design": 2,
-      "web-dev": 1,
-      "webapp-dev": 1,
-      "ai-automation": 1,
+      "meta-ads": 3,
     },
     freeTrialDays: 3,
     active: true,
     sortIndex: 3,
-    razorpayPlanId: "plan_enterprise_monthly_03",
+    razorpayPlanId: "plan_growth_monthly_02",
     updatedAt: "2026-10-01T00:00:00.000Z",
   },
 ];

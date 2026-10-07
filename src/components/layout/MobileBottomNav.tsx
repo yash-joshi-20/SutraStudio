@@ -63,7 +63,7 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="Mobile app bottom navigation"
-      className="fixed bottom-0 inset-x-0 z-40 bg-[#FFFDF9]/95 backdrop-blur-md border-t border-[#EADFCB] px-2 pt-1 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] flex items-center justify-around md:hidden shadow-lg"
+      className="fixed bottom-0 inset-x-0 z-40 bg-[#FFFDF9]/95 backdrop-blur-md border-t border-[#EADFCB] px-2 pt-1.5 pb-safe pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] flex items-center justify-around md:hidden shadow-lg"
     >
       {tabs.map((tab) => {
         const Icon = tab.icon;
@@ -78,7 +78,7 @@ export function MobileBottomNav() {
           <Link
             key={tab.name}
             href={tab.href}
-            className={`flex flex-col items-center justify-center py-1.5 px-2.5 rounded-xl transition-all min-h-[44px] min-w-[54px] touch-target ${
+            className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all min-h-[48px] min-w-[48px] touch-target ${
               isActive
                 ? "text-[#5C3A1E] font-semibold bg-[#F4EFE6]"
                 : "text-[#64748B] hover:text-[#0F172A]"

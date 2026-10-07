@@ -98,20 +98,20 @@ export function Modal({
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0.05, bottom: 0.6 }}
             onDragEnd={handleDragEnd}
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 60 }}
-            transition={{ type: "spring", damping: 28, stiffness: 350 }}
-            className={`relative w-full ${maxWidthClasses} bg-[#FFFDF9] border border-[#EADFCB] shadow-2xl rounded-t-3xl sm:rounded-3xl z-10 flex flex-col max-h-[90dvh] sm:max-h-[85vh] overflow-hidden pb-safe`}
+            transition={{ type: "spring", damping: 30, stiffness: 350 }}
+            className={`fixed inset-x-0 bottom-0 rounded-t-3xl max-h-[92vh] overflow-y-auto z-50 p-6 sm:static sm:inset-auto sm:rounded-2xl sm:max-w-xl mx-auto ${maxWidthClasses} bg-[#FFFDF9] border border-[#EADFCB] shadow-2xl flex flex-col pb-safe`}
           >
             {/* Mobile Drag Indicator Handle */}
-            <div className="sm:hidden pt-3 pb-1 flex justify-center cursor-grab active:cursor-grabbing">
+            <div className="sm:hidden -mt-2 pb-3 flex justify-center cursor-grab active:cursor-grabbing">
               <div className="bottom-sheet-drag-handle" />
             </div>
 
             {/* Sticky Header */}
             {(title || description) && (
-              <div className="flex items-start justify-between gap-4 px-5 sm:px-6 pt-3 pb-4 border-b border-[#EADFCB]/70 shrink-0 bg-[#FFFDF9]">
+              <div className="flex items-start justify-between gap-4 pb-4 border-b border-[#EADFCB]/70 shrink-0 bg-[#FFFDF9]">
                 <div className="pr-2">
                   {title && (
                     <h3
@@ -129,7 +129,7 @@ export function Modal({
                 </div>
                 <button
                   onClick={onClose}
-                  className="w-9 h-9 rounded-full text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8F5EF] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4A35A] flex items-center justify-center shrink-0 min-h-[44px] min-w-[44px] cursor-pointer"
+                  className="w-10 h-10 rounded-full text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8F5EF] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4A35A] flex items-center justify-center shrink-0 min-h-[48px] min-w-[48px] cursor-pointer touch-target"
                   aria-label="Close dialog"
                 >
                   <X className="w-5 h-5" />
@@ -138,13 +138,13 @@ export function Modal({
             )}
 
             {/* Scrollable Content Body */}
-            <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-4 overscroll-contain">
+            <div className="flex-1 overflow-y-auto py-4 overscroll-contain">
               {children}
             </div>
 
-            {/* Sticky Action Footer (if provided) */}
+            {/* Sticky Action Footer (fluid buttons: w-full sm:w-auto) */}
             {footer && (
-              <div className="px-5 sm:px-6 py-3.5 border-t border-[#EADFCB]/70 shrink-0 bg-[#FFFDF9] flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
+              <div className="pt-3.5 border-t border-[#EADFCB]/70 shrink-0 bg-[#FFFDF9] flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 [&>button]:w-full [&>button]:sm:w-auto [&>a]:w-full [&>a]:sm:w-auto [&>div]:w-full [&>div]:sm:w-auto">
                 {footer}
               </div>
             )}

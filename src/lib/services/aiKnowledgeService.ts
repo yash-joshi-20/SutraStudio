@@ -54,7 +54,7 @@ let MEMORY_KNOWLEDGE: KnowledgeBaseEntry[] = [
     title: "Image Creation — Deliverables, Resolution & SLA",
     category: "service_details",
     question: "What is included in Image Creation and what is the turnaround time?",
-    answer: "Image Creation starts at ₹5,499 with a 24–48 hour turnaround SLA. Includes 3–5 multi-angle 4K Ultra-HD renders (PNG/TIFF), studio lighting passes (Midday & Warm Sunset), 2 revision rounds, and commercial copyright license.",
+    answer: "Image Creation starts at ₹3,499 with a 24–48 hour turnaround SLA. Includes 3–5 multi-angle 4K Ultra-HD renders (PNG/TIFF), studio lighting passes (Midday & Warm Sunset), 2 revision rounds, and commercial copyright license.",
     status: "active",
     source: "admin_manual",
     createdAt: "2026-09-15T10:00:00.000Z",

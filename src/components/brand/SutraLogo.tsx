@@ -190,10 +190,10 @@ export function SutraLogo({
   href = "/",
 }: SutraLogoProps) {
   const heightClasses = {
-    sm: "h-9 sm:h-10",
-    md: "h-11 sm:h-12",
-    lg: "h-16 sm:h-18",
-    xl: "h-24 sm:h-28",
+    sm: "h-9 sm:h-10 w-auto object-contain transition-all duration-300",
+    md: "h-10 sm:h-11 md:h-12 w-auto object-contain transition-all duration-300",
+    lg: "h-14 sm:h-16 md:h-18 w-auto object-contain transition-all duration-300",
+    xl: "h-20 sm:h-24 md:h-28 w-auto object-contain transition-all duration-300",
   }[size];
 
   const sizeClasses = {

@@ -8,91 +8,25 @@ import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import {
   Check,
-  Sparkles,
   ShieldCheck,
   Clock,
   HardDrive,
   HelpCircle,
-  ArrowRight,
   Bot,
-  Zap,
 } from "lucide-react";
-
-interface PricingTier {
-  name: string;
-  projectPrice: string;
-  monthlyPrice: string;
-  description: string;
-  features: string[];
-  popular: boolean;
-  cta: string;
-  turnaround: string;
-}
-
-const TIERS: PricingTier[] = [
-  {
-    name: "Starter Creative",
-    projectPrice: "₹3,499",
-    monthlyPrice: "₹5,999",
-    description: "Ideal for boutique brands, luxury founders, and product launches needing immediate high-impact visuals.",
-    features: [
-      "Up to 5 Photorealistic 4K Renders",
-      "1x 10-Second Commercial Video Ad",
-      "Full Commercial Copyright License",
-      "48-Hour Turnaround Pipeline",
-      "Secure Media Vault Delivery",
-      "2 Revision Rounds Included",
-    ],
-    popular: false,
-    cta: "Start with Starter",
-    turnaround: "48 Hours",
-  },
-  {
-    name: "Studio Growth",
-    projectPrice: "₹7,999",
-    monthlyPrice: "₹12,999",
-    description: "Comprehensive creative suite across 3D spatial renders, promotional video, and multi-channel Meta ad campaigns.",
-    features: [
-      "15x High-Resolution 3D & Product Renders",
-      "3x 15-Second Video Ads with Voiceover",
-      "Interactive 360° Space or Product Tour",
-      "Meta Ads Creative Variation Pack (3 Sets)",
-      "Dedicated Creative Lead & Slack Sync",
-      "Priority 24-72 Hour Delivery Pipeline",
-      "Unlimited Minor Revisions (7 Days)",
-    ],
-    popular: true,
-    cta: "Choose Growth",
-    turnaround: "24–72 Hours",
-  },
-  {
-    name: "Bespoke Enterprise",
-    projectPrice: "₹14,999",
-    monthlyPrice: "₹19,999",
-    description: "Full digital studio ecosystem: custom Next.js web application, autonomous 3D pipelines, and AI cloud automation.",
-    features: [
-      "Bespoke Next.js 16 Web Application Build",
-      "Intelligent Production Automation Pipelines",
-      "Unlimited 3D Modeling & Spatial Renders",
-      "Cross-Platform Mobile App Setup (Expo/PWA)",
-      "Custom AI Classifier & Real-Time Sync",
-      "Same-Day Priority Turnaround",
-      "Dedicated Senior Art Director & SLA",
-    ],
-    popular: false,
-    cta: "Inquire for Enterprise",
-    turnaround: "Same-Day / Dedicated",
-  },
-];
+import {
+  PER_PROJECT_TIERS,
+  MONTHLY_RETAINER_TIERS,
+} from "@/config/pricing";
 
 const FAQS = [
   {
     q: "What is your revision policy?",
-    a: "Every project tier includes revision rounds overseen directly by our Principal Art Director. You can annotate feedback, request lighting passes, or submit copy edits through the client portal with guaranteed 24-hour turnaround.",
+    a: "Every project tier includes revision rounds overseen directly by our Principal Art Director. You can annotate feedback, request lighting passes, or submit copy edits through the client portal with guaranteed turnaround.",
   },
   {
-    q: "Can I upgrade or customize my scope mid-project?",
-    a: "Yes. Our modular service architecture allows you to easily attach additional 3D renders, video aspect ratios, or Meta ad sets to any active commission with transparent prorated billing.",
+    q: "How does the Monthly Autonomous Retainer fulfill daily requests?",
+    a: "The Autonomous Growth Retainer operates as your dedicated daily active queue. Each business day, our automated creative engine and senior art director produce 4K graphics, commercial motion shorts, 3D meshes, and ad variations continuously vaulted into your private Sutra Cloud Vault.",
   },
   {
     q: "Do I own full commercial rights to the deliverables?",
@@ -122,8 +56,8 @@ export default function PricingPage() {
           </h1>
 
           <p className="text-base sm:text-lg text-[#64748B] leading-relaxed">
-            Honest studio packages with zero hidden fees. Every asset crafted under
-            experienced art-direction and delivered directly into your Google Drive vault.
+            Honest studio commissions with zero hidden fees. Every asset crafted under
+            experienced art-direction and delivered directly into your Sutra Cloud Vault.
           </p>
 
           {/* Billing Cycle Toggle */}
@@ -153,93 +87,160 @@ export default function PricingPage() {
                     : "text-[#64748B] hover:text-[#0F172A]"
                 }`}
               >
-                <span>Monthly Studio Retainer</span>
+                <span>30-Day Autonomous Retainer</span>
                 <span className="text-[10px] bg-[#D4A35A] text-[#0F172A] px-2 py-0.5 rounded-full font-bold">
-                  Save 20%
+                  Daily Active Queue
                 </span>
               </button>
             </div>
           </div>
         </div>
 
-        {/* 3 Tier Grid (Responsive 1-col on mobile, 3-col on desktop) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-stretch">
-          {TIERS.map((tier) => (
-            <div
-              key={tier.name}
-              className={`rounded-3xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 ${
-                tier.popular
-                  ? "bg-[#FFFDF9] border-2 border-[#D4A35A] shadow-warm-hover relative"
-                  : "bg-[#FFFDF9] border border-[#EADFCB] shadow-sm hover:border-[#D4A35A]/60"
-              }`}
-            >
-              {tier.popular && (
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#5C3A1E] text-white px-4 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase shadow-xs">
-                  Most Popular
-                </div>
-              )}
+        {/* Dynamic Tier Grid */}
+        {billingCycle === "project" ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-stretch">
+            {PER_PROJECT_TIERS.map((tier) => (
+              <div
+                key={tier.id}
+                className={`rounded-3xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 ${
+                  tier.popular
+                    ? "bg-[#FFFDF9] border-2 border-[#D4A35A] shadow-warm-hover relative"
+                    : "bg-[#FFFDF9] border border-[#EADFCB] shadow-sm hover:border-[#D4A35A]/60"
+                }`}
+              >
+                {tier.popular && (
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#5C3A1E] text-white px-4 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase shadow-xs">
+                    Most Popular
+                  </div>
+                )}
 
-              <div className="space-y-6">
-                <div>
-                  <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
-                    {tier.name}
-                  </h3>
-                  <p className="text-xs text-[#64748B] mt-1.5 leading-relaxed">
-                    {tier.description}
-                  </p>
-                </div>
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
+                      {tier.name}
+                    </h3>
+                    <p className="text-xs text-[#64748B] mt-1.5 leading-relaxed">
+                      {tier.description}
+                    </p>
+                  </div>
 
-                {/* Price Display */}
-                <div className="flex items-baseline gap-1.5 pb-6 border-b border-[#EADFCB]/60">
-                  <span className="font-serif text-4xl sm:text-5xl font-bold text-[#5C3A1E]">
-                    {billingCycle === "project" ? tier.projectPrice : tier.monthlyPrice}
-                  </span>
-                  <span className="text-xs text-[#64748B] font-mono">
-                    {billingCycle === "project" ? "/ commission" : "/ month"}
-                  </span>
-                </div>
+                  {/* Price Display */}
+                  <div className="flex items-baseline gap-1.5 pb-6 border-b border-[#EADFCB]/60">
+                    <span className="font-serif text-3xl sm:text-4xl font-bold text-[#5C3A1E]">
+                      {tier.formattedPrice}
+                    </span>
+                    <span className="text-xs text-[#64748B] font-mono">
+                      {tier.price === "custom" ? "" : "/ commission"}
+                    </span>
+                  </div>
 
-                {/* Metadata Pills */}
-                <div className="grid grid-cols-1 gap-2 text-[11px] font-mono">
-                  <div className="p-2 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center gap-1.5 text-[#5C3A1E]">
-                    <Clock className="w-3.5 h-3.5 text-[#A98B57]" />
-                    <span>{tier.turnaround}</span>
+                  {/* Metadata Pills */}
+                  <div className="grid grid-cols-1 gap-2 text-[11px] font-mono">
+                    <div className="p-2 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center gap-1.5 text-[#5C3A1E]">
+                      <Clock className="w-3.5 h-3.5 text-[#A98B57]" />
+                      <span>Turnaround: {tier.turnaround}</span>
+                    </div>
+                  </div>
+
+                  {/* Features Checklist */}
+                  <div className="space-y-3">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#A98B57] block">
+                      What is Included:
+                    </span>
+                    <ul className="space-y-2.5 text-xs text-[#475569]">
+                      {tier.features.map((feat) => (
+                        <li key={feat} className="flex items-start gap-2.5">
+                          <span className="w-4 h-4 rounded-full bg-[#EDF7F0] text-[#2E7D4F] flex items-center justify-center shrink-0 mt-0.5">
+                            <Check className="w-2.5 h-2.5 stroke-[3]" />
+                          </span>
+                          <span className="leading-snug">{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
 
-                {/* Features Checklist */}
-                <div className="space-y-3">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#A98B57] block">
-                    What is Included:
-                  </span>
-                  <ul className="space-y-2.5 text-xs text-[#475569]">
-                    {tier.features.map((feat) => (
-                      <li key={feat} className="flex items-start gap-2.5">
-                        <span className="w-4 h-4 rounded-full bg-[#EDF7F0] text-[#2E7D4F] flex items-center justify-center shrink-0 mt-0.5">
-                          <Check className="w-2.5 h-2.5 stroke-[3]" />
-                        </span>
-                        <span>{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="pt-8">
+                  <Link href={tier.ctaHref || `/orders?package=${tier.id}`} className="block">
+                    <Button
+                      variant={tier.popular ? "primary" : "secondary"}
+                      size="md"
+                      className="w-full justify-center"
+                      withArrow
+                    >
+                      {tier.ctaText}
+                    </Button>
+                  </Link>
                 </div>
               </div>
+            ))}
+          </div>
+        ) : (
+          <div className="max-w-3xl mx-auto w-full">
+            {MONTHLY_RETAINER_TIERS.map((tier) => (
+              <div
+                key={tier.id}
+                className="rounded-3xl p-8 sm:p-10 bg-[#FFFDF9] border-2 border-[#D4A35A] shadow-warm-hover relative flex flex-col justify-between space-y-8"
+              >
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#5C3A1E] text-white px-5 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase shadow-xs">
+                  Autonomous Campaign Engine
+                </div>
 
-              <div className="pt-8">
-                <Link href="/orders">
-                  <Button
-                    variant={tier.popular ? "primary" : "secondary"}
-                    size="md"
-                    className="w-full justify-center"
-                    withArrow
-                  >
-                    {tier.cta}
-                  </Button>
-                </Link>
+                <div className="space-y-6">
+                  <div className="text-center sm:text-left">
+                    <h3 className="font-serif text-3xl font-semibold text-[#0F172A]">
+                      {tier.name}
+                    </h3>
+                    <p className="text-sm text-[#64748B] mt-2 leading-relaxed">
+                      {tier.description}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-baseline justify-between pb-6 border-b border-[#EADFCB]/60 gap-2">
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-serif text-4xl sm:text-5xl font-bold text-[#5C3A1E]">
+                        {tier.formattedMonthlyPrice}
+                      </span>
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FAF9F5] border border-[#D4A35A]/50 text-xs font-mono font-bold text-[#5C3A1E]">
+                      <Clock className="w-4 h-4 text-[#A98B57]" />
+                      <span>{tier.turnaround}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#A98B57] block">
+                      30-Day Autonomous Retainer Deliverables:
+                    </span>
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-[#475569]">
+                      {tier.features.map((feat) => (
+                        <li key={feat} className="flex items-start gap-2.5 p-2 rounded-xl bg-[#FAF9F5]/80 border border-[#EADFCB]/60">
+                          <span className="w-4 h-4 rounded-full bg-[#EDF7F0] text-[#2E7D4F] flex items-center justify-center shrink-0 mt-0.5">
+                            <Check className="w-2.5 h-2.5 stroke-[3]" />
+                          </span>
+                          <span className="leading-snug">{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="pt-4">
+                  <Link href={tier.ctaHref || `/orders?package=${tier.id}&cycle=monthly`} className="block">
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      className="w-full justify-center text-sm font-semibold"
+                      withArrow
+                    >
+                      {tier.ctaText}
+                    </Button>
+                  </Link>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Studio Service Guarantees Strip */}
         <div className="p-6 sm:p-8 rounded-3xl bg-[#FAF9F5] border border-[#EADFCB] grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs text-[#64748B]">
@@ -258,8 +259,8 @@ export default function PricingPage() {
               <HardDrive className="w-5 h-5 text-[#5C3A1E]" />
             </div>
             <div>
-              <h5 className="font-semibold text-[#0F172A] text-sm">Encrypted Drive Archive</h5>
-              <p className="text-[11px] mt-0.5">Private cloud vault with permanent asset storage.</p>
+              <h5 className="font-semibold text-[#0F172A] text-sm">Sutra Cloud Vault Archive</h5>
+              <p className="text-[11px] mt-0.5">Encrypted cloud vault with permanent asset storage.</p>
             </div>
           </div>
 

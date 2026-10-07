@@ -101,13 +101,18 @@ export function Navbar() {
       className={`sticky top-0 z-50 w-full transition-all duration-300 pt-safe ${
         scrolled
           ? "bg-[#FFFDF9]/95 backdrop-blur-md shadow-xs border-b border-[#EADFCB]"
-          : "bg-[#FFFDF9]/90 backdrop-blur-sm border-b border-[#EADFCB]/60"
+          : "bg-[#FFFDF9]/90 backdrop-blur-md border-b border-[#EADFCB]/80"
       }`}
     >
       <div className="app-container-cap px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
-        {/* Prominent Official Brand Logo */}
-        <div className="flex items-center shrink-0">
-          <SutraLogo variant="horizontal" size="md" href={isClient ? "/dashboard" : "/"} />
+        {/* Prominent Official Brand Logo Container */}
+        <div className="flex items-center shrink-0 min-w-0 py-1">
+          <SutraLogo
+            variant="horizontal"
+            size="md"
+            className="h-10 sm:h-11 md:h-12 w-auto object-contain transition-all duration-300"
+            href={isClient ? "/dashboard" : "/"}
+          />
         </div>
 
         {/* Desktop Navigation Links */}

@@ -438,7 +438,7 @@ export default function HomePage() {
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-xs font-semibold uppercase tracking-wider text-[#A98B57]">Sutra Studio</span>
-                      <span className="text-xs font-bold text-[#5C3A1E] bg-[#D4A35A]/20 px-2.5 py-0.5 rounded-full">From ₹5,499</span>
+                      <span className="text-xs font-bold text-[#5C3A1E] bg-[#D4A35A]/20 px-2.5 py-0.5 rounded-full">From ₹3,499</span>
                     </div>
                     <h4 className="font-serif text-lg font-bold text-[#0F172A] mb-2">Autonomous Atelier</h4>
                     <p className="text-xs text-[#64748B] mb-5 leading-relaxed">AI speed + Senior Art Director Polish + Cloud Vault.</p>
@@ -446,7 +446,7 @@ export default function HomePage() {
                     <ul className="space-y-3 text-xs text-[#171717]">
                       <li className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
-                        <span className="font-medium"><strong>Guaranteed 4K UHD Master Deliverables</strong> (3–5 curated variations)</span>
+                        <span className="font-medium"><strong>Guaranteed 4K UHD Master Deliverables</strong> (up to 5 curated renders)</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
@@ -462,7 +462,7 @@ export default function HomePage() {
                       </li>
                       <li className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
-                        <span className="font-medium"><strong>Private Google Drive Vault</strong> & 100% Commercial IP</span>
+                        <span className="font-medium"><strong>Private Sutra Cloud Vault</strong> & 100% Commercial IP</span>
                       </li>
                     </ul>
                   </div>
@@ -503,7 +503,7 @@ export default function HomePage() {
                     Choose Service or Retainer
                   </h4>
                   <p className="text-xs text-[#64748B] leading-relaxed">
-                    Select a single project (e.g. 3D Product, Branding, AI Visuals) starting at ₹5,499, or an all-inclusive monthly retainer from ₹5,999/mo with a 3-day risk-free trial.
+                    Select a single project (e.g. 3D Product, Branding, AI Visuals) starting at ₹3,499, or the Autonomous Growth Retainer at ₹14,999/mo for daily continuous active queue output.
                   </p>
                 </div>
 
@@ -529,7 +529,7 @@ export default function HomePage() {
                     Receive 4K Masters in 24–48h
                   </h4>
                   <p className="text-xs text-[#64748B] leading-relaxed">
-                    Get finished 4K UHD masters, source files, and brand assets delivered directly into your private, permanent Google Drive Vault with full commercial rights.
+                    Get finished 4K UHD masters, source files, and brand assets delivered directly into your private, permanent Sutra Cloud Vault with full commercial rights.
                   </p>
                 </div>
               </div>
@@ -543,10 +543,10 @@ export default function HomePage() {
                   <span>Exact Deliverables Guarantee</span>
                 </div>
                 <h4 className="font-serif text-xl font-bold text-[#0F172A]">
-                  Every ₹5,499 Project Includes 3 to 5 Curated 4K Deliverables
+                  Starter Commissions (₹3,499) Include Up to 5 Curated 4K Deliverables
                 </h4>
                 <p className="text-xs text-[#64748B] max-w-2xl leading-relaxed">
-                  Need more? Scale to 2x (6–10 deliverables for ₹10,998) or 3x (9–15 deliverables for ₹16,497). For continuous daily output, our monthly retainers provide 15–30+ assets/month with a 3-day risk-free money-back trial.
+                  Need more? Scale with Studio Growth (₹7,999) for 15x 3D renders, video ads, and 360° virtual tours, or activate the Autonomous Growth Retainer (₹14,999/mo) for daily active queue fulfillment.
                 </p>
               </div>
 

@@ -175,6 +175,34 @@ export interface FirestoreOrderRecord {
   };
 }
 
+export interface UniversalOrderPayload {
+  source?: "ai_tool" | "direct_order" | "pricing_package" | "whatsapp" | "email" | "dashboard" | "admin_manual" | string;
+  clientName?: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  brandName?: string;
+  industry?: string;
+  brandUrl?: string;
+  serviceId?: string;
+  serviceTitle?: string;
+  tierId?: string;
+  amount?: number;
+  billingType?: "per_project" | "monthly_retainer";
+  targetDeadline?: string;
+  creativeBrief?: string;
+  brandAssetUrl?: string;
+  paymentMethod?: "upi_qr" | "online" | "invoice" | "pay_on_invoice" | "direct" | "free_test" | string;
+  utrNumber?: string;
+  paymentStatus?: "unpaid" | "paid" | "failed" | "refunded" | "awaiting_confirmation" | "pending_verification";
+  serviceDetails?: Record<string, any>;
+  attachments?: any[];
+  notes?: string;
+  brief?: string;
+  requirements?: string;
+  couponCode?: string;
+  skipPayment?: boolean;
+}
+
 import { SEED_CATALOG_SERVICES, SEED_CATALOG_PLANS, CatalogService, CatalogPlan } from "@/lib/services/serviceCatalog";
 
 // Canonical Server-Side Database Catalogs (Source of Truth for Price Recomputations)
@@ -263,7 +291,7 @@ export async function GET(req: Request) {
   return NextResponse.json({
     database: isFirebaseAdminReady() ? "Firebase Firestore" : "Local Studio Vault (Synchronized)",
     collection: "orders",
-    storageBackend: "Google Drive Vault API v3",
+    storageBackend: "Sutra Cloud Vault (Encrypted)",
     totalCount: filtered.length,
     orders: filtered,
   });
@@ -275,7 +303,9 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     const orderType: "service" | "monthly_plan" =
-      body.type === "monthly_plan" ? "monthly_plan" : "service";
+      body.type === "monthly_plan" || body.billingType === "monthly_retainer"
+        ? "monthly_plan"
+        : "service";
 
     let calculatedTotal = 0;
     let verifiedItems: {
@@ -302,7 +332,7 @@ export async function POST(req: Request) {
         const srv = OFFICIAL_SERVICES[item.serviceId];
         if (srv && srv.active) {
           const qty = Math.max(1, Math.min(50, Math.floor(Number(item.quantity) || 1)));
-          const unitPrice = srv.startingPrice ?? (srv as any).price ?? 5499; // Recomputed from database!
+          const unitPrice = srv.startingPrice ?? (srv as any).price ?? 3499; // Recomputed from database!
           calculatedTotal += unitPrice * qty;
           verifiedItems.push({
             serviceId: srv.id,
@@ -314,9 +344,9 @@ export async function POST(req: Request) {
       }
 
       if (verifiedItems.length === 0) {
-        if (body.customServiceName || body.amountINR || body.totalAmount || body.source || body.isCustomOrder) {
-          const customAmount = Number(body.amountINR || body.totalAmount || body.price || 5000);
-          const customName = body.customServiceName || body.service || body.title || "Bespoke Creative Commission";
+        if (body.customServiceName || body.serviceTitle || body.amountINR || body.totalAmount || body.amount || body.source || body.isCustomOrder) {
+          const customAmount = Number(body.amountINR || body.totalAmount || body.amount || body.price || 3499);
+          const customName = body.customServiceName || body.serviceTitle || body.service || body.title || "Bespoke Creative Commission";
           calculatedTotal = customAmount;
           verifiedItems.push({
             name: customName,
@@ -440,29 +470,42 @@ export async function POST(req: Request) {
       body.paymentMethod === "free_test"
     );
 
+    const isUpiVerification = Boolean(
+      body.paymentMethod === "upi_qr" && body.utrNumber
+    );
+
     const isDirectPaid =
       body.paymentStatus === "paid" ||
       body.isPaid === true ||
-      body.paymentMethod === "upi_qr" ||
       body.paymentMethod === "bank_transfer" ||
       body.paymentMethod === "cash";
 
     const initialStatus = isDirectPaid
       ? "in_progress"
+      : isUpiVerification
+      ? "pending_payment"
       : isDirectInvoice
       ? "confirmed"
       : "pending_payment";
     const initialStatusLabel = isDirectPaid
       ? "Payment Verified — In Studio Production Queue"
+      : isUpiVerification
+      ? "Direct UPI UTR Submitted — Awaiting Studio Confirmation"
       : isDirectInvoice
       ? "Confirmed — In Studio Production Queue"
-      : "Pending Payment via Razorpay";
-    const initialPaymentStatus = isDirectPaid ? "paid" : "unpaid";
+      : "Pending Payment via Razorpay / UPI";
+    const initialPaymentStatus = isDirectPaid
+      ? "paid"
+      : isUpiVerification
+      ? "awaiting_confirmation"
+      : "unpaid";
     const initialDeliverablePreview = isDirectPaid
       ? "Payment verified via direct channel. Active in studio production queue."
+      : isUpiVerification
+      ? `UPI Reference UTR (${body.utrNumber}) submitted. Awaiting bank verification.`
       : isDirectInvoice
       ? "Brief registered in studio queue. Pending admin workflow review."
-      : "Commission registered in Firestore. Production brief is pending verified Razorpay checkout.";
+      : "Commission registered in Firestore. Production brief is pending verified checkout.";
 
     const newOrder: FirestoreOrderRecord = {
       id: `ord_${Date.now()}`,
@@ -617,6 +660,32 @@ export async function POST(req: Request) {
       });
     } catch (notifErr) {
       console.warn("[Orders API] Error dispatching order_placed notifications:", notifErr);
+    }
+
+    // -------------------------------------------------------------------------
+    // AUTONOMOUS n8n WORKFLOW DISPATCH
+    // If order is paid, UTR submitted, or direct brief registered, queue for autonomous pipeline
+    // -------------------------------------------------------------------------
+    try {
+      const { N8nAutomationService } = await import("@/lib/services/n8nService");
+      if (
+        isDirectPaid ||
+        isUpiVerification ||
+        isDirectInvoice ||
+        newOrder.paymentStatus === "paid" ||
+        newOrder.paymentStatus === "awaiting_confirmation"
+      ) {
+        N8nAutomationService.dispatchWorkflow({
+          workflowId: "SUTRA_MASTER_AUTONOMOUS_PIPELINE",
+          orderId: newOrder.id,
+          service: primaryServiceName,
+          brief: newOrder.requirements,
+          clientId: clientUid,
+          driveFolderId: newOrder.driveFolderId,
+        }).catch((n8nErr) => console.warn("[Orders API] n8n background dispatch error:", n8nErr));
+      }
+    } catch (err) {
+      console.warn("[Orders API] Error initiating n8n dispatch:", err);
     }
 
     return NextResponse.json({

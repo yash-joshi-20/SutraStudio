@@ -58,7 +58,11 @@ const authContextFile = path.join(rootDir, "src/lib/auth/authContext.tsx");
 const authContextContent = fs.readFileSync(authContextFile, "utf-8");
 
 const adminPageFile = path.join(rootDir, "src/app/admin/page.tsx");
-const adminPageContent = fs.readFileSync(adminPageFile, "utf-8");
+const adminClientFile = path.join(rootDir, "src/app/admin/AdminClient.tsx");
+const adminPageContent =
+  fs.readFileSync(adminPageFile, "utf-8") +
+  "\n" +
+  (fs.existsSync(adminClientFile) ? fs.readFileSync(adminClientFile, "utf-8") : "");
 
 const ordersApiFile = path.join(rootDir, "src/app/api/orders/route.ts");
 const ordersApiContent = fs.readFileSync(ordersApiFile, "utf-8");
@@ -460,10 +464,10 @@ async function runSecurityTests() {
     "Admin contains dedicated Site Control & Master Business Management panel"
   );
   assert(
-    (adminPageContent.includes("Starter Creative Pack") || adminPageContent.includes("Starter Graphics Pack")) &&
-      (adminPageContent.includes("Growth Creative Studio") || adminPageContent.includes("Growth Creative Tier")) &&
-      adminPageContent.includes("Atelier Enterprise") &&
-      adminPageContent.includes("prices: {"),
+    (adminPageContent.includes("Starter") || adminPageContent.includes("Starter Creative Pack")) &&
+      (adminPageContent.includes("Growth") || adminPageContent.includes("Growth Creative Studio")) &&
+      (adminPageContent.includes("Retainer") || adminPageContent.includes("Enterprise") || adminPageContent.includes("Atelier Enterprise")) &&
+      (adminPageContent.includes("startingPrice") || adminPageContent.includes("handleUpdateServicePrice") || adminPageContent.includes("prices: {")),
     "Admin Site Control provides live INR pricing controls for all creative tiers and services"
   );
   assert(

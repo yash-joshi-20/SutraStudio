@@ -18,7 +18,6 @@ import {
   Box,
   FileText,
   Search,
-  Upload,
   CheckCircle2,
   AlertTriangle,
   Eye,
@@ -37,6 +36,7 @@ import {
   Play,
   Sparkles,
   Layers,
+  Share2,
 } from "lucide-react";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 
@@ -165,19 +165,13 @@ export default function MediaLibraryPage() {
   const [selectedAsset, setSelectedAsset] = useState<MediaAsset | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Loading, Download & Error States
+  // Loading, Download, Share & Error States
   const [isLoading, setIsLoading] = useState(false);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [downloadSuccess, setDownloadSuccess] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [uploadModalOpen, setUploadModalOpen] = useState(false);
-  const [newFileName, setNewFileName] = useState("");
-  const [uploadFolder, setUploadFolder] = useState("/DELIVERABLES/01_CLIENT_ASSETS");
-  const [selectedFileObj, setSelectedFileObj] = useState<File | null>(null);
-  const [uploadedPreviewUrl, setUploadedPreviewUrl] = useState<string>("");
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [copiedAssetId, setCopiedAssetId] = useState<string | null>(null);
 
   // Fetch real order deliverables and media vault assets
   const fetchVaultData = async () => {
@@ -308,7 +302,7 @@ export default function MediaLibraryPage() {
                   folder: vf.folder || "/DELIVERABLES/03_FINAL_DELIVERY",
                   date: vf.createdAt ? new Date(vf.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Vault Asset",
                   driveFileId: vf.driveFileId || `drive_${vf.id.slice(0, 12)}`,
-                  resolution: vf.width && vf.height ? `${vf.width} x ${vf.height}` : "Google Drive Synced",
+                  resolution: vf.width && vf.height ? `${vf.width} x ${vf.height}` : "Sutra Cloud Vault Synced",
                   checksum: `sha256:${vf.id.slice(0, 16)}...`,
                   thumbnail: vf.thumbnailUrl || vf.storageUrl || vf.driveUrl || "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=1200&q=80",
                   downloadUrl: vf.storageUrl || vf.driveUrl,
@@ -324,7 +318,7 @@ export default function MediaLibraryPage() {
 
       setAssets(combinedAssets);
     } catch (err: any) {
-      setErrorMessage("Could not index Google Drive vault: " + (err.message || "Unknown error"));
+      setErrorMessage("Could not index Sutra Cloud Vault: " + (err.message || "Unknown error"));
     } finally {
       setIsLoading(false);
     }
@@ -356,7 +350,7 @@ export default function MediaLibraryPage() {
 
   const handleRefreshVault = () => {
     fetchVaultData();
-    setDownloadSuccess("Google Drive vault refreshed and synced successfully.");
+    setDownloadSuccess("Sutra Cloud Vault refreshed and synced successfully.");
     setTimeout(() => setDownloadSuccess(""), 3000);
   };
 
@@ -372,7 +366,7 @@ export default function MediaLibraryPage() {
           setTimeout(() => {
             setDownloadingId(null);
             setDownloadProgress(0);
-            setDownloadSuccess(`Downloaded "${asset.name}" from Google Drive vault.`);
+            setDownloadSuccess(`Downloaded "${asset.name}" from Sutra Cloud Vault.`);
             setTimeout(() => setDownloadSuccess(""), 3500);
 
             // Trigger file download if direct url exists
@@ -393,69 +387,23 @@ export default function MediaLibraryPage() {
     }, 180);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFileObj(file);
-      setNewFileName(file.name);
-      if (file.type.startsWith("image/")) {
-        const url = URL.createObjectURL(file);
-        setUploadedPreviewUrl(url);
-      } else {
-        setUploadedPreviewUrl("");
-      }
+  const handleShareLink = (asset: MediaAsset) => {
+    const shareUrl =
+      asset.downloadUrl ||
+      asset.thumbnail ||
+      (typeof window !== "undefined"
+        ? `${window.location.origin}/media?asset=${asset.id}`
+        : "");
+
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(shareUrl);
     }
-  };
-
-  const handleAddFile = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newFileName.trim()) return;
-
-    const ext = newFileName.split(".").pop()?.toLowerCase();
-    let type: MediaAsset["type"] = "Document";
-    let isVid = false;
-    if (ext === "png" || ext === "jpg" || ext === "jpeg" || ext === "webp" || ext === "tiff") {
-      type = "Image";
-    } else if (ext === "mp4" || ext === "mov" || ext === "webm") {
-      type = "Video";
-      isVid = true;
-    } else if (ext === "gltf" || ext === "glb" || ext === "usdz" || ext === "obj") {
-      type = "3D";
-    } else if (ext === "hdr") {
-      type = "360";
-    } else if (ext === "zip") {
-      type = "Marketing";
-    }
-
-    const preview = uploadedPreviewUrl || (
-      isVid
-        ? "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
-        : type === "3D"
-        ? "https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80"
-        : "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80"
-    );
-
-    const newAsset: MediaAsset = {
-      id: `ast-${Date.now()}`,
-      name: newFileName,
-      type,
-      size: selectedFileObj ? `${(selectedFileObj.size / (1024 * 1024)).toFixed(1)} MB` : "12.4 MB",
-      folder: uploadFolder,
-      date: "Just now",
-      driveFileId: `drive_${Math.random().toString(36).substring(2, 10)}_sutra`,
-      checksum: `sha256:${Math.random().toString(36).substring(2, 12)}...`,
-      thumbnail: preview,
-      downloadUrl: preview,
-      isVideo: isVid,
-    };
-
-    setAssets([newAsset, ...assets]);
-    setNewFileName("");
-    setSelectedFileObj(null);
-    setUploadedPreviewUrl("");
-    setUploadModalOpen(false);
-    setDownloadSuccess(`Uploaded "${newAsset.name}" to Google Drive folder ${uploadFolder}`);
-    setTimeout(() => setDownloadSuccess(""), 3500);
+    setCopiedAssetId(asset.id);
+    setDownloadSuccess(`Encrypted vault share link for "${asset.name}" copied to clipboard.`);
+    setTimeout(() => {
+      setCopiedAssetId(null);
+      setDownloadSuccess("");
+    }, 3000);
   };
 
   const getAssetIcon = (type: MediaAsset["type"]) => {
@@ -595,7 +543,7 @@ export default function MediaLibraryPage() {
                 <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
                 <span className="font-medium">{downloadSuccess}</span>
               </div>
-              <span className="text-[10px] font-mono text-[#15803D]">Google Drive API v3</span>
+              <span className="text-[10px] font-mono text-[#15803D]">Sutra Cloud Vault v3</span>
             </div>
           )}
 
@@ -604,7 +552,7 @@ export default function MediaLibraryPage() {
               <div className="flex items-center gap-2.5">
                 <AlertTriangle className="w-4 h-4 text-[#DC2626] shrink-0" />
                 <div>
-                  <span className="font-bold">Drive Sync Notice: </span>
+                  <span className="font-bold">Cloud Vault Notice: </span>
                   <span>{errorMessage}</span>
                 </div>
               </div>
@@ -797,35 +745,50 @@ export default function MediaLibraryPage() {
                     </div>
                   </div>
 
-                  {/* Actions Bar */}
-                  <div className="px-4 pb-4 pt-2 border-t border-[#EADFCB]/60 flex items-center justify-between gap-2">
+                  {/* Actions Bar - Strictly 3 Triggers */}
+                  <div className="px-3.5 pb-3.5 pt-2 border-t border-[#EADFCB]/60 grid grid-cols-3 gap-1.5">
                     <button
                       type="button"
                       onClick={() => setSelectedAsset(asset)}
-                      className="px-2.5 py-1.5 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] text-[#0F172A] hover:border-[#D4A35A] transition-colors text-xs flex items-center gap-1 font-medium cursor-pointer"
+                      className="px-2 py-1.5 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] text-[#0F172A] hover:border-[#D4A35A] hover:bg-[#FAF9F5] transition-colors text-[11px] font-medium flex items-center justify-center gap-1 cursor-pointer"
+                      title="Preview 4K Master"
                     >
-                      <Eye className="w-3.5 h-3.5 text-[#5C3A1E]" />
-                      <span>Preview</span>
+                      <Eye className="w-3.5 h-3.5 text-[#5C3A1E] shrink-0" />
+                      <span className="truncate">Preview 4K</span>
                     </button>
 
-                    <Button
-                      variant="secondary"
-                      size="sm"
+                    <button
+                      type="button"
                       disabled={downloadingId === asset.id}
                       onClick={() => handleDownload(asset)}
-                      className="text-xs py-1 px-3"
-                      leftIcon={
-                        downloadingId === asset.id ? (
-                          <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#5C3A1E]" />
-                        ) : (
-                          <Download className="w-3.5 h-3.5 text-[#5C3A1E]" />
-                        )
-                      }
+                      className="px-2 py-1.5 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] text-[#0F172A] hover:border-[#D4A35A] hover:bg-[#FAF9F5] transition-colors text-[11px] font-medium flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
+                      title="Download Master"
                     >
-                      {downloadingId === asset.id
-                        ? `${downloadProgress}%`
-                        : "Download"}
-                    </Button>
+                      {downloadingId === asset.id ? (
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#5C3A1E] shrink-0" />
+                      ) : (
+                        <Download className="w-3.5 h-3.5 text-[#5C3A1E] shrink-0" />
+                      )}
+                      <span className="truncate">
+                        {downloadingId === asset.id ? `${downloadProgress}%` : "Download Master"}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleShareLink(asset)}
+                      className="px-2 py-1.5 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] text-[#0F172A] hover:border-[#D4A35A] hover:bg-[#FAF9F5] transition-colors text-[11px] font-medium flex items-center justify-center gap-1 cursor-pointer"
+                      title="Share Link"
+                    >
+                      {copiedAssetId === asset.id ? (
+                        <Check className="w-3.5 h-3.5 text-[#2E7D4F] shrink-0" />
+                      ) : (
+                        <Share2 className="w-3.5 h-3.5 text-[#5C3A1E] shrink-0" />
+                      )}
+                      <span className="truncate">
+                        {copiedAssetId === asset.id ? "Copied" : "Share Link"}
+                      </span>
+                    </button>
                   </div>
                 </div>
               ))}
@@ -866,14 +829,15 @@ export default function MediaLibraryPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2.5 sm:shrink-0">
+                  <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
                     <button
                       type="button"
                       onClick={() => setSelectedAsset(asset)}
-                      className="p-2 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] text-[#0F172A] hover:border-[#D4A35A] transition-all cursor-pointer"
-                      title="Inspect preview & checksum"
+                      className="px-2.5 py-1.5 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] text-[#0F172A] hover:border-[#D4A35A] hover:bg-[#FAF9F5] transition-all text-xs font-medium flex items-center gap-1.5 cursor-pointer"
+                      title="Preview 4K Master"
                     >
-                      <Eye className="w-4 h-4 text-[#5C3A1E]" />
+                      <Eye className="w-3.5 h-3.5 text-[#5C3A1E]" />
+                      <span>Preview 4K</span>
                     </button>
 
                     <Button
@@ -881,6 +845,7 @@ export default function MediaLibraryPage() {
                       size="sm"
                       disabled={downloadingId === asset.id}
                       onClick={() => handleDownload(asset)}
+                      className="text-xs py-1 px-3"
                       leftIcon={
                         downloadingId === asset.id ? (
                           <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#5C3A1E]" />
@@ -889,8 +854,22 @@ export default function MediaLibraryPage() {
                         )
                       }
                     >
-                      {downloadingId === asset.id ? `Downloading ${downloadProgress}%` : "Download"}
+                      {downloadingId === asset.id ? `Downloading ${downloadProgress}%` : "Download Master"}
                     </Button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleShareLink(asset)}
+                      className="px-2.5 py-1.5 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] text-[#0F172A] hover:border-[#D4A35A] hover:bg-[#FAF9F5] transition-all text-xs font-medium flex items-center gap-1.5 cursor-pointer"
+                      title="Share Link"
+                    >
+                      {copiedAssetId === asset.id ? (
+                        <Check className="w-3.5 h-3.5 text-[#2E7D4F]" />
+                      ) : (
+                        <Share2 className="w-3.5 h-3.5 text-[#5C3A1E]" />
+                      )}
+                      <span>{copiedAssetId === asset.id ? "Copied" : "Share Link"}</span>
+                    </button>
                   </div>
                 </div>
               ))}
@@ -907,7 +886,7 @@ export default function MediaLibraryPage() {
           isOpen={!!selectedAsset}
           onClose={() => setSelectedAsset(null)}
           title={selectedAsset?.name || "Asset Preview"}
-          description={`Google Drive Directory: ${selectedAsset?.folder}`}
+          description={`Sutra Cloud Vault Path: ${selectedAsset?.folder}`}
           maxWidth="lg"
         >
           {selectedAsset && (
@@ -955,7 +934,7 @@ export default function MediaLibraryPage() {
                   <span className="font-medium text-[#0F172A]">{selectedAsset.date}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">Drive File ID</span>
+                  <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">Vault Asset ID</span>
                   <span className="font-mono text-[#5C3A1E] truncate block">{selectedAsset.driveFileId}</span>
                 </div>
               </div>
@@ -967,16 +946,15 @@ export default function MediaLibraryPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-between pt-2 border-t border-[#EADFCB]">
-                <a
-                  href={`https://drive.google.com/drive/search?q=${encodeURIComponent(selectedAsset.name)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs text-[#5C3A1E] hover:underline font-medium"
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#EADFCB]">
+                <button
+                  type="button"
+                  onClick={() => handleShareLink(selectedAsset)}
+                  className="inline-flex items-center gap-1.5 text-xs text-[#5C3A1E] hover:underline font-medium cursor-pointer"
                 >
-                  <ExternalLink className="w-3.5 h-3.5 text-[#D4A35A]" />
-                  <span>Open in Google Drive</span>
-                </a>
+                  <Share2 className="w-3.5 h-3.5 text-[#D4A35A]" />
+                  <span>Copy Vault Share URL</span>
+                </button>
 
                 <div className="flex items-center gap-2">
                   <Button
@@ -1002,96 +980,12 @@ export default function MediaLibraryPage() {
                       )
                     }
                   >
-                    {downloadingId === selectedAsset.id ? `Downloading ${downloadProgress}%` : "Download File"}
+                    {downloadingId === selectedAsset.id ? `Downloading ${downloadProgress}%` : "Download Master"}
                   </Button>
                 </div>
               </div>
             </div>
           )}
-        </Modal>
-
-        {/* =========================================================
-            UPLOAD FILE MODAL
-            ========================================================= */}
-        <Modal
-          isOpen={uploadModalOpen}
-          onClose={() => setUploadModalOpen(false)}
-          title="Upload to Google Drive Vault"
-          description="Upload reference moodboards, client logos, 3D models, or project files directly into your cloud vault."
-          maxWidth="md"
-        >
-          <form onSubmit={handleAddFile} className="space-y-4 pt-2">
-            <div>
-              <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                Target Google Drive Folder
-              </label>
-              <select
-                value={uploadFolder}
-                onChange={(e) => setUploadFolder(e.target.value)}
-                className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
-              >
-                <option value="/DELIVERABLES/01_CLIENT_ASSETS">01 Client Assets (/DELIVERABLES/01_CLIENT_ASSETS)</option>
-                <option value="/DELIVERABLES/02_DRAFTS">02 Drafts (/DELIVERABLES/02_DRAFTS)</option>
-                <option value="/DELIVERABLES/03_FINAL_DELIVERY">03 Final Delivery (/DELIVERABLES/03_FINAL_DELIVERY)</option>
-                <option value="/DELIVERABLES/04_REVISIONS">04 Revisions (/DELIVERABLES/04_REVISIONS)</option>
-                <option value="/BRAND_ASSETS">Brand Assets (/BRAND_ASSETS)</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                Select File
-              </label>
-              <input
-                ref={fileInputRef}
-                type="file"
-                onChange={handleFileChange}
-                className="w-full text-xs text-[#64748B] file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#F4EFE6] file:text-[#5C3A1E] hover:file:bg-[#EADFCB] cursor-pointer"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                File Name
-              </label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Architectural_Elevation_Pass.png"
-                value={newFileName}
-                onChange={(e) => setNewFileName(e.target.value)}
-                className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
-              />
-              <span className="text-[10px] text-[#94A3B8] mt-1 block">
-                Supported: .png, .jpg, .mp4, .gltf, .glb, .hdr, .pdf, .zip
-              </span>
-            </div>
-
-            {uploadedPreviewUrl && (
-              <div className="relative aspect-video w-full rounded-xl overflow-hidden border border-[#EADFCB] bg-[#FAF9F5]">
-                <Image
-                  src={uploadedPreviewUrl}
-                  alt="Preview"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            )}
-
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setUploadModalOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" variant="primary" size="sm">
-                Add to Drive Vault
-              </Button>
-            </div>
-          </form>
         </Modal>
       </div>
     </RouteGuard>
