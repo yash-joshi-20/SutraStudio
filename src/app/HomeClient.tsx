@@ -118,41 +118,41 @@ export default function HomePage() {
                     </Button>
                   </div>
 
-                  {/* Stats Strip Divided by Hairlines */}
+                  {/* Studio Capability Highlights Divided by Hairlines */}
                   <div className="hero-stats pt-8 mt-6 border-t border-[#EADFCB] grid grid-cols-2 sm:grid-cols-4 gap-6">
                     <div className="hero-stats-item">
-                      <p className="font-serif text-2xl sm:text-3xl font-bold text-[#5C3A1E]">
-                        500+
+                      <p className="font-serif text-lg sm:text-xl font-bold text-[#5C3A1E]">
+                        High-Precision
                       </p>
                       <p className="text-xs text-[#64748B] mt-0.5 font-medium">
-                        Projects Delivered
+                        Studio Engine
                       </p>
                     </div>
 
                     <div className="hero-stats-item">
-                      <p className="font-serif text-2xl sm:text-3xl font-bold text-[#5C3A1E]">
-                        200+
+                      <p className="font-serif text-lg sm:text-xl font-bold text-[#5C3A1E]">
+                        Autonomous
                       </p>
                       <p className="text-xs text-[#64748B] mt-0.5 font-medium">
-                        Happy Clients
+                        AI Creative Pipelines
                       </p>
                     </div>
 
                     <div className="hero-stats-item">
-                      <p className="font-serif text-2xl sm:text-3xl font-bold text-[#5C3A1E]">
-                        12
+                      <p className="font-serif text-lg sm:text-xl font-bold text-[#5C3A1E]">
+                        Enterprise
                       </p>
                       <p className="text-xs text-[#64748B] mt-0.5 font-medium">
-                        Creative Pillars
+                        Production Rigor
                       </p>
                     </div>
 
                     <div className="hero-stats-item">
-                      <p className="font-serif text-2xl sm:text-3xl font-bold text-[#5C3A1E]">
-                        24/7
+                      <p className="font-serif text-lg sm:text-xl font-bold text-[#5C3A1E]">
+                        Ultra-HD 4K
                       </p>
                       <p className="text-xs text-[#64748B] mt-0.5 font-medium">
-                        AI Workflow Support
+                        Master Deliverables
                       </p>
                     </div>
                   </div>

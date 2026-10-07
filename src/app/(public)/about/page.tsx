@@ -162,36 +162,36 @@ export default function AboutPage() {
                 <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center mx-auto mb-3">
                   <Award className="w-5 h-5 text-[#5C3A1E]" />
                 </div>
-                <p className="font-serif text-3xl font-bold text-[#5C3A1E]">500+</p>
-                <p className="text-xs font-semibold text-[#0F172A] mt-1">Projects Delivered</p>
-                <p className="text-[11px] text-[#64748B]">Across 14 countries worldwide</p>
+                <p className="font-serif text-2xl font-bold text-[#5C3A1E]">High-Precision</p>
+                <p className="text-xs font-semibold text-[#0F172A] mt-1">Studio Architecture</p>
+                <p className="text-[11px] text-[#64748B]">Tradition meets computation</p>
               </div>
 
               <div className="p-6 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] text-center shadow-xs">
                 <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center mx-auto mb-3">
                   <Users className="w-5 h-5 text-[#5C3A1E]" />
                 </div>
-                <p className="font-serif text-3xl font-bold text-[#5C3A1E]">200+</p>
-                <p className="text-xs font-semibold text-[#0F172A] mt-1">Client Partnerships</p>
-                <p className="text-[11px] text-[#64748B]">From luxury brands to startups</p>
+                <p className="font-serif text-2xl font-bold text-[#5C3A1E]">Autonomous</p>
+                <p className="text-xs font-semibold text-[#0F172A] mt-1">Creative Pipelines</p>
+                <p className="text-[11px] text-[#64748B]">Tailored client sanctum</p>
               </div>
 
               <div className="p-6 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] text-center shadow-xs">
                 <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center mx-auto mb-3">
                   <Clock className="w-5 h-5 text-[#5C3A1E]" />
                 </div>
-                <p className="font-serif text-3xl font-bold text-[#5C3A1E]">48 Hours</p>
-                <p className="text-xs font-semibold text-[#0F172A] mt-1">Average Turnaround</p>
-                <p className="text-[11px] text-[#64748B]">Rapid iterative AI pipelines</p>
+                <p className="font-serif text-2xl font-bold text-[#5C3A1E]">24-48h SLA</p>
+                <p className="text-xs font-semibold text-[#0F172A] mt-1">Production Turnaround</p>
+                <p className="text-[11px] text-[#64748B]">Rapid iterative studio cycles</p>
               </div>
 
               <div className="p-6 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] text-center shadow-xs">
                 <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center mx-auto mb-3">
                   <Shield className="w-5 h-5 text-[#5C3A1E]" />
                 </div>
-                <p className="font-serif text-3xl font-bold text-[#5C3A1E]">100%</p>
+                <p className="font-serif text-2xl font-bold text-[#5C3A1E]">100%</p>
                 <p className="text-xs font-semibold text-[#0F172A] mt-1">Commercial Rights</p>
-                <p className="text-[11px] text-[#64748B]">Full IP transfer & Drive delivery</p>
+                <p className="text-[11px] text-[#64748B]">Full IP transfer & Sutra Cloud Vault delivery</p>
               </div>
             </div>
           </div>

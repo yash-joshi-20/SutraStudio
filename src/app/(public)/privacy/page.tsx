@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 
 export const metadata = {
   title: "Privacy Directive — Sutra Studio",
-  description: "Studio data protection, client vault isolation, and encrypted Google Drive storage policies.",
+  description: "Studio data protection, client vault isolation, and encrypted Sutra Cloud Vault storage policies.",
 };
 
 export default function PrivacyPage() {
@@ -47,7 +47,7 @@ export default function PrivacyPage() {
                 1. Client Isolation & Dedicated Vaults
               </h2>
               <p>
-                Sutra Studio operates a strict tenant-isolated architecture. Every client registered through our Firebase Authentication enclave is assigned a unique client ID and an isolated folder inside Google Drive. Deliverables, raw 3D scene files, and ProRes motion assets are never cross-referenced or shared with other accounts.
+                Sutra Studio operates a strict tenant-isolated architecture. Every client registered through our Firebase Authentication enclave is assigned a unique client ID and an isolated directory in Sutra Cloud Vault. Deliverables, raw 3D scene files, and ProRes motion assets are never cross-referenced or shared with other accounts.
               </p>
             </section>
 

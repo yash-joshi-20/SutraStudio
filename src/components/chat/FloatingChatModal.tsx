@@ -33,12 +33,14 @@ import {
   VolumeX,
   Volume1,
   Languages,
+  QrCode,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { LotusSymbol } from "@/components/brand/SutraLogo";
 import { motion, AnimatePresence } from "framer-motion";
 import { openRazorpayCheckout } from "@/lib/services/razorpayClient";
+import { PaymentModal } from "@/components/checkout/PaymentModal";
 import { useAuth } from "@/lib/auth/authContext";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -492,6 +494,8 @@ export function FloatingChatModal() {
   });
   const [handoffSubmitted, setHandoffSubmitted] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState<string | null>(null);
+  const [selectedChatOrder, setSelectedChatOrder] = useState<NonNullable<ChatMessage["orderDraft"]> | null>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -932,20 +936,35 @@ export function FloatingChatModal() {
                           </div>
 
                           {!msg.orderDraft.paid ? (
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              disabled={isProcessingPayment === msg.orderDraft.orderId}
-                              onClick={() => handlePayChatOrder(msg.id, msg.orderDraft!)}
-                              className="w-full text-xs justify-center gap-1.5 mt-1 !bg-[#2E7D4F] hover:!bg-[#24633F]"
-                            >
-                              {isProcessingPayment === msg.orderDraft.orderId ? (
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                              ) : (
-                                <CreditCard className="w-3.5 h-3.5" />
-                              )}
-                              <span>Pay Now via Razorpay (₹{msg.orderDraft.totalAmount.toLocaleString("en-IN")})</span>
-                            </Button>
+                            <div className="space-y-1.5 pt-1">
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedChatOrder(msg.orderDraft!);
+                                  setIsPaymentModalOpen(true);
+                                }}
+                                className="w-full text-xs justify-center gap-1.5 !bg-[#5C3A1E] hover:!bg-[#462B16] text-white shadow-xs"
+                              >
+                                <QrCode className="w-3.5 h-3.5 text-[#D4A35A]" />
+                                <span>Zero-Fee UPI QR (₹{msg.orderDraft.totalAmount.toLocaleString("en-IN")})</span>
+                              </Button>
+
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={isProcessingPayment === msg.orderDraft.orderId}
+                                onClick={() => handlePayChatOrder(msg.id, msg.orderDraft!)}
+                                className="w-full text-xs justify-center gap-1.5 border-[#EADFCB] hover:bg-[#FAF9F5]"
+                              >
+                                {isProcessingPayment === msg.orderDraft.orderId ? (
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                ) : (
+                                  <CreditCard className="w-3.5 h-3.5" />
+                                )}
+                                <span>Pay via Razorpay / Cards</span>
+                              </Button>
+                            </div>
                           ) : (
                             <div className="space-y-1.5 pt-1">
                               <div className="flex items-center gap-1 text-[11px] text-[#2E7D4F] font-semibold">
@@ -1274,6 +1293,29 @@ export function FloatingChatModal() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* In-Chat Zero-Fee UPI & GPay Payment Modal */}
+      {isPaymentModalOpen && selectedChatOrder && (
+        <PaymentModal
+          isOpen={isPaymentModalOpen}
+          onClose={() => setIsPaymentModalOpen(false)}
+          orderId={selectedChatOrder.orderId}
+          orderCode={selectedChatOrder.orderNumber}
+          clientName={user?.displayName || "Studio Client"}
+          clientEmail={user?.email || "client@sutrastudio.com"}
+          serviceTitle={selectedChatOrder.service}
+          amount={selectedChatOrder.totalAmount}
+          onPaymentSuccess={() => {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.orderDraft?.orderId === selectedChatOrder.orderId
+                  ? { ...m, orderDraft: { ...m.orderDraft, paid: true } }
+                  : m
+              )
+            );
+          }}
+        />
+      )}
     </>
   );
 }

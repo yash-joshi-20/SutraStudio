@@ -18,6 +18,8 @@ import {
   PER_PROJECT_TIERS,
   MONTHLY_RETAINER_TIERS,
 } from "@/config/pricing";
+import { motion, AnimatePresence } from "framer-motion";
+import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 
 const FAQS = [
   {
@@ -96,151 +98,171 @@ export default function PricingPage() {
           </div>
         </div>
 
-        {/* Dynamic Tier Grid */}
-        {billingCycle === "project" ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-stretch">
-            {PER_PROJECT_TIERS.map((tier) => (
-              <div
-                key={tier.id}
-                className={`rounded-3xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 ${
-                  tier.popular
-                    ? "bg-[#FFFDF9] border-2 border-[#D4A35A] shadow-warm-hover relative"
-                    : "bg-[#FFFDF9] border border-[#EADFCB] shadow-sm hover:border-[#D4A35A]/60"
-                }`}
-              >
-                {tier.popular && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#5C3A1E] text-white px-4 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase shadow-xs">
-                    Most Popular
-                  </div>
-                )}
-
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
-                      {tier.name}
-                    </h3>
-                    <p className="text-xs text-[#64748B] mt-1.5 leading-relaxed">
-                      {tier.description}
-                    </p>
-                  </div>
-
-                  {/* Price Display */}
-                  <div className="flex items-baseline gap-1.5 pb-6 border-b border-[#EADFCB]/60">
-                    <span className="font-serif text-3xl sm:text-4xl font-bold text-[#5C3A1E]">
-                      {tier.formattedPrice}
-                    </span>
-                    <span className="text-xs text-[#64748B] font-mono">
-                      {tier.price === "custom" ? "" : "/ commission"}
-                    </span>
-                  </div>
-
-                  {/* Metadata Pills */}
-                  <div className="grid grid-cols-1 gap-2 text-[11px] font-mono">
-                    <div className="p-2 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center gap-1.5 text-[#5C3A1E]">
-                      <Clock className="w-3.5 h-3.5 text-[#A98B57]" />
-                      <span>Turnaround: {tier.turnaround}</span>
+        {/* Dynamic Tier Grid with Smooth AnimatePresence Transition */}
+        <AnimatePresence mode="wait">
+          {billingCycle === "project" ? (
+            <motion.div
+              key="project"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-stretch"
+            >
+              {PER_PROJECT_TIERS.map((tier) => (
+                <div
+                  key={tier.id}
+                  className={`rounded-3xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 ${
+                    tier.popular
+                      ? "bg-[#FFFDF9] border-2 border-[#D4A35A] shadow-warm-hover relative"
+                      : "bg-[#FFFDF9] border border-[#EADFCB] shadow-sm hover:border-[#D4A35A]/60"
+                  }`}
+                >
+                  {tier.popular && (
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#5C3A1E] text-white px-4 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase shadow-xs">
+                      Most Popular
                     </div>
-                  </div>
+                  )}
 
-                  {/* Features Checklist */}
-                  <div className="space-y-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-[#A98B57] block">
-                      What is Included:
-                    </span>
-                    <ul className="space-y-2.5 text-xs text-[#475569]">
-                      {tier.features.map((feat) => (
-                        <li key={feat} className="flex items-start gap-2.5">
-                          <span className="w-4 h-4 rounded-full bg-[#EDF7F0] text-[#2E7D4F] flex items-center justify-center shrink-0 mt-0.5">
-                            <Check className="w-2.5 h-2.5 stroke-[3]" />
-                          </span>
-                          <span className="leading-snug">{feat}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
+                        {tier.name}
+                      </h3>
+                      <p className="text-xs text-[#64748B] mt-1.5 leading-relaxed">
+                        {tier.description}
+                      </p>
+                    </div>
 
-                <div className="pt-8">
-                  <Link href={tier.ctaHref || `/orders?package=${tier.id}`} className="block">
-                    <Button
-                      variant={tier.popular ? "primary" : "secondary"}
-                      size="md"
-                      className="w-full justify-center"
-                      withArrow
-                    >
-                      {tier.ctaText}
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="max-w-3xl mx-auto w-full">
-            {MONTHLY_RETAINER_TIERS.map((tier) => (
-              <div
-                key={tier.id}
-                className="rounded-3xl p-8 sm:p-10 bg-[#FFFDF9] border-2 border-[#D4A35A] shadow-warm-hover relative flex flex-col justify-between space-y-8"
-              >
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#5C3A1E] text-white px-5 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase shadow-xs">
-                  Autonomous Campaign Engine
-                </div>
-
-                <div className="space-y-6">
-                  <div className="text-center sm:text-left">
-                    <h3 className="font-serif text-3xl font-semibold text-[#0F172A]">
-                      {tier.name}
-                    </h3>
-                    <p className="text-sm text-[#64748B] mt-2 leading-relaxed">
-                      {tier.description}
-                    </p>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-baseline justify-between pb-6 border-b border-[#EADFCB]/60 gap-2">
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-serif text-4xl sm:text-5xl font-bold text-[#5C3A1E]">
-                        {tier.formattedMonthlyPrice}
+                    {/* Price Display with Animated Number */}
+                    <div className="flex items-baseline gap-1.5 pb-6 border-b border-[#EADFCB]/60">
+                      <span className="font-serif text-3xl sm:text-4xl font-bold text-[#5C3A1E]">
+                        {typeof tier.price === "number" ? (
+                          <AnimatedNumber value={tier.price} prefix="₹" />
+                        ) : (
+                          "Custom Quote"
+                        )}
+                      </span>
+                      <span className="text-xs text-[#64748B] font-mono">
+                        {tier.price === "custom" ? "" : "/ commission"}
                       </span>
                     </div>
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FAF9F5] border border-[#D4A35A]/50 text-xs font-mono font-bold text-[#5C3A1E]">
-                      <Clock className="w-4 h-4 text-[#A98B57]" />
-                      <span>{tier.turnaround}</span>
+
+                    {/* Metadata Pills */}
+                    <div className="grid grid-cols-1 gap-2 text-[11px] font-mono">
+                      <div className="p-2 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center gap-1.5 text-[#5C3A1E]">
+                        <Clock className="w-3.5 h-3.5 text-[#A98B57]" />
+                        <span>Turnaround: {tier.turnaround}</span>
+                      </div>
+                    </div>
+
+                    {/* Features Checklist */}
+                    <div className="space-y-3">
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#A98B57] block">
+                        What is Included:
+                      </span>
+                      <ul className="space-y-2.5 text-xs text-[#475569]">
+                        {tier.features.map((feat) => (
+                          <li key={feat} className="flex items-start gap-2.5">
+                            <span className="w-4 h-4 rounded-full bg-[#EDF7F0] text-[#2E7D4F] flex items-center justify-center shrink-0 mt-0.5">
+                              <Check className="w-2.5 h-2.5 stroke-[3]" />
+                            </span>
+                            <span className="leading-snug">{feat}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-[#A98B57] block">
-                      30-Day Autonomous Retainer Deliverables:
-                    </span>
-                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-[#475569]">
-                      {tier.features.map((feat) => (
-                        <li key={feat} className="flex items-start gap-2.5 p-2 rounded-xl bg-[#FAF9F5]/80 border border-[#EADFCB]/60">
-                          <span className="w-4 h-4 rounded-full bg-[#EDF7F0] text-[#2E7D4F] flex items-center justify-center shrink-0 mt-0.5">
-                            <Check className="w-2.5 h-2.5 stroke-[3]" />
-                          </span>
-                          <span className="leading-snug">{feat}</span>
-                        </li>
-                      ))}
-                    </ul>
+                  <div className="pt-8">
+                    <Link href={tier.ctaHref || `/orders?package=${tier.id}`} className="block">
+                      <Button
+                        variant={tier.popular ? "primary" : "secondary"}
+                        size="md"
+                        className="w-full justify-center"
+                        withArrow
+                      >
+                        {tier.ctaText}
+                      </Button>
+                    </Link>
                   </div>
                 </div>
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="monthly"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="max-w-3xl mx-auto w-full"
+            >
+              {MONTHLY_RETAINER_TIERS.map((tier) => (
+                <div
+                  key={tier.id}
+                  className="rounded-3xl p-8 sm:p-10 bg-[#FFFDF9] border-2 border-[#D4A35A] shadow-warm-hover relative flex flex-col justify-between space-y-8"
+                >
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#5C3A1E] text-white px-5 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase shadow-xs">
+                    Autonomous Campaign Engine
+                  </div>
 
-                <div className="pt-4">
-                  <Link href={tier.ctaHref || `/orders?package=${tier.id}&cycle=monthly`} className="block">
-                    <Button
-                      variant="primary"
-                      size="lg"
-                      className="w-full justify-center text-sm font-semibold"
-                      withArrow
-                    >
-                      {tier.ctaText}
-                    </Button>
-                  </Link>
+                  <div className="space-y-6">
+                    <div className="text-center sm:text-left">
+                      <h3 className="font-serif text-3xl font-semibold text-[#0F172A]">
+                        {tier.name}
+                      </h3>
+                      <p className="text-sm text-[#64748B] mt-2 leading-relaxed">
+                        {tier.description}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-baseline justify-between pb-6 border-b border-[#EADFCB]/60 gap-2">
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-serif text-4xl sm:text-5xl font-bold text-[#5C3A1E]">
+                          <AnimatedNumber value={14999} prefix="₹" suffix=" / month" />
+                        </span>
+                      </div>
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FAF9F5] border border-[#D4A35A]/50 text-xs font-mono font-bold text-[#5C3A1E]">
+                        <Clock className="w-4 h-4 text-[#A98B57]" />
+                        <span>{tier.turnaround}</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#A98B57] block">
+                        30-Day Autonomous Retainer Deliverables:
+                      </span>
+                      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-[#475569]">
+                        {tier.features.map((feat) => (
+                          <li key={feat} className="flex items-start gap-2.5 p-2 rounded-xl bg-[#FAF9F5]/80 border border-[#EADFCB]/60">
+                            <span className="w-4 h-4 rounded-full bg-[#EDF7F0] text-[#2E7D4F] flex items-center justify-center shrink-0 mt-0.5">
+                              <Check className="w-2.5 h-2.5 stroke-[3]" />
+                            </span>
+                            <span className="leading-snug">{feat}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="pt-4">
+                    <Link href={tier.ctaHref || `/orders?package=${tier.id}&cycle=monthly`} className="block">
+                      <Button
+                        variant="primary"
+                        size="lg"
+                        className="w-full justify-center text-sm font-semibold"
+                        withArrow
+                      >
+                        {tier.ctaText}
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Studio Service Guarantees Strip */}
         <div className="p-6 sm:p-8 rounded-3xl bg-[#FAF9F5] border border-[#EADFCB] grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs text-[#64748B]">

@@ -957,187 +957,223 @@ export default function ClientDashboardPage() {
                 </div>
 
                 {/* Desktop View: Unified Stream Rows */}
-                <div className="hidden md:block rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] divide-y divide-[#EADFCB]/60 overflow-hidden shadow-xs">
-                  {orders.map((ord) => (
-                    <div
-                      key={ord.id}
-                      className="p-6 flex items-center justify-between gap-6 hover:bg-[#F8F5EF]/40 transition-colors"
-                    >
-                      <div className="space-y-2 flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2.5">
-                          <span className="text-xs font-mono font-bold text-[#5C3A1E] tracking-wider">
-                            {ord.code}
-                          </span>
-                          <Badge
-                            variant={
-                              ord.status === "completed"
-                                ? "completed"
-                                : ord.status === "awaiting_approval"
-                                ? "gold"
-                                : ord.status === "revision_requested"
-                                ? "progress"
-                                : "neutral"
-                            }
-                            size="sm"
-                          >
-                            {ord.statusLabel}
-                          </Badge>
-                          <span className="text-xs text-[#94A3B8]">
-                            • {ord.service}
-                          </span>
-                          <span className="text-[11px] font-medium text-[#64748B] bg-[#F8F5EF] px-2 py-0.5 rounded-full border border-[#EADFCB]">
-                            Round {ord.revisionRound} of {ord.maxRevisions} Revisions
-                          </span>
-                        </div>
-
-                        <h3 className="font-serif text-lg font-semibold text-[#0F172A] truncate">
-                          {ord.title}
-                        </h3>
-
-                        <p className="text-xs text-[#64748B] truncate">
-                          {ord.deliverable}
-                        </p>
-
-                        {/* Progress Bar */}
-                        <div className="pt-2 max-w-md">
-                          <div className="flex items-center justify-between text-[11px] mb-1">
-                            <span className="text-[#64748B]">Pipeline Completion</span>
-                            <span className="font-semibold text-[#0F172A]">{ord.progress}%</span>
-                          </div>
-                          <div className="w-full h-1.5 rounded-full bg-[#EADFCB]/50 overflow-hidden">
-                            <div
-                              className="h-full rounded-full bg-gradient-to-r from-[#D4A35A] to-[#5C3A1E]"
-                              style={{ width: `${ord.progress}%` }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setInspectingOrder(ord);
-                            setIsRevisionMode(false);
-                          }}
-                          className="px-4 py-2 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#FFFDF9] transition-all cursor-pointer flex items-center gap-1.5"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>Inspect Scope</span>
-                        </button>
-
-                        {ord.status === "awaiting_approval" && (
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={() => handleApproveDeliverable(ord.id)}
-                            leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
-                          >
-                            Approve
-                          </Button>
-                        )}
-                      </div>
+                {orders.length === 0 ? (
+                  <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-8 sm:p-12 text-center shadow-xs space-y-4">
+                    <div className="w-16 h-16 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] text-[#D4A35A] flex items-center justify-center mx-auto">
+                      <FolderOpen className="w-8 h-8" />
                     </div>
-                  ))}
-                </div>
-
-                {/* Mobile View: High-Density Elevated Card Stack with Zero Overflow */}
-                <div className="block md:hidden space-y-3.5">
-                  {orders.map((ord) => (
-                    <div
-                      key={ord.id}
-                      className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] shadow-xs space-y-3"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-mono font-bold text-[#5C3A1E] tracking-wider">
-                          {ord.code}
-                        </span>
-                        <Badge
-                          variant={
-                            ord.status === "completed"
-                              ? "completed"
-                              : ord.status === "awaiting_approval"
-                              ? "gold"
-                              : ord.status === "revision_requested"
-                              ? "progress"
-                              : "neutral"
-                          }
-                          size="sm"
-                        >
-                          {ord.statusLabel}
-                        </Badge>
-                      </div>
-
-                      <div>
-                        <h3 className="font-serif text-base font-semibold text-[#0F172A] leading-snug">
-                          {ord.title}
-                        </h3>
-                        <p className="text-xs text-[#64748B] mt-0.5">
-                          {ord.deliverable}
-                        </p>
-                        <div className="flex flex-wrap items-center gap-2 text-[11px] text-[#64748B] mt-2">
-                          <span className="font-medium text-[#5C3A1E] bg-[#F8F5EF] px-2 py-0.5 rounded-full border border-[#EADFCB]">
-                            {ord.service}
-                          </span>
-                          <span>•</span>
-                          <span>Round {ord.revisionRound}/{ord.maxRevisions} Revs</span>
-                        </div>
-                      </div>
-
-                      {/* Mobile Progress Bar */}
-                      <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/60 space-y-1.5">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-[#64748B]">Pipeline Completion</span>
-                          <span className="font-mono font-bold text-[#A98B57]">{ord.progress}%</span>
-                        </div>
-                        <div className="w-full bg-[#EADFCB]/60 rounded-full h-1.5 overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-[#D4A35A] to-[#5C3A1E] rounded-full"
-                            style={{ width: `${ord.progress}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Full-width Action Buttons */}
-                      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#EADFCB]/50">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setInspectingOrder(ord);
-                            setIsRevisionMode(false);
-                          }}
-                          className="w-full py-2.5 px-3 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] transition-all flex items-center justify-center gap-1.5 min-h-[44px] cursor-pointer"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>Inspect</span>
-                        </button>
-
-                        {ord.status === "awaiting_approval" ? (
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            className="w-full min-h-[44px] justify-center"
-                            onClick={() => handleApproveDeliverable(ord.id)}
-                            leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
-                          >
-                            Approve
-                          </Button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setInspectingOrder(ord);
-                              setIsRevisionMode(true);
-                            }}
-                            className="w-full py-2.5 px-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-xs font-medium text-[#64748B] hover:text-[#0F172A] transition-all flex items-center justify-center gap-1 min-h-[44px] cursor-pointer"
-                          >
-                            <span>Request Rev</span>
-                          </button>
-                        )}
-                      </div>
+                    <div className="max-w-md mx-auto space-y-2">
+                      <h3 className="font-serif text-xl sm:text-2xl font-semibold text-[#0F172A]">
+                        No active orders found
+                      </h3>
+                      <p className="text-xs sm:text-sm text-[#64748B] leading-relaxed">
+                        No active orders found. Commission your first creative pipeline below. Track real-time generative workflows, inspect draft deliverables, and release 4K masters to your Sutra Cloud Vault.
+                      </p>
                     </div>
-                  ))}
-                </div>
+                    <div className="pt-2 flex flex-wrap justify-center gap-3">
+                      <Link href="/orders">
+                        <Button variant="primary" size="md" withArrow>
+                          Commission New Project
+                        </Button>
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setViewMode("commission");
+                          setStep(1);
+                        }}
+                      >
+                        <Button variant="secondary" size="md">
+                          Open Commission Wizard
+                        </Button>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="hidden md:block rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] divide-y divide-[#EADFCB]/60 overflow-hidden shadow-xs">
+                      {orders.map((ord) => (
+                        <div
+                          key={ord.id}
+                          className="p-6 flex items-center justify-between gap-6 hover:bg-[#F8F5EF]/40 transition-colors"
+                        >
+                          <div className="space-y-2 flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2.5">
+                              <span className="text-xs font-mono font-bold text-[#5C3A1E] tracking-wider">
+                                {ord.code}
+                              </span>
+                              <Badge
+                                variant={
+                                  ord.status === "completed"
+                                    ? "completed"
+                                    : ord.status === "awaiting_approval"
+                                    ? "gold"
+                                    : ord.status === "revision_requested"
+                                    ? "progress"
+                                    : "neutral"
+                                }
+                                size="sm"
+                              >
+                                {ord.statusLabel}
+                              </Badge>
+                              <span className="text-xs text-[#94A3B8]">
+                                • {ord.service}
+                              </span>
+                              <span className="text-[11px] font-medium text-[#64748B] bg-[#F8F5EF] px-2 py-0.5 rounded-full border border-[#EADFCB]">
+                                Round {ord.revisionRound} of {ord.maxRevisions} Revisions
+                              </span>
+                            </div>
+
+                            <h3 className="font-serif text-lg font-semibold text-[#0F172A] truncate">
+                              {ord.title}
+                            </h3>
+
+                            <p className="text-xs text-[#64748B] truncate">
+                              {ord.deliverable}
+                            </p>
+
+                            {/* Progress Bar */}
+                            <div className="pt-2 max-w-md">
+                              <div className="flex items-center justify-between text-[11px] mb-1">
+                                <span className="text-[#64748B]">Pipeline Completion</span>
+                                <span className="font-semibold text-[#0F172A]">{ord.progress}%</span>
+                              </div>
+                              <div className="w-full h-1.5 rounded-full bg-[#EADFCB]/50 overflow-hidden">
+                                <div
+                                  className="h-full rounded-full bg-gradient-to-r from-[#D4A35A] to-[#5C3A1E]"
+                                  style={{ width: `${ord.progress}%` }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setInspectingOrder(ord);
+                                setIsRevisionMode(false);
+                              }}
+                              className="px-4 py-2 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#FFFDF9] transition-all cursor-pointer flex items-center gap-1.5"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>Inspect Scope</span>
+                            </button>
+
+                            {ord.status === "awaiting_approval" && (
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={() => handleApproveDeliverable(ord.id)}
+                                leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
+                              >
+                                Approve
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Mobile View: High-Density Elevated Card Stack with Zero Overflow */}
+                    <div className="block md:hidden space-y-3.5">
+                      {orders.map((ord) => (
+                        <div
+                          key={ord.id}
+                          className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] shadow-xs space-y-3"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-mono font-bold text-[#5C3A1E] tracking-wider">
+                              {ord.code}
+                            </span>
+                            <Badge
+                              variant={
+                                ord.status === "completed"
+                                  ? "completed"
+                                  : ord.status === "awaiting_approval"
+                                  ? "gold"
+                                  : ord.status === "revision_requested"
+                                  ? "progress"
+                                  : "neutral"
+                              }
+                              size="sm"
+                            >
+                              {ord.statusLabel}
+                            </Badge>
+                          </div>
+
+                          <div>
+                            <h3 className="font-serif text-base font-semibold text-[#0F172A] leading-snug">
+                              {ord.title}
+                            </h3>
+                            <p className="text-xs text-[#64748B] mt-0.5">
+                              {ord.deliverable}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-2 text-[11px] text-[#64748B] mt-2">
+                              <span className="font-medium text-[#5C3A1E] bg-[#F8F5EF] px-2 py-0.5 rounded-full border border-[#EADFCB]">
+                                {ord.service}
+                              </span>
+                              <span>•</span>
+                              <span>Round {ord.revisionRound}/{ord.maxRevisions} Revs</span>
+                            </div>
+                          </div>
+
+                          {/* Mobile Progress Bar */}
+                          <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/60 space-y-1.5">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-[#64748B]">Pipeline Completion</span>
+                              <span className="font-mono font-bold text-[#A98B57]">{ord.progress}%</span>
+                            </div>
+                            <div className="w-full bg-[#EADFCB]/60 rounded-full h-1.5 overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-[#D4A35A] to-[#5C3A1E] rounded-full"
+                                style={{ width: `${ord.progress}%` }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Full-width Action Buttons */}
+                          <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#EADFCB]/50">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setInspectingOrder(ord);
+                                setIsRevisionMode(false);
+                              }}
+                              className="w-full py-2.5 px-3 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] transition-all flex items-center justify-center gap-1.5 min-h-[44px] cursor-pointer"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>Inspect</span>
+                            </button>
+
+                            {ord.status === "awaiting_approval" ? (
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                className="w-full min-h-[44px] justify-center"
+                                onClick={() => handleApproveDeliverable(ord.id)}
+                                leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
+                              >
+                                Approve
+                              </Button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setInspectingOrder(ord);
+                                  setIsRevisionMode(true);
+                                }}
+                                className="w-full py-2.5 px-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-xs font-medium text-[#64748B] hover:text-[#0F172A] transition-all flex items-center justify-center gap-1 min-h-[44px] cursor-pointer"
+                              >
+                                <span>Request Rev</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
               </motion.div>
             )}
           </AnimatePresence>

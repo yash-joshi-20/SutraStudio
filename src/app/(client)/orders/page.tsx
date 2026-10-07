@@ -252,8 +252,47 @@ export default function OrdersPage() {
   const [createdOrderResult, setCreatedOrderResult] = useState<OrderItem | null>(null);
   const [receiptOrder, setReceiptOrder] = useState<ReceiptOrderData | null>(null);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
-  const [retryingOrderId, setRetryingOrderId] = useState<string | null>(null);
   const [paymentModalOrder, setPaymentModalOrder] = useState<OrderItem | null>(null);
+  const [retryingOrderId, setRetryingOrderId] = useState<string | null>(null);
+
+  // Support custom amount, WhatsApp concierge, and pricing links (e.g. /orders?amount=12000&ref=custom)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const amountParam = params.get("amount");
+    const refParam = params.get("ref");
+    const packageParam = params.get("package");
+    const serviceParam = params.get("service");
+
+    if (amountParam && !isNaN(Number(amountParam))) {
+      const parsedAmount = Number(amountParam);
+      const customCode = refParam
+        ? `CUST-${refParam.toUpperCase()}`
+        : `SUTRA-${Date.now().toString().slice(-4)}`;
+      setPaymentModalOrder({
+        id: `ord_custom_${Date.now()}`,
+        code: customCode,
+        orderNumber: customCode,
+        title: "Bespoke Creative Commission",
+        service: "Custom Creative Project",
+        totalAmount: parsedAmount,
+        amountPaid: parsedAmount,
+        status: "pending_payment",
+        statusLabel: "Pending Payment Verification",
+        deliverablePreview: "Custom commissioned pipeline assets",
+        driveFolder: "Vault",
+        revisionRound: 0,
+        maxRevisions: 2,
+        updatedAt: new Date().toISOString(),
+      });
+    } else if (packageParam) {
+      setIsMasterOrderModalOpen(true);
+      setInitialMasterTier(packageParam);
+    } else if (serviceParam) {
+      setIsMasterOrderModalOpen(true);
+      setInitialMasterService(serviceParam);
+    }
+  }, []);
 
   // Tab Filtering: Active Orders vs Order History
   const [activeFilterTab, setActiveFilterTab] = useState<"active" | "history" | "all">("active");

@@ -228,7 +228,7 @@ export function OrderReceiptModal({ order, isOpen, onClose }: OrderReceiptModalP
           <div className="pt-4 border-t border-[#E5E1D8] text-center text-[11px] text-[#A3A3A3] space-y-1">
             <p>Sutra Studio Atelier — Modern Creative Technology & 3D Visual Architecture</p>
             <p>GSTIN: 24AABCS1234F1Z8 | Razorpay Merchant Partner Account</p>
-            <p>Thank you for partnering with Sutra Studio. Your digital master assets will be vaulted to Google Drive.</p>
+            <p>Thank you for partnering with Sutra Studio. Your digital master assets will be vaulted to Sutra Cloud Vault.</p>
           </div>
         </div>
       </div>

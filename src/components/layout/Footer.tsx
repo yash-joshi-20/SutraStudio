@@ -44,7 +44,7 @@ export function Footer() {
     { label: "Project Dashboard", href: "/dashboard" },
     { label: "Order Wizard", href: "/orders" },
     { label: "Deliverable Vault", href: "/projects-client" },
-    { label: "Google Drive Media", href: "/media" },
+    { label: "Sutra Cloud Vault", href: "/media" },
     { label: "Billing & Invoices", href: "/invoices" },
   ];
 

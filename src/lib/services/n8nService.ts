@@ -84,7 +84,7 @@ export class N8nAutomationService {
     return (
       readEnv("APP_BASE_URL") ||
       readPublicEnv("NEXT_PUBLIC_APP_URL") ||
-      "http://localhost:3000"
+      "https://sutrastudio-1.onrender.com"
     );
   }
 
