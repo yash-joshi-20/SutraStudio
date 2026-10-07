@@ -15,9 +15,12 @@ import { ProjectCard } from "@/components/portfolio/ProjectCard";
 import { HeroAnimation } from "@/components/motion/HeroAnimation";
 import { BackgroundVideo } from "@/components/media/BackgroundVideo";
 import { VideoCard } from "@/components/media/VideoCard";
+import { SutraParticleWings } from "@/components/canvas/SutraParticleWings";
 import { LotusSymbol } from "@/components/brand/SutraLogo";
 import { SUTRA_SERVICES } from "@/data/servicesData";
 import { SUTRA_PROJECTS } from "@/data/projectsData";
+import { PER_PROJECT_TIERS, MONTHLY_RETAINER_TIERS } from "@/config/pricing";
+import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import {
   Play,
   Sparkles,
@@ -37,6 +40,12 @@ import {
   Award,
   UploadCloud,
   FileCheck2,
+  ExternalLink,
+  Smartphone,
+  Cpu,
+  Palette,
+  TrendingUp,
+  Sliders,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -51,14 +60,29 @@ const FILTER_CATEGORIES = [
   "Marketing",
 ];
 
+const HERO_DISCIPLINES = [
+  { id: "visuals", label: "4K AI Visuals", output: "4K UHD PNG / TIFF", price: "₹3,499" },
+  { id: "video", label: "Cinematic Reels", output: "ProRes 422 60FPS", price: "₹7,999" },
+  { id: "3d", label: "3D Spatial Meshes", output: "GLB / OBJ / USDZ", price: "₹7,999" },
+  { id: "interior", label: "Architectural Living", output: "8K Photorealistic", price: "₹7,999" },
+  { id: "meta", label: "Meta Ads Launcher", output: "Multi-Ratio Ad Bundles", price: "₹3,499" },
+  { id: "web", label: "Full-Stack Web/App", output: "Next.js 16 Flagships", price: "Custom" },
+];
+
 export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [demoModalOpen, setDemoModalOpen] = useState(false);
+  const [activeHeroDiscipline, setActiveHeroDiscipline] = useState("visuals");
+  const [heroRightTab, setHeroRightTab] = useState<"video" | "particle">("video");
+  const [pricingCycle, setPricingCycle] = useState<"project" | "monthly">("project");
 
   const filteredProjects =
     selectedCategory === "All"
       ? SUTRA_PROJECTS
       : SUTRA_PROJECTS.filter((p) => p.category === selectedCategory);
+
+  const activeDisciplineData =
+    HERO_DISCIPLINES.find((d) => d.id === activeHeroDiscipline) || HERO_DISCIPLINES[0];
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
@@ -66,45 +90,73 @@ export default function HomePage() {
 
       <main id="main-content" className="flex-1 pb-16 md:pb-0">
         {/* ===================================================
-            1. HERO SECTION (Clean White / Warm Ivory Editorial)
+            1. HERO SECTION (Clean White / Warm Ivory Luxury Atelier)
             =================================================== */}
-        <section className="relative overflow-hidden pt-8 pb-16 md:pt-16 md:pb-24">
-          {/* Subtle Background Watermark */}
-          <div className="absolute top-12 left-1/2 -translate-x-1/2 -z-10 opacity-[0.03] pointer-events-none">
-            <LotusSymbol className="w-[800px] h-[800px]" color="gold" />
+        <section className="relative overflow-hidden pt-6 pb-16 md:pt-12 md:pb-24">
+          {/* Subtle Background Lotus Watermark */}
+          <div className="absolute top-10 left-1/2 -translate-x-1/2 -z-10 opacity-[0.03] pointer-events-none">
+            <LotusSymbol className="w-[850px] h-[850px]" color="gold" />
           </div>
 
           <HeroAnimation>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
                 {/* Left Column: Hero Narrative & CTAs */}
                 <div className="lg:col-span-7 space-y-6">
-                  {/* Eyebrow Badge */}
-                  <div className="hero-badge inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] shadow-xs">
-                    <span className="text-[#D4A35A] text-xs">◆</span>
+                  {/* Eyebrow Status Badge */}
+                  <div className="hero-badge inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-pulse" />
                     <span className="text-[10px] md:text-xs font-semibold tracking-[0.22em] text-[#5C3A1E] uppercase">
                       IDEAS ◆ DESIGN ◆ DEVELOPMENT ◆ GROWTH
                     </span>
                   </div>
 
                   {/* Main Display Headline */}
-                  <h1 className="hero-heading font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold leading-[1.08] tracking-tight text-[#0F172A]">
-                    <span className="text-gold-gradient font-bold">Tradition</span>{" "}
-                    Meets Technology
+                  <h1 className="hero-heading font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold leading-[1.06] tracking-tight text-[#0F172A]">
+                    <span className="text-gold-gradient font-bold">Tradition</span> Meets Modern AI Engineering
                   </h1>
 
                   {/* Subtitle */}
                   <p className="hero-subhead text-base sm:text-lg text-[#64748B] max-w-xl leading-relaxed font-sans">
-                    AI-Powered Creative, Design, Development & Digital Marketing
+                    AI-Powered Creative, Design, Development &amp; Digital Marketing
                     Solutions for Modern Businesses. Rooted in traditional Indian
-                    symmetry, executed with high-precision engineering.
+                    symmetry, executed with high-precision autonomous pipelines.
                   </p>
+
+                  {/* Quick Discipline Selector Bar */}
+                  <div className="space-y-2 pt-1">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#A98B57] block">
+                      Production Disciplines &amp; 4K Standards:
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {HERO_DISCIPLINES.map((disc) => {
+                        const isSelected = activeHeroDiscipline === disc.id;
+                        return (
+                          <button
+                            key={disc.id}
+                            type="button"
+                            onClick={() => setActiveHeroDiscipline(disc.id)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                              isSelected
+                                ? "bg-[#5C3A1E] text-white shadow-xs font-semibold ring-1 ring-[#D4A35A]"
+                                : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A] hover:text-[#0F172A]"
+                            }`}
+                          >
+                            <span>{disc.label}</span>
+                            <span className={`ml-1.5 text-[10px] font-mono ${isSelected ? "text-[#D4A35A]" : "text-[#A98B57]"}`}>
+                              {disc.price}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
 
                   {/* Action Buttons */}
                   <div className="hero-cta flex flex-wrap items-center gap-4 pt-2">
-                    <Link href="#services">
-                      <Button variant="primary" size="lg" withArrow>
-                        Explore Services
+                    <Link href="/orders">
+                      <Button variant="primary" size="lg" withArrow className="shadow-warm">
+                        Start Commission ({activeDisciplineData.price})
                       </Button>
                     </Link>
 
@@ -116,10 +168,21 @@ export default function HomePage() {
                     >
                       Watch Showreel
                     </Button>
+
+                    <Link href="/chat">
+                      <Button
+                        variant="ghost"
+                        size="lg"
+                        leftIcon={<Bot className="w-4 h-4 text-[#D4A35A]" />}
+                        className="text-[#5C3A1E] hover:bg-[#F4EFE6]"
+                      >
+                        AI Concierge
+                      </Button>
+                    </Link>
                   </div>
 
                   {/* Studio Capability Highlights Divided by Hairlines */}
-                  <div className="hero-stats pt-8 mt-6 border-t border-[#EADFCB] grid grid-cols-2 sm:grid-cols-4 gap-6">
+                  <div className="hero-stats pt-8 border-t border-[#EADFCB] grid grid-cols-2 sm:grid-cols-4 gap-6">
                     <div className="hero-stats-item">
                       <p className="font-serif text-lg sm:text-xl font-bold text-[#5C3A1E]">
                         High-Precision
@@ -140,68 +203,126 @@ export default function HomePage() {
 
                     <div className="hero-stats-item">
                       <p className="font-serif text-lg sm:text-xl font-bold text-[#5C3A1E]">
-                        Enterprise
+                        24-48h SLA
                       </p>
                       <p className="text-xs text-[#64748B] mt-0.5 font-medium">
-                        Production Rigor
+                        Rapid Turnaround
                       </p>
                     </div>
 
                     <div className="hero-stats-item">
                       <p className="font-serif text-lg sm:text-xl font-bold text-[#5C3A1E]">
-                        Ultra-HD 4K
+                        100% IP Rights
                       </p>
                       <p className="text-xs text-[#64748B] mt-0.5 font-medium">
-                        Master Deliverables
+                        Sutra Cloud Vault
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Right Column: Architectural Ambient Video Card */}
-                <div className="hero-visual-card lg:col-span-5 relative">
-                  <div className="relative aspect-[4/5] w-full max-w-md mx-auto rounded-3xl overflow-hidden shadow-2xl border-4 border-[#FFFDF9] bg-[#0F172A]">
-                    {/* Background Video Ambient Stream */}
-                    <BackgroundVideo
-                      video="hero-showcase"
-                      layout="fill"
-                      overlay="dark-editorial"
-                      overlayOpacity={0.65}
-                      priority
-                      showPlayPauseToggle
-                    />
-
-                    {/* Center Video Play Badge */}
-                    <div className="absolute inset-0 flex items-center justify-center z-10">
+                {/* Right Column: Interactive Video & Particle Matrix Spotlight Card */}
+                <div className="hero-visual-card lg:col-span-5 relative space-y-3">
+                  {/* Mode Switcher Tabs (Showreel vs 3D Vector Matrix) */}
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#A98B57]">
+                      Atelier Interactive Spotlight
+                    </span>
+                    <div className="inline-flex rounded-full bg-[#FFFDF9] border border-[#EADFCB] p-0.5 shadow-2xs text-[11px]">
                       <button
-                        onClick={() => setDemoModalOpen(true)}
-                        className="group flex items-center gap-3 bg-[#FFFDF9]/95 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/60 shadow-lg transition-transform duration-300 hover:scale-105 cursor-pointer touch-target"
+                        type="button"
+                        onClick={() => setHeroRightTab("video")}
+                        className={`px-3 py-1 rounded-full font-semibold transition-all cursor-pointer ${
+                          heroRightTab === "video"
+                            ? "bg-[#5C3A1E] text-white"
+                            : "text-[#64748B] hover:text-[#0F172A]"
+                        }`}
                       >
-                        <span className="w-8 h-8 rounded-full bg-[#5C3A1E] text-white flex items-center justify-center">
-                          <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
-                        </span>
-                        <span className="text-xs font-semibold text-[#0F172A] tracking-wider uppercase">
-                          Watch Full Reel
-                        </span>
+                        Studio Reel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setHeroRightTab("particle")}
+                        className={`px-3 py-1 rounded-full font-semibold transition-all cursor-pointer ${
+                          heroRightTab === "particle"
+                            ? "bg-[#5C3A1E] text-white"
+                            : "text-[#64748B] hover:text-[#0F172A]"
+                        }`}
+                      >
+                        3D Sacred Matrix
                       </button>
                     </div>
+                  </div>
 
-                    {/* Bottom Floating Badge */}
-                    <div className="absolute bottom-6 inset-x-6 z-10">
-                      <div className="bg-[#FFFDF9]/95 backdrop-blur-md rounded-2xl p-4 border border-[#EADFCB] shadow-warm flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center shrink-0">
-                          <Sparkles className="w-5 h-5 text-[#D4A35A]" />
+                  <div className="relative aspect-[4/5] w-full max-w-md mx-auto rounded-3xl overflow-hidden shadow-2xl border-4 border-[#FFFDF9] bg-[#0F172A]">
+                    {heroRightTab === "video" ? (
+                      <>
+                        {/* Background Video Ambient Stream */}
+                        <BackgroundVideo
+                          video="hero-showcase"
+                          layout="fill"
+                          overlay="dark-editorial"
+                          overlayOpacity={0.65}
+                          priority
+                          showPlayPauseToggle
+                        />
+
+                        {/* Center Video Play Badge */}
+                        <div className="absolute inset-0 flex items-center justify-center z-10">
+                          <button
+                            onClick={() => setDemoModalOpen(true)}
+                            className="group flex items-center gap-3 bg-[#FFFDF9]/95 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/60 shadow-lg transition-transform duration-300 hover:scale-105 cursor-pointer touch-target"
+                          >
+                            <span className="w-8 h-8 rounded-full bg-[#5C3A1E] text-white flex items-center justify-center">
+                              <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+                            </span>
+                            <span className="text-xs font-semibold text-[#0F172A] tracking-wider uppercase">
+                              Watch Full Reel
+                            </span>
+                          </button>
                         </div>
-                        <div>
-                          <p className="text-xs font-bold text-[#0F172A]">
-                            Sutra Creative Technology
+
+                        {/* Bottom Floating Badge */}
+                        <div className="absolute bottom-6 inset-x-6 z-10">
+                          <div className="bg-[#FFFDF9]/95 backdrop-blur-md rounded-2xl p-4 border border-[#EADFCB] shadow-warm flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center shrink-0">
+                                <Sparkles className="w-5 h-5 text-[#D4A35A]" />
+                              </div>
+                              <div>
+                                <p className="text-xs font-bold text-[#0F172A]">
+                                  {activeDisciplineData.label}
+                                </p>
+                                <p className="text-[11px] text-[#64748B]">
+                                  {activeDisciplineData.output}
+                                </p>
+                              </div>
+                            </div>
+                            <span className="text-xs font-mono font-bold text-[#5C3A1E]">
+                              {activeDisciplineData.price}
+                            </span>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="w-full h-full relative">
+                        <SutraParticleWings
+                          height="100%"
+                          initialMode="wings"
+                          interactive={true}
+                          showControls={false}
+                          theme="warm-gold"
+                        />
+                        <div className="absolute bottom-4 inset-x-4 z-10 bg-[#0F172A]/80 backdrop-blur-md rounded-xl p-3 border border-[#EADFCB]/30 text-white text-center">
+                          <p className="text-[11px] font-semibold text-[#D4A35A]">
+                            Interactive Vector Light Field
                           </p>
-                          <p className="text-[11px] text-[#64748B]">
-                            AI Workflow Router & Bespoke Craftsmanship
+                          <p className="text-[10px] text-[#94A3B8]">
+                            Touch or drag to guide mathematical particle flow
                           </p>
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
 
                   {/* Decorative background watermark */}
@@ -218,12 +339,12 @@ export default function HomePage() {
             2. 12 SERVICES CATALOG
             =================================================== */}
         <section id="services" className="py-20 bg-[#FAF9F5] border-t border-[#EADFCB]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
             <SectionHeader
-              badge="OUR SERVICES"
-              title="Complete Creative & Digital Solutions"
-              subtitle="From photorealistic visual generation to enterprise web platforms — everything your business requires, crafted in one studio."
-              className="mb-14"
+              badge="OUR 12 DISCIPLINES"
+              title="Complete Creative &amp; Digital Solutions"
+              subtitle="From photorealistic visual generation to enterprise web platforms — everything your business requires, crafted in one unified atelier."
+              className="text-center"
             />
 
             {/* 12-Card Responsive Grid */}
@@ -234,74 +355,71 @@ export default function HomePage() {
             </div>
 
             {/* Bottom Service Assurance Strip */}
-            <div className="mt-12 p-6 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] flex flex-wrap items-center justify-around gap-6 text-xs text-[#64748B]">
-              <div className="flex items-center gap-2">
+            <div className="p-6 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] flex flex-wrap items-center justify-around gap-6 text-xs text-[#64748B] shadow-xs">
+              <div className="flex items-center gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-[#2E7D4F]" />
-                <span>Dedicated Art Director on Every Order</span>
+                <span className="font-medium text-[#0F172A]">Dedicated Art Director on Every Order</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 <Clock className="w-4 h-4 text-[#C2761A]" />
-                <span>Rapid 24-72 Hour Delivery Pipelines</span>
+                <span className="font-medium text-[#0F172A]">Rapid 24-72 Hour Delivery Pipelines</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 <ShieldCheck className="w-4 h-4 text-[#5C3A1E]" />
-                <span>Full Commercial License & Sutra Cloud Vault</span>
+                <span className="font-medium text-[#0F172A]">Full Commercial License &amp; Sutra Cloud Vault</span>
               </div>
             </div>
           </div>
         </section>
 
         {/* ===================================================
-            3. WHY SUTRA STUDIO & VALUE COMPARISON MATRIX
+            3. WHY SUTRA STUDIO & HONEST COMPARISON MATRIX
             =================================================== */}
         <section className="py-20 bg-[#F8F5EF] border-t border-[#EADFCB]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
             <SectionHeader
               badge="WHY SUTRA STUDIO"
-              title="Why Pay Sutra Studio vs Free AI, Freelancers & Agencies?"
+              title="Why Pay Sutra Studio vs Free AI, Freelancers &amp; Agencies?"
               subtitle="Free AI generates distorted drafts. Freelancers are fragmented. Big agencies charge ₹2,00,000/mo. Sutra Studio blends AI computational speed with Senior Human Art Direction for production-ready perfection in 24–48 hours."
-              className="mb-14"
+              className="text-center"
             />
 
             {/* Core 3 Pillars */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-              {/* Feature 1 */}
-              <div className="interactive-card rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] p-8 hover:border-[#D4A35A] transition-all shadow-xs">
-                <div className="w-12 h-12 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="interactive-card rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-8 hover:border-[#D4A35A] transition-all shadow-xs space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center">
                   <Layers className="w-6 h-6 text-[#5C3A1E]" />
                 </div>
                 <h3 className="font-serif text-xl font-semibold text-[#0F172A]">
                   Heritage Aesthetics + Precision
                 </h3>
-                <p className="text-sm text-[#64748B] mt-3 leading-relaxed">
+                <p className="text-sm text-[#64748B] leading-relaxed">
                   Every asset is balanced through traditional geometric principles,
                   warm color harmonies, and timeless typographic hierarchy.
                 </p>
               </div>
 
-              {/* Feature 2 */}
-              <div className="interactive-card rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] p-8 hover:border-[#D4A35A] transition-all shadow-xs">
-                <div className="w-12 h-12 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center mb-6">
+              <div className="interactive-card rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-8 hover:border-[#D4A35A] transition-all shadow-xs space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center">
                   <Zap className="w-6 h-6 text-[#5C3A1E]" />
                 </div>
                 <h3 className="font-serif text-xl font-semibold text-[#0F172A]">
                   Autonomous Creative Intelligence
                 </h3>
-                <p className="text-sm text-[#64748B] mt-3 leading-relaxed">
+                <p className="text-sm text-[#64748B] leading-relaxed">
                   State-of-the-art computational design models, automated render
                   dispatchers, and continuous progress updates delivered to your portal.
                 </p>
               </div>
 
-              {/* Feature 3 */}
-              <div className="interactive-card rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] p-8 hover:border-[#D4A35A] transition-all shadow-xs">
-                <div className="w-12 h-12 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center mb-6">
+              <div className="interactive-card rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-8 hover:border-[#D4A35A] transition-all shadow-xs space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center">
                   <Target className="w-6 h-6 text-[#5C3A1E]" />
                 </div>
                 <h3 className="font-serif text-xl font-semibold text-[#0F172A]">
-                  Business Growth & Conversion
+                  Business Growth &amp; Conversion
                 </h3>
-                <p className="text-sm text-[#64748B] mt-3 leading-relaxed">
+                <p className="text-sm text-[#64748B] leading-relaxed">
                   Creative work engineered specifically to elevate luxury brand
                   perception, command premium pricing, and expand market presence.
                 </p>
@@ -309,16 +427,16 @@ export default function HomePage() {
             </div>
 
             {/* 4-Way Side-by-Side Comparison Matrix */}
-            <div className="bg-[#FFFDF9] border border-[#EADFCB] rounded-3xl p-6 sm:p-10 shadow-sm mb-16">
-              <div className="text-center max-w-3xl mx-auto mb-10">
-                <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[#A98B57] flex items-center justify-center gap-1.5 mb-2">
+            <div className="bg-[#FFFDF9] border border-[#EADFCB] rounded-3xl p-6 sm:p-10 shadow-sm">
+              <div className="text-center max-w-3xl mx-auto mb-10 space-y-2">
+                <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[#A98B57] flex items-center justify-center gap-1.5">
                   <span className="text-[#D4A35A] text-[10px]">◆</span>
                   <span>THE HONEST COMPARISON</span>
                 </span>
                 <h3 className="font-serif text-2xl sm:text-3xl font-semibold text-[#0F172A]">
                   See the Direct Difference
                 </h3>
-                <p className="text-sm text-[#64748B] mt-2">
+                <p className="text-sm text-[#64748B]">
                   Why modern founders, brands, and agencies choose our dedicated atelier over guesswork and bloated retainers.
                 </p>
               </div>
@@ -338,7 +456,7 @@ export default function HomePage() {
                     <ul className="space-y-3 text-xs text-[#64748B]">
                       <li className="flex items-start gap-2">
                         <XIcon className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" />
-                        <span>Prompt guesswork & distorted hands/text</span>
+                        <span>Prompt guesswork &amp; distorted hands/text</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <XIcon className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" />
@@ -381,7 +499,7 @@ export default function HomePage() {
                       </li>
                       <li className="flex items-start gap-2">
                         <XIcon className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" />
-                        <span>Unpredictable turnaround & ghosting risk</span>
+                        <span>Unpredictable turnaround &amp; ghosting risk</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <XIcon className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" />
@@ -389,7 +507,7 @@ export default function HomePage() {
                       </li>
                       <li className="flex items-start gap-2">
                         <XIcon className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" />
-                        <span>Files scattered in emails & expiring links</span>
+                        <span>Files scattered in emails &amp; expiring links</span>
                       </li>
                     </ul>
                   </div>
@@ -462,7 +580,7 @@ export default function HomePage() {
                       </li>
                       <li className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
-                        <span className="font-medium"><strong>Private Sutra Cloud Vault</strong> & 100% Commercial IP</span>
+                        <span className="font-medium"><strong>Private Sutra Cloud Vault</strong> &amp; 100% Commercial IP</span>
                       </li>
                     </ul>
                   </div>
@@ -477,101 +595,229 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-
-            {/* Simple 3-Step "How It Works" Flow (Universal for ages 18-60) */}
-            <div className="mb-14">
-              <div className="text-center max-w-2xl mx-auto mb-12">
-                <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[#A98B57] flex items-center justify-center gap-1.5 mb-2">
-                  <span className="text-[#D4A35A] text-[10px]">◆</span>
-                  <span>HOW IT WORKS</span>
-                </span>
-                <h3 className="font-serif text-3xl font-semibold text-[#0F172A]">
-                  Simple, Transparent & Frictionless
-                </h3>
-                <p className="text-sm text-[#64748B] mt-2">
-                  No lengthy meetings, no hourly ambiguity. Commission creative work in 3 intuitive steps.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {/* Step 1 */}
-                <div className="relative p-8 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] text-center shadow-xs">
-                  <div className="w-12 h-12 rounded-2xl bg-[#5C3A1E] text-[#FAF9F5] font-serif font-bold text-lg flex items-center justify-center mx-auto mb-5 shadow-xs border border-[#A98B57]/40">
-                    1
-                  </div>
-                  <h4 className="font-serif text-lg font-bold text-[#0F172A] mb-2">
-                    Choose Service or Retainer
-                  </h4>
-                  <p className="text-xs text-[#64748B] leading-relaxed">
-                    Select a single project (e.g. 3D Product, Branding, AI Visuals) starting at ₹3,499, or the Autonomous Growth Retainer at ₹14,999/mo for daily continuous active queue output.
-                  </p>
-                </div>
-
-                {/* Step 2 */}
-                <div className="relative p-8 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] text-center shadow-xs">
-                  <div className="w-12 h-12 rounded-2xl bg-[#5C3A1E] text-[#FAF9F5] font-serif font-bold text-lg flex items-center justify-center mx-auto mb-5 shadow-xs border border-[#A98B57]/40">
-                    2
-                  </div>
-                  <h4 className="font-serif text-lg font-bold text-[#0F172A] mb-2">
-                    Share Brief or Talk to AI
-                  </h4>
-                  <p className="text-xs text-[#64748B] leading-relaxed">
-                    Type your requirements, upload sketches and reference photos, or speak directly to our AI Concierge. Our automated pipeline initializes your creative workspace immediately.
-                  </p>
-                </div>
-
-                {/* Step 3 */}
-                <div className="relative p-8 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] text-center shadow-xs">
-                  <div className="w-12 h-12 rounded-2xl bg-[#5C3A1E] text-[#FAF9F5] font-serif font-bold text-lg flex items-center justify-center mx-auto mb-5 shadow-xs border border-[#A98B57]/40">
-                    3
-                  </div>
-                  <h4 className="font-serif text-lg font-bold text-[#0F172A] mb-2">
-                    Receive 4K Masters in 24–48h
-                  </h4>
-                  <p className="text-xs text-[#64748B] leading-relaxed">
-                    Get finished 4K UHD masters, source files, and brand assets delivered directly into your private, permanent Sutra Cloud Vault with full commercial rights.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Transparent Deliverables & Quantity Scaling Callout Banner */}
-            <div className="bg-linear-to-r from-[#FFFDF9] via-[#FAF9F5] to-[#FFFDF9] border border-[#D4A35A]/50 rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xs">
-              <div className="space-y-2 text-center md:text-left">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-[#EBF3ED] text-[#2E7D4F] border border-[#2E7D4F]/20">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Exact Deliverables Guarantee</span>
-                </div>
-                <h4 className="font-serif text-xl font-bold text-[#0F172A]">
-                  Starter Commissions (₹3,499) Include Up to 5 Curated 4K Deliverables
-                </h4>
-                <p className="text-xs text-[#64748B] max-w-2xl leading-relaxed">
-                  Need more? Scale with Studio Growth (₹7,999) for 15x 3D renders, video ads, and 360° virtual tours, or activate the Autonomous Growth Retainer (₹14,999/mo) for daily active queue fulfillment.
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3 shrink-0">
-                <Link href="/pricing">
-                  <Button variant="primary" size="md" withArrow>
-                    View All Pricing
-                  </Button>
-                </Link>
-                <Link href="/orders">
-                  <Button variant="secondary" size="md">
-                    Commission Now
-                  </Button>
-                </Link>
-              </div>
-            </div>
           </div>
         </section>
 
         {/* ===================================================
-            4. FEATURED WORK / PORTFOLIO
+            4. TRANSPARENT PRICING & COMMISSION MATRIX
             =================================================== */}
-        <section id="projects" className="py-20 bg-[#FAF9F5] border-t border-[#EADFCB]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+        <section id="pricing" className="py-20 bg-[#FAF9F5] border-t border-[#EADFCB]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+            <div className="text-center max-w-3xl mx-auto space-y-4">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] shadow-xs">
+                <span className="text-[#D4A35A] text-xs">◆</span>
+                <span className="text-[10px] md:text-xs font-semibold tracking-[0.22em] text-[#5C3A1E] uppercase">
+                  TRANSPARENT STUDIO INVESTMENT
+                </span>
+              </div>
+
+              <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-semibold text-[#0F172A]">
+                Clear Value, <span className="text-gold-gradient">Guaranteed Excellence</span>
+              </h2>
+
+              <p className="text-sm sm:text-base text-[#64748B] leading-relaxed">
+                Choose between single high-impact commissions starting at ₹3,499 or our 30-Day Autonomous Retainer with daily queue fulfillment.
+              </p>
+
+              {/* Billing Cycle Toggle */}
+              <div className="pt-2 flex items-center justify-center">
+                <div role="tablist" aria-label="Billing frequency" className="inline-flex rounded-full bg-[#FFFDF9] border border-[#EADFCB] p-1 shadow-xs">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={pricingCycle === "project"}
+                    onClick={() => setPricingCycle("project")}
+                    className={`interactive-pill focus-ring px-5 py-2 rounded-full text-xs font-semibold cursor-pointer ${
+                      pricingCycle === "project"
+                        ? "bg-[#5C3A1E] text-white shadow-xs"
+                        : "text-[#64748B] hover:text-[#0F172A]"
+                    }`}
+                  >
+                    Per-Project Commission
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={pricingCycle === "monthly"}
+                    onClick={() => setPricingCycle("monthly")}
+                    className={`interactive-pill focus-ring px-5 py-2 rounded-full text-xs font-semibold cursor-pointer flex items-center gap-1.5 ${
+                      pricingCycle === "monthly"
+                        ? "bg-[#5C3A1E] text-white shadow-xs"
+                        : "text-[#64748B] hover:text-[#0F172A]"
+                    }`}
+                  >
+                    <span>30-Day Autonomous Retainer</span>
+                    <span className="text-[10px] bg-[#D4A35A] text-[#0F172A] px-2 py-0.5 rounded-full font-bold">
+                      Daily Queue
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Dynamic Pricing Cards Grid */}
+            <AnimatePresence mode="wait">
+              {pricingCycle === "project" ? (
+                <motion.div
+                  key="project-grid"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.3 }}
+                  className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch"
+                >
+                  {PER_PROJECT_TIERS.map((tier) => (
+                    <div
+                      key={tier.id}
+                      className={`rounded-3xl p-8 flex flex-col justify-between transition-all duration-300 ${
+                        tier.popular
+                          ? "bg-[#FFFDF9] border-2 border-[#D4A35A] shadow-warm relative ring-1 ring-[#D4A35A]/30"
+                          : "bg-[#FFFDF9] border border-[#EADFCB] shadow-sm hover:border-[#D4A35A]/60"
+                      }`}
+                    >
+                      {tier.popular && (
+                        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#5C3A1E] text-white px-4 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase shadow-xs">
+                          Most Popular
+                        </div>
+                      )}
+
+                      <div className="space-y-6">
+                        <div>
+                          <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
+                            {tier.name}
+                          </h3>
+                          <p className="text-xs text-[#64748B] mt-1.5 leading-relaxed">
+                            {tier.description}
+                          </p>
+                        </div>
+
+                        {/* Price Display */}
+                        <div className="flex items-baseline gap-1.5 pb-6 border-b border-[#EADFCB]/60">
+                          <span className="font-serif text-3xl sm:text-4xl font-bold text-[#5C3A1E]">
+                            {typeof tier.price === "number" ? (
+                              <AnimatedNumber value={tier.price} prefix="₹" />
+                            ) : (
+                              "Custom Quote"
+                            )}
+                          </span>
+                          <span className="text-xs text-[#64748B] font-mono">
+                            {tier.price === "custom" ? "" : "/ commission"}
+                          </span>
+                        </div>
+
+                        {/* Feature List */}
+                        <ul className="space-y-3 text-xs text-[#475569]">
+                          {tier.features.map((feat) => (
+                            <li key={feat} className="flex items-start gap-2.5">
+                              <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
+                              <span>{feat}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="mt-8 pt-6 border-t border-[#EADFCB]/60 space-y-3">
+                        <Link href={tier.ctaHref || "/orders"}>
+                          <Button
+                            variant={tier.popular ? "primary" : "secondary"}
+                            size="md"
+                            className="w-full justify-center shadow-xs"
+                            withArrow
+                          >
+                            {tier.ctaText}
+                          </Button>
+                        </Link>
+                        <p className="text-[11px] text-[#94A3B8] text-center">
+                          Turnaround: {tier.turnaround} • Direct UPI / Bank
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="monthly-grid"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.3 }}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch"
+                >
+                  {MONTHLY_RETAINER_TIERS.map((tier) => (
+                    <div
+                      key={tier.id}
+                      className={`rounded-3xl p-8 flex flex-col justify-between transition-all duration-300 ${
+                        tier.popular
+                          ? "bg-[#FFFDF9] border-2 border-[#D4A35A] shadow-warm relative ring-1 ring-[#D4A35A]/30"
+                          : "bg-[#FFFDF9] border border-[#EADFCB] shadow-sm hover:border-[#D4A35A]/60"
+                      }`}
+                    >
+                      {tier.popular && (
+                        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#5C3A1E] text-white px-4 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase shadow-xs">
+                          Continuous Active Queue
+                        </div>
+                      )}
+
+                      <div className="space-y-6">
+                        <div>
+                          <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
+                            {tier.name}
+                          </h3>
+                          <p className="text-xs text-[#64748B] mt-1.5 leading-relaxed">
+                            {tier.description}
+                          </p>
+                        </div>
+
+                        {/* Price Display */}
+                        <div className="flex items-baseline gap-1.5 pb-6 border-b border-[#EADFCB]/60">
+                          <span className="font-serif text-3xl sm:text-4xl font-bold text-[#5C3A1E]">
+                            <AnimatedNumber value={tier.priceMonthly} prefix="₹" />
+                          </span>
+                          <span className="text-xs text-[#64748B] font-mono">
+                            / 30-day billing
+                          </span>
+                        </div>
+
+                        {/* Feature List */}
+                        <ul className="space-y-3 text-xs text-[#475569]">
+                          {tier.features.map((feat) => (
+                            <li key={feat} className="flex items-start gap-2.5">
+                              <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
+                              <span>{feat}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="mt-8 pt-6 border-t border-[#EADFCB]/60 space-y-3">
+                        <Link href={tier.ctaHref || "/orders"}>
+                          <Button
+                            variant={tier.popular ? "primary" : "secondary"}
+                            size="md"
+                            className="w-full justify-center shadow-xs"
+                            withArrow
+                          >
+                            {tier.ctaText}
+                          </Button>
+                        </Link>
+                        <p className="text-[11px] text-[#94A3B8] text-center">
+                          {tier.monthlyQuotaDescription}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </section>
+
+        {/* ===================================================
+            5. FEATURED WORK / PORTFOLIO
+            =================================================== */}
+        <section id="projects" className="py-20 bg-[#F8F5EF] border-t border-[#EADFCB]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div>
                 <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[#A98B57] flex items-center gap-1.5 mb-2">
                   <span className="text-[#D4A35A] text-[10px]">◆</span>
@@ -590,10 +836,11 @@ export default function HomePage() {
                     <button
                       key={cat}
                       onClick={() => setSelectedCategory(cat)}
-                      className={`interactive-pill focus-ring px-4 py-1.5 rounded-full text-xs font-medium cursor-pointer ${isActive
-                          ? "bg-[#5C3A1E] text-white shadow-xs"
+                      className={`interactive-pill focus-ring px-4 py-1.5 rounded-full text-xs font-medium cursor-pointer ${
+                        isActive
+                          ? "bg-[#5C3A1E] text-white shadow-xs font-semibold"
                           : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A] hover:text-[#0F172A]"
-                        }`}
+                      }`}
                     >
                       {cat}
                     </button>
@@ -626,16 +873,84 @@ export default function HomePage() {
         </section>
 
         {/* ===================================================
-            5. WHITE PREMIUM EDITORIAL CTA BAND (No Dark Band)
+            6. FOUNDER & ATELIER LEADERSHIP SECTION
+            =================================================== */}
+        <section className="py-20 bg-[#FFFDF9] border-t border-[#EADFCB]">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="rounded-3xl bg-[#FAF9F5] border border-[#EADFCB] p-8 sm:p-10 shadow-warm">
+              <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-br from-[#5C3A1E] to-[#2B1810] flex items-center justify-center text-white shadow-md shrink-0 border-2 border-[#D4A35A]/40">
+                  <LotusSymbol className="w-14 h-14" color="gold" />
+                </div>
+
+                <div className="flex-1 space-y-4 text-center md:text-left">
+                  <div>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-xs font-semibold text-[#A98B57] uppercase tracking-wider mb-2">
+                      <span>Founder &amp; Principal AI Architect</span>
+                    </div>
+                    <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#0F172A]">
+                      Yash Joshi
+                    </h3>
+                    <p className="text-xs text-[#64748B] font-mono mt-0.5">
+                      Sutra Studio Atelier • Creative Technology &amp; Generative Engineering
+                    </p>
+                  </div>
+
+                  <p className="text-sm text-[#475569] leading-relaxed max-w-2xl">
+                    Leading the synthesis of classical Indian aesthetic doctrines (Pramana, Rasa, Yantra) with autonomous generative AI workflows, 4K rendering pipelines, and high-conversion commercial digital experiences.
+                  </p>
+
+                  <div className="pt-2 flex flex-wrap items-center justify-center md:justify-start gap-3">
+                    <a
+                      href="https://www.facebook.com/yashjoshisutrastudio/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] hover:border-[#D4A35A] hover:bg-[#FFFFFF] text-xs font-semibold text-[#5C3A1E] shadow-2xs transition-all"
+                    >
+                      <svg className="w-4 h-4 fill-current text-[#1877F2]" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                      </svg>
+                      <span>Connect with Founder (Facebook Profile)</span>
+                    </a>
+
+                    <a
+                      href="https://www.instagram.com/yashsutrastudio/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] hover:border-[#D4A35A] hover:bg-[#FFFFFF] text-xs font-semibold text-[#5C3A1E] shadow-2xs transition-all"
+                    >
+                      <svg className="w-4 h-4 fill-current text-[#E4405F]" viewBox="0 0 24 24">
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                      </svg>
+                      <span>@yashsutrastudio</span>
+                    </a>
+
+                    <a
+                      href="https://wa.me/918200192781?text=Hello%20Yash%2C%20I%20would%20like%20to%20discuss%20a%20project%20with%20Sutra%20Studio."
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FFFDF9] border border-[#2E7D4F]/40 hover:border-[#2E7D4F] hover:bg-[#FFFFFF] text-xs font-semibold text-[#2E7D4F] shadow-2xs transition-all"
+                    >
+                      <span className="w-2 h-2 rounded-full bg-[#25D366] animate-ping" />
+                      <span>Studio WhatsApp Concierge</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ===================================================
+            7. WHITE LUXURY EDITORIAL CTA BANNER
             =================================================== */}
         <section className="relative overflow-hidden bg-[#FFFDF9] text-[#0F172A] py-20 border-t border-[#EADFCB]">
-          {/* Subtle Lotus Watermark Accent */}
           <div className="absolute -bottom-16 -left-16 pointer-events-none opacity-[0.05]">
             <LotusSymbol className="w-96 h-96" color="gold" />
           </div>
 
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-[0.2em] bg-[#F4EFE6] text-[#5C3A1E] border border-[#EADFCB] mx-auto">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-semibold uppercase tracking-[0.2em] bg-[#F4EFE6] text-[#5C3A1E] border border-[#EADFCB] mx-auto">
               <span className="text-[#D4A35A] text-[10px]">◆</span>
               <span>COMMISSION A PROJECT</span>
             </div>
@@ -650,7 +965,7 @@ export default function HomePage() {
 
             <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
               <Link href="/orders">
-                <Button variant="primary" size="lg" withArrow>
+                <Button variant="primary" size="lg" withArrow className="shadow-warm">
                   Start Project
                 </Button>
               </Link>
@@ -676,7 +991,7 @@ export default function HomePage() {
       <Modal
         isOpen={demoModalOpen}
         onClose={() => setDemoModalOpen(false)}
-        title="Sutra Studio — Creative Showreel & Capabilities"
+        title="Sutra Studio — Creative Showreel &amp; Capabilities"
         description="A curated montage of our generative visual, 3D spatial, and architectural work."
         maxWidth="lg"
       >
