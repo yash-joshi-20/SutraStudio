@@ -29,29 +29,34 @@ export default function ProjectsPage() {
     <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A]">
       <Navbar />
 
-      <main id="main-content" className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[#D4A35A]">
-            PORTFOLIO SHOWCASE
-          </span>
-          <h1 className="font-serif text-4xl sm:text-5xl font-semibold text-[#0F172A] mt-2">
-            Featured Projects & Case Studies
+      <main id="main-content" className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 w-full">
+        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12 space-y-3 sm:space-y-4">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] shadow-xs">
+            <span className="text-[#D4A35A] text-xs">◆</span>
+            <span className="text-[10px] md:text-xs font-semibold tracking-[0.22em] text-[#5C3A1E] uppercase">
+              PORTFOLIO SHOWCASE
+            </span>
+          </div>
+
+          <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-[#0F172A] leading-tight">
+            Featured Projects &amp; <span className="text-gold-gradient">Case Studies</span>
           </h1>
-          <p className="text-base text-[#64748B] mt-3">
+
+          <p className="text-sm sm:text-base text-[#64748B] leading-relaxed max-w-2xl mx-auto font-sans">
             Explore our latest creative outputs across photorealistic 3D,
             architectural films, brand portals, and Meta growth campaigns.
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-2 mt-8">
+          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 pt-4">
             {PROJECT_CATEGORIES.map((cat) => {
               const isActive = selectedCat === cat;
               return (
                 <button
                   key={cat}
                   onClick={() => setSelectedCat(cat)}
-                  className={`interactive-pill focus-ring px-5 py-2 rounded-full text-xs font-medium cursor-pointer ${
+                  className={`interactive-pill focus-ring px-4 sm:px-5 py-2 rounded-full text-xs font-medium cursor-pointer transition-all ${
                     isActive
-                      ? "bg-[#5C3A1E] text-white shadow-xs"
+                      ? "bg-[#5C3A1E] text-white shadow-xs font-semibold ring-1 ring-[#D4A35A]"
                       : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A] hover:text-[#0F172A]"
                   }`}
                 >

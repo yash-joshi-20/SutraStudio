@@ -73,11 +73,12 @@ export function ProjectCard({ project }: { project: ProjectItem }) {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative z-10 w-full max-w-2xl overflow-hidden rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-2xl p-6 sm:p-8"
+              className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-2xl p-5 sm:p-8"
             >
               <button
                 onClick={() => setModalOpen(false)}
-                className="absolute top-6 right-6 p-2 rounded-full bg-[#F8F5EF] text-[#0F172A] hover:bg-[#EADFCB] transition-colors"
+                aria-label="Close project preview"
+                className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 rounded-full bg-[#F8F5EF] text-[#0F172A] hover:bg-[#EADFCB] transition-colors z-20 min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>

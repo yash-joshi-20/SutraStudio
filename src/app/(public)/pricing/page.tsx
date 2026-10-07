@@ -64,13 +64,13 @@ export default function PricingPage() {
 
           {/* Billing Cycle Toggle */}
           <div className="pt-4 flex items-center justify-center">
-            <div role="tablist" aria-label="Billing frequency" className="inline-flex rounded-full bg-[#FFFDF9] border border-[#EADFCB] p-1 shadow-xs">
+            <div role="tablist" aria-label="Billing frequency" className="inline-flex flex-wrap items-center justify-center rounded-2xl sm:rounded-full bg-[#FFFDF9] border border-[#EADFCB] p-1 shadow-xs max-w-full gap-1">
               <button
                 type="button"
                 role="tab"
                 aria-selected={billingCycle === "project"}
                 onClick={() => setBillingCycle("project")}
-                className={`interactive-pill focus-ring px-4 py-2 rounded-full text-xs font-semibold cursor-pointer ${
+                className={`interactive-pill focus-ring px-3.5 sm:px-4 py-2 rounded-xl sm:rounded-full text-xs font-semibold cursor-pointer transition-all ${
                   billingCycle === "project"
                     ? "bg-[#5C3A1E] text-white shadow-xs"
                     : "text-[#64748B] hover:text-[#0F172A]"
@@ -83,15 +83,15 @@ export default function PricingPage() {
                 role="tab"
                 aria-selected={billingCycle === "monthly"}
                 onClick={() => setBillingCycle("monthly")}
-                className={`interactive-pill focus-ring px-4 py-2 rounded-full text-xs font-semibold cursor-pointer flex items-center gap-1.5 ${
+                className={`interactive-pill focus-ring px-3.5 sm:px-4 py-2 rounded-xl sm:rounded-full text-xs font-semibold cursor-pointer flex items-center gap-1.5 transition-all ${
                   billingCycle === "monthly"
                     ? "bg-[#5C3A1E] text-white shadow-xs"
                     : "text-[#64748B] hover:text-[#0F172A]"
                 }`}
               >
-                <span>30-Day Autonomous Retainer</span>
-                <span className="text-[10px] bg-[#D4A35A] text-[#0F172A] px-2 py-0.5 rounded-full font-bold">
-                  Daily Active Queue
+                <span>30-Day Retainer</span>
+                <span className="text-[10px] bg-[#D4A35A] text-[#0F172A] px-2 py-0.5 rounded-full font-bold hidden xs:inline">
+                  Daily Active
                 </span>
               </button>
             </div>
@@ -340,17 +340,18 @@ export default function PricingPage() {
           <p className="text-sm text-[#64748B] max-w-xl mx-auto leading-relaxed">
             We partner with luxury architecture studios, heritage brands, and fast-growing businesses requiring cross-discipline creative technology.
           </p>
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/contact">
-              <Button variant="primary" size="md" withArrow>
+          <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 max-w-md mx-auto sm:max-w-none">
+            <Link href="/contact" className="w-full sm:w-auto">
+              <Button variant="primary" size="md" withArrow className="w-full sm:w-auto justify-center shadow-warm">
                 Request Custom Proposal
               </Button>
             </Link>
-            <Link href="/chat">
+            <Link href="/chat" className="w-full sm:w-auto">
               <Button
                 variant="secondary"
                 size="md"
                 leftIcon={<Bot className="w-4 h-4 text-[#D4A35A]" />}
+                className="w-full sm:w-auto justify-center"
               >
                 Chat with Studio Assistant
               </Button>

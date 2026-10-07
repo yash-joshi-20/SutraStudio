@@ -260,7 +260,7 @@ export default function ContactPage() {
 
             {/* Right Column: Inquiry Form Card */}
             <div className="lg:col-span-7">
-              <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-8 sm:p-12 shadow-sm relative overflow-hidden">
+              <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-5 sm:p-8 md:p-12 shadow-sm relative overflow-hidden">
                 {/* Form Status State Handling */}
                 {status === "success" ? (
                   <div className="py-12 text-center space-y-6">

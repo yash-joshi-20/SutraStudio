@@ -14,16 +14,21 @@ export default function StudioPage() {
     <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A]">
       <Navbar />
 
-      <main id="main-content" className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full space-y-16">
+      <main id="main-content" className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 w-full space-y-12 sm:space-y-16">
         {/* Intro */}
-        <div className="text-center max-w-3xl mx-auto space-y-4">
-          <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[#D4A35A]">
-            STUDIO PHILOSOPHY
-          </span>
-          <h1 className="font-serif text-4xl sm:text-5xl font-semibold text-[#0F172A]">
-            Where Vedic Craft Meets Digital Intelligence
+        <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] shadow-xs">
+            <span className="text-[#D4A35A] text-xs">◆</span>
+            <span className="text-[10px] md:text-xs font-semibold tracking-[0.22em] text-[#5C3A1E] uppercase">
+              STUDIO PHILOSOPHY
+            </span>
+          </div>
+
+          <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-[#0F172A] leading-tight">
+            Where Vedic Craft Meets <span className="text-gold-gradient">Digital Intelligence</span>
           </h1>
-          <p className="text-base text-[#64748B] leading-relaxed">
+
+          <p className="text-sm sm:text-base text-[#64748B] leading-relaxed max-w-2xl mx-auto font-sans">
             Sutra Studio was founded on a simple conviction: modern generative
             technology achieves its highest expression when guided by centuries of
             disciplined design wisdom, sacred geometry, and artisanal human craft.
@@ -51,8 +56,8 @@ export default function StudioPage() {
                 <Sparkles className="w-3.5 h-3.5" />
                 MATHEMATICAL SYMMETRY
               </span>
-              <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-[#0F172A] mt-1">
-                3D Particle Light Matrix & Sacred Geometry
+              <h2 className="font-serif text-xl sm:text-2xl md:text-3xl font-semibold text-[#0F172A] mt-1">
+                3D Particle Light Matrix &amp; Sacred Geometry
               </h2>
             </div>
             <p className="text-xs text-[#64748B] max-w-xs sm:text-right">
@@ -60,12 +65,14 @@ export default function StudioPage() {
             </p>
           </div>
 
-          <SutraParticleWings
-            height="460px"
-            initialMode="wings"
-            showControls={true}
-            interactive={true}
-          />
+          <div className="w-full overflow-hidden rounded-3xl border border-[#EADFCB] shadow-warm">
+            <SutraParticleWings
+              height="420px"
+              initialMode="wings"
+              showControls={true}
+              interactive={true}
+            />
+          </div>
         </div>
 
         {/* 4 Pillars Grid */}

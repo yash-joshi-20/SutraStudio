@@ -106,14 +106,14 @@ export default function AboutPage() {
                   without sacrificing digital speed.
                 </p>
 
-                <div className="pt-2 flex flex-wrap items-center gap-4">
-                  <Link href="/contact">
-                    <Button variant="primary" size="lg" withArrow>
+                <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 max-w-md">
+                  <Link href="/contact" className="w-full sm:w-auto">
+                    <Button variant="primary" size="lg" withArrow className="w-full sm:w-auto justify-center shadow-warm">
                       Start a Conversation
                     </Button>
                   </Link>
-                  <Link href="/services">
-                    <Button variant="secondary" size="lg">
+                  <Link href="/services" className="w-full sm:w-auto">
+                    <Button variant="secondary" size="lg" className="w-full sm:w-auto justify-center">
                       Explore Capabilities
                     </Button>
                   </Link>
@@ -366,14 +366,14 @@ export default function AboutPage() {
               we are your dedicated creative partner.
             </p>
 
-            <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
-              <Link href="/contact">
-                <Button variant="primary" size="lg" withArrow>
+            <div className="pt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 max-w-md mx-auto sm:max-w-none">
+              <Link href="/contact" className="w-full sm:w-auto">
+                <Button variant="primary" size="lg" withArrow className="w-full sm:w-auto justify-center shadow-warm">
                   Schedule Discovery Call
                 </Button>
               </Link>
-              <Link href="/pricing">
-                <Button variant="secondary" size="lg">
+              <Link href="/pricing" className="w-full sm:w-auto">
+                <Button variant="secondary" size="lg" className="w-full sm:w-auto justify-center">
                   View Transparent Pricing
                 </Button>
               </Link>

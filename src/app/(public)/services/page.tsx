@@ -412,17 +412,18 @@ export default function ServicesPage() {
               architecture under a single unified studio retainer.
             </p>
 
-            <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
-              <Link href="/contact">
-                <Button variant="primary" size="lg" withArrow>
+            <div className="pt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 max-w-md mx-auto sm:max-w-none">
+              <Link href="/contact" className="w-full sm:w-auto">
+                <Button variant="primary" size="lg" withArrow className="w-full sm:w-auto justify-center shadow-warm">
                   Request Custom Proposal
                 </Button>
               </Link>
-              <Link href="/chat">
+              <Link href="/chat" className="w-full sm:w-auto">
                 <Button
                   variant="secondary"
                   size="lg"
                   leftIcon={<Bot className="w-4 h-4 text-[#D4A35A]" />}
+                  className="w-full sm:w-auto justify-center"
                 >
                   Consult AI Assistant
                 </Button>
