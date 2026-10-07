@@ -51,8 +51,8 @@ export interface UtrVerificationResult {
 }
 
 export class PaymentsService {
-  private static DEFAULT_VPA = readPublicEnv("NEXT_PUBLIC_MERCHANT_UPI_VPA" as any) || "yashj9428-1@oksbi";
-  private static DEFAULT_MERCHANT_NAME = "SUTRA STUDIO";
+  private static DEFAULT_VPA = readPublicEnv("NEXT_PUBLIC_MERCHANT_UPI_VPA" as any) || "yashjoshi7355-1@okicici";
+  private static DEFAULT_MERCHANT_NAME = "Yash Joshi";
 
   /**
    * Generates a standard RFC-compliant UPI Deep-Link URI for Google Pay, PhonePe, Paytm, and BHIM apps.

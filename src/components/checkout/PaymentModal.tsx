@@ -62,9 +62,13 @@ export function PaymentModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
+  const payeeName = STUDIO_PAYMENT_CONFIG.payeeName || "Yash Joshi";
+  const verifiedAccountLabel =
+    STUDIO_PAYMENT_CONFIG.verifiedAccountLabel || "Yash Joshi (Verified Studio Account)";
+
   // UPI Intent Deep Link for Mobile (GPay, PhonePe, Paytm, BHIM)
   const upiDeepLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(
-    merchantName
+    payeeName
   )}&am=${amount}&cu=INR&tn=${encodeURIComponent(displayCode)}`;
 
   // Copy UPI ID to clipboard
@@ -105,7 +109,7 @@ export function PaymentModal({
     return true;
   };
 
-  // Submit UTR verification
+  // Submit UTR verification directly to /api/orders with pending_verification status
   const handleSubmitVerification = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateUtr(utrNumber)) return;
@@ -114,8 +118,28 @@ export function PaymentModal({
     setUtrError("");
 
     try {
-      // 1. Submit payment verification to orders dispatcher or verify API
-      const res = await fetch("/api/payment/verify", {
+      // 1. Submit payment verification to orders dispatcher with pending_verification
+      await fetch("/api/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "verify_payment",
+          orderId,
+          orderCode: displayCode,
+          utrNumber: utrNumber.trim(),
+          amount,
+          clientName,
+          clientEmail,
+          paymentMethod: "UPI_GPAY",
+          paymentStatus: "pending_verification",
+          status: "pending_verification",
+          payee: payeeName,
+          upiId,
+        }),
+      });
+
+      // 2. Also notify verify proxy endpoint
+      await fetch("/api/payment/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -125,12 +149,12 @@ export function PaymentModal({
           amount,
           clientName,
           clientEmail,
-          paymentMethod: "upi_qr",
+          paymentMethod: "UPI_GPAY",
           hasReceiptAttachment: !!receiptFile,
+          status: "pending_verification",
         }),
-      });
+      }).catch(() => {});
 
-      // Even if backend endpoint is async or mocked, provide smooth client success flow
       setSubmissionSuccess(true);
       if (onPaymentSuccess) {
         onPaymentSuccess({
@@ -144,7 +168,6 @@ export function PaymentModal({
         setIsSubmitting(false);
       }, 1000);
     } catch {
-      // Fallback: local confirmation with callback
       setSubmissionSuccess(true);
       if (onPaymentSuccess) {
         onPaymentSuccess({
@@ -157,15 +180,16 @@ export function PaymentModal({
     }
   };
 
-  // WhatsApp Fallback Message Builder
+  // Fallback WhatsApp message builder
   const getWhatsAppFallbackUrl = () => {
-    const text = `Namaste Sutra Studio!
+    const text = `Namaste Yash Joshi & Sutra Studio!
 I have completed the zero-fee UPI payment for my creative commission:
-• *Order Code:* ${displayCode}
+• *Order ID / Code:* ${displayCode}
 • *Client:* ${clientName}
-• *Service:* ${serviceTitle}
+• *Service / Plan:* ${serviceTitle}
 • *Amount:* ₹${amount.toLocaleString("en-IN")}
-• *UPI UTR:* ${utrNumber ? utrNumber.trim() : "[Attaching Screenshot]"}
+• *UPI UTR Reference:* ${utrNumber ? utrNumber.trim() : "[Attaching Screenshot]"}
+• *Payee:* ${payeeName} (${upiId})
 
 Please verify receipt and initiate studio production workflow.`;
 
@@ -256,64 +280,72 @@ Please verify receipt and initiate studio production workflow.`;
 
           {/* Grid Layout: Left QR Code, Right Payment Instructions */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            {/* Left Column: QR Code & Direct Mobile Button */}
+            {/* Left Column: QR Code & Verified Credentials */}
             <div className="flex flex-col items-center justify-center p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-4 text-center">
-              <div className="relative w-56 h-56 rounded-2xl bg-white p-3 border border-[#EADFCB] shadow-sm flex items-center justify-center overflow-hidden">
+              {/* QR Container with Automated CSS Cropping & Framing */}
+              <div className="relative mx-auto w-56 h-56 sm:w-64 sm:h-64 rounded-2xl p-3 bg-white shadow-xl border border-amber-200/40 flex items-center justify-center overflow-hidden">
                 <Image
-                  src={STUDIO_PAYMENT_CONFIG.qrImageSrc}
-                  alt="Sutra Studio UPI Payment QR"
-                  width={220}
-                  height={220}
-                  className="w-full h-full object-contain"
+                  alt="Pay to Yash Joshi via UPI"
+                  className="object-contain p-2"
+                  fill
                   priority
+                  src="/brand/gpay-qr.png"
                 />
               </div>
 
-              <div className="space-y-1">
-                <p className="text-xs font-semibold text-[#0F172A] flex items-center justify-center gap-1.5">
-                  <QrCode className="w-3.5 h-3.5 text-[#D4A35A]" />
-                  <span>Scan with any UPI App</span>
-                </p>
-                <p className="text-[11px] text-[#64748B]">
-                  Google Pay • PhonePe • Paytm • BHIM • Cred
-                </p>
-              </div>
-
-              {/* Mobile Deep-link Button */}
-              <a
-                href={upiDeepLink}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#5C3A1E] text-white hover:bg-[#462B16] transition-colors text-xs font-semibold shadow-xs md:hidden"
-              >
-                <Smartphone className="w-4 h-4 text-[#D4A35A]" />
-                <span>Open in UPI App</span>
-              </a>
-
-              {/* UPI ID Pill & Copy Button */}
-              <div className="w-full p-2.5 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] flex items-center justify-between gap-2">
-                <div className="text-left overflow-hidden">
-                  <span className="text-[9px] font-mono text-[#94A3B8] block">Merchant UPI ID</span>
-                  <span className="font-mono text-xs font-bold text-[#0F172A] truncate block">
-                    {upiId}
+              {/* Verified Payee Credentials */}
+              <div className="w-full space-y-2">
+                <div>
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#94A3B8] block">
+                    Payee Name
+                  </span>
+                  <span className="text-xs sm:text-sm font-semibold text-[#0F172A] flex items-center justify-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-[#2E7D4F]" />
+                    <span>{verifiedAccountLabel}</span>
                   </span>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleCopyUpi}
-                  className="px-2.5 py-1.5 rounded-lg bg-[#F8F5EF] hover:bg-[#EADFCB] text-[#5C3A1E] transition-colors text-xs font-medium flex items-center gap-1 shrink-0 cursor-pointer"
-                  title="Copy UPI ID"
-                >
-                  {copiedUpi ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-[#2E7D4F]" />
-                      <span className="text-[#2E7D4F]">Copied</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>Copy</span>
-                    </>
-                  )}
-                </button>
+
+                <div className="p-2.5 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] flex items-center justify-between gap-2 shadow-2xs">
+                  <div className="text-left overflow-hidden">
+                    <span className="text-[9px] font-mono text-[#94A3B8] block">Verified UPI ID</span>
+                    <span className="font-mono text-xs font-bold text-[#5C3A1E] truncate block select-all">
+                      {upiId}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCopyUpi}
+                    className="px-3 py-1.5 rounded-lg bg-[#FAF9F5] hover:bg-[#F4EFE6] border border-[#EADFCB] text-[#5C3A1E] transition-all text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-2xs"
+                    title="Copy UPI ID"
+                  >
+                    {copiedUpi ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-[#2E7D4F]" />
+                        <span className="text-[#2E7D4F]">Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5 text-[#A98B57]" />
+                        <span>Copy UPI ID</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Native 1-Tap UPI Intent Trigger Button on Mobile */}
+              <a
+                href={upiDeepLink}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#5C3A1E] text-white hover:bg-[#462B16] transition-colors text-xs font-semibold shadow-xs md:hidden"
+              >
+                <Smartphone className="w-4 h-4 text-[#D4A35A]" />
+                <span>Pay ₹{amount.toLocaleString("en-IN")} via UPI App</span>
+              </a>
+
+              <div className="space-y-0.5 pt-0.5">
+                <p className="text-[11px] font-medium text-[#64748B]">
+                  Google Pay • PhonePe • Paytm • BHIM • Cred
+                </p>
               </div>
             </div>
 
@@ -420,7 +452,7 @@ Please verify receipt and initiate studio production workflow.`;
                     className="inline-flex items-center justify-center gap-1.5 text-xs text-[#2E7D4F] hover:text-[#1E5635] font-semibold hover:underline"
                   >
                     <MessageCircle className="w-3.5 h-3.5 fill-[#2E7D4F] text-[#FAF9F5]" />
-                    <span>Send details to Studio WhatsApp Support</span>
+                    <span>Confirm & Send Screenshot via WhatsApp</span>
                   </a>
                 </div>
               </div>

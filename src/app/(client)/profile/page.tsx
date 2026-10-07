@@ -321,13 +321,13 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Section 3: Google Drive Media Vault Link */}
+            {/* Section 3: Sutra Cloud Vault Link */}
             <div className="p-4 sm:p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <HardDrive className="w-4 h-4 text-[#5C3A1E]" />
                   <span className="text-xs font-semibold text-[#0F172A]">
-                    Google Drive Media Storage Vault
+                    Sutra Cloud Vault
                   </span>
                 </div>
                 <p className="text-xs text-[#64748B]">

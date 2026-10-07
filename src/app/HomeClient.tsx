@@ -245,7 +245,7 @@ export default function HomePage() {
               </div>
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-[#5C3A1E]" />
-                <span>Full Commercial License & Google Drive Storage</span>
+                <span>Full Commercial License & Sutra Cloud Vault</span>
               </div>
             </div>
           </div>

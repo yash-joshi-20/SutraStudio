@@ -41,6 +41,7 @@ export interface FirestoreOrderRecord {
   service: string;
   status:
     | "pending_payment"
+    | "pending_verification"
     | "paid"
     | "brief_review"
     | "in_production"
@@ -119,8 +120,7 @@ export interface FirestoreOrderRecord {
   // Discussion Thread & Internal Notes
   comments?: OrderCommentItem[];
   internalNotes?: InternalNoteItem[];
-  // Razorpay Payment fields for Step 9 & 15
-  paymentStatus?: "unpaid" | "paid" | "failed" | "refunded" | "awaiting_confirmation";
+  paymentStatus?: "unpaid" | "paid" | "failed" | "refunded" | "awaiting_confirmation" | "pending_verification";
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
   razorpaySignature?: string;
@@ -128,6 +128,11 @@ export interface FirestoreOrderRecord {
   paidAt?: string;
   paymentMethod?: string;
   paymentReference?: string;
+  payee?: string;
+  upiId?: string;
+  utrNumber?: string;
+  screenshotUrl?: string;
+  serviceDetails?: Record<string, any>;
   failureReason?: string;
   subscriptionId?: string;
   subscriptionStatus?: "active" | "cancelled" | "halted" | "pending" | "trial" | "expired" | "closed";
@@ -176,6 +181,27 @@ export interface FirestoreOrderRecord {
 }
 
 export interface UniversalOrderPayload {
+  orderId?: string;
+  sourceChannel?: "ai_tool" | "direct_order" | "pricing_package" | "whatsapp" | "email";
+  client?: { name: string; email: string; phone: string; brandName: string };
+  package?: { tierId: string; name: string; price: number; billingCycle: "project" | "monthly" };
+  serviceDetails?: {
+    metaAds?: { targetGeo: string; destinationUrl: string; offer: string; dailyBudget: number };
+    spatial3D?: { referenceAssetUrls: string[]; dimensions?: string };
+    monthlyEngine?: { goals: string };
+    [key: string]: any;
+  };
+  payment?: {
+    method: "UPI_GPAY";
+    payee: "Yash Joshi";
+    upiId: "yashjoshi7355-1@okicici";
+    utr?: string;
+    screenshotUrl?: string;
+    status: "pending_verification";
+  };
+  createdAt?: string;
+
+  // Flattened & legacy fields for seamless backward compatibility:
   source?: "ai_tool" | "direct_order" | "pricing_package" | "whatsapp" | "email" | "dashboard" | "admin_manual" | string;
   clientName?: string;
   clientEmail?: string;
@@ -187,6 +213,7 @@ export interface UniversalOrderPayload {
   serviceTitle?: string;
   tierId?: string;
   amount?: number;
+  totalAmount?: number;
   billingType?: "per_project" | "monthly_retainer";
   targetDeadline?: string;
   creativeBrief?: string;
@@ -194,7 +221,6 @@ export interface UniversalOrderPayload {
   paymentMethod?: "upi_qr" | "online" | "invoice" | "pay_on_invoice" | "direct" | "free_test" | string;
   utrNumber?: string;
   paymentStatus?: "unpaid" | "paid" | "failed" | "refunded" | "awaiting_confirmation" | "pending_verification";
-  serviceDetails?: Record<string, any>;
   attachments?: any[];
   notes?: string;
   brief?: string;
@@ -302,10 +328,27 @@ export async function POST(req: Request) {
     const user = await getAuthenticatedUser(req);
     const body = await req.json();
 
-    const orderType: "service" | "monthly_plan" =
-      body.type === "monthly_plan" || body.billingType === "monthly_retainer"
-        ? "monthly_plan"
-        : "service";
+    // UniversalOrderPayload support: unpack nested objects if provided
+    const clientPayload = body.client || {};
+    const packagePayload = body.package || {};
+    const paymentPayload = body.payment || {};
+    const serviceDetailsPayload = body.serviceDetails || {};
+
+    const clientNameInput = clientPayload.name || body.clientName;
+    const clientEmailInput = clientPayload.email || body.clientEmail;
+    const clientPhoneInput = clientPayload.phone || body.clientPhone;
+    const brandNameInput = clientPayload.brandName || body.brandName || body.companyName;
+
+    const sourceChannel = body.sourceChannel || body.source || "direct_order";
+
+    const isMonthlyRetainer =
+      packagePayload.billingCycle === "monthly" ||
+      packagePayload.tierId === "autonomous-growth-retainer" ||
+      body.type === "monthly_plan" ||
+      body.billingType === "monthly_retainer" ||
+      body.billingCycle === "monthly";
+
+    const orderType: "service" | "monthly_plan" = isMonthlyRetainer ? "monthly_plan" : "service";
 
     let calculatedTotal = 0;
     let verifiedItems: {
@@ -324,8 +367,8 @@ export async function POST(req: Request) {
     // =========================================================================
     if (orderType === "service") {
       const rawItems = Array.isArray(body.items) ? body.items : [];
-      if (rawItems.length === 0 && body.serviceId) {
-        rawItems.push({ serviceId: body.serviceId, quantity: 1 });
+      if (rawItems.length === 0 && (body.serviceId || packagePayload.tierId)) {
+        rawItems.push({ serviceId: body.serviceId || packagePayload.tierId, quantity: 1 });
       }
 
       for (const item of rawItems) {
@@ -344,9 +387,32 @@ export async function POST(req: Request) {
       }
 
       if (verifiedItems.length === 0) {
-        if (body.customServiceName || body.serviceTitle || body.amountINR || body.totalAmount || body.amount || body.source || body.isCustomOrder) {
-          const customAmount = Number(body.amountINR || body.totalAmount || body.amount || body.price || 3499);
-          const customName = body.customServiceName || body.serviceTitle || body.service || body.title || "Bespoke Creative Commission";
+        if (
+          packagePayload.price ||
+          packagePayload.name ||
+          body.customServiceName ||
+          body.serviceTitle ||
+          body.amountINR ||
+          body.totalAmount ||
+          body.amount ||
+          body.source ||
+          body.isCustomOrder
+        ) {
+          const customAmount = Number(
+            packagePayload.price ||
+            body.amountINR ||
+            body.totalAmount ||
+            body.amount ||
+            body.price ||
+            3499
+          );
+          const customName =
+            packagePayload.name ||
+            body.customServiceName ||
+            body.serviceTitle ||
+            body.service ||
+            body.title ||
+            "Bespoke Creative Commission";
           calculatedTotal = customAmount;
           verifiedItems.push({
             name: customName,
@@ -371,48 +437,74 @@ export async function POST(req: Request) {
       }
     } else {
       // Monthly Plan Path
-      const planId = body.planId || "studio-growth";
+      const planId = packagePayload.tierId || body.planId || "studio-growth";
       const plan = OFFICIAL_PLANS[planId];
       if (!plan || !plan.active) {
-        return NextResponse.json(
-          { error: "Validation Error: Selected monthly plan is not active or valid." },
-          { status: 400 }
-        );
+        // Fallback to custom monthly package if defined
+        if (packagePayload.price || body.totalAmount || body.amount) {
+          const customMonthlyAmount = Number(packagePayload.price || body.totalAmount || body.amount || 14999);
+          calculatedTotal = customMonthlyAmount;
+          primaryServiceName = packagePayload.name || "Autonomous Growth Retainer";
+          title = body.title || `${primaryServiceName} (Monthly Retainer)`;
+          verifiedItems = [
+            {
+              planId: planId || "autonomous-growth-retainer",
+              name: `${primaryServiceName} (MONTHLY RETAINER)`,
+              price: calculatedTotal,
+              quantity: 1,
+            },
+          ];
+        } else {
+          return NextResponse.json(
+            { error: "Validation Error: Selected monthly plan is not active or valid." },
+            { status: 400 }
+          );
+        }
+      } else {
+        const cycle =
+          packagePayload.billingCycle === "monthly"
+            ? "monthly"
+            : body.billingCycle === "quarterly" || body.billingCycle === "annual"
+            ? body.billingCycle
+            : "monthly";
+
+        let multiplier = 1;
+        let discountMultiplier = 1.0;
+        if (cycle === "quarterly") {
+          multiplier = 3;
+          discountMultiplier = 0.9; // 10% savings
+        } else if (cycle === "annual") {
+          multiplier = 12;
+          discountMultiplier = 0.8; // 20% savings
+        }
+
+        calculatedTotal = Math.round(plan.monthlyPrice * multiplier * discountMultiplier);
+        verifiedItems = [
+          {
+            planId: plan.id,
+            name: `${plan.name} (${cycle.toUpperCase()} RETAINER)`,
+            price: calculatedTotal,
+            quantity: 1,
+          },
+        ];
+        primaryServiceName = plan.name;
+        title = body.title || `${plan.name} Retainer Plan`;
       }
-
-      const cycle =
-        body.billingCycle === "quarterly" || body.billingCycle === "annual"
-          ? body.billingCycle
-          : "monthly";
-
-      let multiplier = 1;
-      let discountMultiplier = 1.0;
-      if (cycle === "quarterly") {
-        multiplier = 3;
-        discountMultiplier = 0.9; // 10% savings
-      } else if (cycle === "annual") {
-        multiplier = 12;
-        discountMultiplier = 0.8; // 20% savings
-      }
-
-      calculatedTotal = Math.round(plan.monthlyPrice * multiplier * discountMultiplier);
-      verifiedItems = [
-        {
-          planId: plan.id,
-          name: `${plan.name} (${cycle.toUpperCase()} RETAINER)`,
-          price: calculatedTotal,
-          quantity: 1,
-        },
-      ];
-      primaryServiceName = plan.name;
-      title = body.title || `${plan.name} Retainer Plan`;
     }
 
     // SERVER-BOUND IDENTITY: Derive strictly from authenticated session
-    const clientUid = user.isAuthenticated ? user.uid : (body.clientUid || body.clientId || "usr_client_001");
-    const clientEmail = (user.isAuthenticated && user.email) ? user.email : (body.clientEmail || "client@sutrastudio.com");
-    const clientName = user.isAuthenticated ? (user.name || user.company || body.clientName || "Studio Client") : (body.clientName || "Studio Client");
-    const clientPhone = (user.isAuthenticated && user.phone) ? user.phone : (body.clientPhone || "");
+    const clientUid = user.isAuthenticated
+      ? user.uid
+      : (body.clientUid || body.clientId || "usr_client_001");
+    const clientEmail = (user.isAuthenticated && user.email)
+      ? user.email
+      : (clientEmailInput || "client@sutrastudio.com");
+    const clientName = user.isAuthenticated
+      ? (user.name || user.company || clientNameInput || "Studio Client")
+      : (clientNameInput || "Studio Client");
+    const clientPhone = (user.isAuthenticated && user.phone)
+      ? user.phone
+      : (clientPhoneInput || "");
     const driveFolderId = body.driveFolderId || "drive_fld_sutra_001";
     const orderNumber = generateOrderNumber();
     const orderCode = `#ORD-${Math.floor(100 + Math.random() * 900)}`;
@@ -462,6 +554,23 @@ export async function POST(req: Request) {
     const estDays = firstService?.estimatedDeliveryDays || 3;
     const estDueDate = new Date(Date.now() + estDays * 24 * 3600 * 1000).toISOString();
 
+    const upiPayee = paymentPayload.payee || body.payee || "Yash Joshi";
+    const upiIdVal = paymentPayload.upiId || body.upiId || "yashjoshi7355-1@okicici";
+    const utrVal = paymentPayload.utr || body.utrNumber || body.paymentReference;
+    const screenshotVal = paymentPayload.screenshotUrl || body.screenshotUrl;
+    const isUpiPayment =
+      paymentPayload.method === "UPI_GPAY" ||
+      body.paymentMethod === "UPI_GPAY" ||
+      body.paymentMethod === "upi_qr";
+
+    const isPendingVerification = Boolean(
+      paymentPayload.status === "pending_verification" ||
+      body.paymentStatus === "pending_verification" ||
+      body.status === "pending_verification" ||
+      (isUpiPayment && utrVal) ||
+      (paymentPayload.method === "UPI_GPAY")
+    );
+
     const isDirectInvoice = Boolean(
       body.skipPayment ||
       body.paymentMethod === "invoice" ||
@@ -471,7 +580,7 @@ export async function POST(req: Request) {
     );
 
     const isUpiVerification = Boolean(
-      body.paymentMethod === "upi_qr" && body.utrNumber
+      (body.paymentMethod === "upi_qr" || body.paymentMethod === "UPI_GPAY") && (body.utrNumber || utrVal)
     );
 
     const isDirectPaid =
@@ -480,32 +589,42 @@ export async function POST(req: Request) {
       body.paymentMethod === "bank_transfer" ||
       body.paymentMethod === "cash";
 
-    const initialStatus = isDirectPaid
+    const initialStatus: FirestoreOrderRecord["status"] = isDirectPaid
       ? "in_progress"
+      : isPendingVerification
+      ? "pending_verification"
       : isUpiVerification
-      ? "pending_payment"
+      ? "pending_verification"
       : isDirectInvoice
       ? "confirmed"
       : "pending_payment";
+
     const initialStatusLabel = isDirectPaid
       ? "Payment Verified — In Studio Production Queue"
-      : isUpiVerification
+      : isPendingVerification || isUpiVerification
       ? "Direct UPI UTR Submitted — Awaiting Studio Confirmation"
       : isDirectInvoice
       ? "Confirmed — In Studio Production Queue"
       : "Pending Payment via Razorpay / UPI";
-    const initialPaymentStatus = isDirectPaid
+
+    const initialPaymentStatus: FirestoreOrderRecord["paymentStatus"] = isDirectPaid
       ? "paid"
-      : isUpiVerification
-      ? "awaiting_confirmation"
+      : isPendingVerification || isUpiVerification
+      ? "pending_verification"
       : "unpaid";
+
     const initialDeliverablePreview = isDirectPaid
       ? "Payment verified via direct channel. Active in studio production queue."
-      : isUpiVerification
-      ? `UPI Reference UTR (${body.utrNumber}) submitted. Awaiting bank verification.`
+      : isPendingVerification || isUpiVerification
+      ? `UPI Reference UTR (${utrVal || "Submitted"}) received. Awaiting Yash Joshi Studio verification.`
       : isDirectInvoice
       ? "Brief registered in studio queue. Pending admin workflow review."
       : "Commission registered in Firestore. Production brief is pending verified checkout.";
+
+    let combinedRequirements = body.requirements || body.brief || body.notes || "";
+    if (!combinedRequirements && Object.keys(serviceDetailsPayload).length > 0) {
+      combinedRequirements = JSON.stringify(serviceDetailsPayload, null, 2);
+    }
 
     const newOrder: FirestoreOrderRecord = {
       id: `ord_${Date.now()}`,
@@ -532,17 +651,17 @@ export async function POST(req: Request) {
         isGstClaimed: Boolean(body.billingDetails.gstin),
       } : undefined,
       billingCycle: body.billingCycle || (orderType === "monthly_plan" ? "monthly" : undefined),
-      requirements: body.requirements || body.brief || body.notes || "",
+      requirements: combinedRequirements,
       attachments: Array.isArray(body.attachments) ? body.attachments : [],
       status: initialStatus,
       statusLabel: initialStatusLabel,
-      source: body.source || (body.source === "ai_chat" ? "ai_chat" : "dashboard"),
+      source: sourceChannel || body.source || "dashboard",
       chatId: body.chatId,
       clientUid,
       clientId: clientUid,
-      clientName: body.clientName || "Studio Client",
-      clientEmail: body.clientEmail || "client@sutrastudio.com",
-      clientPhone: body.clientPhone || "",
+      clientName: clientName || "Studio Client",
+      clientEmail: clientEmail || "client@sutrastudio.com",
+      clientPhone: clientPhone || "",
       driveFolderId,
       driveFolderPath: `${driveFolderId}/NEW_ORDERS`,
       revisionRound: 0,
@@ -551,8 +670,13 @@ export async function POST(req: Request) {
       paymentStatus: initialPaymentStatus,
       amountPaid: isDirectPaid ? finalPayableAmount : Number(body.amountPaid || 0),
       paidAt: isDirectPaid ? now : undefined,
-      paymentMethod: body.paymentMethod || (isDirectPaid ? "upi_qr" : undefined),
-      paymentReference: body.paymentReference || body.utrNumber || (isDirectPaid ? "Direct Verification" : undefined),
+      paymentMethod: body.paymentMethod || (isPendingVerification ? "UPI_GPAY" : isDirectPaid ? "upi_qr" : undefined),
+      paymentReference: utrVal || body.paymentReference || (isDirectPaid ? "Direct Verification" : undefined),
+      payee: upiPayee,
+      upiId: upiIdVal,
+      utrNumber: utrVal,
+      screenshotUrl: screenshotVal,
+      serviceDetails: Object.keys(serviceDetailsPayload).length > 0 ? serviceDetailsPayload : undefined,
       estimatedDeliveryDays: estDays,
       estimatedDueDate: estDueDate,
       comments: [],
@@ -670,18 +794,37 @@ export async function POST(req: Request) {
       const { N8nAutomationService } = await import("@/lib/services/n8nService");
       if (
         isDirectPaid ||
+        isPendingVerification ||
         isUpiVerification ||
         isDirectInvoice ||
         newOrder.paymentStatus === "paid" ||
+        newOrder.paymentStatus === "pending_verification" ||
         newOrder.paymentStatus === "awaiting_confirmation"
       ) {
         N8nAutomationService.dispatchWorkflow({
-          workflowId: "SUTRA_MASTER_AUTONOMOUS_PIPELINE",
+          workflowId: isPendingVerification ? "SUTRA_PAYMENT_VERIFICATION_PIPELINE" : "SUTRA_MASTER_AUTONOMOUS_PIPELINE",
           orderId: newOrder.id,
           service: primaryServiceName,
           brief: newOrder.requirements,
           clientId: clientUid,
           driveFolderId: newOrder.driveFolderId,
+          metadata: {
+            orderId: newOrder.id,
+            orderNumber: newOrder.orderNumber,
+            clientName: newOrder.clientName,
+            clientEmail: newOrder.clientEmail,
+            totalAmount: newOrder.totalAmount,
+            sourceChannel: newOrder.source,
+            serviceDetails: newOrder.serviceDetails,
+            payment: {
+              method: newOrder.paymentMethod || "UPI_GPAY",
+              payee: newOrder.payee,
+              upiId: newOrder.upiId,
+              utr: newOrder.utrNumber,
+              screenshotUrl: newOrder.screenshotUrl,
+              status: newOrder.paymentStatus,
+            },
+          },
         }).catch((n8nErr) => console.warn("[Orders API] n8n background dispatch error:", n8nErr));
       }
     } catch (err) {
@@ -768,15 +911,66 @@ export async function PATCH(req: Request) {
         });
       }
 
-      // Mark Payment Received Action (Manual QR / Bank / Cash)
-      if (body.action === "mark_paid" || body.paymentStatus === "paid") {
+      // Direct UPI Verification Submission (From Client or Payment Modal)
+      if (
+        body.action === "verify_payment" ||
+        body.action === "submit_utr" ||
+        body.paymentStatus === "pending_verification" ||
+        body.status === "pending_verification"
+      ) {
+        targetOrder.paymentStatus = "pending_verification";
+        targetOrder.status = "pending_verification";
+        targetOrder.statusLabel = "Direct UPI UTR Submitted — Awaiting Studio Confirmation";
+        if (body.utrNumber || body.utr) targetOrder.utrNumber = body.utrNumber || body.utr;
+        if (body.screenshotUrl) targetOrder.screenshotUrl = body.screenshotUrl;
+        if (body.payee) targetOrder.payee = body.payee;
+        if (body.upiId) targetOrder.upiId = body.upiId;
+        if (body.paymentMethod) targetOrder.paymentMethod = body.paymentMethod;
+        targetOrder.updatedAt = now;
+        targetOrder.statusHistory = [
+          ...(targetOrder.statusHistory || []),
+          {
+            status: "pending_verification",
+            changedAt: now,
+            changedBy: body.adminName || "client",
+            note: `Direct UPI UTR (${targetOrder.utrNumber || "N/A"}) submitted. Awaiting studio verification.`,
+          },
+        ];
+        OrdersStore.update(targetOrder.id, targetOrder);
+
+        // Dispatch n8n notification for payment verification
+        try {
+          const { N8nAutomationService } = await import("@/lib/services/n8nService");
+          N8nAutomationService.dispatchWorkflow({
+            workflowId: "SUTRA_PAYMENT_VERIFICATION_PIPELINE",
+            orderId: targetOrder.id,
+            service: targetOrder.service,
+            clientId: targetOrder.clientUid,
+            metadata: {
+              utrNumber: targetOrder.utrNumber,
+              screenshotUrl: targetOrder.screenshotUrl,
+              payee: targetOrder.payee,
+              upiId: targetOrder.upiId,
+            },
+          }).catch(() => {});
+        } catch {}
+
+        return NextResponse.json({
+          success: true,
+          order: targetOrder,
+          message: "Payment reference submitted. Verification in progress.",
+        });
+      }
+
+      // Mark Payment Received Action (Manual QR / Bank / Cash / Approved by Admin)
+      if (body.action === "mark_paid" || body.action === "approve_payment" || body.paymentStatus === "paid") {
         targetOrder.paymentStatus = "paid";
         targetOrder.amountPaid = Number(body.amountPaid || targetOrder.totalAmount || 0);
         targetOrder.paidAt = now;
-        targetOrder.paymentMethod = body.paymentMethod || "upi_qr";
-        targetOrder.paymentReference = body.paymentReference || body.utrNumber || "Admin Manual Verification";
+        targetOrder.paymentMethod = body.paymentMethod || targetOrder.paymentMethod || "UPI_GPAY";
+        targetOrder.paymentReference = body.paymentReference || body.utrNumber || targetOrder.utrNumber || "Admin Manual Verification";
 
-        if (targetOrder.status === "pending_payment") {
+        if (targetOrder.status === "pending_payment" || targetOrder.status === "pending_verification") {
           targetOrder.status = "in_progress";
           targetOrder.statusLabel = "In Studio Production Queue";
         }
@@ -823,6 +1017,9 @@ export async function PATCH(req: Request) {
       if (rawStatus === "pending") {
         normalizedStatus = "pending";
         statusLabel = "Pending Studio Confirmation";
+      } else if (rawStatus === "pending_verification") {
+        normalizedStatus = "pending_verification";
+        statusLabel = "Direct UPI UTR Submitted — Awaiting Studio Confirmation";
       } else if (rawStatus === "confirmed") {
         normalizedStatus = "confirmed";
         statusLabel = "Confirmed & Scheduled";

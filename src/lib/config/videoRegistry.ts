@@ -115,7 +115,7 @@ export const SUTRA_VIDEO_REGISTRY: Record<string, VideoAssetConfig> = {
     id: 'app-demo',
     title: 'Mobile Client Command Hub Interactive Demo',
     subtitle: 'Bespoke Studio in Your Pocket',
-    description: 'Interactive walkthrough demonstrating 1-click deliverable approvals, real-time AI studio chat, and secure Google Drive vault media streaming on iOS and Android.',
+    description: 'Interactive walkthrough demonstrating 1-click deliverable approvals, real-time AI studio chat, and secure Sutra Cloud Vault media streaming on iOS and Android.',
     category: 'app',
     aspectRatio: '16/9',
     durationSeconds: 8,

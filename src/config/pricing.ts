@@ -144,11 +144,13 @@ export const MONTHLY_RETAINER_TIERS: MonthlyRetainerTier[] = [
  * Default fallback UPI details for zero-fee direct merchant payment
  */
 export const STUDIO_PAYMENT_CONFIG = {
-  vpa: process.env.NEXT_PUBLIC_MERCHANT_UPI_VPA || "yashj9428-1@oksbi",
-  merchantName: "SUTRA STUDIO",
+  vpa: process.env.NEXT_PUBLIC_MERCHANT_UPI_VPA || "yashjoshi7355-1@okicici",
+  payeeName: "Yash Joshi",
+  verifiedAccountLabel: "Yash Joshi (Verified Studio Account)",
+  merchantName: "Yash Joshi",
   currency: "INR",
   qrImageSrc: "/brand/gpay-qr.png",
-  whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919428000000",
+  whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919428199999",
 };
 
 /**

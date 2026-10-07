@@ -1591,7 +1591,7 @@ function AdminHubContent() {
     if (
       !(await confirm({
         title: "Archive Folder",
-        description: `Archive Google Drive vault folder for order #${order.orderNumber || order.code}?`,
+        description: `Archive Sutra Cloud Vault folder for order #${order.orderNumber || order.code}?`,
         isDangerous: true,
       }))
     ) {
@@ -2768,7 +2768,7 @@ const [adminDataError, setAdminDataError] = useState("");
                     <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <HardDrive className="w-4 h-4 text-[#5C3A1E]" />
-                        <span className="font-semibold text-[#0F172A]">Google Drive Vault API</span>
+                        <span className="font-semibold text-[#0F172A]">Sutra Cloud Vault API</span>
                       </div>
                       <span className="text-[#2E7D4F] font-bold">Connected (AES-256)</span>
                     </div>
@@ -3497,7 +3497,7 @@ const [adminDataError, setAdminDataError] = useState("");
                         {[
                           "I am reviewing your 4K renders right now.",
                           "Revision round 01 assigned to senior 3D lead.",
-                          "Google Drive vault files updated.",
+                          "Sutra Cloud Vault files updated.",
                           "Order confirmed. Moving into production pipeline.",
                         ].map((snippet, idx) => (
                           <button
@@ -4362,7 +4362,7 @@ const [adminDataError, setAdminDataError] = useState("");
                         </span>
                       </div>
                       <p className="text-xs text-[#64748B]">
-                        Real-time execution percentages, active workflow nodes, and Google Drive vault stages across all client commissions and monthly packages.
+                        Real-time execution percentages, active workflow nodes, and Sutra Cloud Vault stages across all client commissions and monthly packages.
                       </p>
                     </div>
                   </div>
@@ -4589,7 +4589,7 @@ const [adminDataError, setAdminDataError] = useState("");
                       </h4>
                     </div>
                     <p className="text-xs text-[#64748B] mt-0.5">
-                      Real-time asynchronous job progress synced to client Google Drive vaults.
+                      Real-time asynchronous job progress synced to client Sutra Cloud Vaults.
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -6060,7 +6060,7 @@ const [adminDataError, setAdminDataError] = useState("");
                             <div className="flex items-center gap-2">
                               <HardDrive className="w-4 h-4 text-[#D4A35A]" />
                               <h5 className="font-semibold text-xs uppercase tracking-wider text-[#5C3A1E]">
-                                Google Drive Vault Root
+                                Sutra Cloud Vault Root
                               </h5>
                             </div>
                             <div className="flex items-center gap-2">
@@ -7263,7 +7263,7 @@ const [adminDataError, setAdminDataError] = useState("");
                       <button
                         type="button"
                         onClick={() => {
-                          const pitch = `Namaste! At Sutra Studio, you can work with us in two flexible ways:\n\n1. Per-Project (Individual Services): 4K image creation starting at ₹5,499 (3-5 renders/unit), cinematic video ads at ₹7,999, 3D modeling at ₹9,499, and 360 virtual tours at ₹11,999. Quantity scales linearly with full commercial usage license.\n\n2. Monthly Retainer Plans: Studio Growth (₹12,999/mo) or Starter (₹5,999/mo) gives you dedicated creative capacity (15 renders, 3 video ads, 3D models) with continuous 24-48h sprint fulfillment and a 3-Day Risk-Free Trial.\n\nAll deliverables stage directly into your private Google Drive vault.`;
+                          const pitch = `Namaste! At Sutra Studio, you can work with us in two flexible ways:\n\n1. Per-Project (Commissions): Starter Creative at ₹3,499 (48h turnaround, 5x 4K renders, 1x 10s video ad), Studio Growth at ₹7,999 (15x 3D renders, 3x 15s video ads, 360° tour, 3x Meta ads), or Bespoke Enterprise with custom proposals.\n\n2. Monthly Retainer: Autonomous Growth Retainer (₹14,999/mo) gives you an always-on creative engine (daily 4K renders & video reels, 3D modeling, Meta ads) with a Daily Active Queue.\n\nAll deliverables stage directly into your private Sutra Cloud Vault.`;
                           navigator.clipboard.writeText(pitch);
                           setCopiedPitch(true);
                           setTimeout(() => setCopiedPitch(false), 2500);
@@ -7340,7 +7340,7 @@ const [adminDataError, setAdminDataError] = useState("");
                               Continuous Sprint Queue (Always-On Studio)
                             </span>
                             <p className="text-[#64748B] leading-relaxed">
-                              Clients submit briefs throughout the month. Each request is picked up immediately with a <strong>24–48 hour sprint turnaround</strong>. Deliverables flow continuously to the client’s private Google Drive vault.
+                              Clients submit briefs throughout the month. Each request is picked up immediately with a <strong>24–48 hour sprint turnaround</strong>. Deliverables flow continuously to the client’s private Sutra Cloud Vault.
                             </p>
                           </div>
                           <div className="space-y-1.5 p-3.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]">

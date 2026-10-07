@@ -119,7 +119,7 @@ export default function StudioPage() {
             </h3>
             <p className="text-sm text-[#64748B] mt-3 leading-relaxed">
               All master assets, renders, and models are organized directly into
-              your private Google Drive workspace with permanent ownership.
+              your private Sutra Cloud Vault workspace with permanent ownership.
             </p>
           </div>
         </div>
@@ -134,7 +134,7 @@ export default function StudioPage() {
               8 Isolated Production Pipelines
             </h2>
             <p className="text-sm text-[#64748B]">
-              Each creative discipline is powered by specialized generative models, automated validation chains, and direct Google Drive cloud sync.
+              Each creative discipline is powered by specialized generative models, automated validation chains, and direct Sutra Cloud Vault sync.
             </p>
           </div>
 

@@ -196,7 +196,7 @@ export function Footer() {
                     <span>Firebase Protected</span>
                   </div>
                   <p className="text-[11px] text-[#94A3B8]">
-                    Client isolation, encrypted Firestore and Google Drive vaults.
+                    Client isolation, encrypted Firestore and Sutra Cloud Vaults.
                   </p>
                 </div>
               </li>

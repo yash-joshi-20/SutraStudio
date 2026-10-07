@@ -984,7 +984,7 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
         options: [
           "Firebase Auth & Firestore Real-Time DB",
           "Razorpay Subscriptions & Automated Invoicing",
-          "Google Drive Vault File Synchronization",
+          "Sutra Cloud Vault File Synchronization",
           "AI LLM Concierge / Assistant (Gemini API)",
           "SendGrid / Twilio Notification Webhooks",
         ],

@@ -98,8 +98,7 @@ export default function ClientDashboardPage() {
                 title: o.title || o.service || "Studio Commission",
                 service: o.service || "Creative Direction",
                 status: o.status || "in_progress",
-                statusLabel: o.statusLabel || "In Production",
-                deliverable: o.deliverablePreview || "Production files vaulted in Google Drive",
+                deliverable: o.deliverablePreview || "Production files vaulted in Sutra Cloud Vault",
                 driveFolder: o.driveFolderPath || o.driveFolderId || "Vault",
                 revisionRound: o.revisionRound || 0,
                 maxRevisions: o.maxRevisions || 2,
@@ -197,7 +196,7 @@ export default function ClientDashboardPage() {
           : o
       )
     );
-    setFeedbackSuccess("Deliverable approved! High-resolution masters finalized in your Google Drive vault.");
+    setFeedbackSuccess("Deliverable approved! High-resolution masters finalized in your Sutra Cloud Vault.");
     setTimeout(() => {
       setInspectingOrder(null);
       setFeedbackSuccess("");
@@ -537,7 +536,7 @@ export default function ClientDashboardPage() {
                   </div>
                 )}
 
-                {/* Step 3: Google Drive Asset Uploads */}
+                {/* Step 3: Sutra Cloud Vault Asset Uploads */}
                 {step === 3 && (
                   <div className="space-y-6 max-w-xl mx-auto">
                     <div className="text-center">
@@ -545,7 +544,7 @@ export default function ClientDashboardPage() {
                         References & Asset Uploads
                       </h3>
                       <p className="text-xs text-[#64748B] mt-1">
-                        Assets will automatically sync to your private Google Drive vault folder.
+                        Assets will automatically sync to your private Sutra Cloud Vault folder.
                       </p>
                     </div>
 
@@ -567,11 +566,11 @@ export default function ClientDashboardPage() {
 
                     <div className="space-y-1.5">
                       <label className="block text-xs font-semibold uppercase tracking-wider text-[#0F172A]">
-                        Or paste Cloud / Google Drive Link
+                        Or paste Cloud / Vault Asset Link
                       </label>
                       <input
                         type="text"
-                        placeholder="https://drive.google.com/drive/folders/..."
+                        placeholder="https://drive.google.com/drive/folders/... or cloud link"
                         value={orderDetails.references}
                         onChange={(e) =>
                           setOrderDetails({ ...orderDetails, references: e.target.value })
@@ -636,7 +635,7 @@ export default function ClientDashboardPage() {
                           </div>
                           <div className="flex justify-between text-xs">
                             <span className="text-[#64748B]">Vault Storage:</span>
-                            <span className="font-bold text-[#2E7D4F]">Google Drive Encrypted</span>
+                            <span className="font-bold text-[#2E7D4F]">Sutra Cloud Vault Encrypted</span>
                           </div>
                         </div>
                       </div>
@@ -705,7 +704,7 @@ export default function ClientDashboardPage() {
 
                     <p className="text-sm text-[#64748B] leading-relaxed">
                       Sutra Studio operates as your autonomous creative technology wing.
-                      Your private Google Drive vault has been created, your dedicated art director
+                      Your private Sutra Cloud Vault has been created, your dedicated art director
                       has been assigned, and your generative review pipelines are ready to activate.
                     </p>
 
@@ -757,7 +756,7 @@ export default function ClientDashboardPage() {
                         <CheckCircle2 className="w-4 h-4" />
                       </div>
                       <h4 className="font-serif text-base font-semibold text-[#0F172A]">
-                        1. Google Drive Vault
+                        1. Sutra Cloud Vault
                       </h4>
                       <p className="text-xs text-[#64748B] leading-relaxed">
                         Dedicated cloud directory synchronized. All RAW 3D files, renders, and contracts will auto-archive here.
@@ -917,7 +916,7 @@ export default function ClientDashboardPage() {
                           Action Required: Deliverable Awaiting Your Review
                         </h4>
                         <p className="text-xs text-[#64748B]">
-                          Inspect the 4K render pass below to approve for final Google Drive release or request revisions.
+                          Inspect the 4K render pass below to approve for final Sutra Cloud Vault release or request revisions.
                         </p>
                       </div>
                     </div>
@@ -1258,7 +1257,7 @@ export default function ClientDashboardPage() {
                       onClick={() => handleApproveDeliverable(inspectingOrder.id)}
                       leftIcon={<CheckCircle2 className="w-4 h-4" />}
                     >
-                      Approve & Release to Drive
+                      Approve & Release to Vault
                     </Button>
                   )}
                 </div>

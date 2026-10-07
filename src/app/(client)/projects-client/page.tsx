@@ -186,7 +186,7 @@ export default function ClientProjectsPage() {
       })
     );
     setCampaignActionMsg(
-      "All 3 Meta Ad Sets approved! Dispatched to client Google Drive campaign vault."
+      "All 3 Meta Ad Sets approved! Dispatched to client Sutra Cloud Vault campaign folder."
     );
     setTimeout(() => setCampaignActionMsg(""), 4000);
   };
@@ -284,7 +284,7 @@ export default function ClientProjectsPage() {
                 <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
                 <span className="font-medium">{campaignActionMsg}</span>
               </div>
-              <span className="text-[10px] font-mono text-[#15803D]">Google Drive Synced</span>
+              <span className="text-[10px] font-mono text-[#15803D]">Sutra Cloud Vault Synced</span>
             </div>
           )}
 
@@ -539,7 +539,7 @@ export default function ClientProjectsPage() {
 
                   <Link href="/media">
                     <span className="text-xs font-semibold text-[#5C3A1E] hover:underline inline-flex items-center gap-1">
-                      <span>View in Google Drive</span>
+                      <span>View in Sutra Cloud Vault</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </span>
                   </Link>
@@ -564,7 +564,7 @@ export default function ClientProjectsPage() {
               <div className="p-4 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] space-y-2">
                 <span className="text-xs font-semibold text-[#64748B]">Production Summary</span>
                 <p className="text-xs text-[#0F172A] leading-relaxed">
-                  Project initialized under isolated generative review pipeline. Raw render outputs, Meta ad sets, and contractual deliverables synchronize directly to your client Google Drive vault.
+                  Project initialized under isolated generative review pipeline. Raw render outputs, Meta ad sets, and contractual deliverables synchronize directly to your client Sutra Cloud Vault.
                 </p>
               </div>
 

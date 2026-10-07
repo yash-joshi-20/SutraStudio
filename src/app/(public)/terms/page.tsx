@@ -74,7 +74,7 @@ export default function TermsPage() {
                 4. Deliverable Preservation & Vault Access
               </h2>
               <p>
-                Approved assets are archived in encrypted Google Drive vaults for a minimum of 36 months following project completion, accessible 24/7 via the Client Media Vault.
+                Approved assets are archived in encrypted Sutra Cloud Vaults for a minimum of 36 months following project completion, accessible 24/7 via the Client Media Vault.
               </p>
             </section>
           </div>

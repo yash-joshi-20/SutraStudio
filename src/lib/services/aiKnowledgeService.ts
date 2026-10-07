@@ -265,7 +265,7 @@ const MEMORY_COMMON_QUESTIONS: CommonQuestionInsight[] = [
   },
   {
     id: "cq_2",
-    topic: "Google Drive Vault Synchronization",
+    topic: "Sutra Cloud Vault Synchronization",
     querySample: "Where do I download my uncompressed render files?",
     frequency: 28,
     category: "business_rules",

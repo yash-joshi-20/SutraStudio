@@ -80,7 +80,7 @@ export default function InvoicesPage() {
   const handleDownloadInvoice = (invNumber: string) => {
     setDownloadMsg(`Downloading official tax receipt for ${invNumber}...`);
     setTimeout(() => {
-      setDownloadMsg(`Receipt ${invNumber} downloaded and archived to Google Drive.`);
+      setDownloadMsg(`Receipt ${invNumber} downloaded and archived to Sutra Cloud Vault.`);
       setTimeout(() => setDownloadMsg(""), 3000);
     }, 1000);
   };
@@ -166,7 +166,7 @@ export default function InvoicesPage() {
                 <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
                 <span className="font-medium">{downloadMsg}</span>
               </div>
-              <span className="text-[10px] font-mono text-[#15803D]">Google Drive Synced</span>
+              <span className="text-[10px] font-mono text-[#15803D]">Sutra Cloud Vault Synced</span>
             </div>
           )}
 
@@ -256,7 +256,7 @@ export default function InvoicesPage() {
                   Encrypted Tax Archive
                 </h4>
                 <p className="text-[#64748B] mt-0.5">
-                  All signed agreements and official GST tax invoices are automatically preserved in your private Google Drive folder <code className="font-mono text-[#5C3A1E]">/LEGAL_DOCS</code>.
+                  All signed agreements and official GST tax invoices are automatically preserved in your private Sutra Cloud Vault folder <code className="font-mono text-[#5C3A1E]">/LEGAL_DOCS</code>.
                 </p>
               </div>
             </div>

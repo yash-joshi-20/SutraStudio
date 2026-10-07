@@ -382,11 +382,11 @@ export default function ServicesPage() {
                 </div>
                 <div>
                   <h4 className="font-serif text-base font-semibold text-[#0F172A]">
-                    Google Drive Vault Storage
+                    Sutra Cloud Vault Storage
                   </h4>
                   <p className="text-xs text-[#64748B] mt-1 leading-relaxed">
                     Raw source files, 4K renders, and 3D assets automatically
-                    archived in your private encrypted Google Drive.
+                    archived in your private encrypted Sutra Cloud Vault.
                   </p>
                 </div>
               </div>
@@ -518,14 +518,14 @@ export default function ServicesPage() {
               </ul>
             </div>
 
-            {/* Workflow & Google Drive Cloud Vault Storage */}
+            {/* Workflow & Sutra Cloud Vault Storage */}
             <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] space-y-2">
               <h4 className="text-xs font-bold uppercase tracking-wider text-[#A98B57]">
                 Production & Cloud Vault Routing
               </h4>
               <p className="text-xs text-[#64748B] leading-relaxed">
                 Executed via Sutra Studio isolated <strong className="text-[#0F172A]">{selectedService.pipelineEngine}</strong> pipeline.
-                High-resolution master files and source assets will be synchronized automatically into your private encrypted Google Drive project folder upon art-director review.
+                High-resolution master files and source assets will be synchronized automatically into your private encrypted Sutra Cloud Vault project folder upon art-director review.
               </p>
             </div>
 

@@ -57,7 +57,7 @@ export default function PhoneAiAgentPage() {
       date: "Today, 10:14 AM",
       duration: "04:12",
       topic: "4K Architectural Render Pass 02 Review",
-      outcome: "Dispatched to Google Drive Vault",
+      outcome: "Dispatched to Sutra Cloud Vault",
       status: "completed",
     },
     {

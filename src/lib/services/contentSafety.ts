@@ -105,7 +105,7 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
 // ---------------------------------------------------------------------------
 
 export const CONSENT_TEXTS = {
-  image_usage: `I grant Sutra Studio permission to use my uploaded images and brand assets solely for the purpose of creating the ordered creative deliverables. My files will be stored securely in my private Google Drive vault and will not be shared with third parties without my explicit consent.`,
+  image_usage: `I grant Sutra Studio permission to use my uploaded images and brand assets solely for the purpose of creating the ordered creative deliverables. My files will be stored securely in my private Sutra Cloud Vault and will not be shared with third parties without my explicit consent.`,
 
   brand_assets: `I confirm that I own or have the right to use all brand assets (logos, images, trademarks) that I upload. I acknowledge that Sutra Studio is not responsible for any intellectual property disputes arising from client-supplied materials.`,
 

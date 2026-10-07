@@ -191,32 +191,44 @@ export function MasterOrderForm({
   const [industry, setIndustry] = useState("Real Estate");
   const [brandUrl, setBrandUrl] = useState("");
   const [brandAssetUrl, setBrandAssetUrl] = useState("");
+  const [brandLogoFile, setBrandLogoFile] = useState<File | null>(null);
+  const [brandLogoPreview, setBrandLogoPreview] = useState<string>("");
   const [targetDeadline, setTargetDeadline] = useState("");
   const [creativeBrief, setCreativeBrief] = useState("");
 
   // Step 3: Conditional Sub-Form Inputs
-  // 3a. Meta Ads Config
+  // 3a. Meta Ads Launcher & Digital Marketing
+  const [metaTargetGeo, setMetaTargetGeo] = useState("All India");
+  const [metaAudienceDemographics, setMetaAudienceDemographics] = useState("25-45, HNI & Urban Professionals");
+  const [metaDestinationUrl, setMetaDestinationUrl] = useState("");
+  const [metaOfferCopy, setMetaOfferCopy] = useState("Flat 20% Off Launch Privilege");
+  const [metaDailyBudget, setMetaDailyBudget] = useState("1500");
+  const [metaPartnerId, setMetaPartnerId] = useState("");
   const [metaAspectRatios, setMetaAspectRatios] = useState<string[]>([
     "9:16 (Stories/Reels)",
     "1:1 (Feed)",
   ]);
   const [metaCta, setMetaCta] = useState("Shop Now");
   const [metaTargetRoas, setMetaTargetRoas] = useState("");
-  const [metaOfferCopy, setMetaOfferCopy] = useState("");
 
-  // 3b. 3D / 360 / Interior Spatial Config
+  // 3b. 3D Modeling, 360 View & Interior/Window Design
+  const [spatialReferenceUrls, setSpatialReferenceUrls] = useState("");
+  const [spatialDimensions, setSpatialDimensions] = useState("");
   const [cadFileUrl, setCadFileUrl] = useState("");
   const [squareFootage, setSquareFootage] = useState("");
   const [lightingPref, setLightingPref] = useState("Warm Daylight Golden Hour");
   const [outputResolution, setOutputResolution] = useState("4K UHD (3840x2160)");
 
-  // 3c. Web / App Dev Config
+  // 3c. Web & App Dev
+  const [webDomainStatus, setWebDomainStatus] = useState("Own Domain (Configured)");
+  const [webBenchmarkUrls, setWebBenchmarkUrls] = useState("");
   const [techStack, setTechStack] = useState("Next.js + Tailwind CSS");
   const [pageCount, setPageCount] = useState("1-3 Landing Pages");
   const [figmaUrl, setFigmaUrl] = useState("");
-  const [domainStatus, setDomainStatus] = useState("Already purchased & ready");
 
-  // 3d. Monthly Retainer Config
+  // 3d. Monthly Retainer (30-Day Engine)
+  const [retainerGoals, setRetainerGoals] = useState("Direct Sales & Brand Awareness");
+  const [retainerPriorityProducts, setRetainerPriorityProducts] = useState("");
   const [retainerFocus, setRetainerFocus] = useState(
     "Omnichannel Growth (Social Reels + 3D Renders)"
   );
@@ -286,6 +298,72 @@ export function MasterOrderForm({
     setFormError("");
 
     const orderPayload = {
+      orderId: `ord_${Date.now()}`,
+      sourceChannel: "direct_order" as const,
+      client: {
+        name: fullName.trim(),
+        email: email.trim(),
+        phone: whatsapp.trim(),
+        brandName: brandName.trim(),
+      },
+      package: {
+        tierId: isMonthlyRetainer
+          ? "autonomous-growth-retainer"
+          : selectedTierId === "starter"
+          ? "starter-creative"
+          : "studio-growth",
+        name: isMonthlyRetainer
+          ? "Autonomous Growth Retainer"
+          : `${activeService.title} (${selectedTierId === "starter" ? "Starter Creative" : "Studio Growth"})`,
+        price: orderAmount,
+        billingCycle: isMonthlyRetainer ? ("monthly" as const) : ("project" as const),
+      },
+      serviceDetails: {
+        ...(isMetaAds && {
+          metaAds: {
+            targetGeo: metaTargetGeo || "All India",
+            destinationUrl: metaDestinationUrl || brandUrl || "https://sutrastudio.com",
+            offer: metaOfferCopy || "Flat 20% Off Launch Offer",
+            dailyBudget: Number(metaDailyBudget) || 1500,
+            audience: metaAudienceDemographics,
+            partnerId: metaPartnerId,
+          },
+        }),
+        ...(isSpatialOr3D && {
+          spatial3D: {
+            referenceAssetUrls: [
+              spatialReferenceUrls,
+              cadFileUrl,
+              brandAssetUrl,
+            ].filter(Boolean),
+            dimensions: spatialDimensions || squareFootage || "Studio scale as specified",
+          },
+        }),
+        ...(isWebDev && {
+          webApp: {
+            domainStatus: webDomainStatus,
+            benchmarkUrls: webBenchmarkUrls
+              .split("\n")
+              .map((u) => u.trim())
+              .filter(Boolean),
+          },
+        }),
+        ...(isMonthlyRetainer && {
+          monthlyEngine: {
+            goals: retainerGoals || retainerFocus,
+            priorityProducts: retainerPriorityProducts || "Core Studio Offerings",
+          },
+        }),
+      },
+      payment: {
+        method: "UPI_GPAY" as const,
+        payee: "Yash Joshi" as const,
+        upiId: "yashjoshi7355-1@okicici" as const,
+        status: "pending_verification" as const,
+      },
+      createdAt: new Date().toISOString(),
+
+      // Backward compatible flat fields:
       source: "direct_order",
       clientName: fullName.trim(),
       clientEmail: email.trim(),
@@ -295,39 +373,19 @@ export function MasterOrderForm({
       brandUrl: brandUrl.trim(),
       serviceId: activeService.id,
       serviceTitle: activeService.title,
-      tierId: isMonthlyRetainer ? "retainer" : selectedTierId,
+      tierId: isMonthlyRetainer
+        ? "autonomous-growth-retainer"
+        : selectedTierId === "starter"
+        ? "starter-creative"
+        : "studio-growth",
       amount: orderAmount,
+      totalAmount: orderAmount,
       billingType: isMonthlyRetainer ? "monthly_retainer" : "per_project",
       targetDeadline,
       creativeBrief: creativeBrief.trim(),
-      brandAssetUrl: brandAssetUrl.trim(),
-      paymentMethod: paymentChoice,
-      // Conditional sub-form data
-      serviceDetails: {
-        ...(isMetaAds && {
-          metaAspectRatios,
-          metaCta,
-          metaTargetRoas,
-          metaOfferCopy,
-        }),
-        ...(isSpatialOr3D && {
-          cadFileUrl,
-          squareFootage,
-          lightingPref,
-          outputResolution,
-        }),
-        ...(isWebDev && {
-          techStack,
-          pageCount,
-          figmaUrl,
-          domainStatus,
-        }),
-        ...(isMonthlyRetainer && {
-          retainerFocus,
-          retainerStartDate,
-          dedicatedSlackChannel,
-        }),
-      },
+      brandAssetUrl: brandLogoPreview || brandAssetUrl.trim(),
+      paymentMethod: paymentChoice === "upi_qr" ? "UPI_GPAY" : "online",
+      paymentStatus: "pending_verification",
     };
 
     try {
@@ -668,20 +726,56 @@ export function MasterOrderForm({
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                  Brand Guidelines / Logo Cloud URL
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-[#0F172A] mb-1.5 flex items-center justify-between">
+                  <span>Brand Logo Upload (Vector SVG or Transparent PNG)</span>
+                  <span className="text-[10px] text-[#A98B57] font-medium">SVG / Transparent PNG / Vector</span>
                 </label>
-                <input
-                  type="url"
-                  placeholder="e.g. https://drive.google.com/... or Figma link"
-                  value={brandAssetUrl}
-                  onChange={(e) => setBrandAssetUrl(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
-                />
+                <div className="border border-dashed border-[#EADFCB] hover:border-[#D4A35A] bg-[#FFFDF9] rounded-2xl p-4 transition-all">
+                  <div className="flex flex-col sm:flex-row items-center gap-3">
+                    <label className="cursor-pointer flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] hover:bg-[#F3EFE6] text-xs font-semibold text-[#0F172A] transition-all shrink-0">
+                      <Upload className="w-4 h-4 text-[#A98B57]" />
+                      <span>{brandLogoFile ? brandLogoFile.name : "Upload Logo Asset"}</span>
+                      <input
+                        type="file"
+                        accept=".svg,.png,.ai,.eps,.pdf,image/svg+xml,image/png"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setBrandLogoFile(file);
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                              setBrandLogoPreview(ev.target?.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                    <span className="text-xs text-[#94A3B8]">or link:</span>
+                    <input
+                      type="url"
+                      placeholder="https://drive.google.com/... or Figma asset link"
+                      value={brandAssetUrl}
+                      onChange={(e) => setBrandAssetUrl(e.target.value)}
+                      className="flex-1 px-3.5 py-2.5 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                    />
+                  </div>
+                  {brandLogoPreview && (
+                    <div className="mt-3 flex items-center gap-3 p-2 bg-[#FAF9F5] rounded-xl border border-[#EADFCB]/60">
+                      <div className="w-9 h-9 rounded-lg bg-white p-1 border border-[#EADFCB] flex items-center justify-center overflow-hidden">
+                        <img src={brandLogoPreview} alt="Brand Logo Preview" className="max-w-full max-h-full object-contain" />
+                      </div>
+                      <span className="text-xs font-medium text-[#2E7D4F] flex items-center gap-1">
+                        <Check className="w-3.5 h-3.5" /> Logo verified for studio asset vault
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div>
+              <div className="sm:col-span-2">
                 <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
                   Target Launch / Delivery Date
                 </label>
@@ -743,19 +837,109 @@ export function MasterOrderForm({
               </p>
             </div>
 
-            {/* Meta & Instagram Ads Accordion */}
+            {/* 1. Meta Ads Launcher & Digital Marketing Accordion */}
             {isMetaAds && (
               <div className="p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-4">
-                <span className="text-xs font-bold text-[#5C3A1E] uppercase font-mono tracking-wider block">
-                  Meta Ads Creative Specifications
-                </span>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#5C3A1E] uppercase font-mono tracking-wider block">
+                    Meta Ads Launcher & Digital Marketing
+                  </span>
+                  <span className="text-[10px] font-mono bg-[#EADFCB]/60 text-[#5C3A1E] px-2 py-0.5 rounded-full">
+                    Autonomous Pipeline
+                  </span>
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
+                      Target Geo / Cities (or All India)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. All India, or Mumbai, Delhi NCR, Bangalore"
+                      value={metaTargetGeo}
+                      onChange={(e) => setMetaTargetGeo(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
+                      Target Audience Demographics & Age Bracket
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 25-45, HNI, Architecture & Luxury Buyers"
+                      value={metaAudienceDemographics}
+                      onChange={(e) => setMetaAudienceDemographics(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
+                      Destination URL (Landing Page or WhatsApp)
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="e.g. https://yourbrand.com/landing or https://wa.me/91..."
+                      value={metaDestinationUrl}
+                      onChange={(e) => setMetaDestinationUrl(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
+                      Core Promotional Offer / Angle
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Flat 20% Off / Free Architecture Consultation"
+                      value={metaOfferCopy}
+                      onChange={(e) => setMetaOfferCopy(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
+                      Daily Ad Budget Allocation (₹)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="1500"
+                      value={metaDailyBudget}
+                      onChange={(e) => setMetaDailyBudget(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
+                    />
+                    <p className="text-[10px] text-[#94A3B8] mt-1">
+                      * Disclaimed: Ad spend is paid directly to Meta via your connected ad account.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5 flex items-center justify-between">
+                      <span>Meta Business Manager / Partner ID</span>
+                      <span className="text-[10px] text-[#94A3B8] font-normal" title="15-16 digit Meta BM ID">Optional</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 123456789012345 (15-16 digits)"
+                      value={metaPartnerId}
+                      onChange={(e) => setMetaPartnerId(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
+                    />
+                    <p className="text-[10px] text-[#64748B] mt-1">
+                      Allows Sutra Studio partner access to deploy campaigns directly into your Ads Manager.
+                    </p>
+                  </div>
+
+                  <div className="sm:col-span-2 pt-1 border-t border-[#EADFCB]/60">
+                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
                       Target Ratios (Multi-select)
                     </label>
-                    <div className="space-y-1.5">
+                    <div className="flex flex-wrap gap-4">
                       {["9:16 (Stories/Reels)", "1:1 (Feed/Square)", "16:9 (Landscape)"].map((ratio) => {
                         const checked = metaAspectRatios.includes(ratio);
                         return (
@@ -781,83 +965,56 @@ export function MasterOrderForm({
                       })}
                     </div>
                   </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                      Call-to-Action (CTA) Style
-                    </label>
-                    <select
-                      value={metaCta}
-                      onChange={(e) => setMetaCta(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
-                    >
-                      <option value="Shop Now">Shop Now</option>
-                      <option value="Book Consultation">Book Consultation</option>
-                      <option value="Learn More">Learn More</option>
-                      <option value="Get Exclusive Quote">Get Exclusive Quote</option>
-                      <option value="Sign Up">Sign Up / Reserve</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                      Target ROAS / Campaign Goal
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 4.5x ROAS or Brand Awareness High-Touch"
-                      value={metaTargetRoas}
-                      onChange={(e) => setMetaTargetRoas(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                      Core Offer / Hook Copy
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 20% Launch Privilege or Architectural Excellence"
-                      value={metaOfferCopy}
-                      onChange={(e) => setMetaOfferCopy(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
-                    />
-                  </div>
                 </div>
               </div>
             )}
 
-            {/* 3D / 360 / Spatial Accordion */}
+            {/* 2. 3D Modeling, 360 View & Interior/Window Design Accordion */}
             {isSpatialOr3D && (
               <div className="p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-4">
                 <span className="text-xs font-bold text-[#5C3A1E] uppercase font-mono tracking-wider block">
-                  3D Spatial & Render Parameters
+                  3D Modeling, 360 View & Interior/Spatial Design
                 </span>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
+                  <div className="sm:col-span-2">
                     <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                      Floor Plan / CAD File Cloud Link
+                      Multi-Angle Reference Photos OR Room Walkthrough Video Link
                     </label>
                     <input
                       type="url"
-                      placeholder="e.g. Dropbox / Drive link to .dwg / .dxf / .pdf"
-                      value={cadFileUrl}
-                      onChange={(e) => setCadFileUrl(e.target.value)}
+                      placeholder="e.g. Google Drive / Dropbox link with Front, Side, Top photos or phone walkthrough video"
+                      value={spatialReferenceUrls}
+                      onChange={(e) => setSpatialReferenceUrls(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
+                    />
+                    <p className="text-[10px] text-[#64748B] mt-1">
+                      Include 3-angle product photos (Front, Side, Top) or an iPhone/Android walk-through of the space.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
+                      Dimensions / Space Scale Notes
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 2,400 sq.ft., ceiling 10.5ft, or product dimensions (H x W x D in cm)"
+                      value={spatialDimensions}
+                      onChange={(e) => setSpatialDimensions(e.target.value)}
                       className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                      Estimated Area / Square Footage
+                      Floor Plan / CAD File Cloud Link (Optional)
                     </label>
                     <input
-                      type="text"
-                      placeholder="e.g. 2,400 sq. ft. Penthouse"
-                      value={squareFootage}
-                      onChange={(e) => setSquareFootage(e.target.value)}
+                      type="url"
+                      placeholder="e.g. Drive link to .dwg / .dxf / .pdf"
+                      value={cadFileUrl}
+                      onChange={(e) => setCadFileUrl(e.target.value)}
                       className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
                     />
                   </div>
@@ -895,14 +1052,29 @@ export function MasterOrderForm({
               </div>
             )}
 
-            {/* Web / App Dev Accordion */}
+            {/* 3. Web & App Development Accordion */}
             {isWebDev && (
               <div className="p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-4">
                 <span className="text-xs font-bold text-[#5C3A1E] uppercase font-mono tracking-wider block">
-                  Digital Experience Specifications
+                  Web & App Development Architecture
                 </span>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
+                      Domain Status
+                    </label>
+                    <select
+                      value={webDomainStatus}
+                      onChange={(e) => setWebDomainStatus(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
+                    >
+                      <option value="Own Domain (Configured)">Own Domain (Already Configured & Active)</option>
+                      <option value="Need Setup Assistance">Need Setup Assistance (Domain & DNS)</option>
+                      <option value="Staging Deployment Only">Staging Subdomain Only</option>
+                    </select>
+                  </div>
+
                   <div>
                     <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
                       Tech Stack Direction
@@ -917,6 +1089,22 @@ export function MasterOrderForm({
                       <option value="Webflow / Framer">Webflow / Framer Luxury CMS</option>
                       <option value="Bespoke Custom">Bespoke Custom WebGL Experience</option>
                     </select>
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
+                      2-3 Benchmark / Reference Website URLs
+                    </label>
+                    <textarea
+                      rows={3}
+                      placeholder="e.g.&#10;https://apple.com&#10;https://stripe.com&#10;https://lincoln.com"
+                      value={webBenchmarkUrls}
+                      onChange={(e) => setWebBenchmarkUrls(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
+                    />
+                    <p className="text-[10px] text-[#64748B] mt-1">
+                      Paste 2 to 3 website links that represent the visual tone, interaction fidelity, or layout you admire.
+                    </p>
                   </div>
 
                   <div>
@@ -936,7 +1124,7 @@ export function MasterOrderForm({
 
                   <div>
                     <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                      Figma UI / Design File Link
+                      Figma UI / Design File Link (Optional)
                     </label>
                     <input
                       type="url"
@@ -946,46 +1134,31 @@ export function MasterOrderForm({
                       className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
                     />
                   </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                      Domain & Hosting
-                    </label>
-                    <select
-                      value={domainStatus}
-                      onChange={(e) => setDomainStatus(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
-                    >
-                      <option value="Already purchased & ready">Already purchased & DNS ready</option>
-                      <option value="Need setup assistance">Need studio assistance with setup</option>
-                      <option value="Domain not required yet">Staging domain only</option>
-                    </select>
-                  </div>
                 </div>
               </div>
             )}
 
-            {/* Monthly Retainer Accordion */}
+            {/* 4. Monthly Retainer (30-Day Engine) Accordion */}
             {isMonthlyRetainer && (
               <div className="p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-4">
                 <span className="text-xs font-bold text-[#5C3A1E] uppercase font-mono tracking-wider block">
-                  Monthly Retainer Structure
+                  Monthly Retainer (30-Day Autonomous Engine)
                 </span>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                      Primary Retainer Focus
+                      Primary 30-Day Goals
                     </label>
                     <select
-                      value={retainerFocus}
-                      onChange={(e) => setRetainerFocus(e.target.value)}
+                      value={retainerGoals}
+                      onChange={(e) => setRetainerGoals(e.target.value)}
                       className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
                     >
-                      <option value="Omnichannel Growth">Omnichannel Growth (Social + 3D Visuals)</option>
-                      <option value="High-Frequency Reels">High-Frequency Commercial Reels & Ads</option>
-                      <option value="Architecture 3D Pipeline">Ongoing Architectural 3D Rendering Queue</option>
-                      <option value="Full-Stack Brand & Web">Full-Stack Digital & Brand Evolution</option>
+                      <option value="Direct Sales & High ROAS Scaling">Direct Sales & High ROAS Scaling</option>
+                      <option value="Brand Awareness & Luxury Authority">Brand Awareness & Luxury Authority</option>
+                      <option value="Lead Generation & High-Ticket Inquiries">Lead Generation & High-Ticket Inquiries</option>
+                      <option value="Omnichannel Content Blitz (Reels + 3D)">Omnichannel Content Blitz (Reels + 3D)</option>
                     </select>
                   </div>
 
@@ -997,6 +1170,19 @@ export function MasterOrderForm({
                       type="date"
                       value={retainerStartDate}
                       onChange={(e) => setRetainerStartDate(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
+                      Priority Products / Features to Highlight Throughout Month
+                    </label>
+                    <textarea
+                      rows={3}
+                      placeholder="Specify your flagship products, hero collections, key service benefits, or seasonal offers to highlight..."
+                      value={retainerPriorityProducts}
+                      onChange={(e) => setRetainerPriorityProducts(e.target.value)}
                       className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
                     />
                   </div>

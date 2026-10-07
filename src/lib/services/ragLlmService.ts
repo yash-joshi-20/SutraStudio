@@ -112,7 +112,7 @@ export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
     title: "GPay & Dynamic UPI Zero-Commission Payment System",
     content: `Our studio supports 100% direct bank settlement with zero gateway commissions:
 
-• **Merchant VPA**: \`yashj9428-1@oksbi\` (SUTRA STUDIO)
+• **Merchant VPA**: \`yashjoshi7355-1@okicici\` (Yash Joshi)
 • **Instant Mobile Deep-Linking**: 1-Click payment via Google Pay, PhonePe, Paytm, or BHIM.
 • **Dynamic QR Codes**: Generated on-demand with exact order amount and order code.
 • **UTR Verification**: Submit the 12-digit Bank Transaction Reference Number (UTR) from your GPay/UPI receipt to instantly verify payment and unlock production pipelines (T+0 instant settlement).
@@ -198,13 +198,13 @@ export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
     updated_at: new Date().toISOString(),
   },
 
-  // 7. GOOGLE DRIVE VAULT & STUDIO POLICIES
+  // 7. SUTRA CLOUD VAULT & STUDIO POLICIES
   {
     id: "kb_drive_vault_policies",
     client_id: "client_sutra",
     category: "Policies",
-    title: "Google Drive Vault Architecture & Studio Guarantees",
-    content: `• **Google Drive Vault**: Every client is allocated an isolated Google Drive directory (\`drive_fld_sutra_001\`) where RAW 3D assets, 4K ProRes masters, vector packages, and contracts are automatically archived.
+    title: "Sutra Cloud Vault Architecture & Studio Guarantees",
+    content: `• **Sutra Cloud Vault**: Every client is allocated an isolated Sutra Cloud Vault directory (\`drive_fld_sutra_001\`) where RAW 3D assets, 4K ProRes masters, vector packages, and contracts are automatically archived.
 • **Security & Privacy**: Strict tenant isolation with end-to-end cloud encryption. Zero cross-client data leakage.
 • **SLA Guarantee**: 24 to 48 hours delivery turnaround on draft review passes.
 • **Revisions**: Up to 2 comprehensive revision rounds included on all standard deliverables.

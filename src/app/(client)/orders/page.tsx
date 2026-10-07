@@ -1235,7 +1235,7 @@ export default function OrdersPage() {
                     status: "completed",
                     changedAt: new Date().toISOString(),
                     changedBy: user?.displayName || "client",
-                    note: "Deliverables approved by client. Final master vaulted to Google Drive.",
+                    note: "Deliverables approved by client. Final master vaulted to Sutra Cloud Vault.",
                   },
                 ],
               }
@@ -1243,7 +1243,7 @@ export default function OrdersPage() {
         )
       );
       setFeedbackSuccess(
-        "Deliverable approved! High-resolution masters have been finalized in your Google Drive vault."
+        "Deliverable approved! High-resolution masters have been finalized in your Sutra Cloud Vault."
       );
       window.dispatchEvent(new Event("sutra_orders_changed"));
       setTimeout(() => {
@@ -1466,7 +1466,7 @@ export default function OrdersPage() {
                       Action Required: Deliverable Awaiting Your Review
                     </h4>
                     <p className="text-xs text-[#64748B]">
-                      Inspect render passes below to approve for final Google Drive vault release or request revisions.
+                      Inspect render passes below to approve for final Sutra Cloud Vault release or request revisions.
                     </p>
                   </div>
                 </div>
@@ -2533,22 +2533,22 @@ export default function OrdersPage() {
                     onClick={() => setFlowStep("drive_assets")}
                     withArrow
                   >
-                    Continue to Drive Assets (Step 3)
+                    Continue to Vault Assets (Step 3)
                   </Button>
                 </div>
               </div>
             )}
 
-            {/* STEP 3: DRIVE ASSETS & REFERENCE UPLOADS */}
+            {/* STEP 3: VAULT ASSETS & REFERENCE UPLOADS */}
             {flowStep === "drive_assets" && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-serif text-lg font-semibold text-[#0F172A]">
-                      Step 3: Reference Files & Google Drive Vault
+                      Step 3: Reference Files & Sutra Cloud Vault
                     </h3>
                     <p className="text-xs text-[#64748B]">
-                      Upload reference moodboards, CAD models, product photos, or paste a Google Drive folder URL.
+                      Upload reference moodboards, CAD models, product photos, or paste a cloud vault folder URL.
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -2603,7 +2603,7 @@ export default function OrdersPage() {
                       Upload Reference Assets (Images, Videos, CAD, PDFs, ZIPs)
                     </p>
                     <p className="text-[11px] text-[#64748B] mt-0.5">
-                      Max 500 MB per file. Staged directly into your private Google Drive vault.
+                      Max 500 MB per file. Staged directly into your private Sutra Cloud Vault.
                     </p>
                   </div>
 
@@ -2677,11 +2677,11 @@ export default function OrdersPage() {
                   </div>
                 )}
 
-                {/* Google Drive / Cloud Link Input */}
+                {/* Sutra Cloud Vault / Storage Link Input */}
                 <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] space-y-2.5">
                   <div className="flex items-center justify-between">
                     <label className="block text-xs font-semibold uppercase tracking-wider text-[#0F172A]">
-                      Or Paste Existing Google Drive / Cloud Folder Link
+                      Or Paste Existing Sutra Cloud Vault / Cloud Folder Link
                     </label>
                     {driveLink && (
                       <span
@@ -2694,7 +2694,7 @@ export default function OrdersPage() {
                         }`}
                       >
                         {driveLink.includes("drive.google.com")
-                          ? "✓ Verified Drive Link"
+                          ? "✓ Verified Cloud Vault Link"
                           : driveLink.startsWith("https://")
                           ? "Cloud Storage Link"
                           : "Invalid URL"}
@@ -2703,7 +2703,7 @@ export default function OrdersPage() {
                   </div>
                   <input
                     type="url"
-                    placeholder="https://drive.google.com/drive/folders/..."
+                    placeholder="https://drive.google.com/drive/folders/... or cloud vault link"
                     value={driveLink}
                     onChange={(e) => setDriveLink(e.target.value)}
                     className="w-full rounded-xl bg-[#FAF9F5] border border-[#EADFCB] px-3.5 py-2 text-xs text-[#0F172A] focus:border-[#D4A35A] focus:outline-none"
@@ -2711,10 +2711,10 @@ export default function OrdersPage() {
                   <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70 text-[11px] text-[#64748B] space-y-1">
                     <div className="font-semibold text-[#0F172A] flex items-center gap-1.5">
                       <HardDrive className="w-3.5 h-3.5 text-[#A98B57]" />
-                      <span>Google Drive Sharing Guide:</span>
+                      <span>Cloud Vault Sharing Guide:</span>
                     </div>
                     <p className="leading-relaxed">
-                      1. Open your folder in Google Drive &rarr; Click <strong>Share</strong> &rarr; Under General Access choose <strong>&quot;Anyone with the link can view&quot;</strong> &rarr; Copy and paste link above.
+                      1. Open your folder in your cloud vault &rarr; Click <strong>Share</strong> &rarr; Under General Access choose <strong>&quot;Anyone with the link can view&quot;</strong> &rarr; Copy and paste link above.
                     </p>
                   </div>
                 </div>
@@ -3354,7 +3354,7 @@ export default function OrdersPage() {
                     <div className="p-3.5 rounded-2xl bg-[#F0FDF4] border border-[#BBF7D0] flex items-center justify-between text-xs text-[#166534]">
                       <div className="flex items-center gap-2 font-medium">
                         <CheckCircle2 className="w-4 h-4 text-[#16A34A]" />
-                        <span>Deliverables Approved & Vaulted in Google Drive Final Delivery.</span>
+                        <span>Deliverables Approved & Vaulted in Sutra Cloud Vault Final Delivery.</span>
                       </div>
                       <span className="font-mono text-[11px] font-bold text-[#15803D]">Approved</span>
                     </div>

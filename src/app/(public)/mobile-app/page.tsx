@@ -92,7 +92,7 @@ export default function MobileAppLandingPage() {
       badge: "AI Agent",
     },
     {
-      title: "Google Drive Vault",
+      title: "Sutra Cloud Vault",
       subtitle: "Direct High-Res Sync",
       desc: "Access your encrypted media archive with instant streaming and direct download.",
       badge: "Media Vault",
@@ -118,7 +118,7 @@ export default function MobileAppLandingPage() {
     },
     {
       icon: HardDrive,
-      title: "Isolated Google Drive Vaults",
+      title: "Isolated Sutra Cloud Vaults",
       description: "Direct mobile streaming of 4K ProRes videos, interactive 3D scene models, and vector packs saved in your private cloud.",
     },
     {
@@ -147,7 +147,7 @@ export default function MobileAppLandingPage() {
     {
       step: "02",
       title: "Sign In with Client Clearance",
-      desc: "Authenticate via Google or Email to unlock your client-isolated Google Drive vault.",
+      desc: "Authenticate via Google or Email to unlock your client-isolated Sutra Cloud Vault.",
     },
     {
       step: "03",
@@ -166,7 +166,7 @@ export default function MobileAppLandingPage() {
       a: "Yes. Our mobile viewport includes responsive media players and 3D preview containers optimized for mobile touch gestures and cellular streaming.",
     },
     {
-      q: "Are my Google Drive vault files safe on mobile?",
+      q: "Are my Sutra Cloud Vault files safe on mobile?",
       a: "Absolutely. All media access tokens are scoped to your authenticated Firebase session with zero hardcoded credentials and strict tenant isolation.",
     },
     {
@@ -200,7 +200,7 @@ export default function MobileAppLandingPage() {
                     Your bespoke creative studio in your pocket.
                   </h1>
                   <p className="text-base sm:text-lg text-[#64748B] max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                    Approve 4K architectural renders, direct AI workflows, and access your encrypted Google Drive media vault anywhere, anytime.
+                    Approve 4K architectural renders, direct AI workflows, and access your encrypted Sutra Cloud Vault anywhere, anytime.
                   </p>
                 </div>
 
@@ -511,7 +511,7 @@ export default function MobileAppLandingPage() {
                 Experience Sutra Studio on your mobile device today.
               </h2>
               <p className="text-sm text-[#64748B]">
-                Free for all clients with active commissions. Instant sync with your Google Drive vault.
+                Free for all clients with active commissions. Instant sync with your Sutra Cloud Vault.
               </p>
             </div>
 
