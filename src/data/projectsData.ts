@@ -60,7 +60,7 @@ export const SUTRA_PROJECTS: ProjectItem[] = [
     year: "2026",
     description: "Next.js dynamic web experience celebrating artisanal looms with GSAP scroll storytelling.",
     badge: "Interactive",
-    thumbnail: "https://image.pollinations.ai/prompt/luxury%20creative%20studio%20website%20mockup%20on%20macbook%20pro%2C%20minimalist%20editorial%20layout%2C%20warm%20ivory%20and%20brass%20palette%2C%208k?width=1200&height=800&nologo=true",
+    thumbnail: "/assets/showcase/live-home-desktop.png",
   },
   {
     id: "proj-ads",
@@ -68,7 +68,7 @@ export const SUTRA_PROJECTS: ProjectItem[] = [
     category: "Marketing",
     client: "Shri Naturals",
     year: "2026",
-    description: "Multi-variant creative ads campaign driving 4.8x return on ad spend through AI-assisted creative optimization.",
+    description: "Multi-variant creative ads campaign driving 4.8x return on ad spend through algorithmic creative optimization.",
     badge: "Case Study",
     thumbnail: "https://image.pollinations.ai/prompt/social%20media%20advertising%20campaign%20creative%2C%20luxury%20aesthetic%2C%20warm%20gold%20and%20obsidian%20palette%2C%20modern%20typography%2C%20commercial%20grade%2C%208k?width=1200&height=800&nologo=true",
   },

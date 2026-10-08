@@ -114,24 +114,24 @@ export function ServiceCard({ service }: { service: ServiceItem }) {
       </div>
 
       {/* Card Footer */}
-      <div className="px-5 pb-5 pt-4 border-t border-[#EADFCB]/60 flex items-center justify-between min-h-[48px]">
-        <div>
+      <div className="px-5 pb-5 pt-4 border-t border-[#EADFCB]/60 flex items-center justify-between min-h-[48px] gap-3">
+        <div className="flex flex-col min-w-0">
           <span className="text-[10px] text-[#94A3B8] uppercase block tracking-wider font-mono">
             {service.isCustomQuote ? "Scope" : "Starting from"}
           </span>
-          <span className="font-serif text-base font-bold text-[#5C3A1E]">
+          <span className="font-serif text-base font-bold text-[#5C3A1E] whitespace-nowrap">
             {service.startingPrice}
           </span>
         </div>
 
         {service.isCustomQuote && service.ctaText ? (
-          <div className="px-3 py-1.5 rounded-xl bg-[#5C3A1E] text-white hover:bg-[#4A2E17] text-xs font-semibold flex items-center gap-1 transition-all shadow-xs">
+          <div className="shrink-0 inline-flex items-center justify-center whitespace-nowrap min-h-[40px] px-3.5 py-1.5 rounded-xl bg-[#5C3A1E] text-white hover:bg-[#4A2E17] text-xs font-semibold gap-1.5 transition-all shadow-xs">
             <span>{service.ctaText}</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
+            <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
           </div>
         ) : (
-          <div className="w-8 h-8 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center transition-all group-hover:bg-[#5C3A1E] group-hover:border-[#5C3A1E] group-hover:text-white shadow-xs">
-            <ArrowUpRight className="w-4 h-4 text-[#5C3A1E] group-hover:text-white transition-colors" />
+          <div className="shrink-0 w-9 h-9 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center transition-all group-hover:bg-[#5C3A1E] group-hover:border-[#5C3A1E] group-hover:text-white shadow-xs">
+            <ArrowUpRight className="w-4 h-4 text-[#5C3A1E] group-hover:text-white transition-colors shrink-0" />
           </div>
         )}
       </div>

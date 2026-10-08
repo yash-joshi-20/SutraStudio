@@ -346,8 +346,8 @@ export default function ServicesPage() {
                       </div>
 
                       {/* Card Footer: Starting Price & Quick Actions */}
-                      <div className="p-5 pt-4 min-h-[56px] border-t border-[#EADFCB]/60 flex items-center justify-between gap-2">
-                        <div className="shrink-0">
+                      <div className="p-5 pt-4 min-h-[56px] border-t border-[#EADFCB]/60 flex items-center justify-between gap-3">
+                        <div className="flex flex-col min-w-0">
                           <span className="text-[10px] text-[#94A3B8] uppercase block tracking-wider font-mono">
                             {service.isCustomQuote ? "Scope" : "Starting from"}
                           </span>
@@ -361,19 +361,19 @@ export default function ServicesPage() {
                             type="button"
                             onClick={() => setSelectedService(service)}
                             title="Inspect Scope & Media"
-                            className="px-2.5 py-1.5 rounded-xl bg-[#F8F5EF] text-[#5C3A1E] border border-[#EADFCB] hover:border-[#D4A35A] transition-colors cursor-pointer text-xs font-medium shrink-0"
+                            className="inline-flex items-center justify-center whitespace-nowrap min-h-[44px] px-3.5 py-2 rounded-xl bg-[#F8F5EF] text-[#5C3A1E] border border-[#EADFCB] hover:border-[#D4A35A] transition-colors cursor-pointer text-xs font-medium shrink-0"
                           >
                             Details
                           </button>
                           <Link href={service.ctaHref || `/orders?service=${service.slug}`} className="shrink-0">
                             {service.isCustomQuote && service.ctaText ? (
-                              <div className="px-3 py-1.5 rounded-xl bg-[#5C3A1E] text-white hover:bg-[#4A2E17] text-xs font-semibold flex items-center gap-1 transition-all shadow-xs cursor-pointer whitespace-nowrap">
+                              <div className="inline-flex items-center justify-center whitespace-nowrap min-h-[44px] px-4 py-2 rounded-xl bg-[#5C3A1E] text-white hover:bg-[#4A2E17] text-xs font-semibold gap-1.5 transition-all shadow-xs cursor-pointer">
                                 <span>{service.ctaText}</span>
-                                <ArrowUpRight className="w-3.5 h-3.5" />
+                                <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
                               </div>
                             ) : (
-                              <div className="w-8 h-8 rounded-xl bg-[#5C3A1E] text-white flex items-center justify-center transition-transform hover:scale-105 shadow-xs cursor-pointer">
-                                <ArrowUpRight className="w-4 h-4" />
+                              <div className="w-11 h-11 rounded-xl bg-[#5C3A1E] text-white flex items-center justify-center transition-transform hover:scale-105 shadow-xs cursor-pointer shrink-0">
+                                <ArrowUpRight className="w-4 h-4 shrink-0" />
                               </div>
                             )}
                           </Link>

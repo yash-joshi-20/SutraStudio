@@ -77,7 +77,7 @@ export const SUTRA_VIDEO_REGISTRY: Record<string, VideoAssetConfig> = {
   'studio-reel': {
     id: 'studio-reel',
     title: 'Craftsmanship & Spatial Philosophy Reel',
-    subtitle: 'Bridging Indian Aesthetic Doctrines with AI Engineering',
+    subtitle: 'Bridging Indian Aesthetic Doctrines with Creative Technology',
     description: 'Cinematic tour through our creative synthesis laboratory, exploring proportion (Pramana), emotional resonance (Rasa), and algorithmic precision (Yantra).',
     category: 'studio',
     aspectRatio: '16/9',
@@ -85,13 +85,13 @@ export const SUTRA_VIDEO_REGISTRY: Record<string, VideoAssetConfig> = {
     isSilentLoop: false,
     promptUsed: 'Sutra Studio craftsmanship documentary reel, golden ratio proportions, architectural blueprints merging into photorealistic 3D spatial renders, warm teak wood, calm refined editorial lighting, sacred geometry overlays.',
     desktop: {
-      mp4: '/videos/studio/studio-reel-desktop.mp4',
+      mp4: '/assets/showcase/live-site-showreel.mp4',
       webm: '/videos/studio/studio-reel-desktop.webm',
       width: 1280,
       height: 720,
     },
     mobile: {
-      mp4: '/videos/studio/studio-reel-mobile.mp4',
+      mp4: '/assets/showcase/live-site-showreel.mp4',
       webm: '/videos/studio/studio-reel-mobile.webm',
       width: 720,
       height: 1280,
@@ -101,10 +101,10 @@ export const SUTRA_VIDEO_REGISTRY: Record<string, VideoAssetConfig> = {
       width: 1280,
       height: 720,
     },
-    transcript: 'Sutra connects classical Indian artistic heritage with state-of-the-art generative intelligence. Every frame is balanced with mathematical symmetry and tactile warmth.',
+    transcript: 'Sutra connects classical Indian artistic heritage with state-of-the-art computational precision. Every frame is balanced with mathematical symmetry and tactile warmth.',
     captions: [
       { start: 0, end: 3.5, text: 'Sutra: The thread connecting classical artistic heritage...' },
-      { start: 3.5, end: 7.0, text: '...with state-of-the-art generative intelligence.' },
+      { start: 3.5, end: 7.0, text: '...with state-of-the-art computational precision.' },
       { start: 7.0, end: 10.0, text: 'Harmonizing sacred proportions with computational precision.' },
     ],
     tags: ['showreel', 'craftsmanship', 'philosophy', 'spatial-design'],
@@ -172,12 +172,12 @@ export const SUTRA_VIDEO_REGISTRY: Record<string, VideoAssetConfig> = {
     tags: ['services', '3d-modeling', 'spatial-architecture', 'vr-360'],
   },
 
-  // 5. Generative AI Video Production Teaser (Services Highlight)
+  // 5. Cinematic Motion & Film Production Teaser (Services Highlight)
   'service-ai-video': {
     id: 'service-ai-video',
     title: 'Cinematic Visual & Motion Generation',
-    subtitle: 'Diffusion Pipelines & High-Impact Brand Reels',
-    description: 'High-definition 4K brand reel featuring generative fluid dynamics, silk textile motion, and saffron gold radiance for luxury marketing campaigns.',
+    subtitle: 'Dynamic Camera Choreography & High-Impact Brand Reels',
+    description: 'High-definition 4K brand reel featuring computational fluid dynamics, silk textile motion, and saffron gold radiance for luxury marketing campaigns.',
     category: 'service',
     aspectRatio: '16/9',
     durationSeconds: 8,
@@ -200,7 +200,7 @@ export const SUTRA_VIDEO_REGISTRY: Record<string, VideoAssetConfig> = {
       width: 1280,
       height: 720,
     },
-    tags: ['services', 'video-creation', 'generative-ai', 'motion-design'],
+    tags: ['services', 'video-creation', 'motion-design', 'commercial-film'],
   },
 };
 

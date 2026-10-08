@@ -22,7 +22,8 @@
     "create-admin": "npx tsx scripts/create-admin.ts",
     "get-drive-token": "npx tsx scripts/get-drive-refresh-token.ts",
     "migrate:firebase": "node scripts/migrate-to-firebase.mjs",
-    "migrate:dry-run": "node scripts/migrate-to-firebase.mjs --dry-run"
+    "migrate:dry-run": "node scripts/migrate-to-firebase.mjs --dry-run",
+    "capture-assets": "npx tsx scripts/capture-live-assets.ts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

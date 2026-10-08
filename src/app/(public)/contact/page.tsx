@@ -201,10 +201,13 @@ export default function ContactPage() {
                   <div className="flex items-start gap-3 p-3 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB]/60">
                     <MapPin className="w-5 h-5 text-[#5C3A1E] shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-semibold text-[#0F172A]">Studio Locations</p>
+                      <p className="font-semibold text-[#0F172A]">Studio Headquarters</p>
                       <p className="text-xs text-[#64748B]">
-                        Bandra West, Mumbai • Mayfair, London • Global Drive Vault
+                        Sutra Studio Atelier • Botad, Gujarat, India - 364710
                       </p>
+                      <span className="text-[10px] text-[#A98B57] font-semibold block mt-0.5">
+                        Studio Headquarters &amp; Cloud Vault Nexus
+                      </span>
                     </div>
                   </div>
 
@@ -433,46 +436,24 @@ export default function ContactPage() {
                   STUDIO ARCHITECTURE & VISITATION
                 </span>
                 <h3 className="font-serif text-2xl font-bold text-[#0F172A] mt-1">
-                  Global Physical & Cloud Presence
+                  Sutra Studio Atelier — Headquarters
                 </h3>
               </div>
               <p className="text-xs text-[#64748B] max-w-md">
-                Bespoke in-person producer briefings available by appointment at our Bandra West executive studio or Mayfair showroom.
+                Bespoke in-person producer briefings and spatial reviews available by appointment at our Botad, Gujarat atelier.
               </p>
             </div>
 
             {/* Stylized Responsive Map Container */}
-            <div className="relative w-full h-72 sm:h-96 rounded-3xl overflow-hidden border border-[#EADFCB] shadow-inner bg-[#F4EFE6] flex items-center justify-center">
-              {/* Simulated Map Canvas with Sacred Geometry & Coordinates */}
-              <div className="absolute inset-0 bg-radial from-[#FFFDF9] to-[#EADFCB] opacity-90" />
-              <div className="absolute inset-0 bg-[linear-gradient(to_right,#E5E1D8_1px,transparent_1px),linear-gradient(to_bottom,#E5E1D8_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-40" />
-
-              {/* Pin 1: Mumbai Studio */}
-              <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 text-center group cursor-pointer">
-                <div className="relative flex items-center justify-center">
-                  <span className="absolute w-8 h-8 rounded-full bg-[#D4A35A]/30 animate-ping" />
-                  <div className="w-10 h-10 rounded-2xl bg-[#5C3A1E] text-white flex items-center justify-center shadow-lg border-2 border-white relative z-10">
-                    <LotusSymbol className="w-5 h-5" color="gold" />
-                  </div>
-                </div>
-                <div className="mt-2 p-2 px-3 rounded-xl bg-white/95 backdrop-blur-sm border border-[#EADFCB] shadow-md text-left">
-                  <p className="font-serif text-xs font-bold text-[#0F172A]">Sutra Mumbai Flagship</p>
-                  <p className="text-[10px] text-[#64748B]">Bandra West, Mumbai 400050</p>
-                </div>
-              </div>
-
-              {/* Pin 2: London Bureau */}
-              <div className="absolute top-1/3 right-1/4 -translate-x-1/2 -translate-y-1/2 text-center group cursor-pointer hidden sm:block">
-                <div className="relative flex items-center justify-center">
-                  <span className="absolute w-8 h-8 rounded-full bg-[#D4A35A]/30 animate-ping" />
-                  <div className="w-10 h-10 rounded-2xl bg-[#0F172A] text-white flex items-center justify-center shadow-lg border-2 border-white relative z-10">
-                    <MapPin className="w-5 h-5 text-[#D4A35A]" />
-                  </div>
-                </div>
-                <div className="mt-2 p-2 px-3 rounded-xl bg-white/95 backdrop-blur-sm border border-[#EADFCB] shadow-md text-left">
-                  <p className="font-serif text-xs font-bold text-[#0F172A]">Mayfair Bureau</p>
-                  <p className="text-[10px] text-[#64748B]">London W1K 3QT, United Kingdom</p>
-                </div>
+            <div className="relative w-full rounded-3xl overflow-hidden border border-[#EADFCB] shadow-inner bg-[#F4EFE6]">
+              <iframe
+                src="https://maps.google.com/maps?q=Botad%20Gujarat%20364710&t=&z=13&ie=UTF8&iwloc=&output=embed"
+                className="w-full h-80 rounded-2xl border border-amber-900/20 shadow-inner grayscale contrast-125 opacity-90 hover:opacity-100 transition-opacity"
+                loading="lazy"
+                allowFullScreen
+              ></iframe>
+              <div className="absolute top-4 left-4 z-10 px-3.5 py-1.5 rounded-full bg-[#171717]/90 text-[#FAF9F5] border border-[#A98B57]/50 shadow-md text-xs font-semibold backdrop-blur-md">
+                ✦ Physical Atelier: Botad, Gujarat | Serving Global Clients
               </div>
             </div>
           </div>

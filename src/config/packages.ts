@@ -200,7 +200,9 @@ export const COMMISSION_PACKAGES: CommissionPackage[] = [
     ctaHref: "/contact?package=bespoke-enterprise",
     features: [
       "Unlimited Custom Deliverables & Assets",
-      "Bespoke High-Performance Web & Mobile Architecture",
+      "Bespoke Enterprise Web Platform & Client Portal Architecture",
+      "Bespoke Native iOS & Android Mobile Systems",
+      "Custom Enterprise Digital Systems & Automated Workflow Pipelines",
       "Custom Spatial 3D & 360° Interactive Showrooms",
       "Direct WhatsApp & Dedicated Art Director Channel",
       "Custom SLA & Milestone-Based Delivery",

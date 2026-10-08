@@ -96,63 +96,16 @@ export function Interactive3DViewer({
     trimMesh.position.y = 0.85;
     group.add(trimMesh);
 
-    // 3. Screen Canvas Texture with Sutra Studio UI
+    // 3. Screen Texture with Sutra Studio Authentic Live Website Interface
     let screenTex: THREE.Texture;
-    if (typeof document !== "undefined") {
-      const canvas = document.createElement("canvas");
-      canvas.width = 1024;
-      canvas.height = 1024;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        const grad = ctx.createLinearGradient(0, 0, 1024, 1024);
-        grad.addColorStop(0, "#0F172A");
-        grad.addColorStop(0.5, "#1E1B18");
-        grad.addColorStop(1, "#0B0F19");
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 1024, 1024);
-
-        ctx.strokeStyle = "rgba(212, 163, 90, 0.4)";
-        ctx.lineWidth = 14;
-        ctx.strokeRect(30, 30, 964, 964);
-
-        ctx.fillStyle = "#D4A35A";
-        ctx.font = "bold 28px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("✦ SUTRA STUDIO ATELIER ✦", 512, 170);
-
-        ctx.fillStyle = "#FFFFFF";
-        ctx.font = "bold 56px serif";
-        ctx.fillText("Tradition Meets", 512, 270);
-        ctx.fillStyle = "#D4A35A";
-        ctx.fillText("Technology", 512, 340);
-
-        // Sacred geometry mandala
-        ctx.save();
-        ctx.translate(512, 530);
-        ctx.strokeStyle = "#D4A35A";
-        ctx.lineWidth = 4;
-        for (let i = 0; i < 8; i++) {
-          ctx.rotate(Math.PI / 4);
-          ctx.beginPath();
-          ctx.ellipse(0, 70, 32, 85, 0, 0, Math.PI * 2);
-          ctx.stroke();
+    if (typeof window !== "undefined") {
+      screenTex = new THREE.TextureLoader().load(
+        "/assets/showcase/live-home-desktop.png",
+        (tex) => {
+          tex.colorSpace = THREE.SRGBColorSpace;
+          tex.needsUpdate = true;
         }
-        ctx.beginPath();
-        ctx.arc(0, 0, 28, 0, Math.PI * 2);
-        ctx.fillStyle = "#D4A35A";
-        ctx.fill();
-        ctx.restore();
-
-        ctx.fillStyle = "#E2E8F0";
-        ctx.font = "24px sans-serif";
-        ctx.fillText("Enterprise Software & 3D Spatial Systems", 512, 780);
-
-        ctx.fillStyle = "#D4A35A";
-        ctx.font = "bold 20px monospace";
-        ctx.fillText("4K PBR ENGINE • REAL-TIME WEBGL", 512, 830);
-      }
-      screenTex = new THREE.CanvasTexture(canvas);
-      screenTex.needsUpdate = true;
+      );
     } else {
       screenTex = new THREE.Texture();
     }

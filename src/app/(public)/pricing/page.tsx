@@ -18,7 +18,6 @@ import {
   PER_PROJECT_TIERS,
   MONTHLY_RETAINER_TIERS,
 } from "@/config/pricing";
-import { STANDALONE_PACKAGES } from "@/config/packages";
 import { motion, AnimatePresence } from "framer-motion";
 
 const FAQS = [
@@ -43,9 +42,9 @@ export default function PricingPage() {
     <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
       <Navbar />
 
-      <main id="main-content" className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 w-full space-y-16">
+      <main id="main-content" className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 w-full flex flex-col items-center justify-center space-y-16">
         {/* Intro Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-4">
+        <div className="text-center max-w-3xl mx-auto space-y-4 w-full flex flex-col items-center justify-center">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] shadow-xs">
             <span className="text-[#D4A35A] text-xs">◆</span>
             <span className="text-[10px] md:text-xs font-semibold tracking-[0.22em] text-[#5C3A1E] uppercase">
@@ -57,48 +56,13 @@ export default function PricingPage() {
             Clear Value, <span className="text-gold-gradient">Guaranteed Excellence</span>
           </h1>
 
-          <p className="text-base sm:text-lg text-[#64748B] leading-relaxed">
+          <p className="text-base sm:text-lg text-[#64748B] leading-relaxed max-w-2xl">
             Honest studio commissions with zero hidden fees. Every asset crafted under
             experienced art-direction and delivered directly into your Sutra Cloud Vault.
           </p>
 
-          {/* Standalone Quick-Order Deliverables Banner */}
-          <div className="pt-2 pb-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto text-left">
-            {STANDALONE_PACKAGES.map((pack) => (
-              <div
-                key={pack.id}
-                className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#D4A35A]/60 shadow-xs flex flex-col justify-between hover:border-[#D4A35A] transition-colors"
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-[#A98B57] font-bold">
-                      Standalone Deliverable
-                    </span>
-                    <span className="text-[11px] font-mono text-[#64748B]">{pack.turnaround}</span>
-                  </div>
-                  <h4 className="font-serif text-base font-semibold text-[#0F172A] mt-1">
-                    {pack.name}
-                  </h4>
-                  <p className="text-xs text-[#64748B] mt-1 line-clamp-2">
-                    {pack.description}
-                  </p>
-                </div>
-                <div className="pt-3 flex items-center justify-between border-t border-[#EADFCB]/60 mt-3">
-                  <span className="font-serif text-xl font-bold text-[#5C3A1E]">
-                    {pack.formattedPrice}
-                  </span>
-                  <Link href={pack.ctaHref}>
-                    <Button variant="secondary" size="sm" className="text-xs">
-                      {pack.ctaText}
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-
           {/* Billing Cycle Toggle */}
-          <div className="pt-4 flex items-center justify-center">
+          <div className="pt-4 flex items-center justify-center w-full">
             <div
               role="tablist"
               aria-label="Billing frequency"
@@ -231,12 +195,12 @@ export default function PricingPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="max-w-3xl mx-auto w-full"
+              className="max-w-3xl mx-auto w-full flex flex-col items-center justify-center"
             >
               {MONTHLY_RETAINER_TIERS.map((tier) => (
                 <div
                   key={tier.id}
-                  className="rounded-3xl p-8 sm:p-10 bg-[#FFFDF9] border-2 border-[#D4A35A] shadow-warm-hover relative flex flex-col justify-between space-y-8"
+                  className="w-full rounded-3xl p-8 sm:p-10 bg-[#FFFDF9] border-2 border-[#D4A35A] shadow-warm-hover relative flex flex-col justify-between space-y-8"
                 >
                   <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#5C3A1E] text-white px-5 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase shadow-xs">
                     Autonomous Campaign Engine

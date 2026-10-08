@@ -87,7 +87,7 @@ export async function sanitizeImage(
   }
 
   // Extract content above watermark, resize back to target dimensions, strip all metadata
-  imagePipeline = imagePipeline
+  imagePipeline = (imagePipeline
     .extract({
       left: 0,
       top: 0,
@@ -97,7 +97,8 @@ export async function sanitizeImage(
     .resize(targetWidth, targetHeight, {
       kernel: sharp.kernel.lanczos3,
       fit: "fill",
-    }); // Strips all EXIF, IPTC, XMP metadata by default in Sharp
+    }) as any)
+    .withMetadata(false); // Strips all EXIF, IPTC, XMP metadata
 
   let outputBuffer: Buffer;
   if (targetFormat === "png") {
