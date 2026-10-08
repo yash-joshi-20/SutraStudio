@@ -65,6 +65,7 @@ export const ADMIN_NAV_ITEMS: PortalNavItem[] = [
   { name: "Services & Pricing", href: "/admin?tab=services", tabKey: "services", icon: Layers },
   { name: "Payments & Refunds", href: "/admin?tab=payments", tabKey: "payments", icon: CreditCard },
   { name: "Deliveries & Drive", href: "/admin?tab=deliveries", tabKey: "deliveries", icon: FolderOpen },
+  { name: "Client Demos (Subdomains)", href: "/admin/demos", icon: Globe },
   { name: "Chats & AI Knowledge", href: "/admin?tab=conversations", tabKey: "conversations", icon: MessageSquare },
   { name: "Brand Prompts", href: "/admin?tab=prompts", tabKey: "prompts", icon: Sparkles },
   { name: "Notifications Settings", href: "/admin?tab=notifications", tabKey: "notifications", icon: Bell },
