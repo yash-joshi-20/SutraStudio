@@ -187,16 +187,14 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${playfair.variable} ${inter.variable} h-full antialiased`}
     >
-      <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
-        />
-      </head>
       <body
         suppressHydrationWarning
         className="min-h-full flex flex-col bg-[var(--background)] text-[var(--foreground)] overflow-x-hidden w-full relative selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]"
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
         {/* Accessible Skip-to-Content Link */}
         <a
           href="#main-content"
