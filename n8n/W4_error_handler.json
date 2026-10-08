@@ -22,7 +22,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.APP_BASE_URL || 'http://localhost:3000' }}/api/n8n/webhook",
+        "url": "={{ $env.APP_BASE_URL || 'https://sutrastudio-1.onrender.com' }}/api/n8n/webhook",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -65,7 +65,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"from\": \"Sutra Studio Alerts <alerts@sutrastudio.com>\",\n  \"to\": [\"{{ $env.ADMIN_EMAIL || 'yash@studioliving.com' }}\"],\n  \"subject\": \"⚠️ Pipeline Execution Alert: {{ $('Extract Error Context & Order ID').item.json.workflowId }}\",\n  \"html\": \"<h2>Sutra Studio Automation Failure Report</h2><p><strong>Workflow:</strong> {{ $('Extract Error Context & Order ID').item.json.workflowId }}</p><p><strong>Failed Node:</strong> {{ $('Extract Error Context & Order ID').item.json.failedNode }}</p><p><strong>Error:</strong> {{ $('Extract Error Context & Order ID').item.json.errorMessage }}</p><p><strong>Order:</strong> {{ $('Extract Error Context & Order ID').item.json.orderId || 'N/A' }}</p><hr/><p><a href=\\\"{{ $env.APP_BASE_URL || 'http://localhost:3000' }}/admin/orders?id={{ $('Extract Error Context & Order ID').item.json.orderId }}&retry=true\\\" style=\\\"background:#171717;color:#fff;padding:10px 18px;text-decoration:none;border-radius:6px;\\\">Retry Pipeline in Admin Console</a></p>\"\n}"
+        "jsonBody": "={\n  \"from\": \"Sutra Studio Alerts <{{ $env.EMAIL_FROM || 'yashjoshi20@zohomail.in' }}>\",\n  \"to\": [\"{{ $env.ADMIN_EMAIL || 'yashjoshi20@zohomail.in' }}\"],\n  \"subject\": \"⚠️ Pipeline Execution Alert: {{ $('Extract Error Context & Order ID').item.json.workflowId }}\",\n  \"html\": \"<h2>Sutra Studio Automation Failure Report</h2><p><strong>Workflow:</strong> {{ $('Extract Error Context & Order ID').item.json.workflowId }}</p><p><strong>Failed Node:</strong> {{ $('Extract Error Context & Order ID').item.json.failedNode }}</p><p><strong>Error:</strong> {{ $('Extract Error Context & Order ID').item.json.errorMessage }}</p><p><strong>Order:</strong> {{ $('Extract Error Context & Order ID').item.json.orderId || 'N/A' }}</p><hr/><p><a href=\\\"{{ $env.APP_BASE_URL || 'https://sutrastudio-1.onrender.com' }}/admin/orders?id={{ $('Extract Error Context & Order ID').item.json.orderId }}&retry=true\\\" style=\\\"background:#171717;color:#fff;padding:10px 18px;text-decoration:none;border-radius:6px;\\\">Retry Pipeline in Admin Console</a></p>\"\n}"
       },
       "id": "node-notify-admin-email",
       "name": "Send Critical Admin Email Alert",

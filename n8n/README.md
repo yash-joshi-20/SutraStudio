@@ -40,7 +40,7 @@ Set these environment variables in your n8n `.env` or self-hosted Docker contain
 
 ```bash
 # Sutra Studio Web App Integration
-APP_BASE_URL=https://studio.sutrastudio.com # or http://localhost:3000 for local dev
+APP_BASE_URL=https://sutrastudio-1.onrender.com
 N8N_WEBHOOK_SECRET=sutra_n8n_sec_live_9941a8
 
 # AI Engines & Models
@@ -56,7 +56,7 @@ INSTAGRAM_ACCOUNT_ID=1784140...
 FACEBOOK_PAGE_ID=1092837...
 
 # Studio Administration & Alerts
-ADMIN_EMAIL=yash@studioliving.com
+ADMIN_EMAIL=yashjoshi20@zohomail.in
 RESEND_API_KEY=re_...
 ```
 

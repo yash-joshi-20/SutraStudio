@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "url": "={{ $env.APP_BASE_URL || 'http://localhost:3000' }}/api/n8n/subscriptions",
+        "url": "={{ $env.APP_BASE_URL || 'https://sutrastudio-1.onrender.com' }}/api/n8n/subscriptions",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -74,7 +74,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.APP_BASE_URL || 'http://localhost:3000' }}/api/n8n/webhook",
+        "url": "={{ $env.APP_BASE_URL || 'https://sutrastudio-1.onrender.com' }}/api/n8n/webhook",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
