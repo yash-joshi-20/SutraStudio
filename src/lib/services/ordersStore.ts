@@ -389,7 +389,7 @@ export class OrdersStore {
       try {
         const { N8nAutomationService } = await import("./n8nService");
         await N8nAutomationService.dispatchWorkflow({
-          workflowId: "W1_order_fulfillment_router",
+          workflowId: "SUTRA_MASTER_RENDER_LOCAL_HYBRID",
           orderId: order.id,
           clientId: order.clientUid || order.clientId || "",
           service: order.service,
@@ -397,7 +397,7 @@ export class OrdersStore {
           driveFolderId: order.driveFolderId,
         });
       } catch (n8nErr) {
-        console.warn("[n8n Auto-Dispatch] Failed to trigger W1 router:", n8nErr);
+        console.warn("[n8n Auto-Dispatch] Failed to trigger Master engine:", n8nErr);
       }
     }, 100);
 

@@ -31,11 +31,7 @@ export async function GET(req: Request) {
     supportedEngines: VALID_WORKFLOW_ENGINES,
     isolationEnforced: true,
     n8nPipelines: [
-      "W1_order_fulfillment_router",
-      "W2_approval_and_publish",
-      "W3_monthly_plan_content",
-      "W4_error_handler",
-      "W5_agency_daily_autopost",
+      "SUTRA_MASTER_RENDER_LOCAL_HYBRID",
     ],
   });
 }
@@ -63,7 +59,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const n8nWorkflowId = "W1_order_fulfillment_router";
+    const n8nWorkflowId = "SUTRA_MASTER_RENDER_LOCAL_HYBRID";
 
     const n8nResult = await N8nAutomationService.dispatchWorkflow({
       workflowId: n8nWorkflowId,

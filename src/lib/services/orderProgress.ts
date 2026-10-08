@@ -239,7 +239,7 @@ export function computeN8nWorkflowProgress(order?: any, workflowIdOverride?: str
   const wfId =
     workflowIdOverride ||
     order?.workflowId ||
-    (order?.type === "monthly_plan" ? "W3_monthly_plan_content" : "W1_order_fulfillment_router");
+    "SUTRA_MASTER_RENDER_LOCAL_HYBRID";
 
   const wfStatus = order?.workflowStatus || "idle";
   const orderStatus = order?.status || "pending";

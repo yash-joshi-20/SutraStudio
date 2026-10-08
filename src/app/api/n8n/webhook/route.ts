@@ -46,7 +46,7 @@ export async function POST(req: Request) {
         if (!order.workflowHistory) order.workflowHistory = [];
         order.workflowHistory.push({
           runId: runId || `run_${Date.now()}`,
-          workflowId: workflowId || "W1_order_fulfillment_router",
+          workflowId: workflowId || "SUTRA_MASTER_RENDER_LOCAL_HYBRID",
           status: status || "completed",
           timestamp: now,
           deliverableUrl: deliverableUrl || (deliverables && deliverables[0]?.previewUrl),
@@ -211,11 +211,7 @@ export async function GET() {
     status: "online",
     authRequirement: "x-sutra-secret header",
     activePipelines: [
-      { id: "W1_order_fulfillment_router", name: "Order Fulfillment Router" },
-      { id: "W2_approval_and_publish", name: "Post-Approval Meta & IG Publisher" },
-      { id: "W3_monthly_plan_content", name: "Monthly Retainer Content Generator" },
-      { id: "W4_error_handler", name: "Global Execution Error Handler" },
-      { id: "W5_agency_daily_autopost", name: "Agency Daily Social Autoposter" },
+      { id: "SUTRA_MASTER_RENDER_LOCAL_HYBRID", name: "Sutra Master Creative & Software Engine" },
     ],
   });
 }

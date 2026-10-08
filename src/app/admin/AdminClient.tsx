@@ -599,18 +599,13 @@ function AdminHubContent() {
   const [assignedMemberId, setAssignedMemberId] = useState("");
 
   const [dispatchingOrderWf, setDispatchingOrderWf] = useState<string | null>(null);
-  const [selectedWfId, setSelectedWfId] = useState<string>("SUTRA_MASTER_AUTONOMOUS_PIPELINE");
+  const [selectedWfId, setSelectedWfId] = useState<string>("SUTRA_MASTER_RENDER_LOCAL_HYBRID");
   const [wfDispatchFeedback, setWfDispatchFeedback] = useState<{ success: boolean; message: string; runId?: string } | null>(null);
 
-  // Auto-select corresponding n8n workflow based on order category and status
+  // Default to the single Sutra Master Creative Engine for all orders
   useEffect(() => {
-    if (!inspectingAdminOrder) return;
-    if (inspectingAdminOrder.status === "approved") {
-      setSelectedWfId("W2_approval_and_publish");
-    } else {
-      setSelectedWfId("SUTRA_MASTER_AUTONOMOUS_PIPELINE");
-    }
-  }, [inspectingAdminOrder?.id, inspectingAdminOrder?.status, inspectingAdminOrder?.service, inspectingAdminOrder?.title, inspectingAdminOrder?.type]);
+    setSelectedWfId("SUTRA_MASTER_RENDER_LOCAL_HYBRID");
+  }, [inspectingAdminOrder?.id]);
   // External Manual Orders & Multi-Channel Payment Inflow State
   const [isRecordExternalModalOpen, setIsRecordExternalModalOpen] = useState(false);
   const [isSopGuideModalOpen, setIsSopGuideModalOpen] = useState(false);
@@ -5836,30 +5831,15 @@ const [adminDataError, setAdminDataError] = useState("");
                                   <label className="text-[11px] font-bold text-[#64748B] block">
                                     Target n8n Autonomous Workflow Engine:
                                   </label>
-                                  <select
-                                    value={selectedWfId}
-                                    onChange={(e) => setSelectedWfId(e.target.value)}
-                                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] font-medium focus:outline-none focus:border-[#D4A35A]"
-                                  >
-                                    <option value="SUTRA_MASTER_AUTONOMOUS_PIPELINE">
-                                      ★ Master Autonomous Creative Pipeline (All 12 Services + Retainers)
-                                    </option>
-                                    <option value="SUTRA_MASTER_RENDER_LOCAL_HYBRID">
-                                      ⚡ Master Engine (Render Live + Local n8n Hybrid)
-                                    </option>
-                                    <option value="W1_order_fulfillment_router">
-                                      W1: Order Fulfillment Router (4K Render / Video Reel / 3D / Ads)
-                                    </option>
-                                    <option value="W2_approval_and_publish">
-                                      W2: Client Approval & Social Media Multi-Publisher
-                                    </option>
-                                    <option value="W3_monthly_plan_content">
-                                      W3: Monthly Retainer Automated Calendar Generator
-                                    </option>
-                                    <option value="W5_agency_daily_autopost">
-                                      W5: Agency Daily Automated Social Publisher
-                                    </option>
-                                  </select>
+                                  <div className="w-full px-3 py-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-xs text-[#0F172A] font-semibold flex items-center justify-between shadow-2xs">
+                                    <div className="flex items-center gap-2 truncate">
+                                      <span className="w-2 h-2 rounded-full bg-[#16A34A] shrink-0 animate-pulse" />
+                                      <span className="truncate">★ Sutra Master Creative Engine (Render Live + Local n8n)</span>
+                                    </div>
+                                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[#EADFCB]/60 text-[#5C3A1E] font-bold shrink-0">
+                                      Master Engine
+                                    </span>
+                                  </div>
                                 </div>
 
                                 <div className="sm:col-span-4 flex items-end">
@@ -6161,7 +6141,7 @@ const [adminDataError, setAdminDataError] = useState("");
                               <Button
                                 variant="secondary"
                                 size="sm"
-                                onClick={() => handleDispatchOrderToN8n(inspectingAdminOrder, "W2_approval_and_publish")}
+                                onClick={() => handleDispatchOrderToN8n(inspectingAdminOrder, "SUTRA_MASTER_RENDER_LOCAL_HYBRID")}
                                 leftIcon={<Zap className="w-3.5 h-3.5 text-[#D4A35A]" />}
                                 className="text-xs"
                               >

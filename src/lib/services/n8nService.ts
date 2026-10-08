@@ -10,12 +10,8 @@ import { readEnv, readPublicEnv } from "@/lib/config/env";
 
 export interface N8nWorkflowPayload {
   workflowId:
-    | "SUTRA_MASTER_AUTONOMOUS_PIPELINE"
-    | "W1_order_fulfillment_router"
-    | "W2_approval_and_publish"
-    | "W3_monthly_plan_content"
-    | "W4_error_handler"
-    | "W5_agency_daily_autopost"
+    | "SUTRA_MASTER_RENDER_LOCAL_HYBRID"
+    | "sutra-master-dispatch"
     | string;
   orderId?: string;
   clientId?: string;
@@ -177,17 +173,11 @@ export class N8nAutomationService {
     const n8nBaseUrl = this.getN8nBaseUrl();
     const explicitWebhook = readEnv("N8N_MASTER_DISPATCH_WEBHOOK");
 
-    // Gather candidate paths to ensure both live hybrid engine and master pipelines are discovered
+    // Target the single master hybrid engine webhook
     const pathsToTry = new Set<string>();
-    if (payload.workflowId === "SUTRA_MASTER_RENDER_LOCAL_HYBRID" || payload.workflowId === "sutra-master-dispatch") {
-      pathsToTry.add("sutra-master-dispatch");
-    } else if (payload.workflowId === "SUTRA_MASTER_AUTONOMOUS_PIPELINE") {
-      pathsToTry.add("sutra-master-dispatch");
-      pathsToTry.add("sutra-master-pipeline");
-    } else {
-      if (payload.workflowId) pathsToTry.add(payload.workflowId);
-      pathsToTry.add("sutra-master-dispatch");
-      pathsToTry.add("sutra-master-pipeline");
+    pathsToTry.add("sutra-master-dispatch");
+    if (payload.workflowId && payload.workflowId !== "SUTRA_MASTER_RENDER_LOCAL_HYBRID") {
+      pathsToTry.add(payload.workflowId);
     }
 
     const candidateUrls: string[] = [];

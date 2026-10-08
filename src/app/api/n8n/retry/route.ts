@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
     // Dispatch via N8nAutomationService
     const result = await N8nAutomationService.dispatchWorkflow({
-      workflowId: workflowId || order.workflowId || "W1_order_fulfillment_router",
+      workflowId: workflowId || order.workflowId || "SUTRA_MASTER_RENDER_LOCAL_HYBRID",
       orderId: order.id,
       clientId: order.clientUid || order.clientId,
       service: order.service || order.title,
