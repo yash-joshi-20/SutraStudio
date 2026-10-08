@@ -35,16 +35,8 @@ export const metadata: Metadata = {
   },
   description:
     "Enterprise creative technology atelier delivering 4K photorealistic product renders, 3D architectural spatial systems, 360 virtual tours, and bespoke web applications with zero hidden fees.",
-  keywords: [
-    "Enterprise creative technology",
-    "4K photorealistic product renders",
-    "3D architectural spatial systems",
-    "360 virtual tours",
-    "Bespoke software architecture",
-    "Sutra Studio India",
-    "Digital architecture atelier",
-    "Creative technology firm",
-  ],
+  keywords:
+    "Enterprise creative technology, 4K photorealistic product renders, 3D architectural spatial systems, 360 virtual tours, Bespoke software architecture, Sutra Studio India, Digital architecture atelier, Creative technology firm",
   alternates: {
     canonical: baseUrl,
   },
@@ -73,11 +65,6 @@ export const metadata: Metadata = {
     images: ["/brand/sutra-logo-primary.png"],
   },
   manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Sutra Studio",
-  },
   icons: {
     icon: "/brand/sutra-favicon.png",
     apple: "/brand/sutra-app-icon.png",
@@ -192,6 +179,8 @@ export default function RootLayout({
         className="min-h-full flex flex-col bg-[var(--background)] text-[var(--foreground)] overflow-x-hidden w-full relative selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]"
       >
         <script
+          id="sutra-schema-jsonld"
+          key="sutra-schema-jsonld"
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />

@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   turbopack: {},
+  experimental: {
+    cpus: 2,
+    workerThreads: false,
+  },
   images: {
     remotePatterns: [
       {

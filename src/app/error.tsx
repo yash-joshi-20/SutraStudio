@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { RotateCcw, AlertTriangle, Home, Mail } from "lucide-react";
 
-export default function GlobalError({
+export default function ErrorBoundary({
   error,
   reset,
 }: {
