@@ -29,7 +29,7 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     category: "Creative",
     tagline: "Product, Ads, Mockups",
     description:
-      "High-fidelity AI generated and human-perfected commercial product imagery, luxury brand mockups, and advertising visual assets.",
+      "High-fidelity computationally engineered and human-perfected commercial product imagery, luxury brand mockups, and advertising visual assets.",
     workflow: "image",
     startingPrice: "₹499",
     priceDisplay: "₹499 for 5x 4K Photorealistic Master Renders (~₹100/image)",
@@ -274,7 +274,7 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     startingPrice: "₹15,999",
     deliverables: ["Automated Workflow Blueprints", "Webhook Security Verification", "Cloud Vault Automated Pipeline"],
     icon: "Cpu",
-    thumbnail: "https://image.pollinations.ai/prompt/futuristic%20autonomous%20ai%20workflow%20engine%20core%2C%20glowing%20gold%20neural%20fibers%2C%20cybernetic%20luxury%20server%2C%20dark%20bronze%2C%208k?width=1200&height=800&nologo=true",
+    thumbnail: "https://image.pollinations.ai/prompt/futuristic%20autonomous%20studio%20workflow%20engine%20core%2C%20glowing%20gold%20neural%20fibers%2C%20cybernetic%20luxury%20server%2C%20dark%20bronze%2C%208k?width=1200&height=800&nologo=true",
     badge: "Automation",
     mediaType: "code",
     mediaFormat: "Cloud Workflow Engine + Secure Webhooks",

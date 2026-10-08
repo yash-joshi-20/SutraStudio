@@ -28,7 +28,7 @@ interface MetaAdCreativeMockupProps {
 export function MetaAdCreativeMockup({
   className = "",
   adTitle = "Sutra Studio • Meta Growth Pipeline",
-  headline = "Transform your brand with 4K AI generation & Vedic spatial craft.",
+  headline = "Transform your brand with 4K CGI visuals & Vedic spatial craft.",
   creativeImageUrl = "https://image.pollinations.ai/prompt/architectural%20interior%20rendering%2C%20minimalist%20luxury%20living%20space%2C%20intricate%20golden%20jali%20screens%2C%20calacatta%20gold%20marble%20floors%2C%20recessed%203000k%20warm%20led%2C%20hasselblad%20photography%2C%208k?width=1200&height=800&nologo=true",
   ctaText = "Book Studio Pipeline",
   ctaHref = "/orders?service=meta-ads-launcher",
@@ -191,10 +191,10 @@ export function MetaAdCreativeMockup({
         <div className="text-xs text-[#171717] space-y-1">
           <p className="leading-relaxed">
             <span className="font-bold mr-1.5">yashsutrastudio</span>
-            Elevate your creative presence with high-converting Meta Ad campaigns powered by Indian aesthetic symmetry, AI generation speed, and precision human art direction.
+            Elevate your creative presence with high-converting Meta Ad campaigns powered by Indian aesthetic symmetry, computational rendering speed, and precision human art direction.
           </p>
           <p className="text-[11px] text-[#A98B57] font-medium">
-            #SutraStudio #GenerativeAI #CreativeTech #MetaAds #BrandGrowth #VedicDesign
+            #SutraStudio #SpatialDesign #CreativeTech #MetaAds #BrandGrowth #VedicDesign
           </p>
         </div>
       </div>

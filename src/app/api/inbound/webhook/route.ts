@@ -266,7 +266,7 @@ export async function POST(req: Request) {
       success: true,
       inquiryId,
       inquiry: inquiryRecord,
-      message: `Inquiry successfully processed by Gemini AI concierge and recorded to admin_inquiries.`,
+      message: `Inquiry successfully processed by studio concierge and recorded to admin_inquiries.`,
     });
   } catch (error: any) {
     console.error("[Inbound Webhook Root Error]", error);

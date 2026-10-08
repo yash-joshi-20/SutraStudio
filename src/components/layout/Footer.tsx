@@ -27,7 +27,7 @@ export function Footer() {
     { label: "3D Modeling & Spatial", href: "/services" },
     { label: "Interior & Architectural", href: "/services" },
     { label: "Web & App Flagships", href: "/services" },
-    { label: "AI Creative Automation", href: "/services" },
+    { label: "Digital Workflow Automation", href: "/services" },
   ];
 
   const studioLinks = [
@@ -52,7 +52,7 @@ export function Footer() {
 // on the public footer. It is only reachable by an account that already
 // carries the role:"admin" custom claim.
   const operationLinks = [
-    { label: "Sutra AI Assistant", href: "/chat" },
+    { label: "Sutra Studio Concierge", href: "/chat" },
     { label: "Account Profile", href: "/profile" },
     { label: "Offline Mode", href: "/offline" },
   ];
@@ -76,7 +76,7 @@ export function Footer() {
               Ready to elevate your digital presence?
             </h3>
             <p className="text-sm text-[#64748B] max-w-xl">
-              Partner with Sutra Studio for world-class AI, design, 3D, and development solutions.
+              Partner with Sutra Studio for world-class design, 3D spatial, and software engineering solutions.
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-3 w-full md:w-auto">
@@ -103,7 +103,7 @@ export function Footer() {
             <SutraLogo variant="horizontal" size="md" href="/" />
             <p className="text-sm text-[#64748B] max-w-sm leading-relaxed mt-4">
               A high-precision creative technology studio rooted in traditional
-              Indian aesthetics, powered by state-of-the-art AI generation and
+              Indian aesthetics, powered by state-of-the-art computational rendering and
               digital craftsmanship.
             </p>
             <div className="pt-2 flex flex-col gap-3">
@@ -258,7 +258,7 @@ export function Footer() {
           <div className="space-y-3 pb-4 border-b border-[#EADFCB]/60">
             <SutraLogo variant="horizontal" size="sm" href="/" />
             <p className="text-xs text-[#64748B] leading-relaxed">
-              Traditional Indian aesthetic principles fused with high-velocity AI generation and modern engineering.
+              Traditional Indian aesthetic principles fused with high-velocity spatial computing and modern engineering.
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-[11px] text-[#5C3A1E]">

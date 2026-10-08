@@ -232,7 +232,7 @@ export function SutraStudioIntroLanding({
               transition={{ duration: 0.8, delay: 0.8 }}
               className="text-xs sm:text-sm font-sans tracking-[0.25em] text-[#5C3A1E] uppercase font-medium"
             >
-              Indian Heritage • Generative AI • Creative Engineering
+              Indian Heritage • Spatial Design • Creative Engineering
             </motion.p>
           </motion.div>
 

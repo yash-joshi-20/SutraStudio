@@ -283,7 +283,7 @@ export class ChatToolsService {
     NotificationsStore.add({
       userId: clientUid,
       type: "order_placed",
-      title: "Order Placed via AI Concierge",
+      title: "Order Placed via Studio Concierge",
       message: `Commission #${orderNumber} for ${primaryServiceName} is registered & confirmed. Our team has queued it for production.`,
       orderId,
       orderNumber,

@@ -63,12 +63,12 @@ const FILTER_CATEGORIES = [
 ];
 
 const HERO_DISCIPLINES = [
-  { id: "visuals", label: "4K AI Visuals", output: "4K UHD PNG / TIFF", price: "₹499" },
-  { id: "video", label: "Cinematic Reels", output: "ProRes 422 60FPS", price: "₹1,499" },
-  { id: "3d", label: "3D Spatial Meshes", output: "GLB / OBJ / USDZ", price: "Custom Quote" },
-  { id: "interior", label: "Architectural Living", output: "8K Photorealistic", price: "Custom Quote" },
-  { id: "meta", label: "Meta Ads Launcher", output: "Multi-Ratio Ad Bundles", price: "Custom Quote" },
-  { id: "web", label: "Full-Stack Web/App", output: "High-Performance Web", price: "Custom Quote" },
+  { id: "visuals", label: "4K Key Visuals", output: "4K UHD PNG / TIFF", price: "₹3,499" },
+  { id: "video", label: "Cinematic Reels", output: "ProRes 422 60FPS", price: "₹7,999" },
+  { id: "3d", label: "3D Spatial Meshes", output: "GLB / OBJ / USDZ", price: "₹7,999" },
+  { id: "interior", label: "Architectural Living", output: "8K Photorealistic", price: "₹7,999" },
+  { id: "meta", label: "Meta Ads Launcher", output: "Multi-Ratio Ad Bundles", price: "₹3,499" },
+  { id: "web", label: "Full-Stack Web/App", output: "High-Performance Web", price: "Custom" },
 ];
 
 export default function HomePage() {
@@ -118,13 +118,13 @@ export default function HomePage() {
 
                   {/* Main Display Headline */}
                   <h1 className="hero-heading font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold leading-[1.06] tracking-tight text-[#0F172A]">
-                    <span className="text-gold-gradient font-bold">Tradition</span> Meets Modern AI Engineering
+                    <span className="text-gold-gradient font-bold">Tradition</span> Meets Modern Computational Engineering
                   </h1>
 
                   {/* Subtitle */}
                   <p className="hero-subhead text-base sm:text-lg text-[#64748B] max-w-xl leading-relaxed font-sans">
-                    AI-Powered Creative, Design, Development &amp; Digital Marketing
-                    Solutions for Modern Businesses. Rooted in traditional Indian
+                    Bespoke Creative Technology, 3D Spatial Design, Full-Stack Engineering &amp;
+                    Digital Marketing Solutions. Rooted in traditional Indian
                     symmetry, executed with high-precision autonomous pipelines.
                   </p>
 
@@ -182,7 +182,7 @@ export default function HomePage() {
                         leftIcon={<Bot className="w-4 h-4 text-[#D4A35A]" />}
                         className="w-full sm:w-auto justify-center text-[#5C3A1E] hover:bg-[#F4EFE6]"
                       >
-                        AI Concierge
+                        Studio Concierge
                       </Button>
                     </Link>
                   </div>
@@ -203,7 +203,7 @@ export default function HomePage() {
                         Autonomous
                       </p>
                       <p className="text-xs text-[#64748B] mt-0.5 font-medium">
-                        AI Creative Pipelines
+                        Studio Production Pipelines
                       </p>
                     </div>
 
@@ -385,8 +385,8 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
             <SectionHeader
               badge="WHY SUTRA STUDIO"
-              title="Why Pay Sutra Studio vs Free AI, Freelancers &amp; Agencies?"
-              subtitle="Free AI generates distorted drafts. Freelancers are fragmented. Big agencies charge ₹2,00,000/mo. Sutra Studio blends AI computational speed with Senior Human Art Direction for production-ready perfection in 24–48 hours."
+              title="Why Pay Sutra Studio vs Freelancers &amp; Traditional Agencies?"
+              subtitle="Generic online tools produce distorted drafts. Freelancers are fragmented. Big agencies charge ₹2,00,000/mo. Sutra Studio blends computational rendering speed with Senior Human Art Direction for production-ready perfection in 24–48 hours."
               className="text-center"
             />
 
@@ -449,15 +449,15 @@ export default function HomePage() {
 
               {/* Responsive Grid Matrix */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* 1. Free AI Tools */}
+                {/* 1. Generic Online Tools */}
                 <div className="p-6 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8] flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">Option 1</span>
                       <span className="text-xs font-bold text-[#64748B] bg-[#E5E1D8]/60 px-2.5 py-0.5 rounded-full">Free / ₹1.5k/mo</span>
                     </div>
-                    <h4 className="font-serif text-lg font-bold text-[#0F172A] mb-2">Free AI Tools</h4>
-                    <p className="text-xs text-[#64748B] mb-5 leading-relaxed">ChatGPT, Midjourney prompt-and-pray generators.</p>
+                    <h4 className="font-serif text-lg font-bold text-[#0F172A] mb-2">Generic Online Generators</h4>
+                    <p className="text-xs text-[#64748B] mb-5 leading-relaxed">Uncalibrated prompt-and-pray generators.</p>
                     
                     <ul className="space-y-3 text-xs text-[#64748B]">
                       <li className="flex items-start gap-2">
@@ -565,7 +565,7 @@ export default function HomePage() {
                       <span className="text-xs font-bold text-[#5C3A1E] bg-[#D4A35A]/20 px-2.5 py-0.5 rounded-full">From ₹499</span>
                     </div>
                     <h4 className="font-serif text-lg font-bold text-[#0F172A] mb-2">Autonomous Atelier</h4>
-                    <p className="text-xs text-[#64748B] mb-5 leading-relaxed">AI speed + Senior Art Director Polish + Cloud Vault.</p>
+                    <p className="text-xs text-[#64748B] mb-5 leading-relaxed">Computational speed + Senior Art Director Polish + Cloud Vault.</p>
                     
                     <ul className="space-y-3 text-xs text-[#171717]">
                       <li className="flex items-start gap-2">
@@ -915,18 +915,18 @@ export default function HomePage() {
                 <div className="flex-1 space-y-4 text-center md:text-left">
                   <div>
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-xs font-semibold text-[#A98B57] uppercase tracking-wider mb-2">
-                      <span>Founder &amp; Principal AI Architect</span>
+                      <span>Founder &amp; Principal Creative Technologist</span>
                     </div>
                     <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#0F172A]">
                       Yash Joshi
                     </h3>
                     <p className="text-xs text-[#64748B] font-mono mt-0.5">
-                      Sutra Studio Atelier • Creative Technology &amp; Generative Engineering
+                      Sutra Studio Atelier • Creative Technology &amp; Spatial Systems Engineering
                     </p>
                   </div>
 
                   <p className="text-sm text-[#475569] leading-relaxed max-w-2xl">
-                    Leading the synthesis of classical Indian aesthetic doctrines (Pramana, Rasa, Yantra) with autonomous generative AI workflows, 4K rendering pipelines, and high-conversion commercial digital experiences.
+                    Leading the synthesis of classical Indian aesthetic doctrines (Pramana, Rasa, Yantra) with modern spatial workflows, 4K rendering pipelines, and high-conversion commercial digital experiences.
                   </p>
 
                   <div className="pt-2 flex flex-wrap items-center justify-center md:justify-start gap-3">
@@ -1005,7 +1005,7 @@ export default function HomePage() {
                   size="lg"
                   leftIcon={<Bot className="w-4 h-4 text-[#D4A35A]" />}
                 >
-                  Consult AI Assistant
+                  Consult Studio Concierge
                 </Button>
               </Link>
             </div>
@@ -1021,7 +1021,7 @@ export default function HomePage() {
         isOpen={demoModalOpen}
         onClose={() => setDemoModalOpen(false)}
         title="Sutra Studio — Creative Showreel &amp; Capabilities"
-        description="A curated montage of our generative visual, 3D spatial, and architectural work."
+        description="A curated montage of our commercial visual, 3D spatial, and architectural work."
         maxWidth="lg"
       >
         <div className="w-full">

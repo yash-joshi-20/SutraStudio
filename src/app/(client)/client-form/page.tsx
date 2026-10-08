@@ -279,7 +279,7 @@ export default function ClientFormPage() {
       {
         id: `faq-${Date.now()}`,
         question: "New Frequently Asked Question?",
-        answer: "Detailed, verified answer to assist website visitors and the AI assistant.",
+        answer: "Detailed, verified answer to assist website visitors and the client concierge.",
         category: "General",
       },
     ]);

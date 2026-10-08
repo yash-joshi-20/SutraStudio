@@ -37,7 +37,7 @@ export function KPITile({
 
 export function EmptyState({
   title = "No items yet",
-  description = "Your workspace is ready. Place an order or start a conversation with the AI assistant.",
+  description = "Your workspace is ready. Place an order or start a conversation with the Studio Concierge.",
   actionLabel,
   actionHref,
   onAction,

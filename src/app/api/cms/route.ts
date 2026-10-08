@@ -4,7 +4,7 @@ import { AuditLogService } from "@/lib/services/auditLogService";
 
 const DEFAULT_SITE_CONTENT = {
   hero: {
-    tagline: "AUTONOMOUS AI CREATIVE & SPATIAL 3D STUDIO",
+    tagline: "ENTERPRISE CREATIVE TECHNOLOGY & SPATIAL 3D STUDIO",
     title: "Tradition Meets Computational Technology",
     description:
       "Sutra Studio delivers bespoke 3D architectural renders, cinematic commercial video reels, and autonomous creative pipelines engineered with timeless aesthetic rigor.",

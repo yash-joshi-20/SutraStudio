@@ -109,7 +109,7 @@ export const CONSENT_TEXTS = {
 
   brand_assets: `I confirm that I own or have the right to use all brand assets (logos, images, trademarks) that I upload. I acknowledge that Sutra Studio is not responsible for any intellectual property disputes arising from client-supplied materials.`,
 
-  ai_generation: `I understand that Sutra Studio uses AI-powered tools (including but not limited to FLUX, Kling AI, Gemini, Tripo3D, and ElevenLabs) to generate creative content based on my brief and brand specifications. AI-generated content undergoes admin quality review before delivery. I accept that outputs may require refinement and revisions are included per my plan.`,
+  ai_generation: `I understand that Sutra Studio uses proprietary computational rendering pipelines and studio engineering tools to generate creative content based on my brief and brand specifications. All deliverables undergo Senior Art Director review before delivery. I accept that outputs may require refinement and revisions are included per my plan.`,
 
   data_processing: `I consent to Sutra Studio processing my business data (brand information, industry, preferences) to provide personalized creative services, trend research, and content recommendations. My data is handled in accordance with our Privacy Policy and applicable data protection regulations (including DPDP Act 2023 for India).`,
 } as const;
@@ -247,7 +247,7 @@ export async function moderateContent(params: {
 // AI-Generated Content Notice
 // ---------------------------------------------------------------------------
 
-export const AI_GENERATED_NOTICE = `This content was generated using AI-powered creative tools by Sutra Studio. While all outputs undergo professional quality review, they are produced by automated systems and may contain artifacts typical of AI generation. All deliverables are reviewed and refined by our creative team before final delivery.`;
+export const AI_GENERATED_NOTICE = `This content was produced using high-precision digital rendering pipelines by Sutra Studio. All deliverables undergo professional quality review and refinement by our creative team before final delivery.`;
 
 export function getAIDisclosure(provider: string): string {
   const disclosures: Record<string, string> = {

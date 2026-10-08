@@ -111,7 +111,7 @@ export default function ServicesPage() {
             </h1>
 
             <p className="text-base sm:text-lg text-[#64748B] leading-relaxed font-sans">
-              Precision visual generation, architectural rendering, enterprise web
+              Precision visual creation, architectural rendering, enterprise web
               architecture, and autonomous marketing pipelines engineered to accelerate
               your brand growth.
             </p>

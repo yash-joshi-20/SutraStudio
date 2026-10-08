@@ -46,7 +46,7 @@ const STATUS_MAP: Record<string, { label: string; tone: StatusTone }> = {
   pending_payment: { label: "Awaiting payment", tone: "pending" },
   paid: { label: "Payment received", tone: "completed" },
   queued: { label: "Queued", tone: "neutral" },
-  ai_processing: { label: "AI working", tone: "progress" },
+  ai_processing: { label: "Studio in production", tone: "progress" },
   draft_ready: { label: "Ready for review", tone: "review" },
   in_review: { label: "In review", tone: "review" },
   revision_requested: { label: "Revision requested", tone: "pending" },
