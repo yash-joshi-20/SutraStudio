@@ -767,7 +767,7 @@ export function FloatingChatModal() {
         <button
           onClick={() => setIsOpen(true)}
           aria-label="Open Sutra Studio Concierge"
-          className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-[var(--z-launcher)] w-14 h-14 sm:w-auto sm:h-auto rounded-full flex items-center justify-center p-0 sm:px-4 sm:py-2.5 sm:gap-3 bg-[#171717]/95 backdrop-blur-md text-[#FAF9F5] border border-[#A98B57]/60 shadow-2xl hover:bg-[#262626] hover:scale-105 active:scale-95 transition-all cursor-pointer group"
+          className="fixed bottom-20 right-4 z-40 md:bottom-6 md:right-6 w-14 h-14 sm:w-auto sm:h-auto rounded-full flex items-center justify-center p-0 sm:px-4 sm:py-2.5 sm:gap-3 bg-[#171717]/95 backdrop-blur-md text-[#FAF9F5] border border-[#A98B57]/60 shadow-2xl hover:bg-[#262626] hover:scale-105 active:scale-95 transition-all cursor-pointer group"
         >
           <div className="relative w-full h-full sm:w-8 sm:h-8 flex items-center justify-center shrink-0 p-2 sm:p-0">
             <img

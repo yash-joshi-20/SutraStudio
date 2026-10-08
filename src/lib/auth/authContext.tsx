@@ -168,6 +168,8 @@ function friendlyAuthError(code?: string, fallbackMessage?: string): string {
         return "That email is already registered with a different sign-in method.";
       case "auth/requires-recent-login":
         return "For security, please sign in again before making this change.";
+      case "auth/unauthorized-domain":
+        return "Authentication domain notice: Ensure sutrastudio-1.onrender.com is added to Firebase Console > Authentication > Settings > Authorized Domains.";
     }
   }
   return fallbackMessage && fallbackMessage !== "[object Object]"

@@ -27,11 +27,11 @@ interface Interactive3DViewerProps {
 
 const PRESET_MODELS = [
   {
-    id: "chair",
-    name: "Luxury Silk Armchair",
-    url: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/SheenChair/glTF-Binary/SheenChair.glb",
-    polyCount: "42.8k Polys",
-    material: "Velvet Sheen & Teak",
+    id: "tablet",
+    name: "Sutra Studio Luxury Tablet",
+    url: "sutra-tablet",
+    polyCount: "86.4k Polys",
+    material: "Obsidian & 24K Brass PBR",
   },
   {
     id: "pedestal",
@@ -65,6 +65,130 @@ export function Interactive3DViewer({
   const animFrameIdRef = useRef<number | null>(null);
   const currentModelGroupRef = useRef<THREE.Group | null>(null);
   const initialCameraPosRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 1.2, 2.5));
+
+  // Build Procedural Luxury Tablet Monolith (Branded Studio UI)
+  const buildProceduralTablet = useCallback((): THREE.Group => {
+    const group = new THREE.Group();
+
+    // 1. Tablet Obsidian Chassis (Chamfered look)
+    const chassisGeo = new THREE.BoxGeometry(1.25, 1.7, 0.05);
+    const obsidianMat = new THREE.MeshStandardMaterial({
+      color: 0x141210,
+      metalness: 0.95,
+      roughness: 0.15,
+    });
+    const chassisMesh = new THREE.Mesh(chassisGeo, obsidianMat);
+    chassisMesh.position.y = 0.85;
+    chassisMesh.castShadow = true;
+    chassisMesh.receiveShadow = true;
+    group.add(chassisMesh);
+
+    // 2. 24K Brass Perimeter Bezel Trim
+    const trimGeo = new THREE.BoxGeometry(1.28, 1.73, 0.045);
+    const goldMat = new THREE.MeshStandardMaterial({
+      color: 0xd4a35a,
+      metalness: 0.9,
+      roughness: 0.2,
+      emissive: 0x5c3a1e,
+      emissiveIntensity: 0.1,
+    });
+    const trimMesh = new THREE.Mesh(trimGeo, goldMat);
+    trimMesh.position.y = 0.85;
+    group.add(trimMesh);
+
+    // 3. Screen Canvas Texture with Sutra Studio UI
+    let screenTex: THREE.Texture;
+    if (typeof document !== "undefined") {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1024;
+      canvas.height = 1024;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        const grad = ctx.createLinearGradient(0, 0, 1024, 1024);
+        grad.addColorStop(0, "#0F172A");
+        grad.addColorStop(0.5, "#1E1B18");
+        grad.addColorStop(1, "#0B0F19");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 1024, 1024);
+
+        ctx.strokeStyle = "rgba(212, 163, 90, 0.4)";
+        ctx.lineWidth = 14;
+        ctx.strokeRect(30, 30, 964, 964);
+
+        ctx.fillStyle = "#D4A35A";
+        ctx.font = "bold 28px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("✦ SUTRA STUDIO ATELIER ✦", 512, 170);
+
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "bold 56px serif";
+        ctx.fillText("Tradition Meets", 512, 270);
+        ctx.fillStyle = "#D4A35A";
+        ctx.fillText("Technology", 512, 340);
+
+        // Sacred geometry mandala
+        ctx.save();
+        ctx.translate(512, 530);
+        ctx.strokeStyle = "#D4A35A";
+        ctx.lineWidth = 4;
+        for (let i = 0; i < 8; i++) {
+          ctx.rotate(Math.PI / 4);
+          ctx.beginPath();
+          ctx.ellipse(0, 70, 32, 85, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.beginPath();
+        ctx.arc(0, 0, 28, 0, Math.PI * 2);
+        ctx.fillStyle = "#D4A35A";
+        ctx.fill();
+        ctx.restore();
+
+        ctx.fillStyle = "#E2E8F0";
+        ctx.font = "24px sans-serif";
+        ctx.fillText("Enterprise Software & 3D Spatial Systems", 512, 780);
+
+        ctx.fillStyle = "#D4A35A";
+        ctx.font = "bold 20px monospace";
+        ctx.fillText("4K PBR ENGINE • REAL-TIME WEBGL", 512, 830);
+      }
+      screenTex = new THREE.CanvasTexture(canvas);
+      screenTex.needsUpdate = true;
+    } else {
+      screenTex = new THREE.Texture();
+    }
+
+    const screenGeo = new THREE.PlaneGeometry(1.15, 1.6);
+    const screenMat = new THREE.MeshStandardMaterial({
+      map: screenTex,
+      roughness: 0.1,
+      metalness: 0.15,
+      emissive: 0x1a1612,
+      emissiveIntensity: 0.25,
+    });
+    const screenMesh = new THREE.Mesh(screenGeo, screenMat);
+    screenMesh.position.set(0, 0.85, 0.026);
+    group.add(screenMesh);
+
+    // 4. Stepped Calacatta Marble Pedestal Base with Brass Torus
+    const baseGeo = new THREE.CylinderGeometry(0.85, 0.95, 0.1, 48);
+    const marbleMat = new THREE.MeshStandardMaterial({
+      color: 0xfaf9f5,
+      roughness: 0.35,
+      metalness: 0.05,
+    });
+    const baseMesh = new THREE.Mesh(baseGeo, marbleMat);
+    baseMesh.position.y = -0.05;
+    baseMesh.receiveShadow = true;
+    group.add(baseMesh);
+
+    const brassRingGeo = new THREE.TorusGeometry(0.88, 0.02, 16, 64);
+    const ringMesh = new THREE.Mesh(brassRingGeo, goldMat);
+    ringMesh.rotation.x = Math.PI / 2;
+    ringMesh.position.y = 0;
+    group.add(ringMesh);
+
+    return group;
+  }, []);
 
   // Build Procedural Luxury Sculpture (Guaranteed Offline / Fallback)
   const buildProceduralSculpture = useCallback((): THREE.Group => {
@@ -151,6 +275,15 @@ export function Interactive3DViewer({
           }
         });
         currentModelGroupRef.current = null;
+      }
+
+      if (targetUrl === "sutra-tablet") {
+        const tabletGroup = buildProceduralTablet();
+        currentModelGroupRef.current = tabletGroup;
+        scene.add(tabletGroup);
+        setIsLoading(false);
+        setLoadProgress(100);
+        return;
       }
 
       if (targetUrl === "procedural-lotus") {
@@ -428,7 +561,7 @@ export function Interactive3DViewer({
                       : "text-[#64748B] hover:text-[#0F172A]"
                   }`}
                 >
-                  {preset.id === "chair" ? "Silk Chair" : "Gold Lotus"}
+                  {preset.id === "tablet" ? "Studio Tablet" : "Gold Lotus"}
                 </button>
               ))}
             </div>

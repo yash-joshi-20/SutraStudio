@@ -121,8 +121,8 @@ export function computeOrderProgress(order: any): OrderProgressInfo {
     case "in_production":
       return {
         percentage: 60,
-        stageName: "In Production Pipeline",
-        stageLabel: "In Production Pipeline",
+        stageName: "Visual Engineering Sprint in Progress",
+        stageLabel: "Visual Engineering Sprint in Progress",
         isComplete: false,
         statusCategory: "active",
       };
@@ -372,7 +372,7 @@ export function computeN8nWorkflowProgress(order?: any, workflowIdOverride?: str
       },
       {
         id: "w3_s2",
-        name: "Gemini Editorial Matrix",
+        name: "Editorial Content Matrix",
         description: "Generate 15-post multi-format calendar & captions",
         percentage: 45,
         isPassed: percentage >= 45,
@@ -445,8 +445,8 @@ export function computeN8nWorkflowProgress(order?: any, workflowIdOverride?: str
       },
       {
         id: "w1_s2",
-        name: "AI & Spatial Synthesis",
-        description: "Flux / Kling / Tripo3D generative asset rendering",
+        name: "Spatial & Visual Synthesis",
+        description: "High-precision 3D and cinematic asset rendering sprint",
         percentage: 50,
         isPassed: percentage >= 50,
         isCurrent: percentage >= 40 && percentage < 70,

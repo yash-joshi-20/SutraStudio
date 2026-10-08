@@ -63,7 +63,7 @@ export default function PricingPage() {
           </p>
 
           {/* Standalone Quick-Order Deliverables Banner */}
-          <div className="pt-2 pb-2 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto text-left">
+          <div className="pt-2 pb-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto text-left">
             {STANDALONE_PACKAGES.map((pack) => (
               <div
                 key={pack.id}

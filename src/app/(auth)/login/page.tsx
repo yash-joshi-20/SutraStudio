@@ -191,8 +191,12 @@ function ClientLoginForm() {
         const destination = safeReturnTo(rawParam, "client");
         window.location.replace(destination);
       }
-    } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Sign-in failed. Please try again.");
+    } catch (err: any) {
+      if (err?.code === "auth/unauthorized-domain" || err?.message?.includes("unauthorized domain") || err?.message?.includes("auth/unauthorized-domain")) {
+        setErrorMsg("Ensure sutrastudio-1.onrender.com is added to Firebase Console > Authentication > Settings > Authorized Domains.");
+      } else {
+        setErrorMsg(err instanceof Error ? err.message : "Sign-in failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -207,12 +211,16 @@ function ClientLoginForm() {
       soundSystem.play("welcome");
       const destination = safeReturnTo(rawParam, loggedIn.role);
       window.location.replace(destination);
-    } catch (err) {
-      setErrorMsg(
-        err instanceof Error
-          ? err.message
-          : "Google sign-in was cancelled or unavailable. Please use email and password."
-      );
+    } catch (err: any) {
+      if (err?.code === "auth/unauthorized-domain" || err?.message?.includes("unauthorized domain") || err?.message?.includes("auth/unauthorized-domain")) {
+        setErrorMsg("Ensure sutrastudio-1.onrender.com is added to Firebase Console > Authentication > Settings > Authorized Domains.");
+      } else {
+        setErrorMsg(
+          err instanceof Error
+            ? err.message
+            : "Google sign-in was cancelled or unavailable. Please use email and password."
+        );
+      }
     } finally {
       setLoading(false);
     }

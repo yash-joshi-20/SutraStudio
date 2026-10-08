@@ -240,8 +240,8 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
         type: "select",
         required: true,
         options: [
-          "Client Provided Script + Studio AI Voiceover",
-          "Full Sutra Studio Scriptwriting & Voiceover",
+          "Client Provided Script + Cinematic Studio Voice Direction",
+          "Full Sutra Studio Scriptwriting & Voice Direction",
           "Music & Sound Design Only (No Voiceover)",
           "Client Supplied Audio Master File",
         ],

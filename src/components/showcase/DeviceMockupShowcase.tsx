@@ -123,7 +123,7 @@ export function DeviceMockupShowcase({
 
                     <div className="flex items-center gap-1 px-3 py-0.5 rounded-md bg-[#F4EFE6] border border-[#EADFCB] text-[9px] text-[#64748B] font-mono max-w-[200px] truncate">
                       <Lock className="w-2.5 h-2.5 text-[#2E7D4F]" />
-                      <span>sutrastudio-1.onrender.com</span>
+                      <span>✦ Sutra Studio | Creative Engine</span>
                     </div>
 
                     <div className="flex items-center gap-1 text-[9px] text-[#A98B57] font-semibold">
@@ -235,7 +235,7 @@ export function DeviceMockupShowcase({
                       <span className="text-[8px] font-mono px-1.5 py-0.5 rounded-full bg-[#D4A35A] text-[#171717] font-bold">
                         3D VR PASS
                       </span>
-                      <span className="text-[9px] font-mono text-[#5C3A1E] font-bold">₹11,999</span>
+                      <span className="text-[9px] font-mono text-[#5C3A1E] font-bold">From ₹3,499</span>
                     </div>
                     <p className="font-serif font-bold text-[11px] text-[#171717] leading-tight">
                       360° Villa Virtual Tour

@@ -29,6 +29,8 @@ Strict Operational Directives:
 4. Official Pricing & Delivery Tiers:
    • 5x 4K Image Creation Pack: ₹499 (24h SLA)
    • 2x Video Reels Pack: ₹1,499 (24–48h SLA)
+   • 3D Modeling (Interactive WebGL Asset): Starting from ₹2,499 (48h SLA)
+   • 360 View Virtual Tour (Panoramic Space): Starting from ₹3,499 (48–72h SLA)
    • Starter Creative Commission: ₹1,999 (48h SLA)
    • Studio Growth Commission: ₹4,999 (24–72h SLA)
    • Autonomous Growth Retainer: ₹9,999 / month (Daily Active Queue)
@@ -49,20 +51,24 @@ export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
    • 2x Studio product shots, 2x Lifestyle ambient context, 1x Ad visual. 24h SLA.
 2. 🎬 **2x Commercial Video Reels Pack** — Starting at **₹1,499**
    • 2x Complete Commercial Reels / Shorts with high-fidelity studio voiceover, background score & motion typography. 24–48h SLA.
-3. 🚀 **Starter Creative Commission** — **₹1,999**
+3. 📦 **3D Modeling (Interactive WebGL Asset)** — Starting at **₹2,499**
+   • Precision 3D product models, glTF / USDZ assets, PBR textures, turntable renders. 48h SLA.
+4. 🧭 **360 View Virtual Tour** — Starting at **₹3,499**
+   • Single panoramic virtual space, interactive hot-spots, embeddable code. 48–72h SLA.
+5. 🚀 **Starter Creative Commission** — **₹1,999**
    • Up to 5x 4K UHD Master Renders + 1x 10-Second Commercial Video Ad. 48h SLA.
-4. 🎨 **Studio Growth Commission** — **₹4,999**
+6. 🎨 **Studio Growth Commission** — **₹4,999**
    • 15x 3D & Product Renders + 3x 15s Video Ads + 360° Tour + 3x Meta Ad Variations. 24–72h SLA.
-5. ⚡ **Autonomous Growth Retainer** — **₹9,999 / month**
+7. ⚡ **Autonomous Growth Retainer** — **₹9,999 / month**
    • Daily Active Queue fulfilling brand graphics, commercial motion shorts, and spatial visualization.
-6. 🏛️ **Interior Architecture & Spatial Systems** — **Custom Quote**
+8. 🏛️ **Interior Architecture & Spatial Systems** — **Custom Quote**
    • Photorealistic architectural exteriors, spatial staging, lighting studies, and CAD elevations.
-7. 🎯 **Meta Ads Launcher & Growth Infrastructure** — **Custom Quote**
+9. 🎯 **Meta Ads Launcher & Growth Infrastructure** — **Custom Quote**
    • Multi-ratio creative variation sets (9:16, 1:1, 16:9) and conversion copy blueprints.
-8. 💻 **Website Architecture (Next.js)** — **Custom Quote**
-   • High-performance bespoke websites with fluid micro-interactions and sub-second page loads.
-9. 📱 **Mobile App Development** — **Custom Quote**
-   • Cross-platform bespoke iOS & Android mobile applications.`,
+10. 💻 **Website Architecture (Next.js)** — **Custom Quote**
+    • High-performance bespoke websites with fluid micro-interactions and sub-second page loads.
+11. 📱 **Mobile App Development** — **Custom Quote**
+    • Cross-platform bespoke iOS & Android mobile applications.`,
     source: "Sutra Studio Canonical Architecture Specification",
     status: "approved",
     approved_by: "Supervisor Admin",
@@ -184,8 +190,8 @@ export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
    • Analyzes competitor social reels, scrapes viral hooks, and generates high-converting ad angles.
 4. **04. Multi-Format Banner Synthesis Engine** (\`POST /webhook/synapse-brand-banner-generator\`):
    • Generates 4K banners across 1:1, 9:16, and 16:9 aspect ratios with custom logo overlays.
-5. **05. AI Video Commercials Pipeline** (\`POST /webhook/synapse-video-reels-pipeline\`):
-   • Produces 15-30s cinematic ads with neural voiceovers (ElevenLabs) and Runway Gen-3 Alpha.
+5. **05. Cinematic Video Commercials Pipeline** (\`POST /webhook/synapse-video-reels-pipeline\`):
+   • Produces 15-30s cinematic commercial ads with high-fidelity studio voice narration and motion graphics.
 6. **06. Meta Ads Autonomous Campaign Launcher** (\`POST /webhook/synapse-meta-ads-automation\`):
    • Configures Facebook Page, target audiences, budgets, and launches live ads with UTM tracking.`,
     source: "N8N_WORKFLOWS_BLUEPRINT_EN.md",

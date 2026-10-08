@@ -136,13 +136,15 @@ function AdminLoginForm() {
       console.error("[Admin Login Error]", err);
       const code = (err as { code?: string })?.code ?? "";
       setErrorMsg(
-        code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found"
-          ? "Those sign-in details were not recognised. Please verify your administrator email and passkey."
-          : code === "auth/too-many-requests"
-            ? "Too many failed attempts. Please wait a moment and try again."
-            : err instanceof Error && err.message
-              ? err.message
-              : "Access denied: administrative clearance required."
+        code === "auth/unauthorized-domain"
+          ? "Ensure sutrastudio-1.onrender.com is added to Firebase Console > Authentication > Settings > Authorized Domains."
+          : code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found"
+            ? "Those sign-in details were not recognised. Please verify your administrator email and passkey."
+            : code === "auth/too-many-requests"
+              ? "Too many failed attempts. Please wait a moment and try again."
+              : err instanceof Error && err.message
+                ? err.message
+                : "Access denied: administrative clearance required."
       );
       setLoading(false);
     }
