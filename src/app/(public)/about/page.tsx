@@ -41,7 +41,7 @@ const PILLARS = [
     icon: Layers,
     sanskrit: "यन्त्र (Yantra)",
     title: "Algorithmic Precision",
-    desc: "Autonomous studio pipelines, generative diffusion models, and modern web architectures delivering accelerated commercial turnarounds.",
+    desc: "Autonomous studio pipelines, distributed rendering clusters, and modern web architectures delivering accelerated commercial turnarounds.",
   },
 ];
 
@@ -49,7 +49,7 @@ const MILESTONES = [
   {
     year: "2024",
     title: "Studio Inception",
-    desc: "Founded as an elite creative synthesis laboratory merging Indian design principles with emerging generative AI technologies.",
+    desc: "Founded as an elite creative synthesis laboratory merging Indian design principles with high-performance computational systems.",
   },
   {
     year: "2025",
@@ -59,7 +59,7 @@ const MILESTONES = [
   {
     year: "2026",
     title: "Autonomous Delivery Platform",
-    desc: "Integrated Firebase Cloud Firestore and automated delivery pipelines, launching the 24/7 client workspace and real-time AI Assistant.",
+    desc: "Integrated Firebase Cloud Firestore and automated delivery pipelines, launching the 24/7 client workspace and real-time Studio Concierge.",
   },
 ];
 
@@ -89,14 +89,14 @@ export default function AboutPage() {
                 </div>
 
                 <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold leading-[1.12] tracking-tight text-[#0F172A]">
-                  Bridging Millennia of <span className="text-gold-gradient">Indian Aesthetic Tradition</span> with Modern AI Engineering
+                  Bridging Millennia of <span className="text-gold-gradient">Indian Aesthetic Tradition</span> with Advanced Computational Engineering
                 </h1>
 
                 <p className="text-base sm:text-lg text-[#64748B] leading-relaxed font-sans">
                   &quot;Sutra&quot; translates from Sanskrit to an aphorism, a thread,
                   or a foundational principle connecting disparate disciplines into a
                   coherent whole. At Sutra Studio, we are the thread connecting classical
-                  artistic heritage with state-of-the-art generative intelligence.
+                  artistic heritage with state-of-the-art spatial and computational design.
                 </p>
 
                 <p className="text-sm text-[#475569] leading-relaxed">
@@ -300,18 +300,18 @@ export default function AboutPage() {
                 <div className="flex-1 space-y-4 text-center md:text-left">
                   <div>
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-xs font-semibold text-[#A98B57] uppercase tracking-wider mb-2">
-                      <span>Founder &amp; Principal AI Architect</span>
+                      <span>Founder &amp; Principal Creative Technologist</span>
                     </div>
                     <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#0F172A]">
                       Yash Joshi
                     </h3>
                     <p className="text-xs text-[#64748B] font-mono mt-0.5">
-                      Sutra Studio Atelier • Creative Technology &amp; Generative Engineering
+                      Sutra Studio Atelier • Creative Technology &amp; Spatial Systems Engineering
                     </p>
                   </div>
 
                   <p className="text-sm text-[#475569] leading-relaxed max-w-2xl">
-                    Leading the synthesis of classical Indian aesthetic doctrines (Pramana, Rasa, Yantra) with autonomous generative AI workflows, 4K rendering pipelines, and high-conversion commercial digital experiences.
+                    Leading the synthesis of classical Indian aesthetic doctrines (Pramana, Rasa, Yantra) with modern spatial workflows, 4K rendering pipelines, and high-conversion commercial digital experiences.
                   </p>
 
                   <div className="pt-2 flex flex-wrap items-center justify-center md:justify-start gap-3">

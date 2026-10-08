@@ -327,7 +327,7 @@ export default function ClientFormPage() {
                 Client Information Management
               </h1>
               <p className="text-xs sm:text-sm text-[#64748B]">
-                Submit your official company details, services, pricing, and documents. All entries undergo Administrative Review before being published to the RAG AI Chatbot.
+                Submit your official company details, services, pricing, and documents. All entries undergo Administrative Review before being published to the Client Concierge Knowledge Base.
               </p>
             </div>
 
@@ -378,7 +378,7 @@ export default function ClientFormPage() {
             <div>
               <span className="font-bold block">Strict Knowledge Gate:</span>
               <span>
-                Client-submitted information <strong>never directly enters the live AI chatbot</strong>. Only information reviewed, verified, and approved by our Administrative Team will become active RAG knowledge.
+                Client-submitted information <strong>never directly enters the live client concierge</strong>. Only information reviewed, verified, and approved by our Administrative Team will become active knowledge.
               </span>
             </div>
           </div>
@@ -941,7 +941,7 @@ export default function ClientFormPage() {
               <div className="space-y-6">
                 <div>
                   <h3 className="font-serif text-2xl font-bold text-[#0F172A]">Step 6: Contact & Business Channels</h3>
-                  <p className="text-xs text-[#64748B] mt-1">Official communication endpoints used by the AI assistant.</p>
+                  <p className="text-xs text-[#64748B] mt-1">Official communication endpoints used by the client concierge.</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">

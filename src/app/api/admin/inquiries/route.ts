@@ -14,11 +14,15 @@ const INITIAL_DEMO_INQUIRIES = [
     maskedFrom: "+91 98 **** 2345",
     name: "Aarav Singhania (Aura Architecture)",
     query: "Namaste Sutra Studio. We need 5 luxury 4K architectural exterior renders for our Udaipur resort villa project. What is the pricing and timeline?",
-    response: "Namaste Aarav! For 5 luxury 4K architectural renders, our **Starter Creative Package (₹3,499)** is the ideal choice. It includes 5x 4K Ultra-HD renders with studio lighting passes, 1x 10-second concept cinematic reel, and a 24–48 hour turnaround SLA. You can initiate this immediately via UPI: `yashjoshi7355-1@okicici` or via our studio portal at https://sutrastudio-1.onrender.com/orders/new.",
+    response: "Namaste Aarav! For 5 luxury 4K architectural renders, our **5x 4K Master Pack (₹499)** or full **Starter Creative Commission (₹1,999)** is the ideal choice. It includes 5x 4K Ultra-HD renders with studio lighting passes, 1x 10-second concept cinematic reel, and a 24–48 hour turnaround SLA. You can initiate this immediately via UPI: `yashjoshi7355-1@okicici` or via our studio portal at https://sutrastudio-1.onrender.com/orders.",
     status: "Delivered",
-    deliveryNote: "Delivered via WhatsApp Cloud API",
+    deliveryNote: "Delivered via Meta WhatsApp Cloud API (+91 82001 92781)",
     timestamp: new Date(Date.now() - 1000 * 60 * 35).toISOString(),
-    pricingMentioned: { starter: "₹3,499", growth: "₹7,999", retainer: "₹14,999", upi: "yashjoshi7355-1@okicici" },
+    parsedIntent: "High-Intent Commercial Inquiry: 4K Spatial Renders & Cinematic Video Ad",
+    sentimentScore: 0.94,
+    reasoningSummary: "Client requesting 5 luxury exterior renders and timeline for hospitality villa. Automatically quoted standalone 5x 4K render pack (₹499) and Starter package (₹1,999) with 24-48h SLA and zero-fee UPI settlement.",
+    dispatchRail: "Meta WhatsApp Cloud API (Graph v21.0 / Phone +91 82001 92781)",
+    pricingMentioned: { starter: "₹1,999", growth: "₹4,999", retainer: "₹9,999", upi: "yashjoshi7355-1@okicici" },
   },
   {
     id: "inq_demo_002",
@@ -27,11 +31,15 @@ const INITIAL_DEMO_INQUIRIES = [
     maskedFrom: "pr***@heritagejewels.in",
     name: "Priya Mehta (Heritage Jewels)",
     query: "Looking for a monthly retainer for high-end 3D jewelry showcases, social media reels, and Meta ad creatives for our Diwali launch.",
-    response: "Namaste Priya! Our **Autonomous Growth Retainer (₹14,999/month)** is tailor-made for luxury brand campaigns. It provides daily active queue fulfillment, unlimited 8K renders, daily social drops, high-converting Meta ad packages, and dedicated art direction. Direct settlement can be completed to `yashjoshi7355-1@okicici` or through our studio dashboard.",
+    response: "Namaste Priya! Our **Autonomous Growth Retainer (₹9,999/month)** is tailor-made for luxury brand campaigns. It provides daily active queue fulfillment, unlimited 8K renders, daily social drops, high-converting Meta ad packages, and dedicated art direction. Direct settlement can be completed to `yashjoshi7355-1@okicici` or through our studio dashboard.",
     status: "Delivered",
     deliveryNote: "Delivered via Zoho SMTP (yashjoshi20@zohomail.in)",
     timestamp: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
-    pricingMentioned: { starter: "₹3,499", growth: "₹7,999", retainer: "₹14,999", upi: "yashjoshi7355-1@okicici" },
+    parsedIntent: "Enterprise Retainer Request: E-commerce 3D & Omnichannel Ads",
+    sentimentScore: 0.98,
+    reasoningSummary: "Enterprise jewelry client seeking monthly retainer for multi-channel product showcase and ad campaigns. Matched to ₹9,999/month Retainer with dedicated active queue.",
+    dispatchRail: "Zoho Mail TLS (info@sutrastudio.com / yashjoshi20@zohomail.in)",
+    pricingMentioned: { starter: "₹1,999", growth: "₹4,999", retainer: "₹9,999", upi: "yashjoshi7355-1@okicici" },
   },
   {
     id: "inq_demo_003",
@@ -40,11 +48,15 @@ const INITIAL_DEMO_INQUIRIES = [
     maskedFrom: "+91 98 **** 7890",
     name: "Karan Patel (Vedic Spaces)",
     query: "તમારા 3D રેન્ડર્સ અને વિડીયો રીલ્સ માટેનું પેકેજ શું છે? મારે 15 રેન્ડર અને 3 વિડીયો એડ્સ જોઈએ છે.",
-    response: "નમસ્તે કરણભાઈ! તમારી જરૂરિયાત (૧૫ રેન્ડર્સ અને ૩ વિડીયો એડ્સ) માટે અમારું **Studio Growth Package (₹7,999)** સૌથી ઉત્તમ છે. જેમાં 15x 3D રેન્ડર્સ, 3x 15-સેકન્ડ 4K રીલ્સ, 3D એસેટ્સ અને 5 રિવિઝન સામેલ છે. તમે સીધું UPI `yashjoshi7355-1@okicici` દ્વારા પેમેન્ટ કરીને તાત્કાલિક પ્રોડક્શન શરૂ કરાવી શકો છો.",
+    response: "નમસ્તે કરણભાઈ! તમારી જરૂરિયાત (૧૫ રેન્ડર્સ અને ૩ વિડીયો એડ્સ) માટે અમારું **Studio Growth Package (₹4,999)** સૌથી ઉત્તમ છે. જેમાં 15x 3D રેન્ડર્સ, 3x 15-સેકન્ડ 4K રીલ્સ, 3D એસેટ્સ અને 5 રિવિઝન સામેલ છે. તમે સીધું UPI `yashjoshi7355-1@okicici` દ્વારા પેમેન્ટ કરીને તાત્કાલિક પ્રોડક્શન શરૂ કરાવી શકો છો.",
     status: "Delivered",
-    deliveryNote: "Delivered via WhatsApp Cloud API",
+    deliveryNote: "Delivered via Meta WhatsApp Cloud API (+91 82001 92781)",
     timestamp: new Date(Date.now() - 1000 * 60 * 420).toISOString(),
-    pricingMentioned: { starter: "₹3,499", growth: "₹7,999", retainer: "₹14,999", upi: "yashjoshi7355-1@okicici" },
+    parsedIntent: "Gujarati Regional Inbound: 15 Spatial Renders + 3 Video Reels",
+    sentimentScore: 0.91,
+    reasoningSummary: "Gujarati commercial client inquiring about multi-asset growth package. Auto-translated intent and dispatched Gujarati response quoting Studio Growth tier (₹4,999) with direct UPI.",
+    dispatchRail: "Meta WhatsApp Cloud API (Graph v21.0 / Phone +91 82001 92781)",
+    pricingMentioned: { starter: "₹1,999", growth: "₹4,999", retainer: "₹9,999", upi: "yashjoshi7355-1@okicici" },
   },
 ];
 
@@ -124,7 +136,7 @@ export async function POST(req: Request) {
       const baseUrl =
         readEnv("APP_BASE_URL") ||
         readEnv("NEXT_PUBLIC_APP_URL") ||
-        "http://localhost:3000";
+        "https://sutrastudio-1.onrender.com";
 
       const res = await fetch(`${baseUrl.replace(/\/$/, "")}/api/inbound/webhook`, {
         method: "POST",
@@ -192,7 +204,7 @@ export async function POST(req: Request) {
             message: manualMessage,
             priority: "high",
             replyTo: supportInbox,
-            actionUrl: "https://sutrastudio-1.onrender.com",
+            actionUrl: process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudio-1.onrender.com",
             actionLabel: "View Studio Portal",
           });
         } catch (e: any) {

@@ -30,20 +30,20 @@ const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudio-1.onrend
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    template: "%s | Sutra Studio — Autonomous AI Creative & 3D Engineering",
+    template: "%s | Sutra Studio — Enterprise Software & 3D Spatial Engineering",
     default: "Sutra Studio — Tradition Meets Computational Technology",
   },
   description:
-    "High-precision AI creative studio delivering 4K photorealistic product renders, 3D architectural modeling, 360 virtual tours, and autonomous commercial pipelines with zero hidden fees.",
+    "Enterprise creative technology atelier delivering 4K photorealistic product renders, 3D architectural spatial systems, 360 virtual tours, and bespoke web applications with zero hidden fees.",
   keywords: [
-    "AI creative studio",
+    "Enterprise creative technology",
     "4K photorealistic product renders",
-    "3D architectural modeling",
+    "3D architectural spatial systems",
     "360 virtual tours",
-    "Meta Ads automation",
+    "Bespoke software architecture",
     "Sutra Studio India",
-    "Bespoke digital architecture",
-    "Creative technology atelier",
+    "Digital architecture atelier",
+    "Creative technology firm",
   ],
   alternates: {
     canonical: baseUrl,
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Sutra Studio — Tradition Meets Computational Technology",
     description:
-      "Bespoke 3D product renders, spatial virtual tours, and autonomous video reels engineered under experienced art direction.",
+      "Bespoke 3D product renders, spatial virtual tours, and commercial motion shorts engineered under experienced art direction.",
     url: baseUrl,
     siteName: "Sutra Studio",
     images: [
@@ -67,9 +67,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sutra Studio — Autonomous AI Creative & 3D Engineering",
+    title: "Sutra Studio — Enterprise Software & 3D Spatial Engineering",
     description:
-      "High-precision 4K renders, spatial 3D architecture, and cinematic video reels delivered directly to your Sutra Cloud Vault.",
+      "High-precision 4K renders, spatial 3D architecture, and cinematic commercial reels delivered directly to your Sutra Cloud Vault.",
     images: ["/brand/sutra-logo-primary.png"],
   },
   manifest: "/manifest.json",
@@ -95,7 +95,7 @@ const organizationSchema = {
       url: baseUrl,
       logo: `${baseUrl}/brand/sutra-logo-primary.png`,
       description:
-        "High-precision creative technology studio combining Indian artistic heritage with cutting-edge AI and spatial 3D engineering.",
+        "High-precision creative technology studio combining Indian artistic heritage with computational technology and spatial 3D engineering.",
       founder: {
         "@type": "Person",
         name: "Yash Joshi",
@@ -112,7 +112,7 @@ const organizationSchema = {
       "@id": `${baseUrl}/#service`,
       name: "Sutra Studio Creative Engineering",
       url: baseUrl,
-      priceRange: "₹3,499 - ₹14,999",
+      priceRange: "₹499 - ₹9,999",
       currenciesAccepted: "INR",
       paymentAccepted: "UPI, Google Pay, PhonePe, Paytm, NetBanking, Cards",
       areaServed: ["India", "Global"],
@@ -124,10 +124,30 @@ const organizationSchema = {
             "@type": "Offer",
             itemOffered: {
               "@type": "Service",
-              name: "Starter Creative Commission",
-              description: "5x 4K Renders or 1x 10s Video Ad with 48h turnaround.",
+              name: "5x 4K Photorealistic Master Renders",
+              description: "5x 4K Master Product & Space Renders with 24h turnaround.",
             },
-            price: "3499",
+            price: "499",
+            priceCurrency: "INR",
+          },
+          {
+            "@type": "Offer",
+            itemOffered: {
+              "@type": "Service",
+              name: "2x Commercial Video Reels",
+              description: "2x 15-30s Commercial Video Reels with high-fidelity studio voiceover & motion typography.",
+            },
+            price: "1499",
+            priceCurrency: "INR",
+          },
+          {
+            "@type": "Offer",
+            itemOffered: {
+              "@type": "Service",
+              name: "Starter Creative Commission",
+              description: "5x 4K UHD Master Renders + 1x 10s Cinematic Video Ad with 48h turnaround.",
+            },
+            price: "1999",
             priceCurrency: "INR",
           },
           {
@@ -137,7 +157,7 @@ const organizationSchema = {
               name: "Studio Growth Commission",
               description: "15x 3D Assets, 3x 15s Video Ads, 360° Space Tour, and Meta Ads variation pack.",
             },
-            price: "7999",
+            price: "4999",
             priceCurrency: "INR",
           },
           {
@@ -145,9 +165,9 @@ const organizationSchema = {
             itemOffered: {
               "@type": "Service",
               name: "Autonomous Growth Retainer",
-              description: "30-day autonomous daily active queue: daily 4K render and video reel.",
+              description: "30-day active queue: daily 4K renders and commercial video shorts.",
             },
-            price: "14999",
+            price: "9999",
             priceCurrency: "INR",
           },
         ],

@@ -97,7 +97,7 @@ export async function POST(req: Request) {
             message: `${authorName || callerRole}: ${text}`,
             orderNumber: order.orderNumber || order.code,
             priority: "high",
-            actionUrl: `https://sutrastudio.com/dashboard/orders/${order.id}`,
+            actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudio-1.onrender.com"}/dashboard/orders/${order.id}`,
             actionLabel: "View Order & Reply",
           });
         }

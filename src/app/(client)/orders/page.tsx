@@ -285,12 +285,36 @@ export default function OrdersPage() {
         maxRevisions: 2,
         updatedAt: new Date().toISOString(),
       });
+    } else if (serviceParam) {
+      const lower = serviceParam.toLowerCase();
+      const isBespoke =
+        lower.includes("interior") ||
+        lower.includes("arch") ||
+        lower.includes("meta") ||
+        lower.includes("ads") ||
+        lower.includes("web") ||
+        lower.includes("mobile") ||
+        lower.includes("app");
+
+      if (isBespoke) {
+        let serviceName = "Bespoke Architecture";
+        if (lower.includes("interior") || lower.includes("arch")) serviceName = "Interior Architecture";
+        else if (lower.includes("meta") || lower.includes("ads")) serviceName = "Meta Ads";
+        else if (lower.includes("mobile") || lower.includes("app")) serviceName = "Mobile Apps";
+        else if (lower.includes("web")) serviceName = "Web Build";
+
+        const bespokeUrl = `https://wa.me/918200192781?text=${encodeURIComponent(
+          `Hello Sutra Studio, I would like to request a custom scope quotation for ${serviceName}.`
+        )}`;
+        window.location.href = bespokeUrl;
+        return;
+      }
+
+      setIsMasterOrderModalOpen(true);
+      setInitialMasterService(serviceParam);
     } else if (packageParam) {
       setIsMasterOrderModalOpen(true);
       setInitialMasterTier(packageParam);
-    } else if (serviceParam) {
-      setIsMasterOrderModalOpen(true);
-      setInitialMasterService(serviceParam);
     }
   }, []);
 
@@ -1921,7 +1945,7 @@ export default function OrdersPage() {
               ? "Review & Confirm Order"
               : "Order Confirmation"
           }
-          description="Crafted with pure traditional craftsmanship and AI precision."
+          description="Crafted with pure traditional craftsmanship and computational precision."
           maxWidth="xl"
           variant="auto"
         >
@@ -3823,7 +3847,8 @@ export default function OrdersPage() {
             clientEmail={paymentModalOrder.clientEmail || clientContact.email}
             clientPhone={paymentModalOrder.clientPhone || clientContact.phone}
             serviceTitle={paymentModalOrder.service || paymentModalOrder.title}
-            amount={paymentModalOrder.totalAmount || 3499}
+            amount={paymentModalOrder.totalAmount || 1999}
+            isCustomQuote={paymentModalOrder.totalAmount === 0 || /interior|architecture|spatial|meta ad|web build|website|web app|mobile app/i.test(paymentModalOrder.service || paymentModalOrder.title)}
             onPaymentSuccess={() => {
               window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
             }}

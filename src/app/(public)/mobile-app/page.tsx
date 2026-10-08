@@ -86,10 +86,10 @@ export default function MobileAppLandingPage() {
       badge: "Workflows",
     },
     {
-      title: "Live Voice & AI Assistant",
-      subtitle: "Full-Screen Studio Phone Agent",
-      desc: "Speak naturally with our studio AI to draft commissions and check delivery milestones.",
-      badge: "AI Agent",
+      title: "Live Voice & Studio Concierge",
+      subtitle: "Full-Screen Studio Phone Interface",
+      desc: "Speak directly with your studio desk to review commissions and check delivery milestones.",
+      badge: "Concierge Desk",
     },
     {
       title: "Sutra Cloud Vault",
@@ -113,8 +113,8 @@ export default function MobileAppLandingPage() {
     },
     {
       icon: MessageSquare,
-      title: "Bespoke Phone AI Agent & Art Director Chat",
-      description: "Seamless handover between autonomous AI generation engines and lead studio supervisors in real-time.",
+      title: "Direct Studio Channel & Executive Chat",
+      description: "Seamless coordination between automated rendering pipelines and lead studio directors in real-time.",
     },
     {
       icon: HardDrive,
@@ -152,7 +152,7 @@ export default function MobileAppLandingPage() {
     {
       step: "03",
       title: "Manage & Approve Commissions",
-      desc: "Commission new creative services, chat with the AI studio agent, and inspect 4K assets.",
+      desc: "Commission new creative services, collaborate with your studio director, and inspect 4K assets.",
     },
   ];
 
@@ -200,7 +200,7 @@ export default function MobileAppLandingPage() {
                     Your bespoke creative studio in your pocket.
                   </h1>
                   <p className="text-base sm:text-lg text-[#64748B] max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                    Approve 4K architectural renders, direct AI workflows, and access your encrypted Sutra Cloud Vault anywhere, anytime.
+                    Approve 4K architectural renders, direct studio pipelines, and access your encrypted Sutra Cloud Vault anywhere, anytime.
                   </p>
                 </div>
 

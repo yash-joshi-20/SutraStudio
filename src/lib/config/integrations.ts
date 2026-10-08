@@ -152,7 +152,7 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
     manualSteps: [
       "Google Cloud console → APIs & Services → Enable Google Drive API.",
       "OAuth consent screen → External → Add test user account.",
-      "Credentials → Create OAuth client ID → Web application (redirect URI: http://localhost:3000/api/auth/drive).",
+      "Credentials → Create OAuth client ID → Web application (redirect URI: https://sutrastudio-1.onrender.com/api/auth/drive or http://localhost:3000/api/auth/drive).",
       "Scope requested: https://www.googleapis.com/auth/drive.file (isolated access).",
       "Run `npx tsx scripts/get-drive-refresh-token.ts` once to generate GOOGLE_DRIVE_REFRESH_TOKEN.",
     ],

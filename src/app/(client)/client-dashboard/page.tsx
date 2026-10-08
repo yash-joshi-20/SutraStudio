@@ -139,13 +139,13 @@ export default function ClientDashboardPage() {
             <div className="space-y-1.5">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-xs font-semibold uppercase tracking-wider text-[#5C3A1E]">
                 <Bot className="w-3.5 h-3.5 text-[#D4A35A]" />
-                <span>CLIENT KNOWLEDGE & AI COCKPIT</span>
+                <span>CLIENT KNOWLEDGE & CONCIERGE COCKPIT</span>
               </div>
               <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#0F172A]">
                 {submission?.company?.name || "Client Knowledge Workspace"}
               </h1>
               <p className="text-xs sm:text-sm text-[#64748B]">
-                Manage verified company facts, services, pricing plans, and preview your RAG AI Assistant.
+                Manage verified company facts, services, pricing plans, and preview your interactive client concierge.
               </p>
             </div>
 
@@ -157,7 +157,7 @@ export default function ClientDashboardPage() {
                 size="sm"
                 leftIcon={<Eye className="w-4 h-4 text-[#D4A35A]" />}
               >
-                Chatbot Preview
+                Concierge Preview
               </Button>
               <Link href="/client-form">
                 <Button variant="primary" size="sm" leftIcon={<Edit className="w-4 h-4" />}>

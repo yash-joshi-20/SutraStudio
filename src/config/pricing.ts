@@ -43,15 +43,15 @@ export const PER_PROJECT_TIERS: ProjectTier[] = [
   {
     id: "starter-creative",
     name: "Starter Creative",
-    price: 3499,
-    formattedPrice: "₹3,499",
+    price: 1999,
+    formattedPrice: "₹1,999",
     tagline: "Essential 4K creative launch pack",
     description:
       "Ideal for boutique brands, luxury founders, and product launches needing immediate high-impact visuals.",
     turnaround: "48 Hours",
     revisionRounds: 2,
     popular: false,
-    ctaText: "Commission Starter (₹3,499)",
+    ctaText: "Commission Starter (₹1,999)",
     ctaHref: "/orders?package=starter-creative",
     features: [
       "Up to 5x Photorealistic 4K Renders",
@@ -65,19 +65,19 @@ export const PER_PROJECT_TIERS: ProjectTier[] = [
   {
     id: "studio-growth",
     name: "Studio Growth",
-    price: 7999,
-    formattedPrice: "₹7,999",
+    price: 4999,
+    formattedPrice: "₹4,999",
     tagline: "High-velocity multi-format digital atelier",
     description:
       "Comprehensive creative suite spanning 3D spatial renders, promotional video, and multi-channel Meta ad campaigns.",
     turnaround: "24–72 Hours",
     revisionRounds: 3,
     popular: true,
-    ctaText: "Commission Growth (₹7,999)",
+    ctaText: "Commission Growth (₹4,999)",
     ctaHref: "/orders?package=studio-growth",
     features: [
       "15x High-Resolution 3D & Product Renders",
-      "3x 15-Second Video Ads with AI Voiceover",
+      "3x 15-Second Video Ads with High-Fidelity Studio Voiceover",
       "Interactive 360° Space Tour or Virtual Showroom",
       "3x Meta Ads Creative Variations (Feed & Story Ratios)",
       "Dedicated Creative Lead & Priority Queue",
@@ -92,7 +92,7 @@ export const PER_PROJECT_TIERS: ProjectTier[] = [
     formattedPrice: "Custom Quote",
     tagline: "Tailored creative engineering & dedicated atelier capacity",
     description:
-      "Full digital atelier ecosystem: custom Next.js web application, autonomous 3D pipelines, AI automation, and executive direction.",
+      "Full digital atelier ecosystem: custom Next.js web application, autonomous 3D pipelines, bespoke computational engineering, and executive direction.",
     turnaround: "Custom Milestone",
     revisionRounds: 99,
     popular: false,
@@ -103,7 +103,7 @@ export const PER_PROJECT_TIERS: ProjectTier[] = [
       "Autonomous Production Automation Pipelines",
       "Dedicated 3D Asset Modeling & Spatial Renders",
       "Cross-Platform Mobile App Setup (Expo / PWA)",
-      "Custom AI Classifier & Real-Time Sync",
+      "Custom Studio Pipeline & Real-Time Sync",
       "Dedicated Senior Art Director & Custom SLA",
       "Private Dedicated Cloud Infrastructure",
     ],
@@ -117,18 +117,18 @@ export const MONTHLY_RETAINER_TIERS: MonthlyRetainerTier[] = [
   {
     id: "autonomous-growth-retainer",
     name: "Autonomous Growth Retainer",
-    priceMonthly: 14999,
-    formattedMonthlyPrice: "₹14,999/month",
+    priceMonthly: 9999,
+    formattedMonthlyPrice: "₹9,999/month",
     tagline: "30-Day Continuous Creative Technology & Content Engine",
     description:
       "Your outsourced luxury creative department. Continuous daily active queue delivering brand graphics, commercial motion shorts, and spatial visualization.",
     turnaround: "Daily Active Queue",
     popular: true,
-    ctaText: "Activate Retainer (₹14,999/mo)",
+    ctaText: "Activate Retainer (₹9,999/mo)",
     ctaHref: "/orders?package=autonomous-growth-retainer&cycle=monthly",
     monthlyQuotaDescription: "60+ Master Deliverables / Month across 6 Creative Disciplines",
     features: [
-      "Daily 1x 4K Brand Image / Graphic (30 Assets/month) powered by trend research",
+      "Daily 1x 4K Brand Image / Graphic (30 Assets/month) powered by studio trend research",
       "Daily 1x Commercial Video Reel / Short (30 Assets/month) with voiceover and motion typography",
       "Dedicated 3D Asset Modeling & Spatial Renders",
       "Interactive 360° Virtual Panoramic Tour",
@@ -150,7 +150,7 @@ export const STUDIO_PAYMENT_CONFIG = {
   merchantName: "Yash Joshi",
   currency: "INR",
   qrImageSrc: "/brand/gpay-qr.png",
-  whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919428199999",
+  whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "918200192781",
 };
 
 /**

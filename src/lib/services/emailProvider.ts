@@ -61,13 +61,13 @@ export class SmtpEmailProvider implements IEmailProvider {
     this.port = parseInt(readEnv("SMTP_PORT") || "465", 10);
     this.user = readEnv("SMTP_USER");
     this.pass = readEnv("SMTP_APP_PASSWORD");
-    this.defaultFrom = readEnv("EMAIL_FROM") || this.user || "concierge@sutrastudio.com";
+    this.defaultFrom = readEnv("EMAIL_FROM") || this.user || "yashjoshi20@zohomail.in";
     this.defaultReplyTo =
       readEnv("EMAIL_REPLY_TO") ||
       readEnv("SUPPORT_INBOX_EMAIL") ||
       readEnv("ADMIN_EMAIL") ||
       this.user ||
-      "concierge@sutrastudio.com";
+      "yashjoshi20@zohomail.in";
   }
 
   async sendEmail(options: EmailOptions): Promise<EmailResult> {
@@ -217,13 +217,13 @@ export class ResendEmailProvider implements IEmailProvider {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: options.from || "Sutra Studio <concierge@sutrastudio.com>",
+          from: options.from || "Sutra Studio <yashjoshi20@zohomail.in>",
           reply_to:
             options.replyTo ||
             readEnv("EMAIL_REPLY_TO") ||
             readEnv("SUPPORT_INBOX_EMAIL") ||
             readEnv("ADMIN_EMAIL") ||
-            "concierge@sutrastudio.com",
+            "yashjoshi20@zohomail.in",
           to: Array.isArray(options.to) ? options.to : [options.to],
           subject: options.subject,
           html: options.html,
@@ -341,14 +341,16 @@ export class EmailService {
     const priority = options.priority || "high";
     const canSendEmail = this.checkAndIncrementCap(priority);
 
-    const actionUrl = options.actionUrl || "https://sutrastudio.com/dashboard";
+    const actionUrl =
+      options.actionUrl ||
+      `${readEnv("APP_BASE_URL") || readEnv("NEXT_PUBLIC_APP_URL") || "https://sutrastudio-1.onrender.com"}/dashboard`;
     const actionLabel = options.actionLabel || "Open Studio Portal";
     const replyTo =
       options.replyTo ||
       readEnv("EMAIL_REPLY_TO") ||
       readEnv("SUPPORT_INBOX_EMAIL") ||
       readEnv("ADMIN_EMAIL") ||
-      "concierge@sutrastudio.com";
+      "yashjoshi20@zohomail.in";
 
     // 1. If daily mailbox send cap is exhausted, fall back to in-app notification + FCM alert
     if (!canSendEmail) {

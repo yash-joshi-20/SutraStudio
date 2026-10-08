@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       readEnv("SUPPORT_INBOX_EMAIL") ||
       readEnv("ADMIN_EMAIL") ||
       readEnv("EMAIL_REPLY_TO") ||
-      "concierge@sutrastudio.com";
+      "yashjoshi20@zohomail.in";
 
     // 1. Record inquiry in Firestore
     try {
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
       message: `A new client inquiry has been submitted by ${body.name} (${body.email}):\n\n"${body.message}"\n\nService: ${body.service || "General"}`,
       priority: "high",
       replyTo: body.email,
-      actionUrl: `https://sutrastudio.com/admin/leads`,
+      actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudio-1.onrender.com"}/admin/leads`,
       actionLabel: "View Inquiries in Studio Admin",
     });
 

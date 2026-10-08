@@ -234,13 +234,13 @@ export default function MediaLibraryPage() {
                 const is3D = !!gd.meshUrl;
                 combinedAssets.unshift({
                   id: fileId,
-                  name: `${gd.title || "AI_Engine_Draft"}_${orderNum}_v${idx + 1}.${isVid ? "mp4" : is3D ? "glb" : "png"}`,
+                  name: `${gd.title || "Studio_Pipeline_Draft"}_${orderNum}_v${idx + 1}.${isVid ? "mp4" : is3D ? "glb" : "png"}`,
                   type: isVid ? "Video" : is3D ? "3D" : "Image",
                   size: isVid ? "48.2 MB" : is3D ? "34.0 MB" : "12.8 MB",
                   folder: "/DELIVERABLES/02_DRAFTS",
-                  date: gd.timestamp ? new Date(gd.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "AI Pipeline Generated",
+                  date: gd.timestamp ? new Date(gd.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Studio Pipeline Generated",
                   driveFileId: gd.driveFileId || `drive_${fileId.slice(0, 12)}`,
-                  resolution: `Engine: ${gd.engine || "n8n Autonomous"} (${gd.model || "FLUX Pro / Kling"})`,
+                  resolution: "Studio Proprietary Pipeline (High-Definition 4K)",
                   checksum: `sha256:${fileId.slice(0, 16)}...`,
                   thumbnail: gd.imageUrl || gd.videoUrl || "https://image.pollinations.ai/prompt/architectural%20interior%20rendering%2C%20minimalist%20luxury%20living%20space%2C%20intricate%20golden%20jali%20screens%2C%20calacatta%20gold%20marble%20floors%2C%20recessed%203000k%20warm%20led%2C%20hasselblad%20photography%2C%208k?width=1200&height=800&nologo=true",
                   downloadUrl: gd.imageUrl || gd.videoUrl || gd.meshUrl,

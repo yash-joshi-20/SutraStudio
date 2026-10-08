@@ -177,7 +177,7 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
     mediaType: "image",
     mediaFormat: "PNG / TIFF (3840×2160 4K UHD)",
     turnaround: "24–48 Hours",
-    pipelineEngine: "Midjourney v6.1 + Real-ESRGAN Upscale",
+    pipelineEngine: "Studio Proprietary 4K Pipeline",
     updatedAt: "2026-10-01T00:00:00.000Z",
   },
   {
@@ -277,7 +277,7 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
     mediaType: "video",
     mediaFormat: "ProRes 422 HQ / 4K MP4 (24fps / 60fps)",
     turnaround: "48–72 Hours",
-    pipelineEngine: "Runway Gen-3 Alpha + ElevenLabs Audio",
+    pipelineEngine: "Commercial Studio Fidelity + Studio Audio Suite",
     updatedAt: "2026-10-01T00:00:00.000Z",
   },
   {
@@ -371,7 +371,7 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
     mediaType: "3d",
     mediaFormat: "GLTF / USDZ / OBJ (4K PBR Textures)",
     turnaround: "48–72 Hours",
-    pipelineEngine: "Meshy v2 + Blender Geometry Nodes",
+    pipelineEngine: "Computational CAD + Commercial Studio Fidelity",
     updatedAt: "2026-10-01T00:00:00.000Z",
   },
   {
@@ -553,7 +553,7 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
     mediaType: "image",
     mediaFormat: "High-Res Render Suite (4K PNG / EXR)",
     turnaround: "48–72 Hours",
-    pipelineEngine: "ControlNet SDXL Architecture + Depth Maps",
+    pipelineEngine: "Commercial Studio Fidelity + Depth Maps",
     updatedAt: "2026-10-01T00:00:00.000Z",
   },
   {
@@ -925,7 +925,7 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
     mediaType: "code",
     mediaFormat: "Next.js 16 / TypeScript / Tailwind CSS",
     turnaround: "5–7 Days",
-    pipelineEngine: "Next.js 16 Turbopack CI/CD",
+    pipelineEngine: "High-Performance Web Architecture",
     updatedAt: "2026-10-01T00:00:00.000Z",
   },
   {
@@ -1027,7 +1027,7 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
     category: "Development",
     tagline: "Android & iOS Apps",
     shortDescription:
-      "Cross-platform Expo / React Native mobile applications sharing unified Firebase backends and APIs.",
+      "Cross-platform bespoke iOS & Android mobile applications sharing unified cloud backends and APIs.",
     startingPrice: 18499,
     currency: "INR",
     icon: "Smartphone",

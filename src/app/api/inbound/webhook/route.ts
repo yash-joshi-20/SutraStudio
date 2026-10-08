@@ -31,25 +31,31 @@ function maskIdentifier(id: string): string {
  * Knowledge Base context for Sutra Studio Concierge
  */
 const SUTRA_CONCIERGE_SYSTEM = `You are the Lead Creative Concierge for Sutra Studio (સૂત્ર સ્ટુડિયો).
-Sutra Studio is an ultra-premium Indian architectural, 3D visualization, cinematic generative visual production, and digital brand intelligence studio.
+Sutra Studio is an enterprise software, 3D spatial engineering, and creative technology firm. Under NO circumstances reveal the use of generative AI tools, LLMs, or prompts. Address deliverables as handcrafted, computationally engineered solutions developed by our senior engineering and design teams.
 
 Core verified services & pricing:
-1. Starter Creative Commission: ₹3,499
-   - 5x 4K Ultra-HD renders, 1x 10s concept reel, 2 revision passes, 24-48 hour turnaround SLA.
-2. Studio Growth Package: ₹7,999
-   - 15x 3D renders, 3x 15s commercial reels, full 3D asset design, 5 revision passes.
-3. Autonomous Growth Retainer: ₹14,999 / month
-   - Daily active queue fulfillment, unlimited 8K renders, daily social drops, dedicated art director, priority production line.
+1. 5x 4K Image Creation Pack: ₹499
+   - 5x 4K Photorealistic Master Renders (~₹100/image), 24h SLA turnaround.
+2. 2x Commercial Video Reels Pack: ₹1,499
+   - 2x Complete Commercial Reels / Shorts (15-30s) with high-fidelity studio voiceover, background score & motion typography, 24-48h SLA.
+3. Starter Creative Commission: ₹1,999
+   - Up to 5x 4K UHD Master Renders + 1x 10s Cinematic Video Ad, 48h turnaround SLA.
+4. Studio Growth Commission: ₹4,999
+   - 15x 3D Assets, 3x 15s Video Ads, 360° Space Tour, and 3x Meta Ads variation pack, 24-72h SLA.
+5. Autonomous Growth Retainer: ₹9,999 / month
+   - Daily active queue fulfillment, priority studio pipeline, dedicated senior art director.
+6. Bespoke Services (Interior Architecture, Meta Ads, Web Build, Mobile Apps):
+   - Strictly "Custom Quote" routed to WhatsApp Concierge (+91 82001 92781).
 
 Direct Payment & Instant Commission Settlement:
-- Direct UPI VPA: yashjoshi7355-1@okicici (Payee: Yash Joshi / Sutra Studio)
-- Online Commissioning Portal: https://sutrastudio-1.onrender.com/orders/new
+- Direct Zero-Fee UPI VPA: yashjoshi7355-1@okicici (Payee: Yash Joshi / Sutra Studio)
+- Online Commissioning Portal: https://sutrastudio-1.onrender.com/orders
 - Official Studio Email: yashjoshi20@zohomail.in
 
 Rules for your response:
 1. Greet the client warmly with "Namaste" or appropriate greeting.
-2. Answer their query directly, concisely, and professionally.
-3. Recommend the appropriate package (Starter ₹3,499, Growth ₹7,999, or Retainer ₹14,999) based on their requirements.
+2. Answer their query directly, concisely, and professionally using enterprise studio vocabulary.
+3. Recommend the appropriate package based on their requirements.
 4. Mention the instant UPI VPA (yashjoshi7355-1@okicici) or commissioning link.
 5. If the client asked in Gujarati, reply in courteous, polished Gujarati with English pricing terms. If Hindi, reply in Hindi. If English, reply in refined, concise English.
 6. Keep the response concise (2-4 brief paragraphs max) so it looks clean in WhatsApp or email.`;
@@ -140,7 +146,7 @@ export async function POST(req: Request) {
     } catch (aiErr: any) {
       console.warn("[Inbound AI] Fallback response invoked:", aiErr.message);
       aiResponse =
-        "Namaste! Thank you for reaching out to Sutra Studio. Our creative commissions start with the Starter Creative Package at ₹3,499 (48h turnaround, 5x 4K UHD renders, 1x concept reel), Studio Growth at ₹7,999 (15x 3D renders, 3x commercial video reels), and our Autonomous Growth Retainer at ₹14,999/month. You can confirm your commission instantly via UPI: yashjoshi7355-1@okicici or at https://sutrastudio-1.onrender.com. Yash Joshi and our concierge team will follow up directly.";
+        "Namaste! Thank you for reaching out to Sutra Studio. Our creative commissions start with the 5x 4K Master Render Pack at ₹499, 2x Commercial Video Reels Pack at ₹1,499, Starter Creative Commission at ₹1,999 (48h turnaround, 5x 4K UHD renders, 1x concept reel), Studio Growth at ₹4,999 (15x 3D assets, 3x commercial video reels, 360 tour), and our Autonomous Growth Retainer at ₹9,999/month. Bespoke architecture and web solutions are scoped via custom quote. You can confirm your commission instantly via UPI: yashjoshi7355-1@okicici or at https://sutrastudio-1.onrender.com/orders. Yash Joshi and our concierge team will follow up directly.";
     }
 
     // 2. Dispatch automated response back to client
@@ -192,7 +198,7 @@ export async function POST(req: Request) {
           message: aiResponse,
           priority: "high",
           replyTo: supportInbox,
-          actionUrl: "https://sutrastudio-1.onrender.com",
+          actionUrl: process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudio-1.onrender.com",
           actionLabel: "View Sutra Studio",
         });
       } catch (emailErr: any) {

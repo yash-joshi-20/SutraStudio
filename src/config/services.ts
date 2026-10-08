@@ -1,4 +1,23 @@
-export interface ServiceItem {
+/**
+ * SUTRA STUDIO — Canonical Services Configuration & Pricing Architecture
+ *
+ * Defines the 12 core creative and engineering services.
+ * Strictly adheres to:
+ * 1. Standalone Creative Deliverables:
+ *    - Image Creation: Starting from ₹499 (5x 4K Photorealistic Master Renders (~₹100/image))
+ *    - Video Creation: Starting from ₹1,499 (2x Complete Commercial Reels / Shorts)
+ * 2. Bespoke Services: Strictly "Custom Quote" (no fixed pricing)
+ *    - Interior Architecture: "Custom Quote", CTA: [Request Spatial Quote]
+ *    - Meta Ads Launcher: "Custom Quote", CTA: [Discuss Ad Campaign]
+ *    - Website Architecture: "Custom Quote", CTA: [Scope Web Build]
+ *    - Mobile App Development: "Custom Quote", CTA: [Scope Mobile App]
+ * 3. Jargon-free studio descriptions:
+ *    - High-Performance Web Architecture
+ *    - Bespoke iOS & Android Mobile Apps
+ *    - Commercial Studio Fidelity
+ */
+
+export interface ServiceDefinition {
   id: string;
   name: string;
   slug: string;
@@ -9,19 +28,21 @@ export interface ServiceItem {
   startingPrice: string;
   priceDisplay?: string;
   isCustomQuote?: boolean;
-  ctaText?: string;
-  ctaHref?: string;
+  ctaText: string;
+  ctaHref: string;
   deliverables: string[];
+  subBullets?: string[];
   icon: string;
   thumbnail: string;
-  badge: "4K Image" | "Video" | "3D" | "360°" | "Interior" | "Elevations" | "Growth" | "Meta Ads" | "Next.js" | "Web App" | "Mobile" | "Automation" | "Custom Quote";
+  badge: string;
   mediaType: "image" | "video" | "3d" | "360" | "interactive" | "code";
   mediaFormat: string;
   turnaround: string;
   pipelineEngine: string;
 }
 
-export const SUTRA_SERVICES: ServiceItem[] = [
+export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
+  // 1. Standalone Creative: Image Creation (₹499)
   {
     id: "img-creation",
     name: "Image Creation",
@@ -29,10 +50,13 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     category: "Creative",
     tagline: "Product, Ads, Mockups",
     description:
-      "High-fidelity AI generated and human-perfected commercial product imagery, luxury brand mockups, and advertising visual assets.",
+      "High-fidelity studio-crafted commercial product imagery, luxury brand mockups, and advertising visual assets.",
     workflow: "image",
     startingPrice: "₹499",
     priceDisplay: "₹499 for 5x 4K Photorealistic Master Renders (~₹100/image)",
+    isCustomQuote: false,
+    ctaText: "Commission 5x Renders (₹499)",
+    ctaHref: "/orders?service=image-creation",
     deliverables: [
       "5x 4K Photorealistic Master Renders (~₹100/image)",
       "2x Studio product shots",
@@ -40,26 +64,37 @@ export const SUTRA_SERVICES: ServiceItem[] = [
       "1x Ad campaign visual",
       "24h SLA",
     ],
-    ctaText: "Commission 5x Renders (₹499)",
+    subBullets: [
+      "2x Studio product shots",
+      "2x Lifestyle ambient context",
+      "1x Ad campaign visual",
+      "24h SLA turnaround",
+    ],
     icon: "Image",
-    thumbnail: "https://image.pollinations.ai/prompt/luxury%20perfume%20bottle%2C%20obsidian%20glass%2C%2024k%20gold%20cap%2C%20caustic%20refractions%2C%20warm%20saffron%20rim%20lighting%2C%20hasselblad%20commercial%20product%20shot%2C%208k?width=1200&height=800&nologo=true",
+    thumbnail:
+      "https://image.pollinations.ai/prompt/luxury%20perfume%20bottle%2C%20obsidian%20glass%2C%2024k%20gold%20cap%2C%20caustic%20refractions%2C%20warm%20saffron%20rim%20lighting%2C%20hasselblad%20commercial%20product%20shot%2C%208k?width=1200&height=800&nologo=true",
     badge: "4K Image",
     mediaType: "image",
     mediaFormat: "PNG / TIFF (3840×2160)",
     turnaround: "24 Hours",
     pipelineEngine: "Studio Proprietary 4K Pipeline",
   },
+
+  // 2. Standalone Creative: Video Creation (₹1,499)
   {
     id: "vid-creation",
     name: "Video Creation",
     slug: "video-creation",
     category: "Creative",
-    tagline: "Ads, Reels, Editing",
+    tagline: "Commercial Reels, Shorts, Motion",
     description:
       "Engaging 15-to-30 second cinematic commercial video ads, social reels, motion sequences, and high-fidelity voiceover-synced promotional clips.",
     workflow: "video",
     startingPrice: "₹1,499",
     priceDisplay: "₹1,499 for 2x Complete Commercial Reels / Shorts",
+    isCustomQuote: false,
+    ctaText: "Commission 2x Reels (₹1,499)",
+    ctaHref: "/orders?service=video-creation",
     deliverables: [
       "2x Complete Commercial Reels / Shorts",
       "15–30s each",
@@ -67,15 +102,23 @@ export const SUTRA_SERVICES: ServiceItem[] = [
       "High-fidelity Studio Voiceover (EN/HI), background score, and motion typography included",
       "24–48h SLA",
     ],
-    ctaText: "Commission 2x Reels (₹1,499)",
+    subBullets: [
+      "15–30s each",
+      "1x Product showcase reel + 1x Feature highlight reel",
+      "High-fidelity Studio Voiceover (EN/HI), background score, and motion typography included",
+      "24–48h SLA turnaround",
+    ],
     icon: "Video",
-    thumbnail: "https://image.pollinations.ai/prompt/cinematic%20architectural%20film%20still%2C%20modern%20sandstone%20courtyard%20villa%20at%20sunset%2C%20ambient%20water%20reflection%2C%20anamorphic%20lens%20flare%2C%208k?width=1200&height=800&nologo=true",
+    thumbnail:
+      "https://image.pollinations.ai/prompt/cinematic%20architectural%20film%20still%2C%20modern%20sandstone%20courtyard%20villa%20at%20sunset%2C%20ambient%20water%20reflection%2C%20anamorphic%20lens%20flare%2C%208k?width=1200&height=800&nologo=true",
     badge: "Video",
     mediaType: "video",
     mediaFormat: "ProRes / 4K MP4 (24fps)",
     turnaround: "24–48 Hours",
     pipelineEngine: "Commercial Studio Fidelity + Studio Audio Suite",
   },
+
+  // 3. 3D Modeling (Precision Assets)
   {
     id: "3d-modeling",
     name: "3D Modeling",
@@ -86,15 +129,21 @@ export const SUTRA_SERVICES: ServiceItem[] = [
       "Precision 3D product models, architectural exterior structures, and interactive web-ready 3D assets.",
     workflow: "three-d",
     startingPrice: "₹9,499",
+    isCustomQuote: false,
+    ctaText: "Commission 3D Model",
+    ctaHref: "/orders?service=3d-modeling",
     deliverables: ["glTF / USDZ Files", "PBR Textured Models", "Turntable Renders"],
     icon: "Box",
-    thumbnail: "https://image.pollinations.ai/prompt/luxury%20modern%20armchair%203d%20render%2C%20emerald%20velvet%20and%20brushed%20brass%2C%20studio%20lighting%2C%20isolated%20on%20warm%20ivory%20plinth%2C%20octane%20render%2C%208k?width=1200&height=800&nologo=true",
+    thumbnail:
+      "https://image.pollinations.ai/prompt/luxury%20modern%20armchair%203d%20render%2C%20emerald%20velvet%20and%20brushed%20brass%2C%20studio%20lighting%2C%20isolated%20on%20warm%20ivory%20plinth%2C%20octane%20render%2C%208k?width=1200&height=800&nologo=true",
     badge: "3D",
     mediaType: "3d",
     mediaFormat: "GLTF / USDZ / OBJ (PBR Textures)",
     turnaround: "48–72 Hours",
     pipelineEngine: "Three.js WebGL + Commercial Studio Fidelity",
   },
+
+  // 4. 360 View (Virtual Tours)
   {
     id: "360-view",
     name: "360 View",
@@ -105,15 +154,21 @@ export const SUTRA_SERVICES: ServiceItem[] = [
       "Immersive 360-degree interactive panoramic virtual tours for luxury villas, hospitality spaces, and real-estate showrooms.",
     workflow: "three-sixty",
     startingPrice: "₹11,999",
+    isCustomQuote: false,
+    ctaText: "Commission 360° Tour",
+    ctaHref: "/orders?service=360-view",
     deliverables: ["Interactive Panorama Viewer", "Hotspot Annotations", "Embeddable Web Code"],
     icon: "Compass",
-    thumbnail: "https://image.pollinations.ai/prompt/equirectangular%20360%20degree%20panoramic%20luxury%20modern%20villa%20interior%2C%20floor%20to%20ceiling%20glass%2C%20calacatta%20marble%2C%20warm%20golden%20lighting%2C%208k%20seamless%20hdr%20spherical?width=2048&height=1024&nologo=true",
+    thumbnail:
+      "https://image.pollinations.ai/prompt/equirectangular%20360%20degree%20panoramic%20luxury%20modern%20villa%20interior%2C%20floor%20to%20ceiling%20glass%2C%20calacatta%20marble%2C%20warm%20golden%20lighting%2C%208k%20seamless%20hdr%20spherical?width=2048&height=1024&nologo=true",
     badge: "360°",
     mediaType: "360",
     mediaFormat: "Equirectangular HDR / WebXR Panoramas",
     turnaround: "2–4 Days",
     pipelineEngine: "Three.js Equirectangular Spatial Engine",
   },
+
+  // 5. Bespoke Service: Interior Architecture (Custom Quote)
   {
     id: "interior-design",
     name: "Interior Architecture",
@@ -121,7 +176,7 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     category: "Design",
     tagline: "Spaces, Renderings & Staging",
     description:
-      "Photorealistic interior architectural visualization, luxury room staging, lighting studies, and material palettes.",
+      "Photorealistic interior architectural visualization, luxury room staging, lighting studies, and bespoke material palettes.",
     workflow: "interior",
     startingPrice: "Custom Quote",
     isCustomQuote: true,
@@ -129,13 +184,16 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     ctaHref: "/contact?service=interior-architecture",
     deliverables: ["High-Res Renders", "Moodboard & Color Schemes", "Furniture Layout Specs"],
     icon: "Home",
-    thumbnail: "https://image.pollinations.ai/prompt/architectural%20interior%20rendering%2C%20minimalist%20luxury%20living%20space%2C%20intricate%20golden%20jali%20screens%2C%20calacatta%20gold%20marble%20floors%2C%20recessed%203000k%20warm%20led%2C%20hasselblad%20photography%2C%208k?width=1200&height=800&nologo=true",
+    thumbnail:
+      "https://image.pollinations.ai/prompt/architectural%20interior%20rendering%2C%20minimalist%20luxury%20living%20space%2C%20intricate%20golden%20jali%20screens%2C%20calacatta%20gold%20marble%20floors%2C%20recessed%203000k%20warm%20led%2C%20hasselblad%20photography%2C%208k?width=1200&height=800&nologo=true",
     badge: "Custom Quote",
     mediaType: "image",
     mediaFormat: "High-Res Render Suite (4K PNG)",
     turnaround: "48–72 Hours",
     pipelineEngine: "Commercial Studio Fidelity + Depth Maps",
   },
+
+  // 6. Window Design (Elevations)
   {
     id: "window-design",
     name: "Window Design",
@@ -146,15 +204,21 @@ export const SUTRA_SERVICES: ServiceItem[] = [
       "Architectural window framing, modern facade elevations, and custom glass architectural visualization.",
     workflow: "window",
     startingPrice: "₹6,499",
+    isCustomQuote: false,
+    ctaText: "Commission Elevations",
+    ctaHref: "/orders?service=window-design",
     deliverables: ["Elevation Profiles", "Glass Material Studies", "Facade Renders"],
     icon: "Grid",
-    thumbnail: "https://image.pollinations.ai/prompt/modern%20architectural%20facade%20elevation%2C%20geometric%20jali%20brass%20window%20framing%2C%20minimalist%20limestone%20villa%2C%20dramatic%20architectural%20shadows%2C%208k?width=1200&height=800&nologo=true",
+    thumbnail:
+      "https://image.pollinations.ai/prompt/modern%20architectural%20facade%20elevation%2C%20geometric%20jali%20brass%20window%20framing%2C%20minimalist%20limestone%20villa%2C%20dramatic%20architectural%20shadows%2C%208k?width=1200&height=800&nologo=true",
     badge: "Elevations",
     mediaType: "image",
     mediaFormat: "CAD DWG / 4K Render Passes",
     turnaround: "24–48 Hours",
     pipelineEngine: "Parametric Facade Modeler + V-Ray",
   },
+
+  // 7. Digital Marketing Strategy
   {
     id: "digital-marketing",
     name: "Digital Marketing",
@@ -165,15 +229,21 @@ export const SUTRA_SERVICES: ServiceItem[] = [
       "Data-driven creative growth strategies, content blueprints, audience profiling, and brand storytelling campaigns.",
     workflow: "marketing",
     startingPrice: "₹14,999",
+    isCustomQuote: false,
+    ctaText: "Commission Strategy",
+    ctaHref: "/orders?service=digital-marketing",
     deliverables: ["Monthly Content Calendar", "Copywriting Decks", "Competitor Trend Analysis"],
     icon: "TrendingUp",
-    thumbnail: "https://image.pollinations.ai/prompt/minimalist%20luxury%20brand%20strategy%20moodboard%2C%20gold%20foil%20typography%2C%20analytics%20charts%20on%20warm%20ivory%20paper%2C%20curated%20aesthetic%2C%208k?width=1200&height=800&nologo=true",
+    thumbnail:
+      "https://image.pollinations.ai/prompt/minimalist%20luxury%20brand%20strategy%20moodboard%2C%20gold%20foil%20typography%2C%20analytics%20charts%20on%20warm%20ivory%20paper%2C%20curated%20aesthetic%2C%208k?width=1200&height=800&nologo=true",
     badge: "Growth",
     mediaType: "interactive",
     mediaFormat: "PDF Strategy Deck / Notion Workspace",
     turnaround: "3–5 Days",
     pipelineEngine: "Sutra Growth Analytics Engine",
   },
+
+  // 8. Bespoke Service: Meta Ads Launcher (Custom Quote)
   {
     id: "meta-ads",
     name: "Meta Ads Launcher",
@@ -181,7 +251,7 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     category: "Marketing",
     tagline: "Campaigns, Ad Creatives",
     description:
-      "End-to-end Facebook & Instagram ad campaign setups, high-converting creative ad variations, copy testing, and optimization.",
+      "End-to-end Facebook & Instagram ad campaign setups, high-converting creative ad variations, copy testing, and audience optimization.",
     workflow: "social",
     startingPrice: "Custom Quote",
     isCustomQuote: true,
@@ -189,13 +259,16 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     ctaHref: "/contact?service=meta-ads-launcher",
     deliverables: ["Targeting Blueprint", "5 Creative Ad Variations", "Conversion Tracking Setup"],
     icon: "Share2",
-    thumbnail: "https://image.pollinations.ai/prompt/social%20media%20advertising%20campaign%20creative%2C%20luxury%20aesthetic%2C%20warm%20gold%20and%20obsidian%20palette%2C%20modern%20typography%2C%20commercial%20grade%2C%208k?width=1200&height=800&nologo=true",
+    thumbnail:
+      "https://image.pollinations.ai/prompt/luxury%20digital%20marketing%20analytics%20growth%20dashboard%2C%20dark%20obsidian%20glass%2C%20golden%20wireframe%20holographic%20charts%2C%20cinematic%20lighting%2C%208k?width=1200&height=800&nologo=true",
     badge: "Custom Quote",
     mediaType: "interactive",
     mediaFormat: "Multi-Ratio Ad Pack (1:1, 9:16, 16:9)",
     turnaround: "48 Hours",
     pipelineEngine: "Commercial Studio Fidelity Pipeline",
   },
+
+  // 9. Bespoke Service: Website Architecture (Custom Quote)
   {
     id: "web-dev",
     name: "Website Architecture",
@@ -211,13 +284,16 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     ctaHref: "/contact?service=website-architecture",
     deliverables: ["Full Responsive Web Code", "SEO & Meta Optimization", "CMS Integration"],
     icon: "Globe",
-    thumbnail: "https://image.pollinations.ai/prompt/minimalist%20luxury%20titanium%20laptop%20mockup%20displaying%20sutra%20studio%20web%20app%2C%20warm%20ivory%20studio%20lighting%2C%20clean%20composition%2C%208k?width=1200&height=800&nologo=true",
+    thumbnail:
+      "https://image.pollinations.ai/prompt/minimalist%20luxury%20titanium%20laptop%20mockup%20displaying%20sutra%20studio%20web%20app%2C%20warm%20ivory%20studio%20lighting%2C%20clean%20composition%2C%208k?width=1200&height=800&nologo=true",
     badge: "Custom Quote",
     mediaType: "code",
     mediaFormat: "Next.js / TypeScript / Tailwind CSS",
     turnaround: "5–7 Days",
     pipelineEngine: "High-Performance Web Architecture",
   },
+
+  // 10. Web App Development (Portals & SaaS)
   {
     id: "webapp-dev",
     name: "Web App Development",
@@ -233,13 +309,16 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     ctaHref: "/contact?service=web-app-architecture",
     deliverables: ["Auth & RBAC", "Real-time Cloud DB", "Production-Ready Code"],
     icon: "Layout",
-    thumbnail: "https://image.pollinations.ai/prompt/dark%20mode%20saas%20dashboard%20ui%20design%2C%20obsidian%20glassmorphism%2C%20gold%20accent%20charts%2C%20enterprise%20portal%2C%20clean%20modern%2C%208k?width=1200&height=800&nologo=true",
+    thumbnail:
+      "https://image.pollinations.ai/prompt/dark%20mode%20saas%20dashboard%20ui%20design%2C%20obsidian%20glassmorphism%2C%20gold%20accent%20charts%2C%20enterprise%20portal%2C%20clean%20modern%2C%208k?width=1200&height=800&nologo=true",
     badge: "Custom Quote",
     mediaType: "interactive",
     mediaFormat: "React / Firestore / Next.js",
     turnaround: "7–14 Days",
     pipelineEngine: "Full-Stack Portal Scaffolder",
   },
+
+  // 11. Bespoke Service: Mobile App Development (Custom Quote)
   {
     id: "mobile-setup",
     name: "Mobile App Development",
@@ -253,15 +332,22 @@ export const SUTRA_SERVICES: ServiceItem[] = [
     isCustomQuote: true,
     ctaText: "Scope Mobile App",
     ctaHref: "/contact?service=mobile-app-setup",
-    deliverables: ["Bespoke iOS & Android Mobile Apps", "iOS & Android Builds", "Push Notification Setup"],
+    deliverables: [
+      "Bespoke iOS & Android Mobile Apps",
+      "iOS & Android Builds",
+      "Push Notification Setup",
+    ],
     icon: "Smartphone",
-    thumbnail: "https://image.pollinations.ai/prompt/luxury%20mobile%20app%20interface%20on%20iphone%2016%20pro%2C%20sutra%20studio%20concierge%20screen%2C%20warm%20gold%20accents%2C%20flawless%20ui%2C%208k?width=1200&height=800&nologo=true",
+    thumbnail:
+      "https://image.pollinations.ai/prompt/luxury%20mobile%20app%20interface%20on%20iphone%2016%20pro%2C%20sutra%20studio%20concierge%20screen%2C%20warm%20gold%20accents%2C%20flawless%20ui%2C%208k?width=1200&height=800&nologo=true",
     badge: "Custom Quote",
     mediaType: "interactive",
     mediaFormat: "iOS IPA / Android APK",
     turnaround: "10–14 Days",
     pipelineEngine: "React Native Mobile Engine",
   },
+
+  // 12. Computational Automation & Cloud Workflows
   {
     id: "ai-automation",
     name: "Cloud Automation & Workflows",
@@ -272,9 +358,17 @@ export const SUTRA_SERVICES: ServiceItem[] = [
       "Custom automated operational pipelines, secure cloud webhook integrations, intelligent content routing, and automated Vault synchronization.",
     workflow: "automation",
     startingPrice: "₹15,999",
-    deliverables: ["Automated Workflow Blueprints", "Webhook Security Verification", "Cloud Vault Automated Pipeline"],
+    isCustomQuote: false,
+    ctaText: "Commission Pipeline",
+    ctaHref: "/orders?service=cloud-automation",
+    deliverables: [
+      "Automated Workflow Blueprints",
+      "Webhook Security Verification",
+      "Cloud Vault Automated Pipeline",
+    ],
     icon: "Cpu",
-    thumbnail: "https://image.pollinations.ai/prompt/futuristic%20autonomous%20ai%20workflow%20engine%20core%2C%20glowing%20gold%20neural%20fibers%2C%20cybernetic%20luxury%20server%2C%20dark%20bronze%2C%208k?width=1200&height=800&nologo=true",
+    thumbnail:
+      "https://image.pollinations.ai/prompt/futuristic%20autonomous%20ai%20workflow%20engine%20core%2C%20glowing%20gold%20neural%20fibers%2C%20cybernetic%20luxury%20server%2C%20dark%20bronze%2C%208k?width=1200&height=800&nologo=true",
     badge: "Automation",
     mediaType: "code",
     mediaFormat: "Cloud Workflow Engine + Secure Webhooks",

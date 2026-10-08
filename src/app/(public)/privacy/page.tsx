@@ -53,20 +53,20 @@ export default function PrivacyPage() {
 
             <section className="space-y-3">
               <h2 className="font-serif text-xl font-semibold text-[#0F172A]">
-                2. AI Provider Routing & Client Data Handling
+                2. Cloud Infrastructure & Confidential Data Safeguards
               </h2>
               <p>
-                Sutra Studio operates an intelligent, multi-tier provider router with strict privacy protections:
+                Sutra Studio operates a high-security, multi-tier computational rendering and storage architecture with rigorous privacy protections:
               </p>
               <ul className="list-disc list-inside space-y-1.5 pl-2 text-xs sm:text-sm text-[#475569]">
                 <li>
-                  <strong className="text-[#0F172A]">Zero Public Training for Confidential Data:</strong> For sensitive client commissions, prompts, and brand assets, our studio activates the <em>No-Training Provider Directive</em>, strictly routing inference through zero-retention enterprise endpoints (Google Cloud Vertex/Gemini API, Groq, Cerebras, BFL Pro) that guarantee client prompts are never retained or utilized to train public foundation models.
+                  <strong className="text-[#0F172A]">Zero Public Training for Confidential Data:</strong> For sensitive client commissions, brand guidelines, and proprietary digital assets, our studio enforces zero-retention enterprise cloud endpoints that guarantee client data is never retained, indexed, or utilized for public training datasets.
                 </li>
                 <li>
-                  <strong className="text-[#0F172A]">Draft & Review Lifecycle:</strong> Free-tier generative models are restricted to preliminary exploratory drafts. All master commercial deliverables undergo executive studio review and are generated via licensed, commercial-grade engines.
+                  <strong className="text-[#0F172A]">Draft & Review Lifecycle:</strong> Exploratory work is strictly segregated from production outputs. All final commercial deliverables undergo executive studio review and quality assurance prior to release into client vaults.
                 </li>
                 <li>
-                  <strong className="text-[#0F172A]">Ephemeral Caching:</strong> Trend intelligence and prompt templates are temporarily cached in-memory with strict 24-hour time-to-live (TTL) expiration and automated purging.
+                  <strong className="text-[#0F172A]">Ephemeral Caching:</strong> Intermediate processing artifacts are temporarily cached in-memory with strict 24-hour time-to-live (TTL) expiration and automated purging.
                 </li>
               </ul>
             </section>

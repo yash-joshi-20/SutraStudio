@@ -273,10 +273,17 @@ export default function ServicesPage() {
                               </span>
                             )}
 
-                            {service.mediaType === "image" && (
+                            {service.mediaType === "image" && !service.isCustomQuote && (
                               <span className="rounded-full bg-white/90 backdrop-blur-sm px-2 py-0.5 text-[10px] font-bold text-[#5C3A1E] flex items-center gap-1 shadow-xs border border-[#EADFCB]">
                                 <ImageIcon className="w-2.5 h-2.5 text-[#5C3A1E]" />
                                 4K Pass
+                              </span>
+                            )}
+
+                            {service.isCustomQuote && (
+                              <span className="rounded-full bg-[#5C3A1E] px-2.5 py-0.5 text-[10px] font-bold text-white flex items-center gap-1 shadow-xs border border-[#A98B57]/40">
+                                <Sparkles className="w-2.5 h-2.5 text-[#D4A35A]" />
+                                Custom Quote
                               </span>
                             )}
                           </div>
@@ -311,6 +318,14 @@ export default function ServicesPage() {
                           <p className="text-xs font-semibold text-[#A98B57] mt-0.5 mb-2.5 tracking-wide">
                             {service.tagline}
                           </p>
+
+                          {/* Standalone Pricing Callout */}
+                          {service.priceDisplay && (
+                            <div className="mb-2.5 p-2 rounded-xl bg-[#FAF9F5] border border-[#D4A35A]/30 text-[11px] font-semibold text-[#8C6D32] leading-tight">
+                              {service.priceDisplay}
+                            </div>
+                          )}
+
                           <p className="text-xs text-[#64748B] leading-relaxed line-clamp-2 mb-3.5">
                             {service.description}
                           </p>
@@ -334,7 +349,7 @@ export default function ServicesPage() {
                       <div className="p-5 pt-3 border-t border-[#EADFCB]/60 flex items-center justify-between">
                         <div>
                           <span className="text-[10px] text-[#94A3B8] uppercase block tracking-wider font-mono">
-                            Starting from
+                            {service.isCustomQuote ? "Scope" : "Starting from"}
                           </span>
                           <span className="font-serif text-lg font-bold text-[#5C3A1E]">
                             {service.startingPrice}
@@ -350,10 +365,17 @@ export default function ServicesPage() {
                           >
                             Details
                           </button>
-                          <Link href={`/orders?service=${service.slug}`}>
-                            <div className="w-8 h-8 rounded-xl bg-[#5C3A1E] text-white flex items-center justify-center transition-transform hover:scale-105 shadow-xs cursor-pointer">
-                              <ArrowUpRight className="w-4 h-4" />
-                            </div>
+                          <Link href={service.ctaHref || `/orders?service=${service.slug}`}>
+                            {service.isCustomQuote && service.ctaText ? (
+                              <div className="px-3 py-1.5 rounded-xl bg-[#5C3A1E] text-white hover:bg-[#4A2E17] text-xs font-semibold flex items-center gap-1 transition-all shadow-xs cursor-pointer">
+                                <span>{service.ctaText}</span>
+                                <ArrowUpRight className="w-3.5 h-3.5" />
+                              </div>
+                            ) : (
+                              <div className="w-8 h-8 rounded-xl bg-[#5C3A1E] text-white flex items-center justify-center transition-transform hover:scale-105 shadow-xs cursor-pointer">
+                                <ArrowUpRight className="w-4 h-4" />
+                              </div>
+                            )}
                           </Link>
                         </div>
                       </div>
@@ -395,7 +417,7 @@ export default function ServicesPage() {
                     24 – 72 Hour Turnarounds
                   </h4>
                   <p className="text-xs text-[#64748B] mt-1 leading-relaxed">
-                    High-speed generative studio pipelines and accelerated review
+                    High-speed production pipelines and accelerated review
                     cycles designed for fast-moving businesses.
                   </p>
                 </div>
@@ -450,7 +472,7 @@ export default function ServicesPage() {
                   leftIcon={<Bot className="w-4 h-4 text-[#D4A35A]" />}
                   className="w-full sm:w-auto justify-center"
                 >
-                  Consult AI Assistant
+                  Consult Studio Concierge
                 </Button>
               </Link>
             </div>
@@ -526,7 +548,9 @@ export default function ServicesPage() {
             {/* Service Metadata Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] text-xs">
               <div>
-                <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">Starting Investment</span>
+                <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">
+                  {selectedService.isCustomQuote ? "Investment Scope" : "Starting Price"}
+                </span>
                 <span className="font-serif text-lg font-bold text-[#5C3A1E]">{selectedService.startingPrice}</span>
               </div>
               <div>
@@ -546,6 +570,14 @@ export default function ServicesPage() {
                 </span>
               </div>
             </div>
+
+            {/* Standalone Pricing Callout if exists */}
+            {selectedService.priceDisplay && (
+              <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#D4A35A]/40 text-xs font-semibold text-[#8C6D32] flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#A98B57] shrink-0" />
+                <span>{selectedService.priceDisplay}</span>
+              </div>
+            )}
 
             {/* Deliverable Specifications */}
             <div>
@@ -585,9 +617,12 @@ export default function ServicesPage() {
               >
                 Close Preview
               </Button>
-              <Link href={`/orders?service=${selectedService.slug}`} className="w-full sm:w-auto">
+              <Link
+                href={selectedService.ctaHref || `/orders?service=${selectedService.slug}`}
+                className="w-full sm:w-auto"
+              >
                 <Button variant="primary" size="md" withArrow className="w-full">
-                  Commission {selectedService.name}
+                  {selectedService.ctaText || `Commission ${selectedService.name}`}
                 </Button>
               </Link>
             </div>

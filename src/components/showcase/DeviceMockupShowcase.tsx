@@ -123,7 +123,7 @@ export function DeviceMockupShowcase({
 
                     <div className="flex items-center gap-1 px-3 py-0.5 rounded-md bg-[#F4EFE6] border border-[#EADFCB] text-[9px] text-[#64748B] font-mono max-w-[200px] truncate">
                       <Lock className="w-2.5 h-2.5 text-[#2E7D4F]" />
-                      <span>sutrastudio.com/flagship</span>
+                      <span>sutrastudio-1.onrender.com</span>
                     </div>
 
                     <div className="flex items-center gap-1 text-[9px] text-[#A98B57] font-semibold">
@@ -148,7 +148,7 @@ export function DeviceMockupShowcase({
                         Where Vedic Craft Meets <span className="text-gold-gradient">Digital Intelligence</span>
                       </h2>
                       <p className="text-[10px] sm:text-xs text-[#64748B] line-clamp-2">
-                        12 isolated generative pipelines: photorealistic 3D, architectural rendering, Next.js web applications, and autonomous Meta ad growth engines.
+                        12 isolated production pipelines: photorealistic 3D, architectural rendering, Next.js web applications, and autonomous Meta ad growth engines.
                       </p>
                     </div>
 
@@ -260,13 +260,13 @@ export function DeviceMockupShowcase({
                   </div>
                 </div>
 
-                {/* Mobile Floating AI Launcher & Bottom Nav */}
+                {/* Mobile Floating Concierge Launcher & Bottom Nav */}
                 <div className="p-2 bg-[#FFFDF9] border-t border-[#EADFCB] flex items-center justify-around relative">
                   <div className="w-3 h-3 rounded-full bg-[#F4EFE6]" />
                   <div className="w-3 h-3 rounded-full bg-[#5C3A1E]" />
                   <div className="w-3 h-3 rounded-full bg-[#F4EFE6]" />
 
-                  {/* Floating AI Orb */}
+                  {/* Floating Concierge Orb */}
                   <div className="absolute -top-4 right-2 w-7 h-7 rounded-full bg-[#171717] border border-[#A98B57] flex items-center justify-center shadow-md">
                     <img
                       src="/brand/sutra-symbol.png"

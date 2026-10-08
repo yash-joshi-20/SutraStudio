@@ -33,7 +33,7 @@ export default function StudioPage() {
           </h1>
 
           <p className="text-sm sm:text-base text-[#64748B] leading-relaxed max-w-2xl mx-auto font-sans">
-            Sutra Studio was founded on a simple conviction: modern generative
+            Sutra Studio was founded on a simple conviction: modern computational
             technology achieves its highest expression when guided by centuries of
             disciplined design wisdom, sacred geometry, and artisanal human craft.
           </p>
@@ -208,11 +208,11 @@ export default function StudioPage() {
               <Cpu className="w-6 h-6 text-[#5C3A1E]" />
             </div>
             <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
-              2. Specialized Generative Engines
+              2. Dedicated Production Pipelines
             </h3>
             <p className="text-sm text-[#64748B] mt-3 leading-relaxed">
               Every creative discipline (image, video, 3D, interior) operates inside
-              dedicated high-precision generation pipelines, ensuring precision outputs
+              dedicated high-precision production pipelines, ensuring photorealistic outputs
               without generic artifacts.
             </p>
           </div>
@@ -225,7 +225,7 @@ export default function StudioPage() {
               3. Human Art Direction
             </h3>
             <p className="text-sm text-[#64748B] mt-3 leading-relaxed">
-              AI generates speed and scale; our senior art directors and 3D
+              Computational automation delivers speed and precision; our senior art directors and 3D
               supervisors curate, polish, and ensure commercial-grade fidelity.
             </p>
           </div>
@@ -255,13 +255,13 @@ export default function StudioPage() {
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 pt-6">
             <div className="space-y-2">
               <p className="font-serif text-2xl font-bold text-[#5C3A1E]">01</p>
-              <h4 className="font-semibold text-sm text-[#0F172A]">Intake &amp; AI Routing</h4>
-              <p className="text-xs text-[#64748B]">Automated brief analysis and classification</p>
+              <h4 className="font-semibold text-sm text-[#0F172A]">Intake &amp; Scope Classification</h4>
+              <p className="text-xs text-[#64748B]">Automated brief analysis and production staging</p>
             </div>
             <div className="space-y-2">
               <p className="font-serif text-2xl font-bold text-[#5C3A1E]">02</p>
-              <h4 className="font-semibold text-sm text-[#0F172A]">Model Generation</h4>
-              <p className="text-xs text-[#64748B]">Rapid iterative drafts produced in hours</p>
+              <h4 className="font-semibold text-sm text-[#0F172A]">Production Drafting</h4>
+              <p className="text-xs text-[#64748B]">Rapid iterative passes rendered in hours</p>
             </div>
             <div className="space-y-2">
               <p className="font-serif text-2xl font-bold text-[#5C3A1E]">03</p>

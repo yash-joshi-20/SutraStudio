@@ -31,6 +31,7 @@ export interface PaymentModalProps {
   clientPhone?: string;
   serviceTitle: string;
   amount: number;
+  isCustomQuote?: boolean;
   onPaymentSuccess?: (verificationData: {
     utr: string;
     receiptUrl?: string;
@@ -48,12 +49,25 @@ export function PaymentModal({
   clientPhone,
   serviceTitle,
   amount,
+  isCustomQuote,
   onPaymentSuccess,
 }: PaymentModalProps) {
   const displayCode = orderCode || orderId || "SUTRA-ORD";
   const upiId = STUDIO_PAYMENT_CONFIG.vpa;
   const merchantName = STUDIO_PAYMENT_CONFIG.merchantName;
-  const whatsappNumber = STUDIO_PAYMENT_CONFIG.whatsappNumber;
+  const whatsappNumber = STUDIO_PAYMENT_CONFIG.whatsappNumber || "918200192781";
+
+  // Check if service is bespoke (Interior Architecture, Meta Ads, Web Build, Mobile Apps, or custom quote)
+  const isBespoke =
+    Boolean(isCustomQuote) ||
+    amount <= 0 ||
+    /interior|architecture|spatial|meta ad|web build|website|web app|mobile app/i.test(
+      serviceTitle
+    );
+
+  const bespokeWhatsAppUrl = `https://wa.me/918200192781?text=${encodeURIComponent(
+    `Hello Sutra Studio, I would like to request a custom scope quotation for ${serviceTitle}.`
+  )}`;
 
   const [copiedUpi, setCopiedUpi] = useState(false);
   const [utrNumber, setUtrNumber] = useState("");
@@ -203,11 +217,66 @@ Please verify receipt and initiate studio production workflow.`;
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Zero-Fee UPI & GPay Direct Checkout"
+      title={isBespoke ? "Bespoke Quotation & Scope Inquiry" : "Zero-Fee UPI & GPay Direct Checkout"}
       description={`Commission ${displayCode} • ${serviceTitle}`}
       maxWidth="lg"
     >
-      {submissionSuccess ? (
+      {isBespoke ? (
+        <div className="py-6 px-2 text-center space-y-6 animate-in fade-in duration-300">
+          <div className="w-16 h-16 rounded-full bg-[#FAF9F5] border border-[#D4A35A]/60 flex items-center justify-center mx-auto text-[#5C3A1E] shadow-xs">
+            <MessageCircle className="w-8 h-8 text-[#A98B57]" />
+          </div>
+
+          <div className="space-y-2 max-w-md mx-auto">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#D4A35A]/40 text-[11px] font-mono font-semibold text-[#5C3A1E]">
+              <span>◆</span>
+              <span>BESPOKE TECHNICAL ARCHITECTURE</span>
+            </div>
+            <h3 className="font-serif text-2xl font-bold text-[#0F172A]">
+              Direct Concierge Routing
+            </h3>
+            <p className="text-xs text-[#64748B] leading-relaxed">
+              Bespoke commissions for <strong className="text-[#0F172A]">{serviceTitle}</strong> require tailored engineering specifications, spatial blueprints, or media roadmaps rather than a fixed upfront fee.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] text-left max-w-md mx-auto space-y-2 text-xs">
+            <div className="flex justify-between text-[#64748B]">
+              <span>Service Selected:</span>
+              <span className="font-semibold text-[#0F172A]">{serviceTitle}</span>
+            </div>
+            <div className="flex justify-between text-[#64748B]">
+              <span>Commission Scope:</span>
+              <span className="font-semibold text-[#5C3A1E]">Custom Architecture Quote</span>
+            </div>
+            <div className="flex justify-between text-[#64748B]">
+              <span>Concierge Direct Line:</span>
+              <span className="font-mono text-[#0F172A]">+91 82001 92781</span>
+            </div>
+          </div>
+
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a
+              href={bespokeWhatsAppUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#25D366] text-white hover:bg-[#20BD5A] transition-colors text-xs font-semibold shadow-xs"
+            >
+              <MessageCircle className="w-4 h-4 fill-white text-[#25D366]" />
+              <span>Connect on WhatsApp Concierge</span>
+            </a>
+
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={onClose}
+              className="w-full sm:w-auto"
+            >
+              Close Window
+            </Button>
+          </div>
+        </div>
+      ) : submissionSuccess ? (
         <div className="py-6 px-2 text-center space-y-4 animate-in fade-in duration-300">
           <div className="w-16 h-16 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] flex items-center justify-center mx-auto text-[#059669]">
             <Check className="w-8 h-8 stroke-[2.5]" />

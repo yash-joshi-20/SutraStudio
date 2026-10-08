@@ -275,7 +275,7 @@ export class MediaVaultStore {
     const file = await MediaVaultStore.getFile(fileId, clientUid);
     if (!file) return null;
 
-    const appUrl = readPublicEnv("NEXT_PUBLIC_APP_URL") || "https://sutrastudio.com";
+    const appUrl = readPublicEnv("NEXT_PUBLIC_APP_URL") || "https://sutrastudio-1.onrender.com";
     const shareLink: ShareLink = {
       id: `share_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
       url: `${appUrl}/share/${fileId}/${Date.now().toString(36)}`,

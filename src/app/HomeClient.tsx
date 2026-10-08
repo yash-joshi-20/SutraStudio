@@ -63,12 +63,12 @@ const FILTER_CATEGORIES = [
 ];
 
 const HERO_DISCIPLINES = [
-  { id: "visuals", label: "4K AI Visuals", output: "4K UHD PNG / TIFF", price: "₹3,499" },
-  { id: "video", label: "Cinematic Reels", output: "ProRes 422 60FPS", price: "₹7,999" },
-  { id: "3d", label: "3D Spatial Meshes", output: "GLB / OBJ / USDZ", price: "₹7,999" },
-  { id: "interior", label: "Architectural Living", output: "8K Photorealistic", price: "₹7,999" },
-  { id: "meta", label: "Meta Ads Launcher", output: "Multi-Ratio Ad Bundles", price: "₹3,499" },
-  { id: "web", label: "Full-Stack Web/App", output: "Next.js 16 Flagships", price: "Custom" },
+  { id: "visuals", label: "4K AI Visuals", output: "4K UHD PNG / TIFF", price: "₹499" },
+  { id: "video", label: "Cinematic Reels", output: "ProRes 422 60FPS", price: "₹1,499" },
+  { id: "3d", label: "3D Spatial Meshes", output: "GLB / OBJ / USDZ", price: "Custom Quote" },
+  { id: "interior", label: "Architectural Living", output: "8K Photorealistic", price: "Custom Quote" },
+  { id: "meta", label: "Meta Ads Launcher", output: "Multi-Ratio Ad Bundles", price: "Custom Quote" },
+  { id: "web", label: "Full-Stack Web/App", output: "High-Performance Web", price: "Custom Quote" },
 ];
 
 export default function HomePage() {
@@ -562,7 +562,7 @@ export default function HomePage() {
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-xs font-semibold uppercase tracking-wider text-[#A98B57]">Sutra Studio</span>
-                      <span className="text-xs font-bold text-[#5C3A1E] bg-[#D4A35A]/20 px-2.5 py-0.5 rounded-full">From ₹3,499</span>
+                      <span className="text-xs font-bold text-[#5C3A1E] bg-[#D4A35A]/20 px-2.5 py-0.5 rounded-full">From ₹499</span>
                     </div>
                     <h4 className="font-serif text-lg font-bold text-[#0F172A] mb-2">Autonomous Atelier</h4>
                     <p className="text-xs text-[#64748B] mb-5 leading-relaxed">AI speed + Senior Art Director Polish + Cloud Vault.</p>
@@ -622,7 +622,7 @@ export default function HomePage() {
               </h2>
 
               <p className="text-sm sm:text-base text-[#64748B] leading-relaxed">
-                Choose between single high-impact commissions starting at ₹3,499 or our 30-Day Autonomous Retainer with daily queue fulfillment.
+                Choose between single high-impact standalone deliverables starting at ₹499, studio commission packs, or our 30-Day Autonomous Retainer with daily queue fulfillment.
               </p>
 
               {/* Billing Cycle Toggle */}

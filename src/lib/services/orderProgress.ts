@@ -117,22 +117,33 @@ export function computeOrderProgress(order: any): OrderProgressInfo {
         statusCategory: "active",
       };
 
+    case "ai_generating":
     case "in_production":
       return {
         percentage: 60,
-        stageName: "In Production",
-        stageLabel: "In Studio Production Pipeline",
+        stageName: "In Production Pipeline",
+        stageLabel: "In Production Pipeline",
         isComplete: false,
         statusCategory: "active",
       };
 
+    case "rendering":
+      return {
+        percentage: 70,
+        stageName: "Visual Engineering Sprint in Progress",
+        stageLabel: "Visual Engineering Sprint in Progress",
+        isComplete: false,
+        statusCategory: "active",
+      };
+
+    case "review":
     case "draft_delivered":
     case "awaiting_approval":
     case "delivered":
       return {
         percentage: 80,
-        stageName: "Draft Delivered",
-        stageLabel: "Draft Vaulted — Waiting for Client Review",
+        stageName: "Quality Assurance & Creative Review",
+        stageLabel: "Quality Assurance & Creative Review",
         isComplete: false,
         statusCategory: "review",
       };
@@ -158,8 +169,8 @@ export function computeOrderProgress(order: any): OrderProgressInfo {
     case "completed":
       return {
         percentage: 100,
-        stageName: "Completed",
-        stageLabel: "Project Completed & Vaulted (100%)",
+        stageName: "Delivered to Sutra Cloud Vault",
+        stageLabel: "Delivered to Sutra Cloud Vault",
         isComplete: true,
         statusCategory: "completed",
       };
@@ -252,21 +263,21 @@ export function computeN8nWorkflowProgress(order?: any, workflowIdOverride?: str
     currentStepLabel = "Draft Vaulted in Drive '02 Drafts' — Awaiting Studio Admin Review (80%)";
   } else if (wfStatus === "running" || orderStatus === "in_production") {
     percentage = 50;
-    currentStepLabel = "AI Multi-Model & Spatial Synthesis Active in Container (50%)";
+    currentStepLabel = "Studio Proprietary Pipeline & Spatial Synthesis Active (50%)";
   } else if (wfStatus === "queued") {
     percentage = 20;
-    currentStepLabel = "Queued in n8n Task Buffer & Mapped to Google Drive (20%)";
+    currentStepLabel = "Queued in Studio Production Buffer & Mapped to Cloud Vault (20%)";
   } else {
     percentage = 10;
     currentStepLabel = "Order Intake & Payment Verified (10%)";
   }
 
-  let workflowName = "Sutra Master Autonomous Pipeline";
+  let workflowName = "Sutra Master Production Pipeline";
   let shortCode = "MASTER";
   let stages: N8nWorkflowStage[] = [];
 
   if (wfId === "SUTRA_MASTER_AUTONOMOUS_PIPELINE" || wfId === "sutra-master-pipeline" || !wfId) {
-    workflowName = "Sutra Master Autonomous Creative Pipeline";
+    workflowName = "Sutra Master Creative & Software Pipeline";
     shortCode = "MASTER";
     stages = [
       {
@@ -279,16 +290,16 @@ export function computeN8nWorkflowProgress(order?: any, workflowIdOverride?: str
       },
       {
         id: "master_s2",
-        name: "Autonomous Brand & Market Research",
-        description: "Gemini 2.5 / SerpApi trend intelligence & prompt architecture",
+        name: "Computational Market & Visual Analysis",
+        description: "Design system research, trend intelligence & technical blueprinting",
         percentage: 25,
         isPassed: percentage >= 25,
         isCurrent: percentage >= 25 && percentage < 50,
       },
       {
         id: "master_s3",
-        name: "Multi-Modal Generative Synthesis",
-        description: "FLUX 4K renders, Kling cinematic video, Tripo3D meshes & Meta Ads",
+        name: "High-Definition Visual & Spatial Synthesis",
+        description: "4K Photorealistic renders, commercial motion suites & 3D spatial models",
         percentage: 50,
         isPassed: percentage >= 50,
         isCurrent: percentage >= 50 && percentage < 80,

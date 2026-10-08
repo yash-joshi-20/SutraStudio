@@ -38,8 +38,8 @@ export default function ChatbotDemoPage() {
     <div className="min-h-screen bg-[#F8F5EF] p-6">
       <div className="max-w-3xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold">AI Chatbot Demo</h1>
-          <p className="text-[#64748B]">Only answers from approved & published knowledge (RAG)</p>
+          <h1 className="text-2xl font-bold">Studio Concierge Demo</h1>
+          <p className="text-[#64748B]">Interactive knowledge discovery assistant</p>
         </div>
         <div className="bg-white border border-[#EADFCB] rounded-lg h-[60vh] flex flex-col">
           <div className="flex-1 p-4 overflow-y-auto space-y-4">

@@ -18,8 +18,8 @@ import {
   PER_PROJECT_TIERS,
   MONTHLY_RETAINER_TIERS,
 } from "@/config/pricing";
+import { STANDALONE_PACKAGES } from "@/config/packages";
 import { motion, AnimatePresence } from "framer-motion";
-import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 
 const FAQS = [
   {
@@ -61,6 +61,41 @@ export default function PricingPage() {
             Honest studio commissions with zero hidden fees. Every asset crafted under
             experienced art-direction and delivered directly into your Sutra Cloud Vault.
           </p>
+
+          {/* Standalone Quick-Order Deliverables Banner */}
+          <div className="pt-2 pb-2 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto text-left">
+            {STANDALONE_PACKAGES.map((pack) => (
+              <div
+                key={pack.id}
+                className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#D4A35A]/60 shadow-xs flex flex-col justify-between hover:border-[#D4A35A] transition-colors"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-[#A98B57] font-bold">
+                      Standalone Deliverable
+                    </span>
+                    <span className="text-[11px] font-mono text-[#64748B]">{pack.turnaround}</span>
+                  </div>
+                  <h4 className="font-serif text-base font-semibold text-[#0F172A] mt-1">
+                    {pack.name}
+                  </h4>
+                  <p className="text-xs text-[#64748B] mt-1 line-clamp-2">
+                    {pack.description}
+                  </p>
+                </div>
+                <div className="pt-3 flex items-center justify-between border-t border-[#EADFCB]/60 mt-3">
+                  <span className="font-serif text-xl font-bold text-[#5C3A1E]">
+                    {pack.formattedPrice}
+                  </span>
+                  <Link href={pack.ctaHref}>
+                    <Button variant="secondary" size="sm" className="text-xs">
+                      {pack.ctaText}
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
 
           {/* Billing Cycle Toggle */}
           <div className="pt-4 flex items-center justify-center">
@@ -138,14 +173,10 @@ export default function PricingPage() {
                       </p>
                     </div>
 
-                    {/* Price Display with Animated Number */}
+                    {/* Price Display with Static Number (No Flicker) */}
                     <div className="flex items-baseline gap-1.5 pb-6 border-b border-[#EADFCB]/60">
                       <span className="font-serif text-3xl sm:text-4xl font-bold text-[#5C3A1E]">
-                        {typeof tier.price === "number" ? (
-                          <AnimatedNumber value={tier.price} prefix="₹" />
-                        ) : (
-                          "Custom Quote"
-                        )}
+                        {typeof tier.price === "number" ? tier.formattedPrice : "Custom Quote"}
                       </span>
                       <span className="text-xs text-[#64748B] font-mono">
                         {tier.price === "custom" ? "" : "/ commission"}
@@ -224,7 +255,7 @@ export default function PricingPage() {
                     <div className="flex flex-col sm:flex-row sm:items-baseline justify-between pb-6 border-b border-[#EADFCB]/60 gap-2">
                       <div className="flex items-baseline gap-2">
                         <span className="font-serif text-4xl sm:text-5xl font-bold text-[#5C3A1E]">
-                          <AnimatedNumber value={14999} prefix="₹" suffix=" / month" />
+                          {tier.formattedMonthlyPrice}
                         </span>
                       </div>
                       <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FAF9F5] border border-[#D4A35A]/50 text-xs font-mono font-bold text-[#5C3A1E]">
@@ -296,7 +327,7 @@ export default function PricingPage() {
             </div>
             <div>
               <h5 className="font-semibold text-[#0F172A] text-sm">24-72 Hour Delivery</h5>
-              <p className="text-[11px] mt-0.5">Autonomous generative pipelines with human supervision.</p>
+              <p className="text-[11px] mt-0.5">Automated high-speed production pipelines with dedicated creative direction.</p>
             </div>
           </div>
         </div>

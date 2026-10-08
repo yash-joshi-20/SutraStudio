@@ -27,8 +27,8 @@ import {
 } from "lucide-react";
 
 const SERVICE_OPTIONS = [
-  { label: "Image Creation (Photorealistic AI & Art)", value: "Image Creation" },
-  { label: "Video Creation (Cinematic AI & Motion)", value: "Video Creation" },
+  { label: "Image Creation (Photorealistic CGI & Key Visuals)", value: "Image Creation" },
+  { label: "Video Creation (Cinematic Motion & Film Grading)", value: "Video Creation" },
   { label: "3D Modeling & Spatial Assets", value: "3D Modeling" },
   { label: "360° Interactive Architectural View", value: "360 View" },
   { label: "Interior & Spatial Design", value: "Interior Design" },
@@ -38,7 +38,7 @@ const SERVICE_OPTIONS = [
   { label: "Website Architecture & Development", value: "Website Development" },
   { label: "Web Application & SaaS Engineering", value: "Web App Development" },
   { label: "Mobile App Implementation", value: "Mobile App Setup" },
-  { label: "AI Creative Automation", value: "AI Automation" },
+  { label: "Digital Workflow Automation", value: "Digital Automation" },
 ];
 
 const BUDGET_OPTIONS = [
@@ -213,7 +213,7 @@ export default function ContactPage() {
                     <div>
                       <p className="font-semibold text-[#0F172A]">Operating Cadence</p>
                       <p className="text-xs text-[#64748B]">
-                        Mon – Fri: 09:00 – 20:00 IST (24/7 AI Router Active)
+                        Mon – Fri: 09:00 – 20:00 IST (24/7 Studio Concierge Active)
                       </p>
                     </div>
                   </div>
@@ -228,7 +228,7 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              {/* AI Creative Assistant Quick Card */}
+              {/* Studio Concierge Assistant Quick Card */}
               <div className="rounded-3xl bg-gradient-to-br from-[#FFFDF9] to-[#FAF6EE] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-2xl bg-[#5C3A1E] text-white flex items-center justify-center shrink-0">
@@ -239,20 +239,20 @@ export default function ContactPage() {
                       Need an Instant Scope or Estimate?
                     </h4>
                     <p className="text-xs text-[#64748B]">
-                      Talk directly with the Sutra AI Assistant
+                      Connect directly with the Studio Concierge
                     </p>
                   </div>
                 </div>
 
                 <p className="text-xs text-[#64748B] leading-relaxed">
-                  Our fine-tuned generative assistant can classify your deliverable,
-                  estimate realistic turnaround times, and draft an order package ready
+                  Our interactive scoping concierge can classify your deliverable specifications,
+                  estimate realistic turnaround milestones, and structure an order package ready
                   for review in real-time.
                 </p>
 
                 <Link href="/chat" className="inline-block w-full">
                   <Button variant="secondary" size="md" className="w-full">
-                    Launch AI Assistant
+                    Launch Studio Concierge
                   </Button>
                 </Link>
               </div>

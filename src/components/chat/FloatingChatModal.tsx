@@ -232,7 +232,7 @@ export function FloatingChatModal() {
       gujaratiTime = "શુભ સંધ્યા";
     }
 
-    const text = `${greetingTime} (${gujaratiTime})! 🙏 Welcome to **Sutra Studio**.\n\nI am your dedicated AI Concierge. You can speak or type to inquire about our 12 creative capabilities, review pricing, share reference files, or commission direct orders. How may we assist your creative vision today?`;
+    const text = `${greetingTime} (${gujaratiTime})! 🙏 Welcome to **Sutra Studio**.\n\nI am your dedicated Studio Concierge. You can speak or type to inquire about our 12 creative capabilities, review pricing, share reference files, or commission direct orders. How may we assist your creative vision today?`;
     const spoken = `${greetingTime}! Welcome to Sutra Studio Atelier. How may I assist your creative vision today?`;
     return { text, spoken };
   };

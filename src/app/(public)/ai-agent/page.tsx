@@ -152,12 +152,12 @@ export default function PhoneAiAgentPage() {
                 </div>
                 <div>
                   <h1 className="font-serif font-bold text-lg text-[#0F172A]">
-                    Sutra AI Phone Agent
+                    Sutra Studio Voice Concierge
                   </h1>
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-pulse" />
                     <span className="text-xs font-mono text-[#5C3A1E] font-medium">
-                      {callState === "speaking" ? "Speaking • Neural Voice" : "Listening..."}
+                      {callState === "speaking" ? "Speaking • Studio Audio" : "Listening..."}
                     </span>
                     <span className="text-xs text-[#94A3B8] font-mono">({formatTimer(callDuration)})</span>
                   </div>

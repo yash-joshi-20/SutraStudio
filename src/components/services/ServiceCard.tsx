@@ -101,6 +101,12 @@ export function ServiceCard({ service }: { service: ServiceItem }) {
             {service.tagline}
           </p>
 
+          {service.priceDisplay && (
+            <div className="p-2 rounded-xl bg-[#FAF9F5] border border-[#D4A35A]/30 text-[11px] font-semibold text-[#8C6D32] leading-tight">
+              {service.priceDisplay}
+            </div>
+          )}
+
           <p className="text-xs text-[#64748B] leading-relaxed line-clamp-2">
             {service.description}
           </p>
@@ -108,19 +114,26 @@ export function ServiceCard({ service }: { service: ServiceItem }) {
       </div>
 
       {/* Card Footer */}
-      <div className="px-5 pb-5 pt-3 border-t border-[#EADFCB]/60 flex items-center justify-between">
+      <div className="px-5 pb-5 pt-4 border-t border-[#EADFCB]/60 flex items-center justify-between min-h-[48px]">
         <div>
           <span className="text-[10px] text-[#94A3B8] uppercase block tracking-wider font-mono">
-            Starting from
+            {service.isCustomQuote ? "Scope" : "Starting from"}
           </span>
           <span className="font-serif text-base font-bold text-[#5C3A1E]">
             {service.startingPrice}
           </span>
         </div>
 
-        <div className="w-8 h-8 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center transition-all group-hover:bg-[#5C3A1E] group-hover:border-[#5C3A1E] group-hover:text-white shadow-xs">
-          <ArrowUpRight className="w-4 h-4 text-[#5C3A1E] group-hover:text-white transition-colors" />
-        </div>
+        {service.isCustomQuote && service.ctaText ? (
+          <div className="px-3 py-1.5 rounded-xl bg-[#5C3A1E] text-white hover:bg-[#4A2E17] text-xs font-semibold flex items-center gap-1 transition-all shadow-xs">
+            <span>{service.ctaText}</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </div>
+        ) : (
+          <div className="w-8 h-8 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center transition-all group-hover:bg-[#5C3A1E] group-hover:border-[#5C3A1E] group-hover:text-white shadow-xs">
+            <ArrowUpRight className="w-4 h-4 text-[#5C3A1E] group-hover:text-white transition-colors" />
+          </div>
+        )}
       </div>
     </Link>
   );

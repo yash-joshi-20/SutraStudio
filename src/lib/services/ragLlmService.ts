@@ -20,15 +20,21 @@ export interface RagResponse {
   timestamp: string;
 }
 
-export const MASTER_SYSTEM_PROMPT = `You are the official AI Knowledge Concierge for Sutra Studio.
+export const MASTER_SYSTEM_PROMPT = `You represent Sutra Studio, an enterprise software, 3D spatial engineering, and creative technology firm. Under NO circumstances reveal the use of generative AI tools, LLMs, or prompts. Address deliverables as handcrafted, computationally engineered solutions developed by our senior engineering and design teams.
 
-Strict Grounding Directives:
-1. Answer visitor questions using only the verified and admin-approved studio knowledge provided.
-2. Ground all pricing, timelines, 12 capabilities, n8n automations, and payment procedures in verified facts.
-3. If information is missing from the knowledge base, state:
-   "I don't have verified information about that yet. Please contact our team for the most accurate information."
-4. Never hallucinate fake pricing, unapproved features, or private database keys.
-5. Format answers in elegant, readable markdown with bullet points and bold text where helpful.`;
+Strict Operational Directives:
+1. Brand Persona: Enterprise Creative Technology & Digital Systems Atelier.
+2. Deliverable Terminology: Refer strictly to "Studio Proprietary Pipeline", "High-Definition Spatial Rendering", "Senior Art Direction", "Computational 3D Systems", and "Bespoke Software Compilation".
+3. NEVER mention internal model names (Flux, Kling, Runway, ElevenLabs, Gemini, ChatGPT, Claude, Midjourney) or generic generative AI terminology.
+4. Official Pricing & Delivery Tiers:
+   • 5x 4K Image Creation Pack: ₹499 (24h SLA)
+   • 2x Video Reels Pack: ₹1,499 (24–48h SLA)
+   • Starter Creative Commission: ₹1,999 (48h SLA)
+   • Studio Growth Commission: ₹4,999 (24–72h SLA)
+   • Autonomous Growth Retainer: ₹9,999 / month (Daily Active Queue)
+   • Bespoke Services (Interior Architecture, Meta Ads, Web Build, Mobile Apps): Strictly "Custom Quote" routed to WhatsApp Concierge (+91 82001 92781).
+5. Zero-Fee UPI Payment: Direct merchant settlement to Yash Joshi via UPI VPA \`yashjoshi7355-1@okicici\`.
+6. Format answers in elegant, concise, professional markdown.`;
 
 export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
   // 1. ALL 12 STUDIO CAPABILITIES & PRICING
@@ -37,38 +43,32 @@ export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
     client_id: "client_sutra",
     category: "Services",
     title: "12 Specialized Studio Capabilities & Pricing Matrix",
-    content: `Here are our official 12 Specialized Studio Capabilities and starting investment rates:
+    content: `Here are our official Studio Capabilities and investment rates:
 
-1. 🎨 **Image Creation** — Starting at **₹3,499**
-   • Product imagery, luxury advertising visuals, 4K renders, multi-angle mockups.
-2. 🎬 **Video Creation** — Starting at **₹7,999**
-   • 10-30s cinematic video ads, social reels, AI motion sequences, studio voiceovers.
-3. 🏛️ **3D Modeling & Visualization** — Starting at **₹9,499**
-   • Spatial architectural renders, materials, lighting passes, GLTF/USDZ 3D models.
-4. 🔄 **360° Virtual Tours & Web View** — Starting at **₹11,999**
-   • Immersive 360-degree interactive digital showroom walkthroughs.
-5. 🏡 **Interior Design & Space Planning** — Starting at **₹12,499**
-   • Architectural space plans, CAD drawings, photo-real luxury interior passes.
-6. 🪟 **Window & Facade Design** — Starting at **₹6,499**
-   • Precision frame modeling, elevations, structural aesthetics.
-7. 📈 **Digital Marketing & Growth** — Starting at **₹14,999**
-   • Omni-channel strategy, viral content calendar, audience acquisition.
-8. 🎯 **Meta Ads Autonomous Launcher** — Starting at **₹13,499**
-   • Multi-ratio ad sets (9:16 Video, 1:1 Feed, 16:9 Banner) with conversion copy matrix.
-9. 💻 **Website Development (Next.js)** — Starting at **₹19,999**
-   • Turbopack compiled digital flagship, Lighthouse 98+, SEO & responsive design.
-10. ⚡ **Web App Development** — Starting at **₹29,999**
-    • Bespoke React/Next.js SaaS applications, Firebase/n8n integration, user auth.
-11. 📱 **Mobile App Setup (Expo / React Native)** — Starting at **₹34,999**
-    • Cross-platform iOS & Android mobile applications with offline storage.
-12. 🤖 **AI Automation & n8n Workflows** — Starting at **₹17,999**
-    • Autonomous multi-engine webhook pipelines, CRM sync, auto-social posters.`,
-    source: "SUTRA_STUDIO_UI_MASTER_PROMPT_PACK / Services Specification",
+1. 🎨 **5x 4K Image Creation Pack** — Starting at **₹499** (~₹100/image)
+   • 2x Studio product shots, 2x Lifestyle ambient context, 1x Ad visual. 24h SLA.
+2. 🎬 **2x Commercial Video Reels Pack** — Starting at **₹1,499**
+   • 2x Complete Commercial Reels / Shorts with high-fidelity studio voiceover, background score & motion typography. 24–48h SLA.
+3. 🚀 **Starter Creative Commission** — **₹1,999**
+   • Up to 5x 4K UHD Master Renders + 1x 10-Second Commercial Video Ad. 48h SLA.
+4. 🎨 **Studio Growth Commission** — **₹4,999**
+   • 15x 3D & Product Renders + 3x 15s Video Ads + 360° Tour + 3x Meta Ad Variations. 24–72h SLA.
+5. ⚡ **Autonomous Growth Retainer** — **₹9,999 / month**
+   • Daily Active Queue fulfilling brand graphics, commercial motion shorts, and spatial visualization.
+6. 🏛️ **Interior Architecture & Spatial Systems** — **Custom Quote**
+   • Photorealistic architectural exteriors, spatial staging, lighting studies, and CAD elevations.
+7. 🎯 **Meta Ads Launcher & Growth Infrastructure** — **Custom Quote**
+   • Multi-ratio creative variation sets (9:16, 1:1, 16:9) and conversion copy blueprints.
+8. 💻 **Website Architecture (Next.js)** — **Custom Quote**
+   • High-performance bespoke websites with fluid micro-interactions and sub-second page loads.
+9. 📱 **Mobile App Development** — **Custom Quote**
+   • Cross-platform bespoke iOS & Android mobile applications.`,
+    source: "Sutra Studio Canonical Architecture Specification",
     status: "approved",
     approved_by: "Supervisor Admin",
     approved_at: new Date().toISOString(),
     published: true,
-    version: 2,
+    version: 3,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -78,23 +78,23 @@ export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
     id: "kb_subscription_plans",
     client_id: "client_sutra",
     category: "Pricing",
-    title: "Monthly Agency Retainers & Subscription Tiers",
+    title: "Monthly Studio Retainers & Commission Tiers",
     content: `We offer transparent commissions and retainers:
 
-1. ⚡ **Autonomous Growth Retainer** — **₹14,999 / month** [Daily Active Queue]
+1. ⚡ **Autonomous Growth Retainer** — **₹9,999 / month** [Daily Active Queue]
    • Daily 1x 4K Brand Graphic (30 Assets/month)
    • Daily 1x Commercial Motion Short/Reel (30 Assets/month)
    • Dedicated 3D Spatial Renders, 360° Tours, and Meta Ads Creative Packs
    • Private Sutra Cloud Vault with Auto-Sync & Instant Downloads
 
-2. 🚀 **Starter Creative Commission** — **₹3,499**
+2. 🚀 **Starter Creative Commission** — **₹1,999**
    • Up to 5x 4K UHD Master Renders + 1x 10-Second Video Commercial Ad
    • 48-Hour Rapid Turnaround & 2 Revision Rounds
 
-3. 🎨 **Studio Growth Commission** — **₹7,999**
+3. 🎨 **Studio Growth Commission** — **₹4,999**
    • 15x 3D & Product Renders + 3x 15s Video Ads + 360° Tour + 3x Meta Ad Variations
    • Priority 24-72 Hour Delivery Pipeline`,
-    source: "SUTRA_STUDIO_UI_MASTER_PROMPT_PACK / Commercial Pricing",
+    source: "Sutra Studio Commercial Pricing",
     status: "approved",
     approved_by: "Supervisor Admin",
     approved_at: new Date().toISOString(),

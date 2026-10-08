@@ -36,6 +36,7 @@ import {
   Palette,
   Camera,
   Share2,
+  MessageCircle,
 } from "lucide-react";
 
 export interface MasterOrderFormProps {
@@ -57,20 +58,38 @@ export interface IntakeServiceOption {
 
 export const INTAKE_SERVICES: IntakeServiceOption[] = [
   {
+    id: "ai-concept-art",
+    title: "5x 4K Image Creation Pack",
+    category: "Creative & Brand",
+    basePrice: 499,
+    turnaround: "24h SLA",
+    description: "5x 4K Photorealistic Master Renders (~₹100/image). 2x Studio shots, 2x Lifestyle ambient context, 1x Ad visual.",
+    iconName: "sparkles",
+  },
+  {
+    id: "commercial-video-ads",
+    title: "2x Commercial Video Reels Pack",
+    category: "Video & Motion",
+    basePrice: 1499,
+    turnaround: "24–48h SLA",
+    description: "2x Complete Commercial Reels / Shorts with studio voiceover, background score, and motion typography.",
+    iconName: "video",
+  },
+  {
     id: "arch-3d",
-    title: "Architecture 3D Visualization",
+    title: "Interior & Architecture Spatial Engineering",
     category: "3D & Spatial",
-    basePrice: 3499,
-    turnaround: "48h Turnaround",
-    description: "Photorealistic architectural exteriors, elevations, and lighting studies.",
+    basePrice: "custom",
+    turnaround: "Bespoke Scope",
+    description: "Photorealistic architectural exteriors, spatial staging, lighting studies, and CAD elevations.",
     iconName: "building",
   },
   {
     id: "interior-staging",
-    title: "Interior Design & Spatial Staging",
+    title: "Interior Architecture & Staging",
     category: "3D & Spatial",
-    basePrice: 3499,
-    turnaround: "48h Turnaround",
+    basePrice: "custom",
+    turnaround: "Bespoke Scope",
     description: "Luxury interior staging, furniture layouts, material finishes, and ambient lighting.",
     iconName: "box",
   },
@@ -78,7 +97,7 @@ export const INTAKE_SERVICES: IntakeServiceOption[] = [
     id: "virtual-tour-360",
     title: "360° Virtual Tours & VR",
     category: "3D & Spatial",
-    basePrice: 7999,
+    basePrice: 4999,
     turnaround: "72h Turnaround",
     description: "Immersive equirectangular virtual walkthroughs with interactive spatial hotspots.",
     iconName: "compass",
@@ -87,79 +106,70 @@ export const INTAKE_SERVICES: IntakeServiceOption[] = [
     id: "product-3d-cgi",
     title: "Product 3D Modeling & CGI",
     category: "3D & Spatial",
-    basePrice: 3499,
+    basePrice: 1999,
     turnaround: "48h Turnaround",
     description: "High-precision CAD modeling, studio product lighting, and explosive CGI views.",
     iconName: "box",
   },
   {
-    id: "commercial-video-ads",
-    title: "Commercial Video Ads",
-    category: "Video & Motion",
-    basePrice: 7999,
-    turnaround: "72h Turnaround",
-    description: "Cinematic commercial reels, product launch videos, and broadcast-ready grading.",
-    iconName: "video",
-  },
-  {
     id: "social-micro-reels",
     title: "Social Media Micro-Content & Reels",
     category: "Social & Ads",
-    basePrice: 3499,
-    turnaround: "48h Turnaround",
+    basePrice: 1499,
+    turnaround: "24–48h SLA",
     description: "High-engagement 9:16 vertical motion assets engineered for virality and conversion.",
     iconName: "share",
   },
   {
     id: "meta-ad-bundles",
-    title: "Meta & Instagram Ad Creative Bundles",
+    title: "Meta Ads Launcher & Campaign Infrastructure",
     category: "Social & Ads",
-    basePrice: 7999,
-    turnaround: "72h Turnaround",
-    description: "Multi-ratio creative packs (9:16, 1:1, 16:9) optimized for high CTR and ROAS.",
+    basePrice: "custom",
+    turnaround: "Bespoke Scope",
+    description: "End-to-end Facebook & Instagram ad campaign setups, high-converting creative ad variations, copy testing, and optimization.",
     iconName: "share",
   },
   {
     id: "editorial-fashion",
     title: "High-Fashion & Editorial Visuals",
     category: "Creative & Brand",
-    basePrice: 3499,
+    basePrice: 1999,
     turnaround: "48h Turnaround",
     description: "Vogue-grade editorial compositions, virtual wardrobe staging, and high-fashion aesthetics.",
     iconName: "camera",
   },
   {
-    id: "ai-concept-art",
-    title: "AI Image Generation & Creative Concepts",
-    category: "Creative & Brand",
-    basePrice: 3499,
-    turnaround: "24h Turnaround",
-    description: "Ultra-fast generative ideation, high-concept moodboards, and master art direction.",
-    iconName: "sparkles",
-  },
-  {
     id: "brand-identity-system",
     title: "Brand Identity & Design Systems",
     category: "Creative & Brand",
-    basePrice: 7999,
+    basePrice: 4999,
     turnaround: "72h Turnaround",
     description: "Complete visual identities, typography guidelines, vector tokens, and design books.",
     iconName: "palette",
   },
   {
     id: "custom-web-digital",
-    title: "Custom Web & Digital Experiences",
+    title: "Website Architecture & Development",
     category: "Digital",
-    basePrice: 7999,
-    turnaround: "5-7 Days",
-    description: "Next.js performance websites, luxury bespoke landing pages, and interactive WebGL experiences.",
+    basePrice: "custom",
+    turnaround: "Bespoke Scope",
+    description: "High-performance bespoke Next.js websites, luxury landing pages, and interactive experiences.",
     iconName: "monitor",
+  },
+  {
+    id: "mobile-app-dev",
+    title: "Mobile App Development",
+    category: "Digital",
+    basePrice: "custom",
+    turnaround: "Bespoke Scope",
+    description: "Cross-platform bespoke iOS & Android mobile applications sharing unified cloud backends.",
+    iconName: "smartphone",
   },
   {
     id: "monthly-retainer",
     title: "Monthly Creative Direction & Content Retainer",
     category: "Retainer",
-    basePrice: 14999,
+    basePrice: 9999,
     turnaround: "Daily Active Queue",
     description: "Dedicated ongoing creative partner with daily delivery queue, private channel, and unlimited requests.",
     iconName: "layers",
@@ -254,15 +264,30 @@ export function MasterOrderForm({
     activeService.id === "interior-staging" ||
     activeService.id === "virtual-tour-360" ||
     activeService.id === "product-3d-cgi";
-  const isWebDev = activeService.id === "custom-web-digital";
+  const isWebDev =
+    activeService.id === "custom-web-digital" || activeService.id === "mobile-app-dev";
+
+  const isBespokeService =
+    activeService.basePrice === "custom" ||
+    activeService.id === "arch-3d" ||
+    activeService.id === "interior-staging" ||
+    activeService.id === "meta-ad-bundles" ||
+    activeService.id === "custom-web-digital" ||
+    activeService.id === "mobile-app-dev" ||
+    /interior|architecture|spatial|meta ad|web build|website|web app|mobile app/i.test(
+      activeService.title
+    );
 
   // Calculate Order Amount
   const orderAmount = React.useMemo(() => {
-    if (isMonthlyRetainer) return 14999;
-    if (selectedTierId === "starter") return 3499;
-    if (selectedTierId === "growth") return 7999;
-    return 7999; // Default studio growth
-  }, [isMonthlyRetainer, selectedTierId]);
+    if (activeService.id === "ai-concept-art") return 499; // 5x 4K Image Creation Pack
+    if (activeService.id === "commercial-video-ads") return 1499; // 2x Video Reels Pack
+    if (activeService.id === "social-micro-reels") return 1499;
+    if (isMonthlyRetainer || selectedTierId === "retainer") return 9999;
+    if (selectedTierId === "starter") return 1999;
+    if (selectedTierId === "growth") return 4999;
+    return 1999;
+  }, [activeService.id, isMonthlyRetainer, selectedTierId]);
 
   // Validation before proceeding
   const handleNextStep = () => {
@@ -322,7 +347,7 @@ export function MasterOrderForm({
         ...(isMetaAds && {
           metaAds: {
             targetGeo: metaTargetGeo || "All India",
-            destinationUrl: metaDestinationUrl || brandUrl || "https://sutrastudio.com",
+            destinationUrl: metaDestinationUrl || brandUrl || "https://sutrastudio-1.onrender.com",
             offer: metaOfferCopy || "Flat 20% Off Launch Offer",
             dailyBudget: Number(metaDailyBudget) || 1500,
             audience: metaAudienceDemographics,
@@ -537,8 +562,56 @@ export function MasterOrderForm({
               })}
             </div>
 
-            {/* Tier Selection (for Per-Project Services) */}
-            {!isMonthlyRetainer && (
+            {/* Tier Selection (Conditional based on Service Type) */}
+            {isBespokeService ? (
+              <div className="pt-4 border-t border-[#EADFCB] space-y-3">
+                <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#D4A35A]/60 flex items-center justify-between">
+                  <div>
+                    <span className="font-serif font-bold text-sm text-[#0F172A] block">
+                      Bespoke Architectural Scope
+                    </span>
+                    <span className="text-xs text-[#64748B]">
+                      Deliverables, CAD blueprints, and milestones are custom-tailored by our senior engineers.
+                    </span>
+                  </div>
+                  <span className="font-serif font-bold text-xs text-[#5C3A1E] px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EADFCB]">
+                    Custom Quote
+                  </span>
+                </div>
+              </div>
+            ) : activeService.id === "ai-concept-art" ? (
+              <div className="pt-4 border-t border-[#EADFCB] space-y-3">
+                <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#D4A35A] flex items-center justify-between">
+                  <div>
+                    <span className="font-serif font-bold text-sm text-[#0F172A] block">
+                      5x 4K Image Creation Pack (~₹100/image)
+                    </span>
+                    <span className="text-xs text-[#64748B]">
+                      2x Studio product shots • 2x Lifestyle ambient • 1x Ad visual • 24h SLA
+                    </span>
+                  </div>
+                  <span className="font-serif font-bold text-base text-[#5C3A1E]">
+                    ₹499
+                  </span>
+                </div>
+              </div>
+            ) : activeService.id === "commercial-video-ads" || activeService.id === "social-micro-reels" ? (
+              <div className="pt-4 border-t border-[#EADFCB] space-y-3">
+                <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#D4A35A] flex items-center justify-between">
+                  <div>
+                    <span className="font-serif font-bold text-sm text-[#0F172A] block">
+                      2x Complete Commercial Reels / Shorts Pack
+                    </span>
+                    <span className="text-xs text-[#64748B]">
+                      15–30s each • High-fidelity studio voiceover, background score & motion typography • 24–48h SLA
+                    </span>
+                  </div>
+                  <span className="font-serif font-bold text-base text-[#5C3A1E]">
+                    ₹1,499
+                  </span>
+                </div>
+              </div>
+            ) : !isMonthlyRetainer ? (
               <div className="pt-4 border-t border-[#EADFCB] space-y-3">
                 <h4 className="font-serif text-sm font-semibold text-[#0F172A]">
                   Select Delivery Tier
@@ -557,7 +630,7 @@ export function MasterOrderForm({
                         Starter Creative
                       </span>
                       <span className="font-serif font-bold text-base text-[#5C3A1E]">
-                        ₹3,499
+                        ₹1,999
                       </span>
                     </div>
                     <p className="text-xs text-[#64748B]">
@@ -583,7 +656,7 @@ export function MasterOrderForm({
                         Studio Growth
                       </span>
                       <span className="font-serif font-bold text-base text-[#5C3A1E]">
-                        ₹7,999
+                        ₹4,999
                       </span>
                     </div>
                     <p className="text-xs text-[#64748B]">
@@ -592,7 +665,7 @@ export function MasterOrderForm({
                   </div>
                 </div>
               </div>
-            )}
+            ) : null}
 
             {isMonthlyRetainer && (
               <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#D4A35A]/50 flex items-center justify-between">
@@ -605,7 +678,7 @@ export function MasterOrderForm({
                   </span>
                 </div>
                 <span className="font-serif font-bold text-lg text-[#5C3A1E]">
-                  ₹14,999 / mo
+                  ₹9,999 / mo
                 </span>
               </div>
             )}
@@ -1251,10 +1324,16 @@ export function MasterOrderForm({
               </div>
 
               <div className="flex justify-between items-center">
-                <span className="text-[#64748B]">Delivery Tier:</span>
+                <span className="text-[#64748B]">Delivery Scope:</span>
                 <span className="font-semibold text-[#5C3A1E]">
-                  {isMonthlyRetainer
+                  {isBespokeService
+                    ? "Bespoke Architecture Quote"
+                    : isMonthlyRetainer
                     ? "Autonomous Growth Retainer"
+                    : activeService.id === "ai-concept-art"
+                    ? "5x 4K Master Renders Pack"
+                    : activeService.id === "commercial-video-ads"
+                    ? "2x Commercial Video Reels Pack"
                     : selectedTierId === "starter"
                     ? "Starter Creative"
                     : "Studio Growth"}
@@ -1276,61 +1355,96 @@ export function MasterOrderForm({
               <div className="flex justify-between items-center pt-2 border-t border-[#EADFCB]">
                 <span className="font-semibold text-[#0F172A]">Total Investment:</span>
                 <span className="font-serif font-bold text-xl text-[#5C3A1E]">
-                  ₹{orderAmount.toLocaleString("en-IN")}
-                  {isMonthlyRetainer && <span className="text-xs font-normal text-[#64748B]"> / month</span>}
+                  {isBespokeService ? (
+                    "Custom Scope Quote"
+                  ) : (
+                    <>
+                      ₹{orderAmount.toLocaleString("en-IN")}
+                      {isMonthlyRetainer && <span className="text-xs font-normal text-[#64748B]"> / month</span>}
+                    </>
+                  )}
                 </span>
               </div>
             </div>
 
-            {/* Payment Options Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-              {/* Option 1: Zero-Fee UPI & GPay QR (Recommended) */}
-              <div
-                onClick={() => handleFinalSubmit("upi_qr")}
-                className="p-5 rounded-2xl bg-[#FFFDF9] border-2 border-[#D4A35A] hover:bg-[#FAF9F5] cursor-pointer transition-all space-y-3 relative group"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <QrCode className="w-5 h-5 text-[#5C3A1E]" />
-                    <span className="font-serif font-bold text-sm text-[#0F172A]">
-                      Direct UPI & GPay QR
-                    </span>
-                  </div>
-                  <span className="bg-[#2E7D4F] text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">
-                    0% Gateway Fee
-                  </span>
+            {/* Payment / Concierge Routing Grid */}
+            {isBespokeService ? (
+              <div className="p-6 rounded-2xl bg-[#FFFDF9] border-2 border-[#D4A35A] space-y-4 text-center">
+                <div className="w-12 h-12 rounded-full bg-[#FAF9F5] border border-[#D4A35A]/60 flex items-center justify-center mx-auto text-[#5C3A1E]">
+                  <MessageCircle className="w-6 h-6 text-[#A98B57]" />
                 </div>
-                <p className="text-xs text-[#64748B]">
-                  Instant scan & pay via Google Pay, PhonePe, Paytm, or BHIM. Enter UTR for rapid autonomous dispatch.
-                </p>
-                <div className="pt-2 flex items-center gap-1.5 text-xs font-semibold text-[#5C3A1E] group-hover:text-[#462B16]">
-                  <span>Launch UPI Payment Modal</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                <div className="space-y-1">
+                  <h4 className="font-serif font-bold text-base text-[#0F172A]">
+                    Bespoke Architectural Scope Quotation
+                  </h4>
+                  <p className="text-xs text-[#64748B] max-w-md mx-auto">
+                    For Interior Architecture, Meta Ads, Web Build, and Mobile Apps, fixed UPI payment is bypassed. We craft a personalized technical quotation tailored to your exact blueprints and goals.
+                  </p>
+                </div>
+                <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <a
+                    href={`https://wa.me/918200192781?text=${encodeURIComponent(
+                      `Hello Sutra Studio, I would like to request a custom scope quotation for ${activeService.title}.`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#25D366] text-white hover:bg-[#20BD5A] transition-colors text-xs font-semibold shadow-xs"
+                  >
+                    <MessageCircle className="w-4 h-4 fill-white text-[#25D366]" />
+                    <span>Route to WhatsApp Concierge (+91 82001 92781)</span>
+                  </a>
                 </div>
               </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                {/* Option 1: Zero-Fee UPI & GPay QR (Recommended) */}
+                <div
+                  onClick={() => handleFinalSubmit("upi_qr")}
+                  className="p-5 rounded-2xl bg-[#FFFDF9] border-2 border-[#D4A35A] hover:bg-[#FAF9F5] cursor-pointer transition-all space-y-3 relative group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <QrCode className="w-5 h-5 text-[#5C3A1E]" />
+                      <span className="font-serif font-bold text-sm text-[#0F172A]">
+                        Direct UPI & GPay QR
+                      </span>
+                    </div>
+                    <span className="bg-[#2E7D4F] text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">
+                      0% Gateway Fee
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#64748B]">
+                    Instant scan & pay via Google Pay, PhonePe, Paytm, or BHIM. Enter UTR for rapid autonomous dispatch.
+                  </p>
+                  <div className="pt-2 flex items-center gap-1.5 text-xs font-semibold text-[#5C3A1E] group-hover:text-[#462B16]">
+                    <span>Generate UPI QR (₹{orderAmount.toLocaleString("en-IN")})</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </div>
+                </div>
 
-              {/* Option 2: Online Card / NetBanking */}
-              <div
-                onClick={() => handleFinalSubmit("online")}
-                className="p-5 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] hover:border-[#D4A35A] hover:bg-[#FAF9F5] cursor-pointer transition-all space-y-3 group"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="w-5 h-5 text-[#5C3A1E]" />
-                    <span className="font-serif font-bold text-sm text-[#0F172A]">
-                      Online Cards & Corporate NetBanking
-                    </span>
+                {/* Option 2: Online Card / NetBanking */}
+                <div
+                  onClick={() => handleFinalSubmit("online")}
+                  className="p-5 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] hover:border-[#D4A35A] hover:bg-[#FAF9F5] cursor-pointer transition-all space-y-3 group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="w-5 h-5 text-[#5C3A1E]" />
+                      <span className="font-serif font-bold text-sm text-[#0F172A]">
+                        Online Cards & Corporate NetBanking
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-[#64748B]">
+                    Pay via Corporate Cards, Visa/Mastercard, or NetBanking with automated tax invoice generation.
+                  </p>
+                  <div className="pt-2 flex items-center gap-1.5 text-xs font-semibold text-[#5C3A1E] group-hover:text-[#462B16]">
+                    <span>Proceed with Online Checkout</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </div>
                 </div>
-                <p className="text-xs text-[#64748B]">
-                  Pay via Corporate Cards, Visa/Mastercard, or NetBanking with automated tax invoice generation.
-                </p>
-                <div className="pt-2 flex items-center gap-1.5 text-xs font-semibold text-[#5C3A1E] group-hover:text-[#462B16]">
-                  <span>Proceed with Online Checkout</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </div>
               </div>
-            </div>
+            )}
 
             <div className="flex items-center justify-between pt-2">
               <Button
@@ -1358,6 +1472,7 @@ export function MasterOrderForm({
           clientPhone={whatsapp}
           serviceTitle={activeService.title}
           amount={orderAmount}
+          isCustomQuote={isBespokeService}
           onPaymentSuccess={() => {
             // Keep modal open on its success screen
           }}

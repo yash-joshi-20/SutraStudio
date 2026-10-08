@@ -705,7 +705,7 @@ export default function ClientDashboardPage() {
                     <p className="text-sm text-[#64748B] leading-relaxed">
                       Sutra Studio operates as your autonomous creative technology wing.
                       Your private Sutra Cloud Vault has been created, your dedicated art director
-                      has been assigned, and your generative review pipelines are ready to activate.
+                      has been assigned, and your production review pipelines are ready to activate.
                     </p>
 
                     <div className="pt-2 flex flex-wrap items-center gap-4">
@@ -777,7 +777,7 @@ export default function ClientDashboardPage() {
                         2. Launch Commission
                       </h4>
                       <p className="text-xs text-[#64748B] leading-relaxed">
-                        Select a service, define your creative brief, and initiate an autonomous studio generative review pipeline.
+                        Select a service, define your creative brief, and initiate an autonomous studio production pipeline.
                       </p>
                       <div className="pt-2">
                         <button
@@ -939,7 +939,7 @@ export default function ClientDashboardPage() {
                       Active Production Streams
                     </h2>
                     <p className="text-xs text-[#64748B]">
-                      Real-time generative pipeline tracking, deliverable approvals, and revision passes.
+                      Real-time production pipeline tracking, deliverable approvals, and revision passes.
                     </p>
                   </div>
                   <Button
@@ -967,7 +967,7 @@ export default function ClientDashboardPage() {
                         No active orders found
                       </h3>
                       <p className="text-xs sm:text-sm text-[#64748B] leading-relaxed">
-                        No active orders found. Commission your first creative pipeline below. Track real-time generative workflows, inspect draft deliverables, and release 4K masters to your Sutra Cloud Vault.
+                        No active orders found. Commission your first creative project below. Track real-time production workflows, inspect draft deliverables, and release 4K masters to your Sutra Cloud Vault.
                       </p>
                     </div>
                     <div className="pt-2 flex flex-wrap justify-center gap-3">

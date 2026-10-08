@@ -564,7 +564,7 @@ export default function ClientProjectsPage() {
               <div className="p-4 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] space-y-2">
                 <span className="text-xs font-semibold text-[#64748B]">Production Summary</span>
                 <p className="text-xs text-[#0F172A] leading-relaxed">
-                  Project initialized under isolated generative review pipeline. Raw render outputs, Meta ad sets, and contractual deliverables synchronize directly to your client Sutra Cloud Vault.
+                  Project initialized under isolated studio production pipeline. Raw render outputs, Meta ad sets, and contractual deliverables synchronize directly to your client Sutra Cloud Vault.
                 </p>
               </div>
 
