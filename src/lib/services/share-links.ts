@@ -41,7 +41,7 @@ export class ShareLinksService {
       assetId: options.assetId,
       assetName: options.assetName,
       clientId: options.clientId,
-      shareUrl: `${process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudio-1.onrender.com"}/share/${shareToken}`,
+      shareUrl: `${process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudios.in"}/share/${shareToken}`,
       createdAt: new Date().toISOString(),
       expiresAt: expiryDate.toISOString(),
       isRevoked: false,

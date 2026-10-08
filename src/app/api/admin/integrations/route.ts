@@ -85,7 +85,7 @@ export async function POST(req: Request) {
         title: "Test Email from Sutra Studio Dispatcher",
         message: "This is a live test notification verifying your SMTP / Email provider integration configuration.",
         priority: "high",
-        actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudio-1.onrender.com"}/admin/integrations`,
+        actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudios.in"}/admin/integrations`,
         actionLabel: "View Studio Integrations",
       });
 

@@ -343,7 +343,7 @@ export class EmailService {
 
     const actionUrl =
       options.actionUrl ||
-      `${readEnv("APP_BASE_URL") || readEnv("NEXT_PUBLIC_APP_URL") || "https://sutrastudio-1.onrender.com"}/dashboard`;
+      `${readEnv("APP_BASE_URL") || readEnv("NEXT_PUBLIC_APP_URL") || "https://sutrastudios.in"}/dashboard`;
     const actionLabel = options.actionLabel || "Open Studio Portal";
     const replyTo =
       options.replyTo ||

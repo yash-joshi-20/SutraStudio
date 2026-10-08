@@ -169,7 +169,7 @@ function friendlyAuthError(code?: string, fallbackMessage?: string): string {
       case "auth/requires-recent-login":
         return "For security, please sign in again before making this change.";
       case "auth/unauthorized-domain":
-        return "Authentication domain notice: Ensure sutrastudio-1.onrender.com is added to Firebase Console > Authentication > Settings > Authorized Domains.";
+        return "Authentication domain notice: Ensure sutrastudios.in (and sutrastudio-fq9d.onrender.com) is added to Firebase Console > Authentication > Settings > Authorized Domains.";
     }
   }
   return fallbackMessage && fallbackMessage !== "[object Object]"

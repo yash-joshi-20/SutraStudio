@@ -347,7 +347,7 @@ export function MasterOrderForm({
         ...(isMetaAds && {
           metaAds: {
             targetGeo: metaTargetGeo || "All India",
-            destinationUrl: metaDestinationUrl || brandUrl || "https://sutrastudio-1.onrender.com",
+            destinationUrl: metaDestinationUrl || brandUrl || "https://sutrastudios.in",
             offer: metaOfferCopy || "Flat 20% Off Launch Offer",
             dailyBudget: Number(metaDailyBudget) || 1500,
             audience: metaAudienceDemographics,

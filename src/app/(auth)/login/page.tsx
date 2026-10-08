@@ -192,7 +192,7 @@ function ClientLoginForm() {
       }
     } catch (err: any) {
       if (err?.code === "auth/unauthorized-domain" || err?.message?.includes("unauthorized domain") || err?.message?.includes("auth/unauthorized-domain")) {
-        setErrorMsg("Ensure sutrastudio-1.onrender.com is added to Firebase Console > Authentication > Settings > Authorized Domains.");
+        setErrorMsg("Ensure sutrastudios.in (and sutrastudio-fq9d.onrender.com) is added to Firebase Console > Authentication > Settings > Authorized Domains.");
       } else {
         setErrorMsg(err instanceof Error ? err.message : "Sign-in failed. Please try again.");
       }
@@ -212,7 +212,7 @@ function ClientLoginForm() {
       window.location.replace(destination);
     } catch (err: any) {
       if (err?.code === "auth/unauthorized-domain" || err?.message?.includes("unauthorized domain") || err?.message?.includes("auth/unauthorized-domain")) {
-        setErrorMsg("Ensure sutrastudio-1.onrender.com is added to Firebase Console > Authentication > Settings > Authorized Domains.");
+        setErrorMsg("Ensure sutrastudios.in (and sutrastudio-fq9d.onrender.com) is added to Firebase Console > Authentication > Settings > Authorized Domains.");
       } else {
         setErrorMsg(
           err instanceof Error

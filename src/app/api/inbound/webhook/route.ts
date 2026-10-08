@@ -49,7 +49,7 @@ Core verified services & pricing:
 
 Direct Payment & Instant Commission Settlement:
 - Direct Zero-Fee UPI VPA: yashjoshi7355-1@okicici (Payee: Yash Joshi / Sutra Studio)
-- Online Commissioning Portal: https://sutrastudio-1.onrender.com/orders
+- Online Commissioning Portal: https://sutrastudios.in/orders
 - Official Studio Email: yashjoshi20@zohomail.in
 
 Rules for your response:
@@ -146,7 +146,7 @@ export async function POST(req: Request) {
     } catch (aiErr: any) {
       console.warn("[Inbound AI] Fallback response invoked:", aiErr.message);
       aiResponse =
-        "Namaste! Thank you for reaching out to Sutra Studio. Our creative commissions start with the 5x 4K Master Render Pack at ₹499, 2x Commercial Video Reels Pack at ₹1,499, Starter Creative Commission at ₹1,999 (48h turnaround, 5x 4K UHD renders, 1x concept reel), Studio Growth at ₹4,999 (15x 3D assets, 3x commercial video reels, 360 tour), and our Autonomous Growth Retainer at ₹9,999/month. Bespoke architecture and web solutions are scoped via custom quote. You can confirm your commission instantly via UPI: yashjoshi7355-1@okicici or at https://sutrastudio-1.onrender.com/orders. Yash Joshi and our concierge team will follow up directly.";
+        "Namaste! Thank you for reaching out to Sutra Studio. Our creative commissions start with the 5x 4K Master Render Pack at ₹499, 2x Commercial Video Reels Pack at ₹1,499, Starter Creative Commission at ₹1,999 (48h turnaround, 5x 4K UHD renders, 1x concept reel), Studio Growth at ₹4,999 (15x 3D assets, 3x commercial video reels, 360 tour), and our Autonomous Growth Retainer at ₹9,999/month. Bespoke architecture and web solutions are scoped via custom quote. You can confirm your commission instantly via UPI: yashjoshi7355-1@okicici or at https://sutrastudios.in/orders. Yash Joshi and our concierge team will follow up directly.";
     }
 
     // 2. Dispatch automated response back to client
@@ -198,7 +198,7 @@ export async function POST(req: Request) {
           message: aiResponse,
           priority: "high",
           replyTo: supportInbox,
-          actionUrl: process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudio-1.onrender.com",
+          actionUrl: process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudios.in",
           actionLabel: "View Sutra Studio",
         });
       } catch (emailErr: any) {

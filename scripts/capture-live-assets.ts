@@ -16,7 +16,7 @@ import { promisify } from "util";
 
 const execAsync = promisify(exec);
 
-const TARGET_URL = process.env.CAPTURE_URL || "https://sutrastudio-1.onrender.com";
+const TARGET_URL = process.env.CAPTURE_URL || "https://sutrastudios.in";
 const OUTPUT_DIR = path.join(process.cwd(), "public", "assets", "showcase");
 
 async function ensureDir(dir: string) {

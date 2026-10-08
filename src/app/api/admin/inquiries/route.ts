@@ -14,7 +14,7 @@ const INITIAL_DEMO_INQUIRIES = [
     maskedFrom: "+91 98 **** 2345",
     name: "Aarav Singhania (Aura Architecture)",
     query: "Namaste Sutra Studio. We need 5 luxury 4K architectural exterior renders for our Udaipur resort villa project. What is the pricing and timeline?",
-    response: "Namaste Aarav! For 5 luxury 4K architectural renders, our **5x 4K Master Pack (₹499)** or full **Starter Creative Commission (₹1,999)** is the ideal choice. It includes 5x 4K Ultra-HD renders with studio lighting passes, 1x 10-second concept cinematic reel, and a 24–48 hour turnaround SLA. You can initiate this immediately via UPI: `yashjoshi7355-1@okicici` or via our studio portal at https://sutrastudio-1.onrender.com/orders.",
+    response: "Namaste Aarav! For 5 luxury 4K architectural renders, our **5x 4K Master Pack (₹499)** or full **Starter Creative Commission (₹1,999)** is the ideal choice. It includes 5x 4K Ultra-HD renders with studio lighting passes, 1x 10-second concept cinematic reel, and a 24–48 hour turnaround SLA. You can initiate this immediately via UPI: `yashjoshi7355-1@okicici` or via our studio portal at https://sutrastudios.in/orders.",
     status: "Delivered",
     deliveryNote: "Delivered via Meta WhatsApp Cloud API (+91 82001 92781)",
     timestamp: new Date(Date.now() - 1000 * 60 * 35).toISOString(),
@@ -136,7 +136,7 @@ export async function POST(req: Request) {
       const baseUrl =
         readEnv("APP_BASE_URL") ||
         readEnv("NEXT_PUBLIC_APP_URL") ||
-        "https://sutrastudio-1.onrender.com";
+        "https://sutrastudios.in";
 
       const res = await fetch(`${baseUrl.replace(/\/$/, "")}/api/inbound/webhook`, {
         method: "POST",
@@ -204,7 +204,7 @@ export async function POST(req: Request) {
             message: manualMessage,
             priority: "high",
             replyTo: supportInbox,
-            actionUrl: process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudio-1.onrender.com",
+            actionUrl: process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudios.in",
             actionLabel: "View Studio Portal",
           });
         } catch (e: any) {

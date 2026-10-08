@@ -108,7 +108,7 @@ export async function POST(req: Request) {
       videoUrl: videoUrl ? String(videoUrl) : undefined,
       voiceoverScript: voiceoverScript ? String(voiceoverScript) : undefined,
       status: "in_admin_review",
-      appBaseUrl: appBaseUrl || process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudio-1.onrender.com",
+      appBaseUrl: appBaseUrl || process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudios.in",
       generatedAt: String(generatedAt),
     };
 

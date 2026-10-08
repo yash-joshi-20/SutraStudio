@@ -22,7 +22,7 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudio-1.onrender.com";
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudios.in";
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),

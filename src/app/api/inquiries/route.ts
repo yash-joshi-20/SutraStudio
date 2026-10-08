@@ -58,7 +58,7 @@ export async function POST(req: Request) {
       message: `A new client inquiry has been submitted by ${body.name} (${body.email}):\n\n"${body.message}"\n\nService: ${body.service || "General"}`,
       priority: "high",
       replyTo: body.email,
-      actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudio-1.onrender.com"}/admin/leads`,
+      actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudios.in"}/admin/leads`,
       actionLabel: "View Inquiries in Studio Admin",
     });
 

@@ -82,10 +82,15 @@ export default function AdminOrdersPage() {
     return () => clearInterval(interval);
   }, [fetchOrders]);
 
-  // Client-triggered dispatch to local n8n engine (http://localhost:5678/webhook/sutra-master-dispatch)
+  // Client-triggered dispatch to Master n8n engine (via server relay & direct tunnel)
   const handleVerifyAndDispatch = async (order: AdminOrderRecord) => {
     setIsDispatching(true);
-    setDispatchStatus("Connecting to local n8n engine (http://localhost:5678)...");
+    setDispatchStatus("Connecting to Sutra Master n8n engine...");
+
+    const currentOrigin =
+      typeof window !== "undefined" && window.location.origin
+        ? window.location.origin
+        : "https://sutrastudios.in";
 
     const orderPayload = {
       orderId: order.id,
@@ -104,28 +109,50 @@ export default function AdminOrdersPage() {
       serviceDetails: order.serviceDetails || {
         niche: "Luxury Creative Architecture",
       },
+      appBaseUrl: currentOrigin,
       dispatchedBy: "Studio Administrator",
       dispatchedAt: new Date().toISOString(),
     };
 
     let localN8nAck = false;
 
-    // 1. Trigger local n8n engine directly from admin workstation browser
+    // 1. Dispatch via production server relay (/api/n8n/dispatch) to avoid CORS/mixed-content blocks
     try {
-      const n8nRes = await fetch("http://localhost:5678/webhook/sutra-master-dispatch", {
+      const serverRes = await fetch("/api/n8n/dispatch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderPayload),
+        body: JSON.stringify({
+          ...orderPayload,
+          workflowId: "sutra-master-dispatch",
+          isAdminDispatch: true,
+          force: true,
+        }),
       });
-      if (n8nRes.ok) {
+      const data = await serverRes.json().catch(() => ({}));
+      if (serverRes.ok && data.success) {
         localN8nAck = true;
-        setDispatchStatus("Local n8n workflow accepted order! Updating status to in_production...");
+        setDispatchStatus("Master n8n engine accepted order! Updating status to in_production...");
       } else {
-        setDispatchStatus(`n8n responded with status ${n8nRes.status}. Updating Firestore...`);
+        // Fallback: try direct ngrok webhook
+        const directWebhookUrl =
+          process.env.NEXT_PUBLIC_N8N_URL
+            ? `${process.env.NEXT_PUBLIC_N8N_URL.replace(/\/$/, "")}/webhook/sutra-master-dispatch`
+            : "https://sanitary-engine-pursuable.ngrok-free.dev/webhook/sutra-master-dispatch";
+
+        const n8nRes = await fetch(directWebhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderPayload),
+        });
+        if (n8nRes.ok) {
+          localN8nAck = true;
+          setDispatchStatus("Direct n8n webhook accepted order!");
+        } else {
+          setDispatchStatus("Updating order status in production...");
+        }
       }
     } catch {
-      // If local n8n isn't listening or blocked by CORS, proceed with Render server dispatch
-      setDispatchStatus("Local port 5678 offline. Relaying via production dispatcher...");
+      setDispatchStatus("Proceeding with production order status update...");
     }
 
     // 2. Update Firestore order status to in_production

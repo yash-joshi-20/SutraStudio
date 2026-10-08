@@ -137,7 +137,7 @@ function AdminLoginForm() {
       const code = (err as { code?: string })?.code ?? "";
       setErrorMsg(
         code === "auth/unauthorized-domain"
-          ? "Ensure sutrastudio-1.onrender.com is added to Firebase Console > Authentication > Settings > Authorized Domains."
+          ? "Ensure sutrastudios.in (and sutrastudio-fq9d.onrender.com) is added to Firebase Console > Authentication > Settings > Authorized Domains."
           : code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found"
             ? "Those sign-in details were not recognised. Please verify your administrator email and passkey."
             : code === "auth/too-many-requests"

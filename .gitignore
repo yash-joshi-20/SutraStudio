@@ -100,3 +100,7 @@ docs/*.jpg
 docs/*.jpeg
 docs/*.png
 docs/237868e8-ad3f-4ffe-b657-8a05d0d5695f.jpg
+
+# Local n8n Workflows & Exports (Do not upload to GitHub)
+n8n/
+
