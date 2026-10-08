@@ -27,28 +27,28 @@ const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudios.in";
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    template: "%s | Sutra Studio — Enterprise Software & 3D Spatial Engineering",
-    default: "Sutra Studio — Tradition Meets Computational Technology",
+    template: "%s | Sutra Studios — Enterprise Software & 3D Spatial Engineering",
+    default: "Sutra Studios — Tradition Meets Computational Technology",
   },
   description:
     "Enterprise creative technology atelier delivering 4K photorealistic product renders, 3D architectural spatial systems, 360 virtual tours, and bespoke web applications with zero hidden fees.",
   keywords:
-    "Enterprise creative technology, 4K photorealistic product renders, 3D architectural spatial systems, 360 virtual tours, Bespoke software architecture, Sutra Studio India, Digital architecture atelier, Creative technology firm",
+    "Enterprise creative technology, 4K photorealistic product renders, 3D architectural spatial systems, 360 virtual tours, Bespoke software architecture, Sutra Studios India, Digital architecture atelier, Creative technology firm",
   alternates: {
     canonical: baseUrl,
   },
   openGraph: {
-    title: "Sutra Studio — Tradition Meets Computational Technology",
+    title: "Sutra Studios — Tradition Meets Computational Technology",
     description:
       "Bespoke 3D product renders, spatial virtual tours, and commercial motion shorts engineered under experienced art direction.",
     url: baseUrl,
-    siteName: "Sutra Studio",
+    siteName: "Sutra Studios",
     images: [
       {
         url: "/brand/sutra-logo-primary.png",
         width: 1200,
         height: 630,
-        alt: "Sutra Studio — Computational Art & 3D Atelier",
+        alt: "Sutra Studios — Computational Art & 3D Atelier",
       },
     ],
     locale: "en_IN",
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sutra Studio — Enterprise Software & 3D Spatial Engineering",
+    title: "Sutra Studios — Enterprise Software & 3D Spatial Engineering",
     description:
       "High-precision 4K renders, spatial 3D architecture, and cinematic commercial reels delivered directly to your Sutra Cloud Vault.",
     images: ["/brand/sutra-logo-primary.png"],
@@ -75,7 +75,7 @@ const organizationSchema = {
     {
       "@type": "Organization",
       "@id": `${baseUrl}/#organization`,
-      name: "Sutra Studio",
+      name: "Sutra Studios",
       url: baseUrl,
       logo: `${baseUrl}/brand/sutra-logo-primary.png`,
       description:

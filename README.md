@@ -1,18 +1,35 @@
-# SUTRA STUDIO (सूत्र स्टूडियो)
+# SUTRA STUDIOS (सूत्र स्टूडियोઝ)
 ### *Tradition Meets Technology — AI-Powered Creative, Design & Spatial Engineering Studio*
 
 [![Production Quality](https://img.shields.io/badge/Production-Verified-D4A35A.svg)](#)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16.3.8-black.svg)](#)
 [![React 19](https://img.shields.io/badge/React-19.2.8-61DAFB.svg)](#)
 [![Tailwind CSS 4](https://img.shields.io/badge/Tailwind-4.0-38B2AC.svg)](#)
-[![Tests Passing](https://img.shields.io/badge/Regression%20Tests-281%2F281%20Passed-success.svg)](#)
+[![Domain Live](https://img.shields.io/badge/Live%20Domain-sutrastudios.in-2E7D4F.svg)](https://sutrastudios.in)
 [![Zero SQL](https://img.shields.io/badge/Architecture-Firebase%20%2B%20Google%20Drive-orange.svg)](#)
+
+---
+
+## ⚡ Quick Start: n8n + Ngrok Engine (કામ શરૂ કરતાં પહેલાં આ રન કરવું)
+
+> [!IMPORTANT]
+> **વેબસાઇટ પર કામ શરૂ કરતાં પહેલાં અથવા ઓર્ડર ડિસ્પેચ/ઓટોમેશન ટેસ્ટ કરતાં પહેલાં** આ બંને કમાન્ડ રન કરવા જરૂરી છે. આનાથી તમારું લોકલ n8n લાઈવ પ્રોડક્શન સાઇટ (`https://sutrastudios.in`) સાથે ટનલ દ્વારા કનેક્ટ થઈ જશે.
+
+### Step 1: Start Local n8n Engine (Terminal 1)
+```bash
+n8n start
+```
+
+### Step 2: Connect Ngrok Tunnel (Terminal 2)
+```bash
+ngrok http 5678 --url https://sanitary-engine-pursuable.ngrok-free.dev
+```
 
 ---
 
 ## 1. Brand Ethos & Design Philosophy
 
-**SUTRA STUDIO** is a luxury creative-technology agency bridging ancient Indian geometric principles (*Sūtra* — sacred thread / cosmic formula) with state-of-the-art computational design and generative AI pipelines.
+**SUTRA STUDIOS** is a luxury creative-technology agency bridging ancient Indian geometric principles (*Sūtra* — sacred thread / cosmic formula) with state-of-the-art computational design and generative AI pipelines.
 
 ### Design Principles:
 - **Warm Ivory Palette**: Crafted with subtle warmth (`#FAF9F5`, `#FFFDF9`, `#F5F2EB`), charcoal slate typography (`#0F172A`, `#171717`), parchment borders (`#EADFCB`, `#E5E1D8`), and muted brass accents (`#D4A35A`, `#5C3A1E`).
@@ -152,5 +169,5 @@ npm run dev
 
 ## 8. License & Credits
 
-© 2026 SUTRA STUDIO. All rights reserved. Crafted with timeless aesthetic rigor and modern computational intelligence.
+© 2026 SUTRA STUDIOS. All rights reserved. Crafted with timeless aesthetic rigor and modern computational intelligence.
 

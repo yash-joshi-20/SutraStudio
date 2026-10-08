@@ -105,7 +105,7 @@ export function SutraStudioIntroLanding({
         <div className="w-full max-w-5xl flex items-center justify-between relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-[#EADFCB] text-[11px] font-mono tracking-widest text-[#5C3A1E] shadow-2xs backdrop-blur-sm">
             <span className="w-1.5 h-1.5 rounded-full bg-[#2E7D4F] animate-pulse" />
-            <span>SUTRA STUDIO • ATELIER V7</span>
+            <span>SUTRA STUDIOS • ATELIER V7</span>
           </div>
 
           <div className="flex items-center gap-3">

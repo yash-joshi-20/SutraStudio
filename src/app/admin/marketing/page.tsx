@@ -631,7 +631,7 @@ export default function AdminMarketingPage() {
                       Trigger Daily Agency Campaign
                     </h2>
                     <p className="text-xs text-[#64748B] mt-1">
-                      Dispatches local n8n workflow (<code className="bg-[#F8F5EF] px-1.5 py-0.5 rounded text-[#5C3A1E]">http://localhost:5678/webhook/sutra-master-dispatch</code>) to generate &amp; post 4K daily content for Sutra Studio.
+                      Dispatches Master n8n workflow (<code className="bg-[#F8F5EF] px-1.5 py-0.5 rounded text-[#5C3A1E]">sutra-master-dispatch via ngrok</code>) to generate &amp; post 4K daily content for Sutra Studios.
                     </p>
                   </div>
 

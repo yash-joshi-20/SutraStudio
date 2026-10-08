@@ -50,7 +50,7 @@ export function LotusSymbol({
   return (
     <img
       src={src}
-      alt="Sutra Studio Lotus Symbol"
+      alt="Sutra Studios Lotus Symbol"
       className={`${className} object-contain shrink-0`}
       loading="eager"
     />
@@ -102,13 +102,6 @@ export function SutraLogo({
   showTagline = true,
   href = "/",
 }: SutraLogoProps) {
-  const heightClasses = {
-    sm: "h-9 sm:h-10 w-auto object-contain transition-all duration-300",
-    md: "h-10 sm:h-11 md:h-12 w-auto object-contain transition-all duration-300",
-    lg: "h-14 sm:h-16 md:h-18 w-auto object-contain transition-all duration-300",
-    xl: "h-20 sm:h-24 md:h-28 w-auto object-contain transition-all duration-300",
-  }[size];
-
   const isStacked = variant === "vertical" || variant === "stacked";
   const isWhite = variant === "monochrome-white" || variant === "white";
   const isBlack = variant === "monochrome-black" || variant === "black";
@@ -125,41 +118,58 @@ export function SutraLogo({
     return href ? <Link href={href} className="inline-block">{badge}</Link> : badge;
   }
 
-  // Official Master PNG Asset file mapping
-  const assetSrc =
-    variant === "horizontal"
-      ? "/brand/sutra-logo-primary.png"
-      : variant === "horizontal-dark" || isBlack
-      ? "/brand/sutra-logo-black.png"
-      : isWhite
-      ? "/brand/sutra-logo-white.png"
-      : isStacked
-      ? "/brand/sutra-logo-vertical.png"
-      : variant === "symbol"
-      ? "/brand/sutra-symbol.png"
-      : variant === "monogram"
-      ? "/brand/sutra-monogram.png"
-      : variant === "social-icon"
-      ? "/brand/sutra-social-icon.png"
-      : variant === "watermark-dark"
-      ? "/brand/sutra-watermark-dark.png"
-      : variant === "watermark" || variant === "watermark-light"
-      ? "/brand/sutra-watermark-light.png"
-      : "/brand/sutra-logo-primary.png";
+  if (variant === "symbol" || variant === "monogram") {
+    const symbolSizeClass = {
+      sm: "w-8 h-8",
+      md: "w-10 h-10",
+      lg: "w-14 h-14",
+      xl: "w-20 h-20",
+    }[size];
+    const badge = (
+      <LotusSymbol
+        className={`${symbolSizeClass} ${className}`}
+        color={isWhite ? "white" : isBlack ? "black" : "gold"}
+      />
+    );
+    return href ? <Link href={href} className="inline-block">{badge}</Link> : badge;
+  }
+
+  const sizeClasses = {
+    sm: { symbol: "w-7 h-7 sm:w-8 sm:h-8", text: "text-base sm:text-lg", tagline: "text-[7.5px]" },
+    md: { symbol: "w-9 h-9 sm:w-10 sm:h-10", text: "text-lg sm:text-xl md:text-2xl", tagline: "text-[8.5px]" },
+    lg: { symbol: "w-12 h-12 sm:w-14 sm:h-14", text: "text-2xl sm:text-3xl", tagline: "text-[10px]" },
+    xl: { symbol: "w-16 h-16 sm:w-20 sm:h-20", text: "text-4xl sm:text-5xl", tagline: "text-[12px]" },
+  }[size];
 
   const content = (
     <div
-      className={`inline-flex items-center transition-opacity hover:opacity-95 ${
-        isStacked ? "flex-col text-center" : "flex-row gap-3"
+      className={`inline-flex items-center transition-all duration-300 group-hover:opacity-95 ${
+        isStacked ? "flex-col text-center gap-1.5" : "flex-row items-center gap-2.5 sm:gap-3"
       } ${className}`}
     >
-      {/* Official Master PNG Logo File Render */}
-      <img
-        src={assetSrc}
-        alt="Sutra Studio"
-        className={`${heightClasses} w-auto max-w-full object-contain`}
-        loading="eager"
+      <LotusSymbol
+        className={`${sizeClasses.symbol} shrink-0`}
+        color={isWhite ? "white" : isBlack ? "black" : "gold"}
       />
+      <div className={`flex flex-col ${isStacked ? "items-center" : "items-start"} leading-none select-none`}>
+        <div className={`flex items-baseline gap-1.5 font-bold uppercase ${sizeClasses.text} font-serif tracking-[0.16em]`}>
+          <span className={isWhite ? "text-white" : isBlack ? "text-black" : "text-[#171717]"}>
+            SUTRA
+          </span>
+          <span className={isWhite ? "text-[#EADFCB]" : isBlack ? "text-black/80" : "text-[#A98B57]"}>
+            STUDIOS
+          </span>
+        </div>
+        {showTagline && size !== "sm" && (
+          <span
+            className={`uppercase tracking-[0.26em] ${sizeClasses.tagline} font-medium mt-1 ${
+              isWhite ? "text-white/60" : "text-[#8C7A6B]"
+            }`}
+          >
+            Digital Atelier
+          </span>
+        )}
+      </div>
     </div>
   );
 

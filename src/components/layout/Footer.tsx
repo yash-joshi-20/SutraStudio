@@ -477,7 +477,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="pt-6 border-t border-[#EADFCB] flex flex-col sm:flex-row items-center justify-between text-xs text-[#64748B] gap-4 text-center sm:text-left">
           <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
-            <span>© {new Date().getFullYear()} Sutra Studio.</span>
+            <span>© {new Date().getFullYear()} Sutra Studios.</span>
             <span>All rights reserved.</span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs">
