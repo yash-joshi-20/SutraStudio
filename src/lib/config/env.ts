@@ -134,8 +134,8 @@ function getDiskEnv(): Record<string, string> {
       path.resolve(process.cwd(), ".env"),
     ];
     for (const file of candidates) {
-      if (fs.existsSync(file)) {
-        const content = fs.readFileSync(file, "utf8");
+      if (fs.existsSync(/*turbopackIgnore: true*/ file)) {
+        const content = fs.readFileSync(/*turbopackIgnore: true*/ file, "utf8");
         for (const rawLine of content.split(/\r?\n/)) {
           const line = rawLine.trim();
           if (!line || line.startsWith("#")) continue;
@@ -159,9 +159,9 @@ function getDiskEnv(): Record<string, string> {
     const saPath =
       map["FIREBASE_SERVICE_ACCOUNT"] ||
       path.resolve(process.cwd(), "secrets/sutra-studio-firebase-adminsdk.json");
-    if (fs.existsSync(saPath)) {
+    if (fs.existsSync(/*turbopackIgnore: true*/ saPath)) {
       try {
-        const saData = JSON.parse(fs.readFileSync(saPath, "utf8"));
+        const saData = JSON.parse(fs.readFileSync(/*turbopackIgnore: true*/ saPath, "utf8"));
         if (saData.client_email && !map["FIREBASE_CLIENT_EMAIL"]) {
           map["FIREBASE_CLIENT_EMAIL"] = saData.client_email;
         }
