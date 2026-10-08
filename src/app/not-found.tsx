@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/Button";
 import { LotusSymbol } from "@/components/brand/SutraLogo";
 import { Home, Sparkles, ArrowRight, Search, Compass, FolderGit2 } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default function NotFound() {
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">

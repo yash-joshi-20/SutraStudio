@@ -20,9 +20,6 @@ export const dynamic = "force-dynamic";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 5,
-  viewportFit: "cover",
-  themeColor: "#F8F5EF",
 };
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudio-1.onrender.com";
