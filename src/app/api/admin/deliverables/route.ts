@@ -67,7 +67,12 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    let body = await req.json();
+    if (typeof body === "string") {
+      try {
+        body = JSON.parse(body);
+      } catch {}
+    }
     const {
       deliverableId,
       orderId,

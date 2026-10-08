@@ -49,6 +49,7 @@ export interface N8nWorkflowPayload {
   isStudioSelfMarketing?: boolean;
   campaignName?: string;
   force?: boolean;
+  n8nBaseUrlOverride?: string;
 }
 
 export interface N8nWorkflowResponse {
@@ -174,23 +175,61 @@ export class N8nAutomationService {
     }
 
     const n8nBaseUrl = this.getN8nBaseUrl();
-    const primaryPath = payload.workflowId === "SUTRA_MASTER_AUTONOMOUS_PIPELINE" ? "sutra-master-pipeline" : payload.workflowId;
-    const candidateUrls = [
-      `${n8nBaseUrl}/webhook/${primaryPath}`,
-      `${n8nBaseUrl}/webhook/${payload.workflowId}`,
-      `${n8nBaseUrl}/webhook-test/${primaryPath}`,
-      `${n8nBaseUrl}/webhook-test/${payload.workflowId}`,
-    ];
+    const explicitWebhook = readEnv("N8N_MASTER_DISPATCH_WEBHOOK");
+
+    // Gather candidate paths to ensure both live hybrid engine and master pipelines are discovered
+    const pathsToTry = new Set<string>();
+    if (payload.workflowId === "SUTRA_MASTER_RENDER_LOCAL_HYBRID" || payload.workflowId === "sutra-master-dispatch") {
+      pathsToTry.add("sutra-master-dispatch");
+    } else if (payload.workflowId === "SUTRA_MASTER_AUTONOMOUS_PIPELINE") {
+      pathsToTry.add("sutra-master-dispatch");
+      pathsToTry.add("sutra-master-pipeline");
+    } else {
+      if (payload.workflowId) pathsToTry.add(payload.workflowId);
+      pathsToTry.add("sutra-master-dispatch");
+      pathsToTry.add("sutra-master-pipeline");
+    }
+
+    const candidateUrls: string[] = [];
+    if (explicitWebhook) {
+      candidateUrls.push(explicitWebhook);
+    }
+    for (const p of pathsToTry) {
+      candidateUrls.push(`${n8nBaseUrl}/webhook/${p}`);
+      candidateUrls.push(`${n8nBaseUrl}/webhook-test/${p}`);
+    }
 
     let n8nDispatched = false;
     let responseData: any = null;
+    let lastNetworkError: string | null = null;
+
+    // Enriched payload with client and service details for n8n prompt generation
+    const enrichedBody = {
+      ...payload,
+      orderId: payload.orderId || targetOrder?.id || `ORD-${Date.now().toString().slice(-6)}`,
+      serviceDetails: {
+        niche: payload.niche || targetOrder?.service || targetOrder?.title || "luxury interior architecture",
+        service: payload.service || targetOrder?.service || targetOrder?.title || "Bespoke Creative",
+      },
+      client: {
+        name: targetOrder?.clientName || "Sutra Client",
+        email: targetOrder?.clientEmail || "client@sutrastudio.com",
+        brandName: (targetOrder as any)?.brandName || targetOrder?.clientName || "Sutra Luxe",
+      },
+      brief: payload.brief || targetOrder?.requirements || targetOrder?.notes || "Curated luxury aesthetic",
+      geminiApiKey: readEnv("GEMINI_API_KEY") || readEnv("GOOGLE_AI_API_KEY"),
+      runId,
+      appBaseUrl: this.getAppBaseUrl(),
+      callbackUrl: `${this.getAppBaseUrl()}/api/n8n/webhook`,
+      dispatchedAt: now,
+    };
 
     // Attempt live and test webhooks sequentially
     for (const url of candidateUrls) {
       if (n8nDispatched) break;
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2500);
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
 
         const response = await fetch(url, {
           method: "POST",
@@ -198,13 +237,7 @@ export class N8nAutomationService {
             "Content-Type": "application/json",
             "x-sutra-secret": this.getWebhookSecret(),
           },
-          body: JSON.stringify({
-            ...payload,
-            runId,
-            appBaseUrl: this.getAppBaseUrl(),
-            callbackUrl: `${this.getAppBaseUrl()}/api/n8n/webhook`,
-            dispatchedAt: now,
-          }),
+          body: JSON.stringify(enrichedBody),
           signal: controller.signal,
         });
 
@@ -214,9 +247,11 @@ export class N8nAutomationService {
           responseData = await response.json().catch(() => ({}));
           n8nDispatched = true;
           break;
+        } else {
+          lastNetworkError = `Webhook returned HTTP ${response.status} from ${url}`;
         }
-      } catch {
-        // Continue to next candidate URL
+      } catch (err: any) {
+        lastNetworkError = err?.message || "Connection timeout/refused";
       }
     }
 
@@ -228,13 +263,37 @@ export class N8nAutomationService {
         status: "running",
         orderId: payload.orderId,
         output: responseData,
-        message: `Successfully connected & dispatched to n8n [${payload.workflowId}]. Pipeline running.`,
+        message: `Successfully connected & dispatched to n8n [${payload.workflowId}]. Pipeline running in your n8n engine.`,
         timestamp: now,
         isMock: false,
       };
     }
 
-    // Autonomous Engine execution (local fallback when external n8n Docker is offline)
+    // If an admin manually triggered this and n8n could not be reached, do NOT silently plant fake mock files
+    if (payload.isAdminDispatch || payload.force) {
+      const isRenderCloud = this.getAppBaseUrl().includes("onrender.com");
+      const isLocalN8n = n8nBaseUrl.includes("localhost") || n8nBaseUrl.includes("127.0.0.1");
+
+      let diagnosticMessage = `⚠️ Cannot connect to n8n at ${n8nBaseUrl}. (${lastNetworkError || "Connection failed"}).`;
+      if (isRenderCloud && isLocalN8n) {
+        diagnosticMessage += ` Sutra Studio is live on Render in the cloud, but n8n is running locally on your computer. A cloud server cannot access your local 'localhost' directly. Please expose local n8n using a tunnel (e.g., 'npx localtunnel --port 5678' or ngrok) and set N8N_BASE_URL in your Render Environment settings.`;
+      } else {
+        diagnosticMessage += ` Please check that n8n is active on port 5678 and that the workflow is Published.`;
+      }
+
+      return {
+        success: false,
+        workflowId: payload.workflowId,
+        runId,
+        status: "generation_failed",
+        orderId: payload.orderId,
+        message: diagnosticMessage,
+        timestamp: now,
+        isMock: false,
+      };
+    }
+
+    // Autonomous Engine execution (local fallback for background mock simulations)
     return await this.executeStudioAutonomousEngine(payload, runId, targetOrder);
   }
 

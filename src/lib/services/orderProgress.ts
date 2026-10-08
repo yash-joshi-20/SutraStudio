@@ -276,7 +276,13 @@ export function computeN8nWorkflowProgress(order?: any, workflowIdOverride?: str
   let shortCode = "MASTER";
   let stages: N8nWorkflowStage[] = [];
 
-  if (wfId === "SUTRA_MASTER_AUTONOMOUS_PIPELINE" || wfId === "sutra-master-pipeline" || !wfId) {
+  if (
+    wfId === "SUTRA_MASTER_AUTONOMOUS_PIPELINE" ||
+    wfId === "sutra-master-pipeline" ||
+    wfId === "SUTRA_MASTER_RENDER_LOCAL_HYBRID" ||
+    wfId === "sutra-master-dispatch" ||
+    !wfId
+  ) {
     workflowName = "Sutra Master Creative & Software Pipeline";
     shortCode = "MASTER";
     stages = [

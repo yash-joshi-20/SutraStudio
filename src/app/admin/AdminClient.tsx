@@ -5844,6 +5844,9 @@ const [adminDataError, setAdminDataError] = useState("");
                                     <option value="SUTRA_MASTER_AUTONOMOUS_PIPELINE">
                                       ★ Master Autonomous Creative Pipeline (All 12 Services + Retainers)
                                     </option>
+                                    <option value="SUTRA_MASTER_RENDER_LOCAL_HYBRID">
+                                      ⚡ Master Engine (Render Live + Local n8n Hybrid)
+                                    </option>
                                     <option value="W1_order_fulfillment_router">
                                       W1: Order Fulfillment Router (4K Render / Video Reel / 3D / Ads)
                                     </option>
