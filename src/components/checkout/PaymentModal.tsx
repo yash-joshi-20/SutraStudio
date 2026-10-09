@@ -168,9 +168,14 @@ export function PaymentModal({
         });
       }
 
+      // Automatically close modal after brief confirmation so order shows up in orders list
       setTimeout(() => {
         setIsSubmitting(false);
-      }, 1000);
+        onClose();
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
+        }
+      }, 1400);
     } catch {
       setSubmissionSuccess(true);
       if (onPaymentSuccess) {
@@ -180,7 +185,80 @@ export function PaymentModal({
           receiptFile,
         });
       }
-      setIsSubmitting(false);
+      setTimeout(() => {
+        setIsSubmitting(false);
+        onClose();
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
+        }
+      }, 1400);
+    }
+  };
+
+  // Instant 1-Click Direct Google Pay / UPI App confirmation
+  const handleDirectGPayConfirm = async () => {
+    setIsSubmitting(true);
+    const directUtr = `GPAY-${Date.now().toString().slice(-8)}`;
+    try {
+      await fetch("/api/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "verify_payment",
+          orderId,
+          orderCode: displayCode,
+          utrNumber: directUtr,
+          amount,
+          clientName,
+          clientEmail,
+          paymentMethod: "UPI_GPAY",
+          paymentStatus: "pending_verification",
+          status: "pending_verification",
+          payee: payeeName,
+          upiId,
+          notes: "Direct Google Pay app payment completed.",
+        }),
+      });
+
+      await fetch("/api/payment/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId,
+          orderCode: displayCode,
+          utrNumber: directUtr,
+          amount,
+          clientName,
+          clientEmail,
+          paymentMethod: "UPI_GPAY",
+          status: "pending_verification",
+        }),
+      }).catch(() => {});
+
+      setSubmissionSuccess(true);
+      if (onPaymentSuccess) {
+        onPaymentSuccess({ utr: directUtr });
+      }
+
+      setTimeout(() => {
+        setIsSubmitting(false);
+        onClose();
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
+        }
+      }, 1200);
+    } catch {
+      setSubmissionSuccess(true);
+      if (onPaymentSuccess) {
+        onPaymentSuccess({ utr: directUtr });
+      }
+      setTimeout(() => {
+        setIsSubmitting(false);
+        onClose();
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
+        }
+      }, 1200);
     }
   };
 
@@ -223,6 +301,9 @@ Please verify receipt and initiate studio production workflow.`;
               Your 12-digit transaction reference (
               <span className="font-mono font-semibold text-[#5C3A1E]">{utrNumber}</span>
               ) has been queued for verification. Production pipeline will initiate upon receipt confirmation.
+            </p>
+            <p className="text-[11px] font-semibold text-[#059669] animate-pulse pt-1">
+              ✓ Auto-closing popup & refreshing your order list...
             </p>
           </div>
 
@@ -479,6 +560,17 @@ Please verify receipt and initiate studio production workflow.`;
                     ? "Verifying Transaction..."
                     : `Confirm & Submit UTR (${utrNumber.length}/12)`}
                 </Button>
+
+                {/* 1-Tap Direct Google Pay / UPI Confirmation */}
+                <button
+                  type="button"
+                  onClick={handleDirectGPayConfirm}
+                  disabled={isSubmitting}
+                  className="w-full py-2.5 px-3 rounded-xl bg-[#F0FDF4] border border-[#86EFAC] text-xs font-semibold text-[#166534] hover:bg-[#DCFCE7] flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                >
+                  <Check className="w-3.5 h-3.5 text-[#16A34A]" />
+                  <span>Paid with Google Pay • Auto-Close & Queue Order</span>
+                </button>
 
                 {/* WhatsApp Alternative */}
                 <div className="text-center pt-1">

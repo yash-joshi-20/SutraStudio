@@ -1587,7 +1587,10 @@ export function MasterOrderForm({
           amount={orderAmount}
           isCustomQuote={isBespokeService}
           onPaymentSuccess={() => {
-            // Keep modal open on its success screen
+            setPaymentModalOpen(false);
+            if (onOrderSuccess) {
+              onOrderSuccess(createdOrder);
+            }
           }}
         />
       )}

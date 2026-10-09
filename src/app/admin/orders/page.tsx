@@ -26,6 +26,8 @@ import {
   Video as VideoIcon,
   Image as ImageIcon,
   Film,
+  LayoutGrid,
+  List as ListIcon,
 } from "lucide-react";
 
 interface AdminOrderRecord {
@@ -64,6 +66,7 @@ export default function AdminOrdersPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [inspectingOrder, setInspectingOrder] = useState<AdminOrderRecord | null>(null);
   const [dispatchStatus, setDispatchStatus] = useState<string | null>(null);
   const [isDispatching, setIsDispatching] = useState(false);
@@ -308,29 +311,61 @@ export default function AdminOrdersPage() {
               />
             </div>
 
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-              {[
-                { id: "all", label: "All Orders" },
-                { id: "pending", label: "Pending Verification" },
-                { id: "in_production", label: "In Production" },
-                { id: "completed", label: "Completed" },
-              ].map((f) => (
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                {[
+                  { id: "all", label: "All Orders" },
+                  { id: "pending", label: "Pending Verification" },
+                  { id: "in_production", label: "In Production" },
+                  { id: "completed", label: "Completed" },
+                ].map((f) => (
+                  <button
+                    key={f.id}
+                    onClick={() => setStatusFilter(f.id)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                      statusFilter === f.id
+                        ? "bg-[#5C3A1E] text-white shadow-2xs"
+                        : "bg-white text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A]"
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* View Switcher: Responsive Grid vs Horizontal List */}
+              <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-[#EADFCB] shadow-2xs shrink-0">
                 <button
-                  key={f.id}
-                  onClick={() => setStatusFilter(f.id)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                    statusFilter === f.id
+                  type="button"
+                  onClick={() => setViewMode("grid")}
+                  className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
+                    viewMode === "grid"
                       ? "bg-[#5C3A1E] text-white shadow-2xs"
-                      : "bg-white text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A]"
+                      : "text-[#64748B] hover:text-[#0F172A]"
                   }`}
+                  title="Card Grid View"
                 >
-                  {f.label}
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Grid</span>
                 </button>
-              ))}
+                <button
+                  type="button"
+                  onClick={() => setViewMode("list")}
+                  className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
+                    viewMode === "list"
+                      ? "bg-[#5C3A1E] text-white shadow-2xs"
+                      : "text-[#64748B] hover:text-[#0F172A]"
+                  }`}
+                  title="Row List View"
+                >
+                  <ListIcon className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">List</span>
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Adaptive View: Desktop Table / Mobile Cards */}
+          {/* Responsive View (Grid or List - Zero Rigid Table Overflow) */}
           {isLoading ? (
             <div className="p-12 text-center text-xs text-[#64748B] bg-white rounded-2xl border border-[#EADFCB]">
               <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#A98B57] mb-2" />
@@ -342,96 +377,16 @@ export default function AdminOrdersPage() {
               <p className="font-semibold text-sm text-[#0F172A]">No orders found in this view</p>
               <p>Incoming client commissions via UPI or online checkout will appear here in real time.</p>
             </div>
-          ) : (
-            <>
-              {/* Desktop Table View (md+) */}
-              <div className="hidden md:block bg-white rounded-2xl border border-[#EADFCB] overflow-hidden shadow-xs">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-[#FAF9F5] border-b border-[#EADFCB] text-[11px] font-semibold text-[#64748B] uppercase tracking-wider">
-                      <th className="p-3.5">Order Code</th>
-                      <th className="p-3.5">Client & Brand</th>
-                      <th className="p-3.5">Package & Price</th>
-                      <th className="p-3.5">UPI UTR Ref</th>
-                      <th className="p-3.5">Status</th>
-                      <th className="p-3.5 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#EADFCB]/60">
-                    {filteredOrders.map((ord) => (
-                      <tr key={ord.id} className="hover:bg-[#FAF9F5]/50 transition-colors">
-                        <td className="p-3.5 font-mono font-bold text-[#5C3A1E]">
-                          {ord.orderNumber || ord.code || ord.id}
-                        </td>
-                        <td className="p-3.5">
-                          <div className="font-semibold text-[#0F172A]">{ord.clientName}</div>
-                          <div className="text-[11px] text-[#64748B]">{ord.clientEmail}</div>
-                        </td>
-                        <td className="p-3.5">
-                          <div className="font-medium text-[#0F172A]">{ord.packageName || ord.service || "Creative"}</div>
-                          <div className="font-serif font-bold text-[#5C3A1E]">
-                            ₹{(ord.totalAmount || ord.amountPaid || 3499).toLocaleString("en-IN")}
-                          </div>
-                        </td>
-                        <td className="p-3.5">
-                          {ord.utrNumber ? (
-                            <span className="font-mono font-semibold px-2 py-0.5 rounded bg-[#FAF9F5] border border-[#EADFCB] text-[#2E7D4F]">
-                              {ord.utrNumber}
-                            </span>
-                          ) : (
-                            <span className="text-[#94A3B8] font-mono">—</span>
-                          )}
-                        </td>
-                        <td className="p-3.5">
-                          <Badge
-                            variant={
-                              ord.status === "in_production"
-                                ? "progress"
-                                : ord.status === "completed"
-                                ? "completed"
-                                : ord.status === "pending_verification"
-                                ? "gold"
-                                : "neutral"
-                            }
-                            size="sm"
-                          >
-                            {ord.status.replace("_", " ")}
-                          </Badge>
-                        </td>
-                        <td className="p-3.5 text-right space-x-1.5">
-                          <button
-                            type="button"
-                            onClick={() => setInspectingOrder(ord)}
-                            className="px-2.5 py-1.5 rounded-lg bg-[#FAF9F5] border border-[#EADFCB] hover:border-[#D4A35A] text-[#5C3A1E] font-semibold text-[11px] transition-colors"
-                          >
-                            Inspect
-                          </button>
-                          {ord.status !== "in_production" && ord.status !== "completed" && ord.status !== "cancelled" && ord.status !== "refunded" && (
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              className="text-[11px] py-1 px-2.5"
-                              onClick={() => handleVerifyAndDispatch(ord)}
-                              leftIcon={<Play className="w-3 h-3 text-[#D4A35A]" />}
-                            >
-                              Dispatch n8n
-                            </Button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Mobile Card Stack View (<md) */}
-              <div className="block md:hidden space-y-3">
-                {filteredOrders.map((ord) => (
-                  <div
-                    key={ord.id}
-                    className="p-4 rounded-2xl bg-white border border-[#EADFCB] shadow-xs space-y-3"
-                  >
-                    <div className="flex items-center justify-between">
+          ) : viewMode === "grid" ? (
+            /* Responsive Card Grid View */
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {filteredOrders.map((ord) => (
+                <div
+                  key={ord.id}
+                  className="p-5 rounded-2xl bg-white border border-[#EADFCB] shadow-xs space-y-3 hover:border-[#D4A35A]/60 transition-all flex flex-col justify-between"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-2">
                       <span className="font-mono font-bold text-xs text-[#5C3A1E]">
                         {ord.orderNumber || ord.code || ord.id}
                       </span>
@@ -452,23 +407,26 @@ export default function AdminOrdersPage() {
                     </div>
 
                     <div>
-                      <h4 className="font-serif font-bold text-sm text-[#0F172A]">{ord.clientName}</h4>
+                      <h4 className="font-serif font-bold text-base text-[#0F172A]">{ord.clientName}</h4>
                       <p className="text-xs text-[#64748B]">{ord.clientEmail}</p>
                     </div>
 
-                    <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between text-xs">
+                    <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between text-xs">
                       <div>
-                        <span className="text-[#64748B] block text-[10px]">Package / Amount:</span>
+                        <span className="text-[#64748B] block text-[10px]">Package / Service:</span>
                         <span className="font-semibold text-[#0F172A]">{ord.packageName || ord.service}</span>
                       </div>
-                      <span className="font-serif font-bold text-base text-[#5C3A1E]">
-                        ₹{(ord.totalAmount || ord.amountPaid || 3499).toLocaleString("en-IN")}
-                      </span>
+                      <div className="text-right">
+                        <span className="text-[#64748B] block text-[10px]">Total:</span>
+                        <span className="font-serif font-bold text-base text-[#5C3A1E]">
+                          ₹{(ord.totalAmount || ord.amountPaid || 3499).toLocaleString("en-IN")}
+                        </span>
+                      </div>
                     </div>
 
                     {ord.utrNumber && (
-                      <div className="text-xs font-mono">
-                        <span className="text-[#64748B] text-[10px] block">UPI UTR Reference:</span>
+                      <div className="text-xs font-mono p-2 rounded-lg bg-[#F8F5EF] border border-[#EADFCB]">
+                        <span className="text-[#64748B] text-[10px] block">UPI Reference / UTR:</span>
                         <span className="font-semibold text-[#2E7D4F]">{ord.utrNumber}</span>
                       </div>
                     )}
@@ -479,42 +437,145 @@ export default function AdminOrdersPage() {
                         <span>{ord.deliverables.length} Deliverable(s) Vaulted (4K Images / Video)</span>
                       </div>
                     )}
+                  </div>
 
-                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#EADFCB]/60">
+                  <div className="grid grid-cols-2 gap-2 pt-3 border-t border-[#EADFCB]/60">
+                    <button
+                      type="button"
+                      onClick={() => setInspectingOrder(ord)}
+                      className="w-full py-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] flex items-center justify-center gap-1.5 hover:bg-[#F3EDE2] transition-colors cursor-pointer"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Inspect</span>
+                    </button>
+
+                    {ord.status !== "in_production" && ord.status !== "completed" && ord.status !== "cancelled" && ord.status !== "refunded" ? (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="w-full justify-center text-xs"
+                        onClick={() => handleVerifyAndDispatch(ord)}
+                        leftIcon={<Play className="w-3 h-3" />}
+                      >
+                        Dispatch to n8n
+                      </Button>
+                    ) : (
                       <button
                         type="button"
                         onClick={() => setInspectingOrder(ord)}
-                        className="w-full py-2 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] flex items-center justify-center gap-1.5 hover:bg-[#F3EDE2] transition-colors"
+                        className="w-full py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-[#5C3A1E] font-semibold text-center flex items-center justify-center gap-1.5 hover:bg-amber-100 transition-colors cursor-pointer"
                       >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>Inspect</span>
+                        <Sparkles className="w-3.5 h-3.5 text-[#B38E46]" />
+                        <span>View Assets</span>
                       </button>
-
-                      {ord.status !== "in_production" && ord.status !== "completed" && ord.status !== "cancelled" && ord.status !== "refunded" ? (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          className="w-full justify-center text-xs"
-                          onClick={() => handleVerifyAndDispatch(ord)}
-                          leftIcon={<Play className="w-3 h-3" />}
-                        >
-                          Dispatch to n8n
-                        </Button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setInspectingOrder(ord)}
-                          className="w-full py-2 rounded-xl bg-amber-50 border border-amber-200 text-xs text-[#5C3A1E] font-semibold text-center flex items-center justify-center gap-1 hover:bg-amber-100 transition-colors"
-                        >
-                          <Sparkles className="w-3 h-3 text-[#B38E46]" />
-                          <span>View Assets</span>
-                        </button>
-                      )}
-                    </div>
+                    )}
                   </div>
-                ))}
-              </div>
-            </>
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* Responsive Row List View */
+            <div className="space-y-3">
+              {filteredOrders.map((ord) => (
+                <div
+                  key={ord.id}
+                  className="p-4 sm:p-5 rounded-2xl bg-white border border-[#EADFCB] shadow-2xs hover:border-[#D4A35A]/60 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1 min-w-0">
+                    <div className="space-y-1 sm:w-36 shrink-0">
+                      <span className="font-mono font-bold text-xs text-[#5C3A1E] block">
+                        {ord.orderNumber || ord.code || ord.id}
+                      </span>
+                      <Badge
+                        variant={
+                          ord.status === "in_production"
+                            ? "progress"
+                            : ord.status === "completed"
+                            ? "completed"
+                            : ord.status === "pending_verification"
+                            ? "gold"
+                            : "neutral"
+                        }
+                        size="sm"
+                      >
+                        {ord.status.replace("_", " ")}
+                      </Badge>
+                    </div>
+
+                    <div className="sm:w-52 min-w-0">
+                      <h4 className="font-serif font-bold text-sm text-[#0F172A] truncate">{ord.clientName}</h4>
+                      <p className="text-xs text-[#64748B] truncate">{ord.clientEmail}</p>
+                    </div>
+
+                    <div className="sm:w-44 min-w-0">
+                      <span className="text-[10px] text-[#64748B] block">Package / Service</span>
+                      <span className="text-xs font-semibold text-[#0F172A] truncate block">
+                        {ord.packageName || ord.service}
+                      </span>
+                    </div>
+
+                    <div className="sm:w-28 shrink-0">
+                      <span className="text-[10px] text-[#64748B] block">Total Amount</span>
+                      <span className="font-serif font-bold text-sm text-[#5C3A1E]">
+                        ₹{(ord.totalAmount || ord.amountPaid || 3499).toLocaleString("en-IN")}
+                      </span>
+                    </div>
+
+                    {ord.utrNumber ? (
+                      <div className="sm:w-36 shrink-0">
+                        <span className="text-[10px] text-[#64748B] block">UPI Ref / UTR</span>
+                        <span className="font-mono font-semibold text-xs text-[#2E7D4F] truncate block">
+                          {ord.utrNumber}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="sm:w-36 shrink-0 text-[#94A3B8] text-xs font-mono">
+                        —
+                      </div>
+                    )}
+
+                    {ord.deliverables && ord.deliverables.length > 0 && (
+                      <div className="shrink-0 flex items-center gap-1.5 text-[11px] font-semibold text-[#8B6508] bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">
+                        <Sparkles className="w-3 h-3 text-[#B38E46]" />
+                        <span>{ord.deliverables.length} Deliverable(s)</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-[#EADFCB]/60">
+                    <button
+                      type="button"
+                      onClick={() => setInspectingOrder(ord)}
+                      className="px-3.5 py-2 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] flex items-center justify-center gap-1.5 hover:bg-[#F3EDE2] transition-colors cursor-pointer"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Inspect</span>
+                    </button>
+
+                    {ord.status !== "in_production" && ord.status !== "completed" && ord.status !== "cancelled" && ord.status !== "refunded" ? (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="text-xs py-2 px-3.5"
+                        onClick={() => handleVerifyAndDispatch(ord)}
+                        leftIcon={<Play className="w-3 h-3" />}
+                      >
+                        Dispatch n8n
+                      </Button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setInspectingOrder(ord)}
+                        className="px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-200 text-xs text-[#5C3A1E] font-semibold flex items-center justify-center gap-1.5 hover:bg-amber-100 transition-colors cursor-pointer"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-[#B38E46]" />
+                        <span>View Assets</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
 
           {/* Inspection & Dispatch Modal */}

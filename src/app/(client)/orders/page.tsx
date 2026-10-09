@@ -3826,6 +3826,8 @@ export default function OrdersPage() {
             amount={paymentModalOrder.totalAmount || 1999}
             isCustomQuote={false}
             onPaymentSuccess={() => {
+              setPaymentModalOrder(null);
+              loadOrders();
               window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
             }}
           />
