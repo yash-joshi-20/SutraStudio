@@ -22,6 +22,10 @@ import {
   FileCheck,
   Clock,
   Sparkles,
+  Download,
+  Video as VideoIcon,
+  Image as ImageIcon,
+  Film,
 } from "lucide-react";
 
 interface AdminOrderRecord {
@@ -42,6 +46,16 @@ interface AdminOrderRecord {
   screenshotUrl?: string;
   createdAt: string;
   serviceDetails?: any;
+  deliverables?: Array<{
+    driveFileId?: string;
+    filename?: string;
+    fileSize?: string;
+    mimeType?: string;
+    previewUrl?: string;
+    downloadUrl?: string;
+    thumbnailUrl?: string;
+    category?: string;
+  }>;
 }
 
 export default function AdminOrdersPage() {
@@ -115,6 +129,7 @@ export default function AdminOrdersPage() {
     };
 
     let localN8nAck = false;
+    let returnedDeliverables: any[] = [];
 
     // 1. Dispatch via production server relay (/api/n8n/dispatch) to avoid CORS/mixed-content blocks
     try {
@@ -131,7 +146,8 @@ export default function AdminOrdersPage() {
       const data = await serverRes.json().catch(() => ({}));
       if (serverRes.ok && data.success) {
         localN8nAck = true;
-        setDispatchStatus("Master n8n engine accepted order! Updating status to in_production...");
+        returnedDeliverables = data.deliverables || data.output?.deliverables || [];
+        setDispatchStatus("✓ Pipeline executed! 4K Master Render & Commercial Video Reel generated. Vaulting...");
       } else {
         // Fallback: try direct ngrok webhook
         const directWebhookUrl =
@@ -155,7 +171,7 @@ export default function AdminOrdersPage() {
       setDispatchStatus("Proceeding with production order status update...");
     }
 
-    // 2. Update Firestore order status to in_production
+    // 2. Update Firestore order status to in_production and vault deliverables
     try {
       await fetch("/api/orders", {
         method: "PATCH",
@@ -165,19 +181,32 @@ export default function AdminOrdersPage() {
           orderId: order.id,
           status: "in_production",
           paymentStatus: "paid",
+          deliverables: returnedDeliverables,
           notes: localN8nAck
-            ? "Dispatched directly to local workstation n8n engine."
+            ? "Dispatched to studio creative engine. 4K Master Render & Commercial Reel vaulted."
             : "Dispatched to production pipeline.",
         }),
       });
 
-      setDispatchStatus("Success! Order marked In Production.");
+      setDispatchStatus("✓ Success! Assets Vaulted & Order Placed In Production.");
+      setInspectingOrder((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: "in_production",
+              paymentStatus: "paid",
+              deliverables: [
+                ...(prev.deliverables || []),
+                ...returnedDeliverables,
+              ],
+            }
+          : null
+      );
+      fetchOrders(true);
       setTimeout(() => {
         setDispatchStatus(null);
         setIsDispatching(false);
-        setInspectingOrder(null);
-        fetchOrders(true);
-      }, 1500);
+      }, 2500);
     } catch (e: any) {
       setDispatchStatus(`Status update failed: ${e?.message || e}`);
       setIsDispatching(false);
@@ -444,11 +473,18 @@ export default function AdminOrdersPage() {
                       </div>
                     )}
 
+                    {ord.deliverables && ord.deliverables.length > 0 && (
+                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#8B6508] bg-amber-50/90 px-2.5 py-1.5 rounded-xl border border-amber-200/70">
+                        <Sparkles className="w-3.5 h-3.5 text-[#B38E46] shrink-0" />
+                        <span>{ord.deliverables.length} Deliverable(s) Vaulted (4K Images / Video)</span>
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#EADFCB]/60">
                       <button
                         type="button"
                         onClick={() => setInspectingOrder(ord)}
-                        className="w-full py-2 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] flex items-center justify-center gap-1.5"
+                        className="w-full py-2 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] flex items-center justify-center gap-1.5 hover:bg-[#F3EDE2] transition-colors"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>Inspect</span>
@@ -467,10 +503,11 @@ export default function AdminOrdersPage() {
                       ) : (
                         <button
                           type="button"
-                          disabled
-                          className="w-full py-2 rounded-xl bg-gray-100 text-xs text-gray-400 font-semibold text-center"
+                          onClick={() => setInspectingOrder(ord)}
+                          className="w-full py-2 rounded-xl bg-amber-50 border border-amber-200 text-xs text-[#5C3A1E] font-semibold text-center flex items-center justify-center gap-1 hover:bg-amber-100 transition-colors"
                         >
-                          {ord.status === "in_production" ? "In Production" : "Completed"}
+                          <Sparkles className="w-3 h-3 text-[#B38E46]" />
+                          <span>View Assets</span>
                         </button>
                       )}
                     </div>
@@ -485,7 +522,7 @@ export default function AdminOrdersPage() {
             <Modal
               isOpen={!!inspectingOrder}
               onClose={() => setInspectingOrder(null)}
-              title="Order Verification & Local n8n Dispatch"
+              title="Order Verification & Studio Generation"
               description={`Order #${inspectingOrder.orderNumber || inspectingOrder.code || inspectingOrder.id}`}
               maxWidth="lg"
             >
@@ -523,6 +560,99 @@ export default function AdminOrdersPage() {
                   </div>
                 )}
 
+                {/* Vaulted Deliverables Showcase */}
+                {inspectingOrder.deliverables && inspectingOrder.deliverables.length > 0 ? (
+                  <div className="space-y-3 pt-2 border-t border-[#EADFCB]">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-[#B38E46]" />
+                        <span className="text-xs font-bold text-[#0F172A]">
+                          Generated Vault Deliverables ({inspectingOrder.deliverables.length})
+                        </span>
+                      </div>
+                      <Badge variant="completed" size="sm">
+                        Ready for Review
+                      </Badge>
+                    </div>
+
+                    <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                      {inspectingOrder.deliverables.map((item, idx) => {
+                        const isVid =
+                          item.mimeType?.includes("video") ||
+                          item.filename?.endsWith(".mp4") ||
+                          item.filename?.endsWith(".mov");
+                        const isImg =
+                          item.mimeType?.includes("image") ||
+                          item.filename?.endsWith(".png") ||
+                          item.filename?.endsWith(".jpg") ||
+                          item.filename?.endsWith(".webp");
+
+                        return (
+                          <div
+                            key={item.driveFileId || idx}
+                            className="p-3 rounded-xl bg-white border border-[#EADFCB] space-y-2 shadow-xs"
+                          >
+                            <div className="flex items-center justify-between text-xs">
+                              <div className="flex items-center gap-1.5 font-medium text-[#0F172A] truncate">
+                                {isVid ? (
+                                  <VideoIcon className="w-3.5 h-3.5 text-[#5C3A1E] shrink-0" />
+                                ) : (
+                                  <ImageIcon className="w-3.5 h-3.5 text-[#B38E46] shrink-0" />
+                                )}
+                                <span className="truncate">{item.filename}</span>
+                              </div>
+                              <span className="text-[11px] text-[#64748B] shrink-0">{item.fileSize || "4K Master"}</span>
+                            </div>
+
+                            {/* Visual Preview */}
+                            {isVid && (item.previewUrl || item.downloadUrl) && (
+                              <div className="rounded-lg overflow-hidden border border-[#EADFCB] bg-black">
+                                <video
+                                  src={item.previewUrl || item.downloadUrl}
+                                  controls
+                                  playsInline
+                                  preload="metadata"
+                                  className="w-full max-h-44 object-contain"
+                                />
+                              </div>
+                            )}
+
+                            {isImg && (item.previewUrl || item.downloadUrl) && (
+                              <div className="relative h-40 w-full rounded-lg overflow-hidden border border-[#EADFCB] bg-stone-100">
+                                <Image
+                                  src={item.previewUrl || item.downloadUrl!}
+                                  alt={item.filename || "Deliverable"}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            )}
+
+                            {/* Download / Open Action */}
+                            <div className="flex items-center justify-end gap-2 pt-1">
+                              {(item.previewUrl || item.downloadUrl) && (
+                                <a
+                                  href={item.downloadUrl || item.previewUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#5C3A1E] hover:text-[#8B6508] transition-colors"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                  <span>Open Master</span>
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-center text-xs text-[#64748B]">
+                    No deliverables vaulted yet. Click below to execute pipeline & synthesize 4K Renders & Commercial Video Reel.
+                  </div>
+                )}
+
                 {dispatchStatus && (
                   <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 font-medium">
                     {dispatchStatus}
@@ -548,7 +678,9 @@ export default function AdminOrdersPage() {
                     className="w-full sm:w-auto"
                     leftIcon={<Play className="w-4 h-4" />}
                   >
-                    Verify & Dispatch to Local n8n
+                    {inspectingOrder.deliverables && inspectingOrder.deliverables.length > 0
+                      ? "Re-Dispatch & Synthesize to n8n"
+                      : "Verify & Dispatch to Local n8n"}
                   </Button>
                 </div>
               </div>

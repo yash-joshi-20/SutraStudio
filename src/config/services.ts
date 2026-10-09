@@ -56,7 +56,7 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
     priceDisplay: "Starting from ₹499 (5x 4K Master Pack)",
     isCustomQuote: false,
     ctaText: "Order 5-Image Pack - ₹499",
-    ctaHref: "/orders?service=image-creation",
+    ctaHref: "/orders?mode=packages",
     deliverables: [
       "5x Ultra-HD 4K Photorealistic Master Renders (~₹100/image)",
       "2x Studio product angles",
@@ -94,7 +94,7 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
     priceDisplay: "Starting from ₹1,499 (2x Viral Reels Pack)",
     isCustomQuote: false,
     ctaText: "Order 2-Reels Pack - ₹1,499",
-    ctaHref: "/orders?service=video-creation",
+    ctaHref: "/orders?mode=packages",
     deliverables: [
       "2x Complete Commercial Video Reels / Shorts (15–30 Seconds Each)",
       "1x Product showcase reel + 1x Feature highlight reel",
@@ -359,34 +359,5 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
     mediaFormat: "iOS IPA / Android APK",
     turnaround: "10–14 Days",
     pipelineEngine: "React Native Mobile Engine",
-  },
-
-  // 12. Computational Automation & Cloud Workflows
-  {
-    id: "ai-automation",
-    name: "Cloud Automation & Workflows",
-    slug: "cloud-automation",
-    category: "Automation",
-    tagline: "Autonomous Pipelines & Integrations",
-    description:
-      "Custom automated operational pipelines, secure cloud webhook integrations, intelligent content routing, and automated Vault synchronization.",
-    workflow: "automation",
-    startingPrice: "₹15,999",
-    isCustomQuote: false,
-    ctaText: "Commission Pipeline",
-    ctaHref: "/orders?service=cloud-automation",
-    deliverables: [
-      "Automated Workflow Blueprints",
-      "Webhook Security Verification",
-      "Cloud Vault Automated Pipeline",
-    ],
-    icon: "Cpu",
-    thumbnail:
-      "https://image.pollinations.ai/prompt/futuristic%20autonomous%20ai%20workflow%20engine%20core%2C%20glowing%20gold%20neural%20fibers%2C%20cybernetic%20luxury%20server%2C%20dark%20bronze%2C%208k?width=1200&height=800&nologo=true",
-    badge: "Automation",
-    mediaType: "code",
-    mediaFormat: "Cloud Workflow Engine + Secure Webhooks",
-    turnaround: "48–72 Hours",
-    pipelineEngine: "HMAC Webhook & Vault Router",
   },
 ];
