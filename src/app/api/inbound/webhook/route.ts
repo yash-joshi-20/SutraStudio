@@ -154,7 +154,7 @@ export async function POST(req: Request) {
 
     if (channel === "WhatsApp") {
       const waPhoneId = readEnv("WHATSAPP_PHONE_NUMBER_ID");
-      const metaToken = readEnv("META_GRAPH_ACCESS_TOKEN");
+      const metaToken = readEnv("WHATSAPP_ACCESS_TOKEN") || readEnv("META_GRAPH_ACCESS_TOKEN");
 
       if (waPhoneId && metaToken && !metaToken.includes("USER_") && sender.match(/^[0-9+]+$/)) {
         try {
