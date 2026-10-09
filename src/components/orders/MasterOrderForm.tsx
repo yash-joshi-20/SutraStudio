@@ -145,24 +145,6 @@ export const INTAKE_PACKAGES: IntakePackageOption[] = [
 
 export const INTAKE_SERVICES: IntakeServiceOption[] = [
   {
-    id: "ai-concept-art",
-    title: "5x 4K Image Creation Pack",
-    category: "Creative & Brand",
-    basePrice: 499,
-    turnaround: "24h SLA",
-    description: "5x 4K Photorealistic Master Renders (~₹100/image). 2x Studio shots, 2x Lifestyle ambient context, 1x Ad visual.",
-    iconName: "sparkles",
-  },
-  {
-    id: "commercial-video-ads",
-    title: "2x Commercial Video Reels Pack",
-    category: "Video & Motion",
-    basePrice: 1499,
-    turnaround: "24–48h SLA",
-    description: "2x Complete Commercial Reels / Shorts with studio voiceover, background score, and motion typography.",
-    iconName: "video",
-  },
-  {
     id: "product-3d-cgi",
     title: "Product 3D Modeling & CGI",
     category: "3D & Spatial",
@@ -243,15 +225,6 @@ export const INTAKE_SERVICES: IntakeServiceOption[] = [
     description: "Cross-platform bespoke iOS & Android mobile applications sharing unified cloud backends.",
     iconName: "smartphone",
   },
-  {
-    id: "ai-automation",
-    title: "AI Automation & Workflows",
-    category: "Automation",
-    basePrice: 7999,
-    turnaround: "48–72h SLA",
-    description: "Intelligent agent pipelines, CRM synchronization, and autonomous workflow architecture.",
-    iconName: "zap",
-  },
 ];
 
 export function MasterOrderForm({
@@ -263,12 +236,28 @@ export function MasterOrderForm({
   // Navigation Steps: 1: Service & Tier, 2: Client & Brand Info, 3: Service Parameters, 4: Review & Payment
   const [currentStep, setCurrentStep] = useState(1);
 
+  // If user navigated for image creation, video creation, or packages/retainer, default to packages
+  const isPackagesPreferred =
+    initialServiceId === "monthly-retainer" ||
+    initialServiceId === "image-creation" ||
+    initialServiceId === "video-creation" ||
+    initialServiceId === "ai-concept-art" ||
+    initialServiceId === "commercial-video-ads" ||
+    Boolean(initialTierId);
+
   // Step 1: Mode Switcher & Selection
   const [orderMode, setOrderMode] = useState<"services" | "packages">(
-    initialServiceId === "monthly-retainer" || initialTierId ? "packages" : "services"
+    isPackagesPreferred ? "packages" : "services"
   );
   const [selectedServiceId, setSelectedServiceId] = useState<string>(
-    initialServiceId || "arch-3d"
+    initialServiceId &&
+    initialServiceId !== "ai-concept-art" &&
+    initialServiceId !== "commercial-video-ads" &&
+    initialServiceId !== "ai-automation" &&
+    initialServiceId !== "image-creation" &&
+    initialServiceId !== "video-creation"
+      ? initialServiceId
+      : "arch-3d"
   );
   const [selectedPackageId, setSelectedPackageId] = useState<string>(
     initialTierId || "starter-creative"
@@ -1598,7 +1587,10 @@ export function MasterOrderForm({
           amount={orderAmount}
           isCustomQuote={isBespokeService}
           onPaymentSuccess={() => {
-            // Keep modal open on its success screen
+            setPaymentModalOpen(false);
+            if (onOrderSuccess) {
+              onOrderSuccess(createdOrder);
+            }
           }}
         />
       )}

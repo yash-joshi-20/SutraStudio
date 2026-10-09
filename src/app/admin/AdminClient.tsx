@@ -40,6 +40,8 @@ import {
   Video,
   Image as ImageIcon,
   Layout,
+  LayoutGrid,
+  List as ListIcon,
   Smartphone,
   Megaphone,
   Compass,
@@ -576,6 +578,8 @@ function AdminHubContent() {
   const [orderSortBy, setOrderSortBy] = useState<string>("date_desc");
   const [orderCurrentPage, setOrderCurrentPage] = useState<number>(1);
   const ORDERS_PER_PAGE = 6;
+  const [orderViewMode, setOrderViewMode] = useState<"grid" | "list">("grid");
+  const [clientViewMode, setClientViewMode] = useState<"grid" | "list">("grid");
 
   // Order Details & Status Transition Modal
   const [inspectingAdminOrder, setInspectingAdminOrder] = useState<AdminOrder | null>(null);
@@ -2827,126 +2831,235 @@ const [adminDataError, setAdminDataError] = useState("");
                   ))}
                 </div>
 
-                <div className="relative flex items-center w-full sm:w-72">
-                  <Search className="w-4 h-4 text-[#94A3B8] absolute left-3.5 pointer-events-none" />
-                  <input
-                    type="text"
-                    placeholder="Search client, email or company..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#D4A35A]"
-                  />
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <div className="relative flex items-center w-full sm:w-72">
+                    <Search className="w-4 h-4 text-[#94A3B8] absolute left-3.5 pointer-events-none" />
+                    <input
+                      type="text"
+                      placeholder="Search client, email or company..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#D4A35A]"
+                    />
+                  </div>
+
+                  {/* Grid / List Switcher */}
+                  <div className="flex items-center gap-1 p-1 bg-[#FAF9F5] border border-[#EADFCB] rounded-full shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setClientViewMode("grid")}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+                        clientViewMode === "grid"
+                          ? "bg-[#5C3A1E] text-white shadow-xs"
+                          : "text-[#64748B] hover:text-[#0F172A]"
+                      }`}
+                      title="Grid View"
+                    >
+                      <LayoutGrid className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Grid</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setClientViewMode("list")}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+                        clientViewMode === "list"
+                          ? "bg-[#5C3A1E] text-white shadow-xs"
+                          : "text-[#64748B] hover:text-[#0F172A]"
+                      }`}
+                      title="List View"
+                    >
+                      <ListIcon className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">List</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              {/* High-Density Client Table */}
-              <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] overflow-hidden shadow-xs">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-[#FAF9F5] border-b border-[#EADFCB] text-[10px] uppercase font-bold text-[#64748B] tracking-wider">
-                      <tr>
-                        <th className="py-3.5 px-6">Client / Company</th>
-                        <th className="py-3.5 px-4">Tier</th>
-                        <th className="py-3.5 px-4">Vault ID</th>
-                        <th className="py-3.5 px-4">Active Orders</th>
-                        <th className="py-3.5 px-4">Lifetime Spend</th>
-                        <th className="py-3.5 px-4">Status</th>
-                        <th className="py-3.5 px-6 text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#EADFCB]/60">
-                      {filteredClients.length === 0 ? (
-                        <tr>
-                          <td colSpan={7} className="py-12 text-center text-xs text-[#64748B]">
-                            No registered clients found in directory.
-                          </td>
-                        </tr>
-                      ) : (
-                        filteredClients.map((dossier: any) => {
-                          const client = dossier.profile || dossier;
-                          return (
-                            <tr
-                              key={client.id || client.uid}
-                              className="hover:bg-[#FAF9F5]/60 transition-colors"
-                            >
-                              <td className="py-4 px-6">
-                                <div className="flex items-center gap-3">
-                                  <Avatar name={client.name} size="sm" />
-                                  <div>
-                                    <p className="font-semibold text-[#0F172A]">{client.name}</p>
-                                    <p className="text-[11px] text-[#64748B]">{client.company || client.email}</p>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="py-4 px-4">
-                                <div className="space-y-1">
-                                  <Badge
-                                    variant={
-                                      client.tier === "Enterprise"
-                                        ? "gold"
-                                        : client.tier === "Growth"
-                                        ? "progress"
-                                        : "neutral"
-                                    }
-                                    size="sm"
-                                    showDot={false}
-                                  >
-                                    {client.tier || "Starter"}
-                                  </Badge>
-                                  {dossier.activePlan && (
-                                    <p className="text-[10px] text-[#5C3A1E] font-medium truncate max-w-[140px]">
-                                      {dossier.activePlan.type === "trial" ? "3-Day Trial" : "Retainer Active"}
-                                    </p>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="py-4 px-4">
-                                <a
-                                  href={dossier.driveFolderLink || `https://drive.google.com/drive/folders/${client.driveFolderId}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 font-mono text-[11px] text-[#5C3A1E] hover:underline"
-                                >
-                                  {client.driveFolderId?.slice(0, 14)}...
-                                  <ExternalLink className="w-3 h-3 text-[#94A3B8]" />
-                                </a>
-                              </td>
-                              <td className="py-4 px-4 font-semibold text-[#0F172A]">
-                                {dossier.activeOrdersCount ?? client.activeOrders ?? 0} Orders
-                              </td>
-                              <td className="py-4 px-4 font-serif font-bold text-[#5C3A1E]">
-                                {dossier.lifetimeVolumeFormatted || client.lifetimeVolume || "₹0"}
-                              </td>
-                              <td className="py-4 px-4">
-                                <span
-                                  className={`text-[11px] font-semibold ${
-                                    client.status === "Active"
-                                      ? "text-[#2E7D4F]"
-                                      : client.status === "Disabled"
-                                      ? "text-[#DC2626]"
-                                      : "text-[#C2761A]"
-                                  }`}
-                                >
-                                  ● {client.status || "Active"}
-                                </span>
-                              </td>
-                              <td className="py-4 px-6 text-right">
-                                <Button
-                                  variant="secondary"
-                                  size="sm"
-                                  onClick={() => setSelectedDossier(dossier)}
-                                >
-                                  Inspect Dossier
-                                </Button>
-                              </td>
-                            </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
+              {/* Responsive Client Content (Grid / List) */}
+              {filteredClients.length === 0 ? (
+                <div className="p-12 text-center text-xs text-[#64748B] bg-[#FFFDF9] rounded-3xl border border-[#EADFCB] space-y-2">
+                  <Users className="w-8 h-8 text-[#A98B57] mx-auto opacity-60 mb-2" />
+                  <p className="font-semibold text-[#0F172A]">No registered clients found in directory.</p>
+                  <p className="text-[11px] text-[#94A3B8]">Try adjusting your search query or tier filter.</p>
                 </div>
-              </div>
+              ) : clientViewMode === "grid" ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {filteredClients.map((dossier: any) => {
+                    const client = dossier.profile || dossier;
+                    return (
+                      <div
+                        key={client.id || client.uid}
+                        className="p-5 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] shadow-2xs hover:shadow-xs hover:border-[#D4A35A]/60 transition-all flex flex-col justify-between space-y-4"
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <Avatar name={client.name} size="md" />
+                              <div className="min-w-0">
+                                <p className="font-semibold text-sm text-[#0F172A] truncate">{client.name}</p>
+                                <p className="text-xs text-[#64748B] truncate">{client.company || client.email}</p>
+                              </div>
+                            </div>
+                            <span
+                              className={`text-[11px] font-semibold shrink-0 px-2 py-0.5 rounded-full ${
+                                client.status === "Active"
+                                  ? "bg-[#ECFDF5] text-[#2E7D4F]"
+                                  : client.status === "Disabled"
+                                  ? "bg-[#FEF2F2] text-[#DC2626]"
+                                  : "bg-[#FFFBEB] text-[#C2761A]"
+                              }`}
+                            >
+                              ● {client.status || "Active"}
+                            </span>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-[#EADFCB]/50">
+                            <Badge
+                              variant={
+                                client.tier === "Enterprise"
+                                  ? "gold"
+                                  : client.tier === "Growth"
+                                  ? "progress"
+                                  : "neutral"
+                              }
+                              size="sm"
+                              showDot={false}
+                            >
+                              {client.tier || "Starter"}
+                            </Badge>
+                            {dossier.activePlan && (
+                              <span className="text-[10px] text-[#5C3A1E] font-medium bg-[#FAF9F5] px-2 py-0.5 rounded border border-[#EADFCB]/60 truncate">
+                                {dossier.activePlan.type === "trial" ? "3-Day Trial" : "Retainer Active"}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/60 text-xs">
+                            <div>
+                              <span className="text-[10px] text-[#64748B] block">Active Orders</span>
+                              <span className="font-semibold text-[#0F172A]">
+                                {dossier.activeOrdersCount ?? client.activeOrders ?? 0} Orders
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-[#64748B] block">Lifetime Volume</span>
+                              <span className="font-serif font-bold text-[#5C3A1E]">
+                                {dossier.lifetimeVolumeFormatted || client.lifetimeVolume || "₹0"}
+                              </span>
+                            </div>
+                          </div>
+
+                          {client.driveFolderId && (
+                            <a
+                              href={dossier.driveFolderLink || `https://drive.google.com/drive/folders/${client.driveFolderId}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 font-mono text-[11px] text-[#5C3A1E] hover:underline"
+                            >
+                              <HardDrive className="w-3.5 h-3.5 text-[#A98B57]" />
+                              <span>{client.driveFolderId.slice(0, 16)}...</span>
+                              <ExternalLink className="w-3 h-3 text-[#94A3B8]" />
+                            </a>
+                          )}
+                        </div>
+
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => setSelectedDossier(dossier)}
+                          className="w-full text-xs justify-center"
+                        >
+                          Inspect Dossier
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredClients.map((dossier: any) => {
+                    const client = dossier.profile || dossier;
+                    return (
+                      <div
+                        key={client.id || client.uid}
+                        className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] shadow-2xs hover:border-[#D4A35A]/60 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                      >
+                        <div className="flex items-center gap-3 min-w-0 md:w-1/3">
+                          <Avatar name={client.name} size="md" />
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="font-semibold text-sm text-[#0F172A] truncate">{client.name}</p>
+                              <span
+                                className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
+                                  client.status === "Active"
+                                    ? "bg-[#ECFDF5] text-[#2E7D4F]"
+                                    : client.status === "Disabled"
+                                    ? "bg-[#FEF2F2] text-[#DC2626]"
+                                    : "bg-[#FFFBEB] text-[#C2761A]"
+                                }`}
+                              >
+                                ● {client.status || "Active"}
+                              </span>
+                            </div>
+                            <p className="text-xs text-[#64748B] truncate">{client.company || client.email}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-3 text-xs md:w-1/3">
+                          <Badge
+                            variant={
+                              client.tier === "Enterprise"
+                                ? "gold"
+                                : client.tier === "Growth"
+                                ? "progress"
+                                : "neutral"
+                            }
+                            size="sm"
+                            showDot={false}
+                          >
+                            {client.tier || "Starter"}
+                          </Badge>
+                          <div className="space-y-0.5">
+                            <span className="text-[10px] text-[#64748B] block">Spend</span>
+                            <span className="font-serif font-bold text-[#5C3A1E]">
+                              {dossier.lifetimeVolumeFormatted || client.lifetimeVolume || "₹0"}
+                            </span>
+                          </div>
+                          <div className="space-y-0.5">
+                            <span className="text-[10px] text-[#64748B] block">Active</span>
+                            <span className="font-semibold text-[#0F172A]">
+                              {dossier.activeOrdersCount ?? client.activeOrders ?? 0} Orders
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between md:justify-end gap-3 md:w-1/3">
+                          {client.driveFolderId && (
+                            <a
+                              href={dossier.driveFolderLink || `https://drive.google.com/drive/folders/${client.driveFolderId}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 font-mono text-[11px] text-[#5C3A1E] hover:underline"
+                              title="Google Drive Vault"
+                            >
+                              <HardDrive className="w-3.5 h-3.5 text-[#A98B57]" />
+                              <ExternalLink className="w-3 h-3 text-[#94A3B8]" />
+                            </a>
+                          )}
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setSelectedDossier(dossier)}
+                            className="text-xs shrink-0"
+                          >
+                            Inspect Dossier
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
@@ -5027,7 +5140,7 @@ const [adminDataError, setAdminDataError] = useState("");
                   </div>
 
                   {/* Summary Bar */}
-                  <div className="flex flex-wrap items-center justify-between text-xs text-[#64748B] pt-1">
+                  <div className="flex flex-wrap items-center justify-between text-xs text-[#64748B] pt-1 gap-3">
                     <div className="flex items-center gap-3">
                       <span>Showing <strong>{filteredAndSortedOrders.length}</strong> matching commissions</span>
                       {orderSearchQuery && (
@@ -5040,16 +5153,48 @@ const [adminDataError, setAdminDataError] = useState("");
                         </button>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-[11px]">
-                      <span className="px-2 py-0.5 rounded bg-[#FEF3C7] text-[#92400E] font-medium border border-[#FDE68A]">
-                        {realOrders.filter((o) => o.status === "pending_payment" || o.status === "pending").length} Pending
-                      </span>
-                      <span className="px-2 py-0.5 rounded bg-[#F0FDF4] text-[#15803D] font-medium border border-[#BBF7D0]">
-                        {realOrders.filter((o) => ["paid", "brief_review", "in_production", "draft_delivered", "revision_requested", "trial", "active", "in_progress"].includes(o.status)).length} Active
-                      </span>
-                      <span className="px-2 py-0.5 rounded bg-[#ECFDF5] text-[#065F46] font-medium border border-[#A7F3D0]">
-                        {realOrders.filter((o) => o.status === "completed" || o.status === "approved").length} Completed
-                      </span>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex items-center gap-2 text-[11px]">
+                        <span className="px-2 py-0.5 rounded bg-[#FEF3C7] text-[#92400E] font-medium border border-[#FDE68A]">
+                          {realOrders.filter((o) => o.status === "pending_payment" || o.status === "pending").length} Pending
+                        </span>
+                        <span className="px-2 py-0.5 rounded bg-[#F0FDF4] text-[#15803D] font-medium border border-[#BBF7D0]">
+                          {realOrders.filter((o) => ["paid", "brief_review", "in_production", "draft_delivered", "revision_requested", "trial", "active", "in_progress"].includes(o.status)).length} Active
+                        </span>
+                        <span className="px-2 py-0.5 rounded bg-[#ECFDF5] text-[#065F46] font-medium border border-[#A7F3D0]">
+                          {realOrders.filter((o) => o.status === "completed" || o.status === "approved").length} Completed
+                        </span>
+                      </div>
+
+                      {/* View Mode Toggle: Grid vs List */}
+                      <div className="flex items-center gap-1 p-1 bg-[#FAF9F5] border border-[#EADFCB] rounded-full shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setOrderViewMode("grid")}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+                            orderViewMode === "grid"
+                              ? "bg-[#5C3A1E] text-white shadow-xs"
+                              : "text-[#64748B] hover:text-[#0F172A]"
+                          }`}
+                          title="Grid View"
+                        >
+                          <LayoutGrid className="w-3.5 h-3.5" />
+                          <span>Grid</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setOrderViewMode("list")}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+                            orderViewMode === "list"
+                              ? "bg-[#5C3A1E] text-white shadow-xs"
+                              : "text-[#64748B] hover:text-[#0F172A]"
+                          }`}
+                          title="List View"
+                        >
+                          <ListIcon className="w-3.5 h-3.5" />
+                          <span>List</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -5081,22 +5226,8 @@ const [adminDataError, setAdminDataError] = useState("");
                   </div>
                 ) : (
                   <>
-                    {/* Desktop View: Full Data Table with safe horizontal scroll */}
-                    <div className="hidden lg:block overflow-x-auto rounded-2xl border border-[#EADFCB] bg-[#FFFFFF] shadow-2xs">
-                      <table className="w-full text-left text-xs min-w-[960px]">
-                        <thead className="bg-[#FAF9F5] border-b border-[#EADFCB] text-[10px] uppercase font-bold text-[#64748B] tracking-wider">
-                          <tr>
-                            <th className="py-3.5 px-4 min-w-[130px]">Commission Code</th>
-                            <th className="py-3.5 px-4 min-w-[170px]">Client</th>
-                            <th className="py-3.5 px-4 min-w-[190px]">Service & Type</th>
-                            <th className="py-3.5 px-4 min-w-[95px]">Amount</th>
-                            <th className="py-3.5 px-4 min-w-[110px]">Payment</th>
-                            <th className="py-3.5 px-4 min-w-[150px]">Lifecycle & Progress</th>
-                            <th className="py-3.5 px-4 min-w-[95px]">SLA / Due</th>
-                            <th className="py-3.5 px-4 min-w-[160px] text-right">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[#EADFCB]/60">
+                    {orderViewMode === "grid" ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                           {paginatedOrders.map((order) => {
                             const isChat = order.source === "ai_chat";
                             const itemsCount = order.items?.length || 1;
@@ -5117,107 +5248,64 @@ const [adminDataError, setAdminDataError] = useState("");
                                 : "Studio Creative Direction";
 
                             return (
-                              <tr key={order.id} className="hover:bg-[#FAF9F5]/70 transition-colors">
-                                <td className="py-3.5 px-4">
-                                  <div className="space-y-1">
-                                    <span className="font-mono text-xs font-bold text-[#5C3A1E] block">
-                                      {order.code || order.orderNumber || `#${order.id}`}
-                                    </span>
-                                    <span
-                                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold border ${
-                                        isChat
-                                          ? "bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]"
-                                          : "bg-[#F8F5EF] text-[#64748B] border-[#EADFCB]"
-                                      }`}
-                                    >
-                                      {isChat ? (
-                                        <>
-                                          <Sparkles className="w-2.5 h-2.5 text-[#D4A35A]" />
-                                          <span>AI Chat</span>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <ShoppingBag className="w-2.5 h-2.5 text-[#5C3A1E]" />
-                                          <span>Dashboard</span>
-                                        </>
-                                      )}
-                                    </span>
+                              <div
+                                key={order.id}
+                                className="p-5 rounded-2xl bg-[#FFFFFF] border border-[#EADFCB] shadow-2xs hover:shadow-xs hover:border-[#D4A35A]/60 transition-all flex flex-col justify-between space-y-4"
+                              >
+                                <div className="space-y-3">
+                                  {/* Card Header: Commission Code + Source + Placed Date */}
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-mono text-xs font-bold text-[#5C3A1E]">
+                                        {order.code || order.orderNumber || `#${order.id}`}
+                                      </span>
+                                      <span
+                                        className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border ${
+                                          isChat
+                                            ? "bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]"
+                                            : "bg-[#F8F5EF] text-[#64748B] border-[#EADFCB]"
+                                        }`}
+                                      >
+                                        {isChat ? (
+                                          <>
+                                            <Sparkles className="w-2.5 h-2.5 text-[#D4A35A]" />
+                                            <span>AI Chat</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <ShoppingBag className="w-2.5 h-2.5 text-[#5C3A1E]" />
+                                            <span>Dashboard</span>
+                                          </>
+                                        )}
+                                      </span>
+                                    </div>
+                                    <span className="text-[10px] text-[#94A3B8]">{placedDate}</span>
                                   </div>
-                                </td>
 
-                                <td className="py-3.5 px-4">
+                                  {/* Service and Client Info */}
                                   <div>
-                                    <p className="font-semibold text-[#0F172A] truncate max-w-[160px]">
-                                      {order.clientName || "Studio Client"}
+                                    <p className="font-semibold text-sm text-[#0F172A] line-clamp-1">
+                                      {serviceDisplayName}
                                     </p>
-                                    <p className="text-[11px] text-[#64748B] truncate max-w-[160px]">
-                                      {order.clientEmail || "client@sutrastudio.com"}
+                                    <p className="text-xs text-[#64748B] mt-0.5">
+                                      Client: <strong className="text-[#0F172A] font-semibold">{order.clientName || "Studio Client"}</strong>
+                                      {order.clientEmail && (
+                                        <span className="text-[11px] text-[#94A3B8] block truncate">{order.clientEmail}</span>
+                                      )}
                                     </p>
                                     {order.assignedTo && (
-                                      <span className="inline-flex items-center gap-1 text-[10px] text-[#A98B57] font-medium mt-0.5">
-                                        <UserCheck className="w-2.5 h-2.5" />
-                                        <span>{order.assignedTo.name}</span>
-                                      </span>
+                                      <p className="text-[11px] text-[#A98B57] font-medium flex items-center gap-1 mt-1">
+                                        <UserCheck className="w-3 h-3 shrink-0" />
+                                        <span className="truncate">Assigned to: {order.assignedTo.name}</span>
+                                      </p>
                                     )}
                                   </div>
-                                </td>
 
-                                <td className="py-3.5 px-4">
-                                  <div className="space-y-0.5">
-                                    <span className="font-semibold text-[#0F172A] truncate max-w-[200px] block" title={serviceDisplayName}>
-                                      {serviceDisplayName}
-                                    </span>
-                                    <div className="flex items-center gap-2 text-[10px] text-[#64748B]">
-                                      <span className="capitalize">
-                                        {order.type === "monthly_plan" ? "Monthly Retainer" : "Individual Service"}
-                                      </span>
-                                      <span>•</span>
-                                      <span>{itemsCount} {itemsCount === 1 ? "Item" : "Items"}</span>
-                                    </div>
-                                  </div>
-                                </td>
-
-                                <td className="py-3.5 px-4 font-serif font-bold text-sm text-[#5C3A1E] whitespace-nowrap">
-                                  ₹{(order.totalAmount || 0).toLocaleString("en-IN")}
-                                </td>
-
-                                <td className="py-3.5 px-4">
-                                  {order.paymentStatus === "paid" || order.status === "paid" ? (
-                                    <div className="space-y-0.5">
-                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0] whitespace-nowrap">
-                                        <Check className="w-2.5 h-2.5 text-[#059669]" />
-                                        <span>Paid</span>
-                                      </span>
-                                      {order.razorpayPaymentId && (
-                                        <span className="block font-mono text-[9px] text-[#64748B] truncate max-w-[95px]" title={order.razorpayPaymentId}>
-                                          {order.razorpayPaymentId}
-                                        </span>
-                                      )}
-                                    </div>
-                                  ) : order.paymentStatus === "refunded" || order.status === "refunded" ? (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FAF5FF] text-[#6B21A8] border border-[#E9D5FF] whitespace-nowrap">
-                                      Refunded
-                                    </span>
-                                  ) : order.paymentStatus === "failed" ? (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA] whitespace-nowrap">
-                                      Failed
-                                    </span>
-                                  ) : (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FFFDF0] text-[#9A6700] border border-[#F1E0A6] whitespace-nowrap">
-                                      Unpaid
-                                    </span>
-                                  )}
-                                </td>
-
-                                <td className="py-3.5 px-4">
-                                  <div className="space-y-1.5 min-w-[130px]">
-                                    <div className="flex items-center justify-between text-[11px]">
-                                      <span className="font-semibold text-[#0F172A] truncate max-w-[95px]">
-                                        {progress.stageName}
-                                      </span>
-                                      <span className="font-mono text-[10px] font-bold text-[#A98B57]">
-                                        {progress.percentage}%
-                                      </span>
+                                  {/* Progress Bar */}
+                                  <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70 space-y-1.5">
+                                    <div className="flex items-center justify-between text-xs">
+                                      <span className="font-semibold text-[#0F172A] truncate max-w-[170px]">{progress.stageName}</span>
+                                      <span className="font-mono font-bold text-[#A98B57]">{progress.percentage}%</span>
                                     </div>
                                     <div className="w-full bg-[#EADFCB]/60 rounded-full h-1.5 overflow-hidden">
                                       <div
@@ -5226,21 +5314,45 @@ const [adminDataError, setAdminDataError] = useState("");
                                       />
                                     </div>
                                   </div>
-                                </td>
 
-                                <td className="py-3.5 px-4 text-[#64748B] text-[11px] whitespace-nowrap">
-                                  {order.estimatedDueDate ? (
-                                    <span className="inline-flex items-center gap-1 text-[#5C3A1E] font-medium">
-                                      <Calendar className="w-3 h-3 text-[#A98B57]" />
-                                      <span>{new Date(order.estimatedDueDate).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}</span>
-                                    </span>
-                                  ) : (
-                                    <span>{placedDate}</span>
-                                  )}
-                                </td>
+                                  {/* Pricing, Due Date & Payment Status */}
+                                  <div className="flex items-center justify-between pt-1 border-t border-[#EADFCB]/50 flex-wrap gap-2">
+                                    <div className="space-y-0.5">
+                                      <span className="text-[10px] text-[#94A3B8] block">Commission Total</span>
+                                      <span className="font-serif font-bold text-base text-[#5C3A1E]">
+                                        ₹{(order.totalAmount || 0).toLocaleString("en-IN")}
+                                      </span>
+                                    </div>
 
-                                <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                                  <div className="flex items-center justify-end gap-1.5">
+                                    <div className="flex flex-col items-end gap-1">
+                                      {order.paymentStatus === "paid" || order.status === "paid" ? (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0]">
+                                          <Check className="w-2.5 h-2.5 text-[#059669]" />
+                                          <span>Paid</span>
+                                        </span>
+                                      ) : order.paymentStatus === "failed" ? (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA]">
+                                          Failed
+                                        </span>
+                                      ) : (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#FFFDF0] text-[#9A6700] border border-[#F1E0A6]">
+                                          Unpaid
+                                        </span>
+                                      )}
+
+                                      {order.estimatedDueDate && (
+                                        <span className="inline-flex items-center gap-1 text-[10px] text-[#5C3A1E]">
+                                          <Calendar className="w-3 h-3 text-[#A98B57]" />
+                                          <span>Due {new Date(order.estimatedDueDate).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}</span>
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex items-center justify-between gap-1.5 pt-3 border-t border-[#EADFCB]/60 flex-wrap">
+                                  <div className="flex items-center gap-1 flex-wrap">
                                     {order.paymentStatus !== "paid" && order.status !== "paid" && (
                                       <>
                                         <button
@@ -5253,25 +5365,25 @@ const [adminDataError, setAdminDataError] = useState("");
                                             )
                                           }
                                           disabled={isProcessingPaymentAction === order.id}
-                                          className="p-1.5 rounded-lg border border-[#BBF7D0] bg-[#F0FDF4] text-[#166534] hover:bg-[#DCFCE7] cursor-pointer flex items-center gap-1 text-[11px] font-semibold transition-all shadow-2xs"
-                                          title="Mark payment as received (QR UPI / Bank / Cash)"
+                                          className="p-1.5 px-2 rounded-lg border border-[#BBF7D0] bg-[#F0FDF4] text-[#166534] hover:bg-[#DCFCE7] cursor-pointer flex items-center gap-1 text-[11px] font-semibold transition-all shadow-2xs"
+                                          title="Mark payment as received"
                                         >
                                           {isProcessingPaymentAction === order.id ? (
                                             <Loader2 className="w-3.5 h-3.5 animate-spin text-[#166534]" />
                                           ) : (
                                             <Check className="w-3.5 h-3.5 text-[#16A34A]" />
                                           )}
-                                          <span className="hidden xl:inline">Paid</span>
+                                          <span>Paid</span>
                                         </button>
                                         <button
                                           type="button"
                                           onClick={() => handleSendPaymentReminder(order.id)}
                                           disabled={isProcessingPaymentAction === order.id}
-                                          className="p-1.5 rounded-lg border border-[#FDE68A] bg-[#FFFBEB] text-[#92400E] hover:bg-[#FEF3C7] cursor-pointer flex items-center gap-1 text-[11px] font-semibold transition-all shadow-2xs"
-                                          title="Send payment reminder notification to client"
+                                          className="p-1.5 px-2 rounded-lg border border-[#FDE68A] bg-[#FFFBEB] text-[#92400E] hover:bg-[#FEF3C7] cursor-pointer flex items-center gap-1 text-[11px] font-semibold transition-all shadow-2xs"
+                                          title="Send payment reminder"
                                         >
                                           <Bell className="w-3.5 h-3.5 text-[#D97706]" />
-                                          <span className="hidden xl:inline">Remind</span>
+                                          <span>Remind</span>
                                         </button>
                                       </>
                                     )}
@@ -5293,180 +5405,222 @@ const [adminDataError, setAdminDataError] = useState("");
                                       onClick={() => handleDispatchOrderToN8n(order)}
                                       disabled={dispatchingOrderWf === order.id}
                                       className="p-1.5 rounded-lg border border-[#D4A35A] bg-[#FFFDF9] text-[#5C3A1E] hover:bg-[#FAF9F5] cursor-pointer flex items-center gap-1 text-[11px] font-semibold transition-all shadow-2xs"
-                                      title="Dispatch to n8n Autonomous Automation Engine"
+                                      title="Dispatch to n8n Automation Engine"
                                     >
                                       {dispatchingOrderWf === order.id ? (
                                         <Loader2 className="w-3.5 h-3.5 animate-spin text-[#5C3A1E]" />
                                       ) : (
                                         <Zap className="w-3.5 h-3.5 text-[#D4A35A]" />
                                       )}
-                                      <span className="hidden xl:inline">n8n</span>
+                                      <span>n8n</span>
                                     </button>
-                                    <Button
-                                      variant="secondary"
-                                      size="sm"
-                                      onClick={() => {
-                                        setInspectingAdminOrder(order);
-                                        setAdminOrderModalTab("details");
-                                        setStatusChangeTarget(order.status || "paid");
-                                        setStatusChangeNote("");
-                                      }}
-                                      className="text-xs"
-                                    >
-                                      Inspect & Manage
-                                    </Button>
                                   </div>
-                                </td>
-                              </tr>
+
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => {
+                                      setInspectingAdminOrder(order);
+                                      setAdminOrderModalTab("details");
+                                      setStatusChangeTarget(order.status || "paid");
+                                      setStatusChangeNote("");
+                                    }}
+                                    className="text-xs"
+                                  >
+                                    Inspect & Manage
+                                  </Button>
+                                </div>
+                              </div>
                             );
                           })}
-                        </tbody>
-                      </table>
-                    </div>
+                      </div>
+                    ) : (
+                      /* List View */
+                      <div className="space-y-3">
+                        {paginatedOrders.map((order) => {
+                          const isChat = order.source === "ai_chat";
+                          const placedDate = order.createdAt
+                            ? new Date(order.createdAt).toLocaleDateString("en-IN", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              })
+                            : "Recent";
+                          const progress = computeOrderProgress(order);
+                          const serviceDisplayName =
+                            order.title && order.title.length > 3 && order.title.toLowerCase() !== "ys"
+                              ? order.title
+                              : order.service && order.service.length > 2
+                              ? order.service
+                              : "Studio Creative Direction";
 
-                    {/* Mobile View: High-Density Responsive Cards */}
-                    <div className="block lg:hidden space-y-3.5">
-                      {paginatedOrders.map((order) => {
-                        const isChat = order.source === "ai_chat";
-                        const placedDate = order.createdAt
-                          ? new Date(order.createdAt).toLocaleDateString("en-IN", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            })
-                          : "Recent";
-                        const progress = computeOrderProgress(order);
-
-                        return (
-                          <div
-                            key={order.id}
-                            className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#EADFCB] shadow-2xs space-y-3"
-                          >
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono text-xs font-bold text-[#5C3A1E]">
-                                  {order.code || order.orderNumber || `#${order.id}`}
-                                </span>
-                                <span
-                                  className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border ${
-                                    isChat
-                                      ? "bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]"
-                                      : "bg-[#F8F5EF] text-[#64748B] border-[#EADFCB]"
-                                  }`}
-                                >
-                                  {isChat ? "AI Chat" : "Dashboard"}
-                                </span>
-                              </div>
-                              <span className="text-[10px] text-[#94A3B8]">{placedDate}</span>
-                            </div>
-
-                            <div>
-                              <p className="font-semibold text-sm text-[#0F172A]">
-                                {order.title || order.service || "Creative Direction"}
-                              </p>
-                              <p className="text-xs text-[#64748B]">
-                                Client: <strong className="text-[#0F172A]">{order.clientName || "Studio Client"}</strong>
-                              </p>
-                              {order.assignedTo && (
-                                <p className="text-[11px] text-[#A98B57] font-medium flex items-center gap-1 mt-0.5">
-                                  <UserCheck className="w-3 h-3" />
-                                  <span>Assigned to: {order.assignedTo.name}</span>
+                          return (
+                            <div
+                              key={order.id}
+                              className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#EADFCB] shadow-2xs hover:border-[#D4A35A]/60 transition-all flex flex-col xl:flex-row xl:items-center justify-between gap-4"
+                            >
+                              {/* Column 1: Code, Client & Service */}
+                              <div className="min-w-0 xl:w-4/12 space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-mono text-xs font-bold text-[#5C3A1E]">
+                                    {order.code || order.orderNumber || `#${order.id}`}
+                                  </span>
+                                  <span
+                                    className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border ${
+                                      isChat
+                                        ? "bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]"
+                                        : "bg-[#F8F5EF] text-[#64748B] border-[#EADFCB]"
+                                    }`}
+                                  >
+                                    {isChat ? "AI Chat" : "Dashboard"}
+                                  </span>
+                                  <span className="text-[10px] text-[#94A3B8]">• {placedDate}</span>
+                                </div>
+                                <p className="font-semibold text-sm text-[#0F172A] truncate">
+                                  {serviceDisplayName}
                                 </p>
-                              )}
-                            </div>
-
-                            {/* Mobile Progress Bar */}
-                            <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70 space-y-1.5">
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="font-semibold text-[#0F172A]">{progress.stageName}</span>
-                                <span className="font-mono font-bold text-[#A98B57]">{progress.percentage}%</span>
-                              </div>
-                              <div className="w-full bg-[#EADFCB] rounded-full h-1.5 overflow-hidden">
-                                <div
-                                  className="h-full bg-gradient-to-r from-[#D4A35A] to-[#5C3A1E] rounded-full"
-                                  style={{ width: `${progress.percentage}%` }}
-                                />
-                              </div>
-                            </div>
-
-                            <div className="flex items-center justify-between pt-2 border-t border-[#EADFCB]/60 flex-wrap gap-2">
-                              <div className="space-y-0.5">
-                                <span className="text-[10px] text-[#94A3B8] block">Commission</span>
-                                <span className="font-serif font-bold text-base text-[#5C3A1E]">
-                                  ₹{(order.totalAmount || 0).toLocaleString("en-IN")}
-                                </span>
+                                <p className="text-xs text-[#64748B] truncate">
+                                  Client: <strong className="text-[#0F172A] font-semibold">{order.clientName || "Studio Client"}</strong>
+                                  {order.clientEmail && ` (${order.clientEmail})`}
+                                </p>
                               </div>
 
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                {order.paymentStatus !== "paid" && order.status !== "paid" && (
-                                  <>
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleMarkPaymentReceived(
-                                          order.id,
-                                          "upi_qr",
-                                          "Mobile Quick Payment Verification"
-                                        )
-                                      }
-                                      className="p-1 px-2 rounded-lg border border-[#BBF7D0] bg-[#F0FDF4] text-[#166534] text-[10px] font-bold"
-                                    >
-                                      ✓ Paid
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleSendPaymentReminder(order.id)}
-                                      className="p-1 px-2 rounded-lg border border-[#FDE68A] bg-[#FFFBEB] text-[#92400E] text-[10px] font-bold"
-                                    >
-                                      🔔 Remind
-                                    </button>
-                                  </>
-                                )}
-                                <span
-                                  className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                                    order.paymentStatus === "paid"
-                                      ? "bg-[#ECFDF5] text-[#065F46]"
-                                      : order.paymentStatus === "refunded"
-                                      ? "bg-[#FAF5FF] text-[#6B21A8]"
-                                      : "bg-[#FEF3C7] text-[#92400E]"
-                                  }`}
-                                >
-                                  {order.paymentStatus ? order.paymentStatus.toUpperCase() : "UNPAID"}
-                                </span>
-
-                                <button
-                                  type="button"
-                                  onClick={() => handleDispatchOrderToN8n(order)}
-                                  disabled={dispatchingOrderWf === order.id}
-                                  className="p-1.5 rounded-xl border border-[#D4A35A] bg-[#FFFDF9] text-[#5C3A1E] hover:bg-[#FAF9F5] cursor-pointer flex items-center gap-1 text-[11px] font-semibold"
-                                  title="Dispatch to n8n"
-                                >
-                                  {dispatchingOrderWf === order.id ? (
-                                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#5C3A1E]" />
+                              {/* Column 2: Progress & SLA */}
+                              <div className="xl:w-3/12 space-y-1.5">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="font-semibold text-[#0F172A] truncate max-w-[140px]">{progress.stageName}</span>
+                                  <span className="font-mono font-bold text-[#A98B57]">{progress.percentage}%</span>
+                                </div>
+                                <div className="w-full bg-[#EADFCB]/60 rounded-full h-1.5 overflow-hidden">
+                                  <div
+                                    className="h-full bg-gradient-to-r from-[#D4A35A] to-[#5C3A1E] rounded-full"
+                                    style={{ width: `${progress.percentage}%` }}
+                                  />
+                                </div>
+                                <div className="flex items-center justify-between text-[11px] text-[#64748B]">
+                                  {order.assignedTo ? (
+                                    <span className="text-[#A98B57] truncate flex items-center gap-1">
+                                      <UserCheck className="w-3 h-3 shrink-0" />
+                                      <span>{order.assignedTo.name}</span>
+                                    </span>
                                   ) : (
-                                    <Zap className="w-3.5 h-3.5 text-[#D4A35A]" />
+                                    <span>Unassigned</span>
                                   )}
-                                </button>
+                                  {order.estimatedDueDate && (
+                                    <span className="inline-flex items-center gap-1 text-[#5C3A1E] font-medium shrink-0">
+                                      <Calendar className="w-3 h-3 text-[#A98B57]" />
+                                      <span>{new Date(order.estimatedDueDate).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}</span>
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
 
-                                <Button
-                                  variant="secondary"
-                                  size="sm"
-                                  onClick={() => {
-                                    setInspectingAdminOrder(order);
-                                    setAdminOrderModalTab("details");
-                                    setStatusChangeTarget(order.status || "paid");
-                                    setStatusChangeNote("");
-                                  }}
-                                  className="text-xs py-1 px-2.5"
-                                >
-                                  Inspect & Manage
-                                </Button>
+                              {/* Column 3: Amount, Payment Status & Actions */}
+                              <div className="flex items-center justify-between xl:justify-end gap-3 xl:w-5/12 flex-wrap">
+                                <div className="space-y-0.5">
+                                  <div className="font-serif font-bold text-sm text-[#5C3A1E]">
+                                    ₹{(order.totalAmount || 0).toLocaleString("en-IN")}
+                                  </div>
+                                  <div>
+                                    {order.paymentStatus === "paid" || order.status === "paid" ? (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0]">
+                                        Paid
+                                      </span>
+                                    ) : order.paymentStatus === "failed" ? (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA]">
+                                        Failed
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FFFDF0] text-[#9A6700] border border-[#F1E0A6]">
+                                        Unpaid
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  {order.paymentStatus !== "paid" && order.status !== "paid" && (
+                                    <>
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          handleMarkPaymentReceived(
+                                            order.id,
+                                            order.source === "qr_upi" ? "upi_qr" : "bank_transfer",
+                                            "Direct Settlement Confirmation"
+                                          )
+                                        }
+                                        disabled={isProcessingPaymentAction === order.id}
+                                        className="p-1.5 rounded-lg border border-[#BBF7D0] bg-[#F0FDF4] text-[#166534] hover:bg-[#DCFCE7] cursor-pointer flex items-center gap-1 text-[11px] font-semibold"
+                                        title="Mark payment as received"
+                                      >
+                                        {isProcessingPaymentAction === order.id ? (
+                                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        ) : (
+                                          <Check className="w-3.5 h-3.5 text-[#16A34A]" />
+                                        )}
+                                        <span>Paid</span>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleSendPaymentReminder(order.id)}
+                                        disabled={isProcessingPaymentAction === order.id}
+                                        className="p-1.5 rounded-lg border border-[#FDE68A] bg-[#FFFBEB] text-[#92400E] hover:bg-[#FEF3C7] cursor-pointer flex items-center gap-1 text-[11px] font-semibold"
+                                        title="Send payment reminder"
+                                      >
+                                        <Bell className="w-3.5 h-3.5 text-[#D97706]" />
+                                        <span>Remind</span>
+                                      </button>
+                                    </>
+                                  )}
+                                  {(order.paymentStatus === "paid" || order.status === "paid") && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setAdminReceiptOrder(order as any);
+                                        setIsAdminReceiptOpen(true);
+                                      }}
+                                      className="p-1.5 rounded-lg border border-[#EADFCB] text-[#5C3A1E] hover:bg-[#FAF9F5] cursor-pointer"
+                                      title="View Official Receipt"
+                                    >
+                                      <Receipt className="w-3.5 h-3.5 text-[#A98B57]" />
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDispatchOrderToN8n(order)}
+                                    disabled={dispatchingOrderWf === order.id}
+                                    className="p-1.5 rounded-lg border border-[#D4A35A] bg-[#FFFDF9] text-[#5C3A1E] hover:bg-[#FAF9F5] cursor-pointer flex items-center gap-1 text-[11px] font-semibold"
+                                    title="Dispatch to n8n"
+                                  >
+                                    {dispatchingOrderWf === order.id ? (
+                                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#5C3A1E]" />
+                                    ) : (
+                                      <Zap className="w-3.5 h-3.5 text-[#D4A35A]" />
+                                    )}
+                                    <span>n8n</span>
+                                  </button>
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => {
+                                      setInspectingAdminOrder(order);
+                                      setAdminOrderModalTab("details");
+                                      setStatusChangeTarget(order.status || "paid");
+                                      setStatusChangeNote("");
+                                    }}
+                                    className="text-xs"
+                                  >
+                                    Inspect & Manage
+                                  </Button>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
 
                     {/* Pagination Controls */}
                     {totalOrderPages > 1 && (

@@ -848,7 +848,10 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "orderId or projectId is required." }, { status: 400 });
     }
 
-    const targetOrder = OrdersStore.findById(targetOrderId);
+    let targetOrder = OrdersStore.findById(targetOrderId);
+    if (!targetOrder) {
+      targetOrder = await OrdersStore.findByIdAsync(targetOrderId);
+    }
 
     if (targetOrder) {
       // Payment Reminder Action
@@ -899,6 +902,7 @@ export async function PATCH(req: Request) {
           },
         ];
         OrdersStore.update(targetOrder.id, targetOrder);
+        await OrdersStore.updateAsync(targetOrder.id, targetOrder);
 
         // NOTE: Admin reviews and dispatches order from the Admin Orders Console
 
@@ -934,6 +938,7 @@ export async function PATCH(req: Request) {
         ];
 
         OrdersStore.update(targetOrder.id, targetOrder);
+        await OrdersStore.updateAsync(targetOrder.id, targetOrder);
 
         // Dispatch Confirmation Notification to Client
         try {
@@ -970,7 +975,7 @@ export async function PATCH(req: Request) {
       } else if (rawStatus === "confirmed") {
         normalizedStatus = "confirmed";
         statusLabel = "Confirmed & Scheduled";
-      } else if (rawStatus === "in_progress" || rawStatus === "in production") {
+      } else if (rawStatus === "in_progress" || rawStatus === "in_production" || rawStatus === "in production") {
         normalizedStatus = "in_progress";
         statusLabel = "In Production";
       } else if (rawStatus === "awaiting_approval" || rawStatus === "review") {
@@ -1004,6 +1009,12 @@ export async function PATCH(req: Request) {
       if (body.paidAt) {
         targetOrder.paidAt = body.paidAt;
       }
+      if (Array.isArray(body.deliverables) && body.deliverables.length > 0) {
+        targetOrder.deliverables = [
+          ...(targetOrder.deliverables || []),
+          ...body.deliverables,
+        ];
+      }
       targetOrder.updatedAt = now;
       targetOrder.statusHistory = [
         ...(targetOrder.statusHistory || []),
@@ -1019,6 +1030,7 @@ export async function PATCH(req: Request) {
       ];
 
       OrdersStore.update(targetOrder.id, targetOrder);
+      await OrdersStore.updateAsync(targetOrder.id, targetOrder);
 
       // Record in immutable Administrative Audit Trail
       try {
