@@ -6124,7 +6124,7 @@ const [adminDataError, setAdminDataError] = useState("");
                                   Studio Admin Quality Review Gate
                                 </h5>
                                 <p className="text-[11px] text-[#B45309]">
-                                  Autonomous drafts are vaulted in '02 Drafts'. Review the media files below and authorize client release.
+                                  Autonomous drafts are vaulted in &apos;02 Drafts&apos;. Review the media files below and authorize client release.
                                 </p>
                               </div>
                             </div>

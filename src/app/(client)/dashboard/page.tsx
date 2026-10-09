@@ -269,7 +269,7 @@ export default function ClientDashboardPage() {
                 <div>
                   <h3 className="text-sm font-semibold text-[#5C3A1E]">Verify your email address</h3>
                   <p className="text-xs text-[#5C3A1E]/80 mt-0.5">
-                    You won't be able to commission new projects until you verify {user.email}.
+                    You won&apos;t be able to commission new projects until you verify {user.email}.
                   </p>
                   {verificationMsg && (
                     <p className="text-xs font-medium text-emerald-700 mt-2">{verificationMsg}</p>

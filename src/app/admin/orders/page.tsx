@@ -377,7 +377,7 @@ export default function AdminOrdersPage() {
                           >
                             Inspect
                           </button>
-                          {ord.status === "pending_verification" && (
+                          {ord.status !== "in_production" && ord.status !== "completed" && ord.status !== "cancelled" && ord.status !== "refunded" && (
                             <Button
                               variant="primary"
                               size="sm"
@@ -454,7 +454,7 @@ export default function AdminOrdersPage() {
                         <span>Inspect</span>
                       </button>
 
-                      {ord.status === "pending_verification" ? (
+                      {ord.status !== "in_production" && ord.status !== "completed" && ord.status !== "cancelled" && ord.status !== "refunded" ? (
                         <Button
                           variant="primary"
                           size="sm"
@@ -462,7 +462,7 @@ export default function AdminOrdersPage() {
                           onClick={() => handleVerifyAndDispatch(ord)}
                           leftIcon={<Play className="w-3 h-3" />}
                         >
-                          Dispatch
+                          Dispatch to n8n
                         </Button>
                       ) : (
                         <button
@@ -470,7 +470,7 @@ export default function AdminOrdersPage() {
                           disabled
                           className="w-full py-2 rounded-xl bg-gray-100 text-xs text-gray-400 font-semibold text-center"
                         >
-                          Dispatched
+                          {ord.status === "in_production" ? "In Production" : "Completed"}
                         </button>
                       )}
                     </div>

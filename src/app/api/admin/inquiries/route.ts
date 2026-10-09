@@ -168,7 +168,7 @@ export async function POST(req: Request) {
         );
       }
 
-      let deliveryStatus = "Sent";
+      const deliveryStatus = "Sent";
 
       if (channel?.toLowerCase() === "whatsapp") {
         const phoneId = readEnv("WHATSAPP_PHONE_NUMBER_ID");

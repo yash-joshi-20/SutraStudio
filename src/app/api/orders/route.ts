@@ -787,49 +787,11 @@ export async function POST(req: Request) {
     }
 
     // -------------------------------------------------------------------------
-    // AUTONOMOUS n8n WORKFLOW DISPATCH
-    // If order is paid, UTR submitted, or direct brief registered, queue for autonomous pipeline
+    // WORKFLOW DISPATCH POLICY:
+    // As per Studio Directives, n8n automation dispatch is intentionally delegated to 
+    // the Studio Administrator from the Admin Orders Queue (/admin/orders).
+    // Client-side automatic direct dispatch is disabled to allow human-in-the-loop review.
     // -------------------------------------------------------------------------
-    try {
-      const { N8nAutomationService } = await import("@/lib/services/n8nService");
-      if (
-        isDirectPaid ||
-        isPendingVerification ||
-        isUpiVerification ||
-        isDirectInvoice ||
-        newOrder.paymentStatus === "paid" ||
-        newOrder.paymentStatus === "pending_verification" ||
-        newOrder.paymentStatus === "awaiting_confirmation"
-      ) {
-        N8nAutomationService.dispatchWorkflow({
-          workflowId: isPendingVerification ? "SUTRA_PAYMENT_VERIFICATION_PIPELINE" : "SUTRA_MASTER_AUTONOMOUS_PIPELINE",
-          orderId: newOrder.id,
-          service: primaryServiceName,
-          brief: newOrder.requirements,
-          clientId: clientUid,
-          driveFolderId: newOrder.driveFolderId,
-          metadata: {
-            orderId: newOrder.id,
-            orderNumber: newOrder.orderNumber,
-            clientName: newOrder.clientName,
-            clientEmail: newOrder.clientEmail,
-            totalAmount: newOrder.totalAmount,
-            sourceChannel: newOrder.source,
-            serviceDetails: newOrder.serviceDetails,
-            payment: {
-              method: newOrder.paymentMethod || "UPI_GPAY",
-              payee: newOrder.payee,
-              upiId: newOrder.upiId,
-              utr: newOrder.utrNumber,
-              screenshotUrl: newOrder.screenshotUrl,
-              status: newOrder.paymentStatus,
-            },
-          },
-        }).catch((n8nErr) => console.warn("[Orders API] n8n background dispatch error:", n8nErr));
-      }
-    } catch (err) {
-      console.warn("[Orders API] Error initiating n8n dispatch:", err);
-    }
 
     return NextResponse.json({
       success: true,
@@ -938,22 +900,7 @@ export async function PATCH(req: Request) {
         ];
         OrdersStore.update(targetOrder.id, targetOrder);
 
-        // Dispatch n8n notification for payment verification
-        try {
-          const { N8nAutomationService } = await import("@/lib/services/n8nService");
-          N8nAutomationService.dispatchWorkflow({
-            workflowId: "SUTRA_PAYMENT_VERIFICATION_PIPELINE",
-            orderId: targetOrder.id,
-            service: targetOrder.service,
-            clientId: targetOrder.clientUid,
-            metadata: {
-              utrNumber: targetOrder.utrNumber,
-              screenshotUrl: targetOrder.screenshotUrl,
-              payee: targetOrder.payee,
-              upiId: targetOrder.upiId,
-            },
-          }).catch(() => {});
-        } catch {}
+        // NOTE: Admin reviews and dispatches order from the Admin Orders Console
 
         return NextResponse.json({
           success: true,

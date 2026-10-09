@@ -22,7 +22,7 @@ export interface DeliverableRecord {
 }
 
 // In-memory fallback ledger for zero-setup / offline local dev
-let IN_MEMORY_DELIVERABLES: DeliverableRecord[] = [];
+const IN_MEMORY_DELIVERABLES: DeliverableRecord[] = [];
 
 export async function GET(req: Request) {
   try {
