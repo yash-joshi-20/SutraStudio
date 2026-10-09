@@ -111,7 +111,7 @@ export async function POST(req: Request) {
 
     const pubId = `pub_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     let metaPostId = `${facebookPageId}_${Date.now()}`;
-    let instagramMediaId = `ig_${Date.now()}`;
+    const instagramMediaId = `ig_${Date.now()}`;
     let liveMetaPublished = false;
 
     // Direct Meta Graph API publishing if real token is provided

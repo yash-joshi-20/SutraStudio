@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { PaymentModal } from "@/components/checkout/PaymentModal";
+import { DynamicUPIQRCode } from "@/components/checkout/DynamicUPIQRCode";
 import {
   PER_PROJECT_TIERS,
   MONTHLY_RETAINER_TIERS,
@@ -37,6 +38,7 @@ import {
   Camera,
   Share2,
   MessageCircle,
+  Zap,
 } from "lucide-react";
 
 export interface MasterOrderFormProps {
@@ -49,12 +51,97 @@ export interface MasterOrderFormProps {
 export interface IntakeServiceOption {
   id: string;
   title: string;
-  category: "3D & Spatial" | "Video & Motion" | "Social & Ads" | "Creative & Brand" | "Digital" | "Retainer";
-  basePrice: number | "custom";
+  category: "3D & Spatial" | "Video & Motion" | "Social & Ads" | "Creative & Brand" | "Digital" | "Automation";
+  basePrice: number;
   turnaround: string;
   description: string;
   iconName: string;
 }
+
+export interface IntakePackageOption {
+  id: string;
+  title: string;
+  billingCycle: "monthly" | "one_time";
+  price: number;
+  turnaround: string;
+  description: string;
+  features: string[];
+  popular?: boolean;
+  iconName: string;
+}
+
+export const INTAKE_PACKAGES: IntakePackageOption[] = [
+  {
+    id: "starter-creative",
+    title: "Starter Creative Pack",
+    billingCycle: "one_time",
+    price: 1999,
+    turnaround: "48h Rapid SLA",
+    description: "Essential 4K creative launch pack for boutique brands needing immediate high-impact visuals.",
+    iconName: "sparkles",
+    features: [
+      "Up to 5x Photorealistic 4K Renders",
+      "1x 10-Second Commercial Video Ad",
+      "Full Commercial Copyright License",
+      "48-Hour Rapid Turnaround Pipeline",
+      "Sutra Cloud Vault Archive",
+      "2 Revision Rounds Included",
+    ],
+  },
+  {
+    id: "studio-growth",
+    title: "Studio Growth Pack",
+    billingCycle: "one_time",
+    price: 4999,
+    turnaround: "24–72h Priority SLA",
+    popular: true,
+    description: "High-velocity multi-format digital atelier spanning 3D spatial renders, promo video, and Meta campaigns.",
+    iconName: "layers",
+    features: [
+      "15x High-Resolution 3D & Product Renders",
+      "3x 15-Second Video Ads with Studio Voiceover",
+      "Interactive 360° Space Tour or Virtual Showroom",
+      "3x Meta Ads Creative Variations (Feed & Story)",
+      "Priority 24–72 Hour Delivery Pipeline",
+      "Unlimited Minor Revisions (7 Days)",
+    ],
+  },
+  {
+    id: "autonomous-growth-retainer",
+    title: "Autonomous Growth Retainer",
+    billingCycle: "monthly",
+    price: 9999,
+    turnaround: "Daily Active Queue",
+    popular: true,
+    description: "Your dedicated luxury creative atelier. Continuous daily active queue delivering graphics, reels & 3D.",
+    iconName: "zap",
+    features: [
+      "Daily 1x 4K Brand Graphic (30 Assets/month)",
+      "Daily 1x Commercial Video Reel / Short (30 Assets/month)",
+      "Dedicated 3D Asset Modeling & Spatial Renders",
+      "Interactive 360° Virtual Panoramic Tour",
+      "Meta Ads Creative Variation Pack (Multi-Ratio)",
+      "Private Dedicated Cloud Vault with Instant Sync",
+      "Executive Creative Lead & Priority Queue",
+    ],
+  },
+  {
+    id: "atelier-enterprise-retainer",
+    title: "Atelier Enterprise Retainer",
+    billingCycle: "monthly",
+    price: 24999,
+    turnaround: "Dedicated Atelier Capacity",
+    description: "Full-scale enterprise creative engineering for high-growth brands, studios, and agencies.",
+    iconName: "building",
+    features: [
+      "40+ Master 4K Key Visuals / Month",
+      "12+ Commercial Motion Reels / Month",
+      "Bespoke Web Platform & Client Portal Development",
+      "Dedicated Senior Art Director & Dedicated Slack Channel",
+      "Direct Priority Production & Dedicated Cloud Vault",
+    ],
+  },
+];
 
 export const INTAKE_SERVICES: IntakeServiceOption[] = [
   {
@@ -76,21 +163,12 @@ export const INTAKE_SERVICES: IntakeServiceOption[] = [
     iconName: "video",
   },
   {
-    id: "arch-3d",
-    title: "Interior & Architecture Spatial Engineering",
+    id: "product-3d-cgi",
+    title: "Product 3D Modeling & CGI",
     category: "3D & Spatial",
-    basePrice: "custom",
-    turnaround: "Bespoke Scope",
-    description: "Photorealistic architectural exteriors, spatial staging, lighting studies, and CAD elevations.",
-    iconName: "building",
-  },
-  {
-    id: "interior-staging",
-    title: "Interior Architecture & Staging",
-    category: "3D & Spatial",
-    basePrice: "custom",
-    turnaround: "Bespoke Scope",
-    description: "Luxury interior staging, furniture layouts, material finishes, and ambient lighting.",
+    basePrice: 2499,
+    turnaround: "48h Turnaround",
+    description: "High-precision CAD modeling, studio product lighting, and explosive CGI views.",
     iconName: "box",
   },
   {
@@ -103,12 +181,21 @@ export const INTAKE_SERVICES: IntakeServiceOption[] = [
     iconName: "compass",
   },
   {
-    id: "product-3d-cgi",
-    title: "Product 3D Modeling & CGI",
+    id: "arch-3d",
+    title: "Interior & Architecture Spatial Engineering",
     category: "3D & Spatial",
-    basePrice: 1999,
-    turnaround: "48h Turnaround",
-    description: "High-precision CAD modeling, studio product lighting, and explosive CGI views.",
+    basePrice: 4999,
+    turnaround: "48–72h SLA",
+    description: "Photorealistic architectural exteriors, spatial staging, lighting studies, and CAD elevations.",
+    iconName: "building",
+  },
+  {
+    id: "interior-staging",
+    title: "Interior Architecture & Staging",
+    category: "3D & Spatial",
+    basePrice: 4999,
+    turnaround: "48–72h SLA",
+    description: "Luxury interior staging, furniture layouts, material finishes, and ambient lighting.",
     iconName: "box",
   },
   {
@@ -124,19 +211,10 @@ export const INTAKE_SERVICES: IntakeServiceOption[] = [
     id: "meta-ad-bundles",
     title: "Meta Ads Launcher & Campaign Infrastructure",
     category: "Social & Ads",
-    basePrice: "custom",
-    turnaround: "Bespoke Scope",
+    basePrice: 4999,
+    turnaround: "48h SLA",
     description: "End-to-end Facebook & Instagram ad campaign setups, high-converting creative ad variations, copy testing, and optimization.",
     iconName: "share",
-  },
-  {
-    id: "editorial-fashion",
-    title: "High-Fashion & Editorial Visuals",
-    category: "Creative & Brand",
-    basePrice: 1999,
-    turnaround: "48h Turnaround",
-    description: "Vogue-grade editorial compositions, virtual wardrobe staging, and high-fashion aesthetics.",
-    iconName: "camera",
   },
   {
     id: "brand-identity-system",
@@ -151,8 +229,8 @@ export const INTAKE_SERVICES: IntakeServiceOption[] = [
     id: "custom-web-digital",
     title: "Website Architecture & Development",
     category: "Digital",
-    basePrice: "custom",
-    turnaround: "Bespoke Scope",
+    basePrice: 9999,
+    turnaround: "5–7 Days SLA",
     description: "High-performance bespoke Next.js websites, luxury landing pages, and interactive experiences.",
     iconName: "monitor",
   },
@@ -160,19 +238,19 @@ export const INTAKE_SERVICES: IntakeServiceOption[] = [
     id: "mobile-app-dev",
     title: "Mobile App Development",
     category: "Digital",
-    basePrice: "custom",
-    turnaround: "Bespoke Scope",
+    basePrice: 14999,
+    turnaround: "7–14 Days SLA",
     description: "Cross-platform bespoke iOS & Android mobile applications sharing unified cloud backends.",
     iconName: "smartphone",
   },
   {
-    id: "monthly-retainer",
-    title: "Monthly Creative Direction & Content Retainer",
-    category: "Retainer",
-    basePrice: 9999,
-    turnaround: "Daily Active Queue",
-    description: "Dedicated ongoing creative partner with daily delivery queue, private channel, and unlimited requests.",
-    iconName: "layers",
+    id: "ai-automation",
+    title: "AI Automation & Workflows",
+    category: "Automation",
+    basePrice: 7999,
+    turnaround: "48–72h SLA",
+    description: "Intelligent agent pipelines, CRM synchronization, and autonomous workflow architecture.",
+    iconName: "zap",
   },
 ];
 
@@ -185,13 +263,22 @@ export function MasterOrderForm({
   // Navigation Steps: 1: Service & Tier, 2: Client & Brand Info, 3: Service Parameters, 4: Review & Payment
   const [currentStep, setCurrentStep] = useState(1);
 
-  // Step 1: Selected Service & Tier
+  // Step 1: Mode Switcher & Selection
+  const [orderMode, setOrderMode] = useState<"services" | "packages">(
+    initialServiceId === "monthly-retainer" || initialTierId ? "packages" : "services"
+  );
   const [selectedServiceId, setSelectedServiceId] = useState<string>(
     initialServiceId || "arch-3d"
+  );
+  const [selectedPackageId, setSelectedPackageId] = useState<string>(
+    initialTierId || "starter-creative"
   );
   const [selectedTierId, setSelectedTierId] = useState<string>(
     initialTierId || "starter"
   );
+
+  // Direct UPI UTR Input
+  const [utrNumber, setUtrNumber] = useState("");
 
   // Step 2: Universal Base Inputs
   const [fullName, setFullName] = useState("");
@@ -251,11 +338,16 @@ export function MasterOrderForm({
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [formError, setFormError] = useState("");
 
-  // Active Service Details
+  // Active Package & Service Details
+  const activePackage =
+    INTAKE_PACKAGES.find((p) => p.id === selectedPackageId) || INTAKE_PACKAGES[0];
   const activeService =
     INTAKE_SERVICES.find((s) => s.id === selectedServiceId) || INTAKE_SERVICES[0];
 
-  const isMonthlyRetainer = activeService.id === "monthly-retainer";
+  const isMonthlyRetainer =
+    orderMode === "packages"
+      ? activePackage.billingCycle === "monthly"
+      : selectedTierId === "retainer";
   const isMetaAds =
     activeService.id === "meta-ad-bundles" ||
     activeService.id === "social-micro-reels";
@@ -267,27 +359,21 @@ export function MasterOrderForm({
   const isWebDev =
     activeService.id === "custom-web-digital" || activeService.id === "mobile-app-dev";
 
-  const isBespokeService =
-    activeService.basePrice === "custom" ||
-    activeService.id === "arch-3d" ||
-    activeService.id === "interior-staging" ||
-    activeService.id === "meta-ad-bundles" ||
-    activeService.id === "custom-web-digital" ||
-    activeService.id === "mobile-app-dev" ||
-    /interior|architecture|spatial|meta ad|web build|website|web app|mobile app/i.test(
-      activeService.title
-    );
+  // Standard checkout is active across all services and packages
+  const isBespokeService = false;
 
   // Calculate Order Amount
   const orderAmount = React.useMemo(() => {
-    if (activeService.id === "ai-concept-art") return 499; // 5x 4K Image Creation Pack
-    if (activeService.id === "commercial-video-ads") return 1499; // 2x Video Reels Pack
+    if (orderMode === "packages") {
+      return activePackage.price;
+    }
+    if (activeService.id === "ai-concept-art") return 499;
+    if (activeService.id === "commercial-video-ads") return 1499;
     if (activeService.id === "social-micro-reels") return 1499;
-    if (isMonthlyRetainer || selectedTierId === "retainer") return 9999;
-    if (selectedTierId === "starter") return 1999;
-    if (selectedTierId === "growth") return 4999;
+    if (activeService.id === "product-3d-cgi") return 2499;
+    if (typeof activeService.basePrice === "number") return activeService.basePrice;
     return 1999;
-  }, [activeService.id, isMonthlyRetainer, selectedTierId]);
+  }, [orderMode, activePackage, activeService]);
 
   // Validation before proceeding
   const handleNextStep = () => {
@@ -322,6 +408,11 @@ export function MasterOrderForm({
     setIsSubmitting(true);
     setFormError("");
 
+    const hasUtr = Boolean(utrNumber.trim());
+    const paymentStatus = hasUtr ? "pending_verification" : "pending";
+    const resolvedTitle = orderMode === "packages" ? activePackage.title : activeService.title;
+    const resolvedTierId = orderMode === "packages" ? activePackage.id : (selectedTierId || "starter");
+
     const orderPayload = {
       orderId: `ord_${Date.now()}`,
       sourceChannel: "direct_order" as const,
@@ -332,18 +423,16 @@ export function MasterOrderForm({
         brandName: brandName.trim(),
       },
       package: {
-        tierId: isMonthlyRetainer
-          ? "autonomous-growth-retainer"
-          : selectedTierId === "starter"
-          ? "starter-creative"
-          : "studio-growth",
-        name: isMonthlyRetainer
-          ? "Autonomous Growth Retainer"
-          : `${activeService.title} (${selectedTierId === "starter" ? "Starter Creative" : "Studio Growth"})`,
+        tierId: resolvedTierId,
+        name: resolvedTitle,
         price: orderAmount,
         billingCycle: isMonthlyRetainer ? ("monthly" as const) : ("project" as const),
       },
       serviceDetails: {
+        orderMode,
+        ...(orderMode === "packages" && {
+          packageFeatures: activePackage.features,
+        }),
         ...(isMetaAds && {
           metaAds: {
             targetGeo: metaTargetGeo || "All India",
@@ -381,10 +470,11 @@ export function MasterOrderForm({
         }),
       },
       payment: {
-        method: "UPI_GPAY" as const,
+        method: paymentChoice === "upi_qr" ? ("UPI_GPAY" as const) : ("INVOICE" as const),
         payee: "Yash Joshi" as const,
         upiId: "yashjoshi7355-1@okicici" as const,
-        status: "pending_verification" as const,
+        utr: utrNumber.trim() || undefined,
+        status: paymentStatus,
       },
       createdAt: new Date().toISOString(),
 
@@ -396,21 +486,18 @@ export function MasterOrderForm({
       brandName: brandName.trim(),
       industry,
       brandUrl: brandUrl.trim(),
-      serviceId: activeService.id,
-      serviceTitle: activeService.title,
-      tierId: isMonthlyRetainer
-        ? "autonomous-growth-retainer"
-        : selectedTierId === "starter"
-        ? "starter-creative"
-        : "studio-growth",
+      serviceId: orderMode === "packages" ? activePackage.id : activeService.id,
+      serviceTitle: resolvedTitle,
+      tierId: resolvedTierId,
       amount: orderAmount,
       totalAmount: orderAmount,
       billingType: isMonthlyRetainer ? "monthly_retainer" : "per_project",
       targetDeadline,
       creativeBrief: creativeBrief.trim(),
       brandAssetUrl: brandLogoPreview || brandAssetUrl.trim(),
-      paymentMethod: paymentChoice === "upi_qr" ? "UPI_GPAY" : "online",
-      paymentStatus: "pending_verification",
+      paymentMethod: paymentChoice === "upi_qr" ? "UPI_GPAY" : "invoice",
+      paymentStatus,
+      utrNumber: utrNumber.trim() || undefined,
     };
 
     try {
@@ -424,7 +511,7 @@ export function MasterOrderForm({
       const generatedOrder = data.order || {
         id: `ord_${Date.now()}`,
         code: `STR-${Math.floor(1000 + Math.random() * 9000)}`,
-        title: activeService.title,
+        title: resolvedTitle,
         totalAmount: orderAmount,
       };
 
@@ -432,10 +519,6 @@ export function MasterOrderForm({
 
       if (onOrderSuccess) {
         onOrderSuccess(generatedOrder);
-      }
-
-      if (paymentChoice === "upi_qr") {
-        setPaymentModalOpen(true);
       }
     } catch (err: any) {
       setFormError("Could not submit order: " + (err.message || "Network issue"));
@@ -495,192 +578,189 @@ export function MasterOrderForm({
             ========================================================= */}
         {currentStep === 1 && (
           <div className="space-y-6">
-            <div>
-              <h3 className="font-serif text-lg font-semibold text-[#0F172A] mb-1">
-                1. Select Creative Service (12 Disciplines)
-              </h3>
-              <p className="text-xs text-[#64748B]">
-                Choose the primary service or ongoing monthly creative partnership.
-              </p>
+            {/* Mode Switcher: Services vs Packages */}
+            <div className="flex p-1.5 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] max-w-md mx-auto shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setOrderMode("services")}
+                className={`flex-1 py-2.5 px-3 sm:px-4 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 ${
+                  orderMode === "services"
+                    ? "bg-[#5C3A1E] text-white shadow-xs"
+                    : "text-[#64748B] hover:text-[#0F172A]"
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
+                <span>12 Studio Services</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setOrderMode("packages")}
+                className={`flex-1 py-2.5 px-3 sm:px-4 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 ${
+                  orderMode === "packages"
+                    ? "bg-[#5C3A1E] text-white shadow-xs"
+                    : "text-[#64748B] hover:text-[#0F172A]"
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5 text-[#D4A35A]" />
+                <span>Creative Packages & Retainers</span>
+              </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-              {INTAKE_SERVICES.map((srv) => {
-                const isSelected = selectedServiceId === srv.id;
-                return (
-                  <div
-                    key={srv.id}
-                    onClick={() => setSelectedServiceId(srv.id)}
-                    className={`p-4 rounded-2xl border text-left cursor-pointer transition-all flex flex-col justify-between gap-3 ${
-                      isSelected
-                        ? "bg-[#5C3A1E] text-white border-[#5C3A1E] shadow-sm"
-                        : "bg-[#FFFFFF] text-[#0F172A] border-[#EADFCB] hover:border-[#D4A35A] hover:bg-[#FAF9F5]"
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <span
-                          className={`text-[10px] font-mono px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                            isSelected
-                              ? "bg-white/20 text-white"
-                              : "bg-[#F8F5EF] text-[#64748B]"
-                          }`}
-                        >
-                          {srv.category}
-                        </span>
-                        <span
-                          className={`text-[11px] font-mono font-bold ${
-                            isSelected ? "text-[#D4A35A]" : "text-[#5C3A1E]"
-                          }`}
-                        >
-                          {typeof srv.basePrice === "number"
-                            ? `₹${srv.basePrice.toLocaleString("en-IN")}`
-                            : "Custom"}
-                        </span>
-                      </div>
-                      <h4 className="font-serif font-bold text-sm leading-snug">
-                        {srv.title}
-                      </h4>
-                      <p
-                        className={`text-xs mt-1 line-clamp-2 ${
-                          isSelected ? "text-white/80" : "text-[#64748B]"
+            {orderMode === "services" ? (
+              <>
+                <div>
+                  <h3 className="font-serif text-lg font-semibold text-[#0F172A] mb-1">
+                    1. Select Studio Service (12 Disciplines)
+                  </h3>
+                  <p className="text-xs text-[#64748B]">
+                    Choose from 12 specialized creative technology & design disciplines with guaranteed SLAs.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                  {INTAKE_SERVICES.map((srv) => {
+                    const isSelected = selectedServiceId === srv.id;
+                    return (
+                      <div
+                        key={srv.id}
+                        onClick={() => setSelectedServiceId(srv.id)}
+                        className={`p-4 rounded-2xl border text-left cursor-pointer transition-all flex flex-col justify-between gap-3 ${
+                          isSelected
+                            ? "bg-[#5C3A1E] text-white border-[#5C3A1E] shadow-sm"
+                            : "bg-[#FFFFFF] text-[#0F172A] border-[#EADFCB] hover:border-[#D4A35A] hover:bg-[#FAF9F5]"
                         }`}
                       >
-                        {srv.description}
-                      </p>
-                    </div>
+                        <div>
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <span
+                              className={`text-[10px] font-mono px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                isSelected
+                                  ? "bg-white/20 text-white"
+                                  : "bg-[#F8F5EF] text-[#64748B]"
+                              }`}
+                            >
+                              {srv.category}
+                            </span>
+                            <span
+                              className={`text-[11px] font-mono font-bold ${
+                                isSelected ? "text-[#D4A35A]" : "text-[#5C3A1E]"
+                              }`}
+                            >
+                              ₹{srv.basePrice.toLocaleString("en-IN")}
+                            </span>
+                          </div>
+                          <h4 className="font-serif font-bold text-sm leading-snug">
+                            {srv.title}
+                          </h4>
+                          <p
+                            className={`text-xs mt-1 line-clamp-2 ${
+                              isSelected ? "text-white/80" : "text-[#64748B]"
+                            }`}
+                          >
+                            {srv.description}
+                          </p>
+                        </div>
 
-                    <div
-                      className={`text-[10px] font-mono pt-2 border-t ${
-                        isSelected ? "border-white/20 text-white/70" : "border-[#EADFCB]/60 text-[#94A3B8]"
-                      }`}
-                    >
-                      {srv.turnaround}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                        <div
+                          className={`text-[10px] font-mono pt-2 border-t ${
+                            isSelected ? "border-white/20 text-white/70" : "border-[#EADFCB]/60 text-[#94A3B8]"
+                          }`}
+                        >
+                          {srv.turnaround}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
 
-            {/* Tier Selection (Conditional based on Service Type) */}
-            {isBespokeService ? (
-              <div className="pt-4 border-t border-[#EADFCB] space-y-3">
-                <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#D4A35A]/60 flex items-center justify-between">
+                {/* Service Selection Summary Pill */}
+                <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between">
                   <div>
                     <span className="font-serif font-bold text-sm text-[#0F172A] block">
-                      Bespoke Architectural Scope
+                      {activeService.title}
                     </span>
                     <span className="text-xs text-[#64748B]">
-                      Deliverables, CAD blueprints, and milestones are custom-tailored by our senior engineers.
+                      {activeService.turnaround} • Standard studio production workflow
                     </span>
                   </div>
-                  <span className="font-serif font-bold text-xs text-[#5C3A1E] px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EADFCB]">
-                    Custom Quote
+                  <span className="font-serif font-bold text-lg text-[#5C3A1E]">
+                    ₹{activeService.basePrice.toLocaleString("en-IN")}
                   </span>
                 </div>
-              </div>
-            ) : activeService.id === "ai-concept-art" ? (
-              <div className="pt-4 border-t border-[#EADFCB] space-y-3">
-                <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#D4A35A] flex items-center justify-between">
-                  <div>
-                    <span className="font-serif font-bold text-sm text-[#0F172A] block">
-                      5x 4K Image Creation Pack (~₹100/image)
-                    </span>
-                    <span className="text-xs text-[#64748B]">
-                      2x Studio product shots • 2x Lifestyle ambient • 1x Ad visual • 24h SLA
-                    </span>
-                  </div>
-                  <span className="font-serif font-bold text-base text-[#5C3A1E]">
-                    ₹499
-                  </span>
-                </div>
-              </div>
-            ) : activeService.id === "commercial-video-ads" || activeService.id === "social-micro-reels" ? (
-              <div className="pt-4 border-t border-[#EADFCB] space-y-3">
-                <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#D4A35A] flex items-center justify-between">
-                  <div>
-                    <span className="font-serif font-bold text-sm text-[#0F172A] block">
-                      2x Complete Commercial Reels / Shorts Pack
-                    </span>
-                    <span className="text-xs text-[#64748B]">
-                      15–30s each • High-fidelity studio voiceover, background score & motion typography • 24–48h SLA
-                    </span>
-                  </div>
-                  <span className="font-serif font-bold text-base text-[#5C3A1E]">
-                    ₹1,499
-                  </span>
-                </div>
-              </div>
-            ) : !isMonthlyRetainer ? (
-              <div className="pt-4 border-t border-[#EADFCB] space-y-3">
-                <h4 className="font-serif text-sm font-semibold text-[#0F172A]">
-                  Select Delivery Tier
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div
-                    onClick={() => setSelectedTierId("starter")}
-                    className={`p-4 rounded-2xl border cursor-pointer transition-all ${
-                      selectedTierId === "starter"
-                        ? "bg-[#FAF9F5] border-[#5C3A1E] ring-1 ring-[#5C3A1E]"
-                        : "bg-[#FFFFFF] border-[#EADFCB] hover:border-[#D4A35A]"
-                    }`}
-                  >
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="font-serif font-bold text-sm text-[#0F172A]">
-                        Starter Creative
-                      </span>
-                      <span className="font-serif font-bold text-base text-[#5C3A1E]">
-                        ₹1,999
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#64748B]">
-                      48h Turnaround • 5x 4K UHD Renders or 1x 10s Video Ad • 2 Revision Passes
-                    </p>
-                  </div>
-
-                  <div
-                    onClick={() => setSelectedTierId("growth")}
-                    className={`p-4 rounded-2xl border cursor-pointer transition-all relative ${
-                      selectedTierId === "growth"
-                        ? "bg-[#FAF9F5] border-[#5C3A1E] ring-1 ring-[#5C3A1E]"
-                        : "bg-[#FFFFFF] border-[#EADFCB] hover:border-[#D4A35A]"
-                    }`}
-                  >
-                    <div className="absolute top-2 right-2">
-                      <span className="bg-[#D4A35A] text-[#0F172A] text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">
-                        Most Popular
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center mb-1 pr-20">
-                      <span className="font-serif font-bold text-sm text-[#0F172A]">
-                        Studio Growth
-                      </span>
-                      <span className="font-serif font-bold text-base text-[#5C3A1E]">
-                        ₹4,999
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#64748B]">
-                      24-72h • 15x 3D Assets or 3x 15s Ads • 360° Tour • 3x Meta Variations
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-
-            {isMonthlyRetainer && (
-              <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#D4A35A]/50 flex items-center justify-between">
+              </>
+            ) : (
+              <>
                 <div>
-                  <span className="font-serif font-bold text-sm text-[#0F172A] block">
-                    Autonomous Growth Retainer
-                  </span>
-                  <span className="text-xs text-[#64748B]">
-                    Daily Active Queue • Dedicated Creative Lead • Private Slack Channel
-                  </span>
+                  <h3 className="font-serif text-lg font-semibold text-[#0F172A] mb-1">
+                    1. Select Creative Package or Monthly Retainer
+                  </h3>
+                  <p className="text-xs text-[#64748B]">
+                    Choose a multi-discipline creative pack or activate a 30-day continuous studio partnership.
+                  </p>
                 </div>
-                <span className="font-serif font-bold text-lg text-[#5C3A1E]">
-                  ₹9,999 / mo
-                </span>
-              </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {INTAKE_PACKAGES.map((pkg) => {
+                    const isSelected = selectedPackageId === pkg.id;
+                    return (
+                      <div
+                        key={pkg.id}
+                        onClick={() => setSelectedPackageId(pkg.id)}
+                        className={`p-5 rounded-2xl border text-left cursor-pointer transition-all flex flex-col justify-between gap-4 relative ${
+                          isSelected
+                            ? "bg-[#FAF9F5] border-[#5C3A1E] ring-2 ring-[#5C3A1E] shadow-sm"
+                            : "bg-[#FFFFFF] border-[#EADFCB] hover:border-[#D4A35A] hover:bg-[#FAF9F5]"
+                        }`}
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full uppercase tracking-wider bg-[#F8F5EF] text-[#64748B]">
+                              {pkg.billingCycle === "monthly" ? "Monthly Retainer" : "One-Time Pack"}
+                            </span>
+                            {pkg.popular && (
+                              <span className="bg-[#D4A35A] text-[#0F172A] text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">
+                                Most Popular
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex justify-between items-baseline">
+                            <h4 className="font-serif font-bold text-base text-[#0F172A]">
+                              {pkg.title}
+                            </h4>
+                            <div className="text-right">
+                              <span className="font-serif font-bold text-lg text-[#5C3A1E]">
+                                ₹{pkg.price.toLocaleString("en-IN")}
+                              </span>
+                              {pkg.billingCycle === "monthly" && (
+                                <span className="text-[10px] text-[#64748B] block">/ month</span>
+                              )}
+                            </div>
+                          </div>
+
+                          <p className="text-xs text-[#64748B] leading-relaxed">
+                            {pkg.description}
+                          </p>
+
+                          <ul className="space-y-1.5 pt-2 border-t border-[#EADFCB]/60 text-xs text-[#0F172A]">
+                            {pkg.features.map((feat, idx) => (
+                              <li key={idx} className="flex items-start gap-2">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-[#2E7D4F] shrink-0 mt-0.5" />
+                                <span className="text-[11px] text-[#334155]">{feat}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div className="pt-2 border-t border-[#EADFCB]/60 flex items-center justify-between text-[11px] font-mono text-[#78716C]">
+                          <span>Turnaround SLA:</span>
+                          <span className="font-semibold text-[#5C3A1E]">{pkg.turnaround}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             )}
 
             <div className="flex justify-end pt-2">
@@ -1305,157 +1385,201 @@ export function MasterOrderForm({
             ========================================================= */}
         {currentStep === 4 && (
           <div className="space-y-6">
-            <div>
-              <h3 className="font-serif text-lg font-semibold text-[#0F172A] mb-1">
-                4. Scope Review & Checkout Selection
-              </h3>
-              <p className="text-xs text-[#64748B]">
-                Verify your commission summary and choose payment method. Zero transaction fees via direct UPI QR.
-              </p>
-            </div>
-
-            {/* Scope Summary Box */}
-            <div className="p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-3 text-xs">
-              <div className="flex justify-between items-center pb-2 border-b border-[#EADFCB]">
-                <span className="text-[#64748B]">Commission Service:</span>
-                <span className="font-serif font-bold text-sm text-[#0F172A]">
-                  {activeService.title}
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <span className="text-[#64748B]">Delivery Scope:</span>
-                <span className="font-semibold text-[#5C3A1E]">
-                  {isBespokeService
-                    ? "Bespoke Architecture Quote"
-                    : isMonthlyRetainer
-                    ? "Autonomous Growth Retainer"
-                    : activeService.id === "ai-concept-art"
-                    ? "5x 4K Master Renders Pack"
-                    : activeService.id === "commercial-video-ads"
-                    ? "2x Commercial Video Reels Pack"
-                    : selectedTierId === "starter"
-                    ? "Starter Creative"
-                    : "Studio Growth"}
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <span className="text-[#64748B]">Client & Brand:</span>
-                <span className="font-semibold text-[#0F172A]">
-                  {fullName} ({brandName})
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <span className="text-[#64748B]">WhatsApp / Contact:</span>
-                <span className="font-mono text-[#0F172A]">{whatsapp}</span>
-              </div>
-
-              <div className="flex justify-between items-center pt-2 border-t border-[#EADFCB]">
-                <span className="font-semibold text-[#0F172A]">Total Investment:</span>
-                <span className="font-serif font-bold text-xl text-[#5C3A1E]">
-                  {isBespokeService ? (
-                    "Custom Scope Quote"
-                  ) : (
-                    <>
-                      ₹{orderAmount.toLocaleString("en-IN")}
-                      {isMonthlyRetainer && <span className="text-xs font-normal text-[#64748B]"> / month</span>}
-                    </>
-                  )}
-                </span>
-              </div>
-            </div>
-
-            {/* Payment / Concierge Routing Grid */}
-            {isBespokeService ? (
-              <div className="p-6 rounded-2xl bg-[#FFFDF9] border-2 border-[#D4A35A] space-y-4 text-center">
-                <div className="w-12 h-12 rounded-full bg-[#FAF9F5] border border-[#D4A35A]/60 flex items-center justify-center mx-auto text-[#5C3A1E]">
-                  <MessageCircle className="w-6 h-6 text-[#A98B57]" />
+            {createdOrder ? (
+              <div className="py-6 px-3 sm:px-6 text-center space-y-6 animate-in fade-in duration-300">
+                <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto text-emerald-600 shadow-sm">
+                  <CheckCircle2 className="w-8 h-8" />
                 </div>
-                <div className="space-y-1">
-                  <h4 className="font-serif font-bold text-base text-[#0F172A]">
-                    Bespoke Architectural Scope Quotation
-                  </h4>
-                  <p className="text-xs text-[#64748B] max-w-md mx-auto">
-                    For Interior Architecture, Meta Ads, Web Build, and Mobile Apps, fixed UPI payment is bypassed. We craft a personalized technical quotation tailored to your exact blueprints and goals.
+
+                <div className="space-y-1.5">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[10px] font-mono font-bold text-[#5C3A1E] uppercase">
+                    <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
+                    <span>Commission Registered</span>
+                  </div>
+                  <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#0F172A]">
+                    Order Placed Successfully!
+                  </h3>
+                  <p className="text-xs text-[#64748B] max-w-md mx-auto leading-relaxed">
+                    Your creative commission has been recorded. Our studio leads will review your specifications, assign resources, and initiate production.
                   </p>
                 </div>
-                <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-                  <a
-                    href={`https://wa.me/918200192781?text=${encodeURIComponent(
-                      `Hello Sutra Studio, I would like to request a custom scope quotation for ${activeService.title}.`
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#25D366] text-white hover:bg-[#20BD5A] transition-colors text-xs font-semibold shadow-xs"
+
+                <div className="p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] text-left max-w-md mx-auto space-y-2.5 text-xs shadow-2xs">
+                  <div className="flex justify-between items-center text-[#64748B]">
+                    <span>Order Code:</span>
+                    <span className="font-mono font-bold text-sm text-[#0F172A]">
+                      {createdOrder.code || createdOrder.orderNumber || createdOrder.id}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-[#64748B]">
+                    <span>Service / Package:</span>
+                    <span className="font-semibold text-[#0F172A]">
+                      {createdOrder.title || (orderMode === "packages" ? activePackage.title : activeService.title)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-[#64748B]">
+                    <span>Client & Brand:</span>
+                    <span className="font-semibold text-[#0F172A]">
+                      {fullName} ({brandName})
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-[#64748B]">
+                    <span>Total Investment:</span>
+                    <span className="font-serif font-bold text-[#5C3A1E]">
+                      ₹{orderAmount.toLocaleString("en-IN")}
+                      {isMonthlyRetainer && <span className="text-[10px] text-[#78716C] font-normal"> / month</span>}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-[#64748B] pt-1 border-t border-[#EADFCB]">
+                    <span>Status:</span>
+                    <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-semibold">
+                      {utrNumber.trim() ? "Payment Verification Pending" : "Queued for Studio Review"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex items-center justify-center gap-3">
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={() => {
+                      if (onOrderSuccess) onOrderSuccess(createdOrder);
+                    }}
+                    withArrow
                   >
-                    <MessageCircle className="w-4 h-4 fill-white text-[#25D366]" />
-                    <span>Route to WhatsApp Concierge (+91 82001 92781)</span>
-                  </a>
+                    View in My Orders
+                  </Button>
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                {/* Option 1: Zero-Fee UPI & GPay QR (Recommended) */}
-                <div
-                  onClick={() => handleFinalSubmit("upi_qr")}
-                  className="p-5 rounded-2xl bg-[#FFFDF9] border-2 border-[#D4A35A] hover:bg-[#FAF9F5] cursor-pointer transition-all space-y-3 relative group"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <QrCode className="w-5 h-5 text-[#5C3A1E]" />
-                      <span className="font-serif font-bold text-sm text-[#0F172A]">
-                        Direct UPI & GPay QR
-                      </span>
-                    </div>
-                    <span className="bg-[#2E7D4F] text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">
-                      0% Gateway Fee
+              <>
+                <div>
+                  <h3 className="font-serif text-lg font-semibold text-[#0F172A] mb-1">
+                    4. Scope Review & Zero-Fee UPI Checkout
+                  </h3>
+                  <p className="text-xs text-[#64748B]">
+                    Verify your commission summary, scan the dynamic UPI QR code, or place your order directly.
+                  </p>
+                </div>
+
+                {/* Scope Summary Box */}
+                <div className="p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-3 text-xs">
+                  <div className="flex justify-between items-center pb-2 border-b border-[#EADFCB]">
+                    <span className="text-[#64748B]">
+                      {orderMode === "packages" ? "Selected Package:" : "Commission Service:"}
+                    </span>
+                    <span className="font-serif font-bold text-sm text-[#0F172A]">
+                      {orderMode === "packages" ? activePackage.title : activeService.title}
                     </span>
                   </div>
-                  <p className="text-xs text-[#64748B]">
-                    Instant scan & pay via Google Pay, PhonePe, Paytm, or BHIM. Enter UTR for rapid autonomous dispatch.
-                  </p>
-                  <div className="pt-2 flex items-center gap-1.5 text-xs font-semibold text-[#5C3A1E] group-hover:text-[#462B16]">
-                    <span>Generate UPI QR (₹{orderAmount.toLocaleString("en-IN")})</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#64748B]">Delivery SLA:</span>
+                    <span className="font-semibold text-[#5C3A1E]">
+                      {orderMode === "packages" ? activePackage.turnaround : activeService.turnaround}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#64748B]">Client & Brand:</span>
+                    <span className="font-semibold text-[#0F172A]">
+                      {fullName} ({brandName})
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#64748B]">WhatsApp / Contact:</span>
+                    <span className="font-mono text-[#0F172A]">{whatsapp}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-2 border-t border-[#EADFCB]">
+                    <span className="font-semibold text-[#0F172A]">Total Investment:</span>
+                    <span className="font-serif font-bold text-xl text-[#5C3A1E]">
+                      ₹{orderAmount.toLocaleString("en-IN")}
+                      {isMonthlyRetainer && <span className="text-xs font-normal text-[#64748B]"> / month</span>}
+                    </span>
                   </div>
                 </div>
 
-                {/* Option 2: Online Card / NetBanking */}
-                <div
-                  onClick={() => handleFinalSubmit("online")}
-                  className="p-5 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] hover:border-[#D4A35A] hover:bg-[#FAF9F5] cursor-pointer transition-all space-y-3 group"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="w-5 h-5 text-[#5C3A1E]" />
-                      <span className="font-serif font-bold text-sm text-[#0F172A]">
-                        Online Cards & Corporate NetBanking
-                      </span>
+                {/* Direct UPI Payment & Order Placement Card */}
+                <div className="p-5 sm:p-6 rounded-2xl bg-[#FFFDF9] border-2 border-[#D4A35A] space-y-5 text-center">
+                  <div className="space-y-1">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[10px] font-mono font-bold text-[#5C3A1E] uppercase">
+                      <QrCode className="w-3.5 h-3.5 text-[#D4A35A]" />
+                      <span>Zero-Fee Dynamic UPI QR</span>
                     </div>
+                    <h4 className="font-serif text-lg font-bold text-[#0F172A]">
+                      Instant QR Checkout or Direct Placement
+                    </h4>
+                    <p className="text-xs text-[#64748B] max-w-md mx-auto">
+                      Scan with Google Pay, PhonePe, Paytm, or BHIM. You can also place the order directly without scanning and pay upon studio invoice.
+                    </p>
                   </div>
-                  <p className="text-xs text-[#64748B]">
-                    Pay via Corporate Cards, Visa/Mastercard, or NetBanking with automated tax invoice generation.
-                  </p>
-                  <div className="pt-2 flex items-center gap-1.5 text-xs font-semibold text-[#5C3A1E] group-hover:text-[#462B16]">
-                    <span>Proceed with Online Checkout</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+
+                  {/* Embedded Dynamic UPI QR Code */}
+                  <DynamicUPIQRCode
+                    amount={orderAmount}
+                    orderId={`STR-${Date.now().toString().slice(-4)}`}
+                    className="max-w-sm mx-auto shadow-xs border-amber-200/60"
+                  />
+
+                  {/* Optional UTR Input */}
+                  <div className="max-w-sm mx-auto space-y-1.5 text-left">
+                    <label className="text-[11px] font-semibold text-[#0F172A] flex items-center justify-between">
+                      <span>12-Digit UPI Transaction ID / UTR</span>
+                      <span className="text-[10px] text-[#78716C] font-normal">(Optional if paying now)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={utrNumber}
+                      onChange={(e) => setUtrNumber(e.target.value)}
+                      placeholder="e.g. 428910284910"
+                      maxLength={16}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#EADFCB] text-xs font-mono text-[#0F172A] focus:outline-none focus:border-[#D4A35A] placeholder:text-[#A8A29E]"
+                    />
+                    <p className="text-[10px] text-[#78716C]">
+                      Order will be submitted immediately whether you enter UTR now or choose to pay later.
+                    </p>
+                  </div>
+
+                  {/* Dual Action Buttons */}
+                  <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
+                    <Button
+                      variant="primary"
+                      size="md"
+                      className="w-full sm:flex-1 justify-center shadow-xs"
+                      isLoading={isSubmitting}
+                      disabled={isSubmitting}
+                      onClick={() => handleFinalSubmit("upi_qr")}
+                    >
+                      <span>Confirm & Place Order (₹{orderAmount.toLocaleString("en-IN")})</span>
+                    </Button>
+
+                    <Button
+                      variant="secondary"
+                      size="md"
+                      className="w-full sm:w-auto justify-center text-xs"
+                      isLoading={isSubmitting}
+                      disabled={isSubmitting}
+                      onClick={() => handleFinalSubmit("online")}
+                    >
+                      <span>Place Order (Pay on Invoice)</span>
+                    </Button>
                   </div>
                 </div>
-              </div>
-            )}
 
-            <div className="flex items-center justify-between pt-2">
-              <Button
-                variant="ghost"
-                size="md"
-                onClick={() => setCurrentStep(3)}
-                leftIcon={<ArrowLeft className="w-4 h-4" />}
-              >
-                Back
-              </Button>
-            </div>
+                <div className="flex items-center justify-between pt-2">
+                  <Button
+                    variant="ghost"
+                    size="md"
+                    onClick={() => setCurrentStep(3)}
+                    leftIcon={<ArrowLeft className="w-4 h-4" />}
+                  >
+                    Back
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

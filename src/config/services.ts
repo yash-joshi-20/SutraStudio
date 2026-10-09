@@ -195,7 +195,7 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
     startingPrice: "Custom Quote",
     isCustomQuote: true,
     ctaText: "Request Custom Quote",
-    ctaHref: "https://wa.me/918200192781?text=Hello%20Sutra%20Studio%2C%20I%20would%20like%20to%20request%20a%20custom%20quote%20for%20Interior%20Architecture.",
+    ctaHref: "/orders?service=interior-design",
     deliverables: ["High-Res Renders", "Moodboard & Color Schemes", "Furniture Layout Specs"],
     icon: "Home",
     thumbnail:
@@ -270,8 +270,7 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
     startingPrice: "Custom Quote",
     isCustomQuote: true,
     ctaText: "Request Custom Quote",
-    ctaHref:
-      "https://wa.me/918200192781?text=Hello%20Sutra%20Studio%2C%20I%20would%20like%20to%20request%20a%20custom%20quote%20for%20Meta%20Ads%20Launcher.",
+    ctaHref: "/orders?service=meta-ads-launcher",
     deliverables: ["Targeting Blueprint", "5 Creative Ad Variations", "Conversion Tracking Setup"],
     icon: "Share2",
     thumbnail:
@@ -296,8 +295,7 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
     startingPrice: "Custom Quote",
     isCustomQuote: true,
     ctaText: "Scope Project",
-    ctaHref:
-      "https://wa.me/918200192781?text=Hello%20Sutra%20Studio%2C%20I%20would%20like%20to%20scope%20a%20project%20for%20Website%20Architecture.",
+    ctaHref: "/orders?service=website-development",
     deliverables: ["Full Responsive Web Code", "SEO & Meta Optimization", "CMS Integration"],
     icon: "Globe",
     thumbnail:
@@ -322,8 +320,7 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
     startingPrice: "Custom Quote",
     isCustomQuote: true,
     ctaText: "Scope Project",
-    ctaHref:
-      "https://wa.me/918200192781?text=Hello%20Sutra%20Studio%2C%20I%20would%20like%20to%20scope%20a%20project%20for%20Web%20App%20Development.",
+    ctaHref: "/orders?service=web-app-development",
     deliverables: ["Auth & RBAC", "Real-time Cloud DB", "Production-Ready Code"],
     icon: "Layout",
     thumbnail:
@@ -348,8 +345,7 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
     startingPrice: "Custom Quote",
     isCustomQuote: true,
     ctaText: "Scope Project",
-    ctaHref:
-      "https://wa.me/918200192781?text=Hello%20Sutra%20Studio%2C%20I%20would%20like%20to%20scope%20a%20project%20for%20Mobile%20App%20Development.",
+    ctaHref: "/orders?service=mobile-app-setup",
     deliverables: [
       "Bespoke iOS & Android Mobile Apps",
       "iOS & Android Builds",

@@ -317,7 +317,7 @@ export class N8nAutomationService {
 
     let deliverables: any[] = [];
     let statusLabel = "Draft Vaulted — Awaiting Admin Review";
-    let status = "draft_ready" as const;
+    const status = "draft_ready" as const;
     let taskBriefSummary = "";
 
     if (payload.isStudioSelfMarketing) {
