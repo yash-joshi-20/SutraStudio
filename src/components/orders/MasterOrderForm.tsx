@@ -145,12 +145,21 @@ export const INTAKE_PACKAGES: IntakePackageOption[] = [
 
 export const INTAKE_SERVICES: IntakeServiceOption[] = [
   {
+    id: "visuals-motion",
+    title: "Commercial Visuals & Motion",
+    category: "Video & Motion",
+    basePrice: 1499,
+    turnaround: "24–48h SLA",
+    description: "4K studio product imagery, luxury brand mockups, and cinematic video reels with studio voiceover.",
+    iconName: "video",
+  },
+  {
     id: "product-3d-cgi",
     title: "Product 3D Modeling & CGI",
     category: "3D & Spatial",
     basePrice: 2499,
     turnaround: "48h Turnaround",
-    description: "High-precision CAD modeling, studio product lighting, and explosive CGI views.",
+    description: "High-precision CAD modeling, studio product lighting setups, and interactive WebGL 3D views.",
     iconName: "box",
   },
   {
@@ -164,39 +173,12 @@ export const INTAKE_SERVICES: IntakeServiceOption[] = [
   },
   {
     id: "arch-3d",
-    title: "Interior & Architecture Spatial Engineering",
+    title: "Interior Architecture & Spatial Staging",
     category: "3D & Spatial",
     basePrice: 4999,
     turnaround: "48–72h SLA",
-    description: "Photorealistic architectural exteriors, spatial staging, lighting studies, and CAD elevations.",
+    description: "Photorealistic architectural visualization, luxury staging, and CAD elevations.",
     iconName: "building",
-  },
-  {
-    id: "interior-staging",
-    title: "Interior Architecture & Staging",
-    category: "3D & Spatial",
-    basePrice: 4999,
-    turnaround: "48–72h SLA",
-    description: "Luxury interior staging, furniture layouts, material finishes, and ambient lighting.",
-    iconName: "box",
-  },
-  {
-    id: "social-micro-reels",
-    title: "Social Media Micro-Content & Reels",
-    category: "Social & Ads",
-    basePrice: 1499,
-    turnaround: "24–48h SLA",
-    description: "High-engagement 9:16 vertical motion assets engineered for virality and conversion.",
-    iconName: "share",
-  },
-  {
-    id: "meta-ad-bundles",
-    title: "Meta Ads Launcher & Campaign Infrastructure",
-    category: "Social & Ads",
-    basePrice: 4999,
-    turnaround: "48h SLA",
-    description: "End-to-end Facebook & Instagram ad campaign setups, high-converting creative ad variations, copy testing, and optimization.",
-    iconName: "share",
   },
   {
     id: "brand-identity-system",
@@ -204,26 +186,26 @@ export const INTAKE_SERVICES: IntakeServiceOption[] = [
     category: "Creative & Brand",
     basePrice: 4999,
     turnaround: "72h Turnaround",
-    description: "Complete visual identities, typography guidelines, vector tokens, and design books.",
+    description: "Complete visual identities, luxury typography systems, vector design tokens, and comprehensive brand books.",
     iconName: "palette",
   },
   {
-    id: "custom-web-digital",
-    title: "Website Architecture & Development",
-    category: "Digital",
-    basePrice: 9999,
-    turnaround: "5–7 Days SLA",
-    description: "High-performance bespoke Next.js websites, luxury landing pages, and interactive experiences.",
-    iconName: "monitor",
+    id: "meta-ad-bundles",
+    title: "Digital Marketing & Meta Ads",
+    category: "Social & Ads",
+    basePrice: 4999,
+    turnaround: "48h SLA",
+    description: "End-to-end Facebook & Instagram ad campaign setups, high-converting creative ad variations, and audience optimization.",
+    iconName: "share",
   },
   {
-    id: "mobile-app-dev",
-    title: "Mobile App Development",
+    id: "custom-web-digital",
+    title: "Website & Mobile App Development",
     category: "Digital",
-    basePrice: 14999,
-    turnaround: "7–14 Days SLA",
-    description: "Cross-platform bespoke iOS & Android mobile applications sharing unified cloud backends.",
-    iconName: "smartphone",
+    basePrice: 9999,
+    turnaround: "5–14 Days SLA",
+    description: "High-performance bespoke Next.js websites, client portals, and cross-platform native iOS & Android applications.",
+    iconName: "monitor",
   },
 ];
 
@@ -249,16 +231,18 @@ export function MasterOrderForm({
   const [orderMode, setOrderMode] = useState<"services" | "packages">(
     isPackagesPreferred ? "packages" : "services"
   );
-  const [selectedServiceId, setSelectedServiceId] = useState<string>(
-    initialServiceId &&
-    initialServiceId !== "ai-concept-art" &&
-    initialServiceId !== "commercial-video-ads" &&
-    initialServiceId !== "ai-automation" &&
-    initialServiceId !== "image-creation" &&
-    initialServiceId !== "video-creation"
-      ? initialServiceId
-      : "arch-3d"
-  );
+  const [selectedServiceId, setSelectedServiceId] = useState<string>(() => {
+    if (!initialServiceId) return "visuals-motion";
+    if (initialServiceId === "visuals-and-motion" || initialServiceId === "visuals-motion") return "visuals-motion";
+    if (initialServiceId === "3d-modeling" || initialServiceId === "product-3d-cgi") return "product-3d-cgi";
+    if (initialServiceId === "360-view" || initialServiceId === "virtual-tour-360") return "virtual-tour-360";
+    if (initialServiceId === "interior-design" || initialServiceId === "interior-architecture" || initialServiceId === "arch-3d") return "arch-3d";
+    if (initialServiceId === "brand-identity" || initialServiceId === "brand-identity-system") return "brand-identity-system";
+    if (initialServiceId === "digital-marketing-ads" || initialServiceId === "meta-ads-launcher" || initialServiceId === "meta-ad-bundles") return "meta-ad-bundles";
+    if (initialServiceId === "web-mobile-development" || initialServiceId === "website-development" || initialServiceId === "custom-web-digital") return "custom-web-digital";
+    const found = INTAKE_SERVICES.find((s) => s.id === initialServiceId);
+    return found ? found.id : "visuals-motion";
+  });
   const [selectedPackageId, setSelectedPackageId] = useState<string>(
     initialTierId || "starter-creative"
   );
@@ -356,10 +340,6 @@ export function MasterOrderForm({
     if (orderMode === "packages") {
       return activePackage.price;
     }
-    if (activeService.id === "ai-concept-art") return 499;
-    if (activeService.id === "commercial-video-ads") return 1499;
-    if (activeService.id === "social-micro-reels") return 1499;
-    if (activeService.id === "product-3d-cgi") return 2499;
     if (typeof activeService.basePrice === "number") return activeService.basePrice;
     return 1999;
   }, [orderMode, activePackage, activeService]);
@@ -579,7 +559,7 @@ export function MasterOrderForm({
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
-                <span>12 Studio Services</span>
+                <span>7 Studio Services</span>
               </button>
               <button
                 type="button"
@@ -599,10 +579,10 @@ export function MasterOrderForm({
               <>
                 <div>
                   <h3 className="font-serif text-lg font-semibold text-[#0F172A] mb-1">
-                    1. Select Studio Service (12 Disciplines)
+                    1. Select Studio Service (7 Disciplines)
                   </h3>
                   <p className="text-xs text-[#64748B]">
-                    Choose from 12 specialized creative technology & design disciplines with guaranteed SLAs.
+                    Choose from 7 specialized creative technology & design disciplines with guaranteed SLAs.
                   </p>
                 </div>
 

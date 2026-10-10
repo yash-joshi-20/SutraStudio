@@ -126,7 +126,7 @@ export const MONTHLY_RETAINER_TIERS: MonthlyRetainerTier[] = [
     popular: true,
     ctaText: "Activate Retainer (₹9,999/mo)",
     ctaHref: "/orders?package=autonomous-growth-retainer&cycle=monthly",
-    monthlyQuotaDescription: "60+ Master Deliverables / Month across 6 Creative Disciplines",
+    monthlyQuotaDescription: "60+ Master Deliverables / Month across 7 Creative Disciplines",
     features: [
       "Daily 1x 4K Brand Image / Graphic (30 Assets/month) powered by studio trend research",
       "Daily 1x Commercial Video Reel / Short (30 Assets/month) with voiceover and motion typography",

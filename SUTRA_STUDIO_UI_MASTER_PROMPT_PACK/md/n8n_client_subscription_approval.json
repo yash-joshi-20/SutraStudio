@@ -150,7 +150,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const baseData = $('Step 3: FLUX.1 4K Image Render Generator').first().json;\nconst klingRes = $('Step 4: Kling AI Image-to-Video Reel Synthesizer').first()?.json || {};\n\n// Final combined deliverable package\nconst videoUrl = klingRes.data?.video_url || 'https://assets.mixkit.co/videos/preview/mixkit-modern-apartment-with-panoramic-view-40742-large.mp4';\n\nreturn [{\n  json: {\n    deliverableId: 'DELIV-' + Date.now().toString().slice(-6),\n    clientName: baseData.clientName,\n    clientEmail: baseData.clientEmail,\n    industry: baseData.industry,\n    headline: baseData.blueprint.headline,\n    adCopy: baseData.blueprint.caption,\n    imageUrl: baseData.imageUrl,\n    videoUrl: videoUrl,\n    voiceoverScript: baseData.blueprint.voiceoverScript,\n    format: 'multimodal_bundle',\n    status: 'pending_approval',\n    generatedAt: new Date().toISOString(),\n    approvalReviewUrl: 'http://localhost:3000/admin/clients'\n  }\n}];"
+        "jsCode": "const baseData = $('Step 3: FLUX.1 4K Image Render Generator').first().json;\nconst klingRes = $('Step 4: Kling AI Image-to-Video Reel Synthesizer').first()?.json || {};\n\n// Final combined deliverable package\nconst videoUrl = klingRes.data?.video_url || 'https://assets.mixkit.co/videos/preview/mixkit-modern-apartment-with-panoramic-view-40742-large.mp4';\n\nreturn [{\n  json: {\n    deliverableId: 'DELIV-' + Date.now().toString().slice(-6),\n    clientName: baseData.clientName,\n    clientEmail: baseData.clientEmail,\n    industry: baseData.industry,\n    headline: baseData.blueprint.headline,\n    adCopy: baseData.blueprint.caption,\n    imageUrl: baseData.imageUrl,\n    videoUrl: videoUrl,\n    voiceoverScript: baseData.blueprint.voiceoverScript,\n    format: 'multimodal_bundle',\n    status: 'pending_approval',\n    generatedAt: new Date().toISOString(),\n    approvalReviewUrl: 'https://sutrastudios.in/admin/clients'\n  }\n}];"
       },
       "name": "Step 6: Bundle Multimodal Deliverables",
       "type": "n8n-nodes-base.code",
@@ -160,7 +160,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:3000/api/admin/deliverables",
+        "url": "https://sutrastudios.in/api/admin/deliverables",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json) }}",

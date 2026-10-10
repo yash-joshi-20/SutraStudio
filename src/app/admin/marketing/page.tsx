@@ -33,7 +33,13 @@ import {
   Check,
   Copy,
   X,
+  Video,
 } from "lucide-react";
+import {
+  AGENCY_PROMO_CONCEPTS,
+  getRandomDailyPromoConcept,
+  PromoConcept,
+} from "@/config/marketingPromoConcepts";
 
 export default function AdminMarketingPage() {
   const [activeTab, setActiveTab] = useState<"self_promo" | "client_ads">("self_promo");
@@ -51,6 +57,15 @@ export default function AdminMarketingPage() {
   const [generationSeed, setGenerationSeed] = useState("4289104712");
   const [showPromptInspector, setShowPromptInspector] = useState(false);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
+
+  // Dynamic Self-Promotion State
+  const [selectedDiscipline, setSelectedDiscipline] = useState<string>("all");
+  const [latestPromoResult, setLatestPromoResult] = useState<{
+    concept?: PromoConcept;
+    imagePost?: any;
+    videoReel?: any;
+    n8nStatus?: string;
+  } | null>(null);
 
   // Self-Promo Data
   const [publications, setPublications] = useState<any[]>([]);
@@ -113,7 +128,23 @@ export default function AdminMarketingPage() {
     void loadMarketingData();
   }, [loadMarketingData]);
 
-  // Handle Tab A: Trigger Daily Agency Campaign (n8n Webhook)
+  // Randomize / Switch Trending Topic across 7 disciplines
+  const handleRandomizeTrendingTopic = (disciplineId?: string) => {
+    const targetId = disciplineId !== undefined ? disciplineId : selectedDiscipline;
+    const concept = getRandomDailyPromoConcept(targetId !== "all" ? targetId : undefined);
+    const newSeed = Math.floor(Math.random() * 9000000000 + 1000000000).toString();
+    setGenerationSeed(newSeed);
+    setPromoTheme(concept.theme);
+    setPromoPrompt(concept.imagePrompt);
+    setPublishTitle(concept.imageTitle);
+    setPublishCaption(concept.imageCaption);
+    setPublishMediaUrl(
+      `https://image.pollinations.ai/prompt/${encodeURIComponent(concept.imagePrompt)}?width=1200&height=800&nologo=true&seed=${newSeed}`
+    );
+    setStatusMessage(`✓ Loaded trending direction: "${concept.disciplineName} — ${concept.theme}"`);
+  };
+
+  // Handle Tab A: Trigger Daily Agency Campaign (n8n Webhook & 1 Post + 1 Video Generation)
   const handleTriggerAgencyPromo = async () => {
     setIsDispatchingPromo(true);
     setStatusMessage(null);
@@ -128,11 +159,20 @@ export default function AdminMarketingPage() {
           targetIg: "yashsutrastudio",
           theme: promoTheme,
           prompt: promoPrompt,
+          disciplineId: selectedDiscipline !== "all" ? selectedDiscipline : undefined,
         }),
       });
       const data = await res.json();
       if (res.ok) {
         setStatusMessage(data.message || "✓ Daily Agency Campaign triggered successfully on n8n master orchestrator.");
+        if (data.imagePost && data.videoReel) {
+          setLatestPromoResult({
+            concept: data.concept,
+            imagePost: data.imagePost,
+            videoReel: data.videoReel,
+            n8nStatus: data.n8nStatus,
+          });
+        }
         await loadMarketingData();
       } else {
         setStatusMessage(`Error: ${data.error || "Failed to trigger agency campaign."}`);
@@ -251,7 +291,7 @@ export default function AdminMarketingPage() {
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to Admin</span>
             </Link>
-            <NotificationBell />
+            <NotificationBell align="right" />
           </div>
         </header>
 
@@ -621,33 +661,89 @@ export default function AdminMarketingPage() {
             <div className="space-y-8">
               {/* Section 1: Daily Automation Trigger Card */}
               <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#EADFCB] pb-4">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#EADFCB] pb-4">
                   <div>
                     <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#A98B57] flex items-center gap-1.5">
                       <Zap className="w-3.5 h-3.5 text-[#D4A35A]" />
                       Autonomous Master Workflow Dispatch
                     </span>
                     <h2 className="font-serif text-2xl font-bold text-[#0F172A] mt-1">
-                      Trigger Daily Agency Campaign
+                      Daily Agency Self-Promotion (1 Post + 1 Video)
                     </h2>
                     <p className="text-xs text-[#64748B] mt-1">
-                      Dispatches Master n8n workflow (<code className="bg-[#F8F5EF] px-1.5 py-0.5 rounded text-[#5C3A1E]">sutra-master-dispatch via ngrok</code>) to generate &amp; post 4K daily content for Sutra Studios.
+                      Synthesizes fresh trending creative across Sutra Studio&apos;s 7 disciplines, triggers n8n (<code className="bg-[#F8F5EF] px-1.5 py-0.5 rounded text-[#5C3A1E]">sutra-master-dispatch</code>), and broadcasts to FB &amp; IG.
                     </p>
                   </div>
 
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    onClick={handleTriggerAgencyPromo}
-                    isLoading={isDispatchingPromo}
-                    leftIcon={<Play className="w-4 h-4" />}
-                    className="shadow-warm shrink-0 min-w-[240px]"
-                  >
-                    {isDispatchingPromo ? "Triggering n8n Workflow..." : "Trigger Daily Agency Campaign"}
-                  </Button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleRandomizeTrendingTopic()}
+                      leftIcon={<RefreshCw className="w-3.5 h-3.5 text-[#5C3A1E]" />}
+                      className="bg-[#FAF9F5] border-[#EADFCB] hover:bg-white text-xs"
+                    >
+                      Shuffle Trending Concept
+                    </Button>
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      onClick={handleTriggerAgencyPromo}
+                      isLoading={isDispatchingPromo}
+                      leftIcon={<Play className="w-4 h-4" />}
+                      className="shadow-warm shrink-0 min-w-[220px]"
+                    >
+                      {isDispatchingPromo ? "Synthesizing Post + Reel..." : "Run Autonomous Workflow"}
+                    </Button>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                {/* 7 Disciplines Filter Pills */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-[#0F172A] uppercase tracking-wider">
+                      Target Creative Discipline:
+                    </span>
+                    <span className="text-[11px] text-[#A98B57] font-medium">
+                      Select discipline to auto-load verified prompt &amp; theme
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedDiscipline("all");
+                        handleRandomizeTrendingTopic("all");
+                      }}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                        selectedDiscipline === "all"
+                          ? "bg-[#5C3A1E] text-white shadow-2xs"
+                          : "bg-[#FAF9F5] border border-[#EADFCB] text-[#64748B] hover:text-[#0F172A]"
+                      }`}
+                    >
+                      All 7 Disciplines (Dynamic)
+                    </button>
+                    {AGENCY_PROMO_CONCEPTS.map((c) => (
+                      <button
+                        key={c.disciplineId}
+                        type="button"
+                        onClick={() => {
+                          setSelectedDiscipline(c.disciplineId);
+                          handleRandomizeTrendingTopic(c.disciplineId);
+                        }}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                          selectedDiscipline === c.disciplineId
+                            ? "bg-[#5C3A1E] text-white shadow-2xs"
+                            : "bg-[#FAF9F5] border border-[#EADFCB] text-[#64748B] hover:text-[#0F172A]"
+                        }`}
+                      >
+                        {c.disciplineName}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-1">
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-[#0F172A] block uppercase tracking-wider">
                       Campaign Focus &amp; Theme
@@ -676,10 +772,89 @@ export default function AdminMarketingPage() {
                 <div className="flex flex-wrap items-center justify-between text-xs text-[#64748B] bg-[#FAF9F5] p-3.5 rounded-2xl border border-[#EADFCB]">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-[#2E7D4F]" />
-                    <span>Payload: <strong>&#123; mode: &apos;agency_self_promo&apos;, brandName: &apos;Sutra Studio&apos;, targetPage: &apos;yashsutrastudio&apos;, targetIg: &apos;yashsutrastudio&apos; &#125;</strong></span>
+                    <span>Payload: <strong>&#123; mode: &apos;agency_self_promo&apos;, discipline: &apos;{selectedDiscipline}&apos;, brand: &apos;Sutra Studio&apos; &#125;</strong></span>
                   </div>
                   <span className="font-mono text-[11px] text-[#A98B57]">Target: Facebook Page (61594200943169) &amp; Instagram (@yashsutrastudio)</span>
                 </div>
+
+                {/* Live Generated Assets Cards (1 Post + 1 Video Reel) */}
+                {latestPromoResult && latestPromoResult.imagePost && latestPromoResult.videoReel && (
+                  <div className="p-5 rounded-2xl bg-[#FAF9F5] border-2 border-[#D4A35A]/60 space-y-4 animate-in fade-in duration-300">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#EADFCB] pb-3">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-[#D4A35A]" />
+                        <h4 className="font-serif font-bold text-[#0F172A] text-sm">
+                          Autonomous Run Generated Deliverables (1 Post + 1 Reel)
+                        </h4>
+                      </div>
+                      <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-semibold border border-emerald-200">
+                        ✓ Dispatched to n8n &amp; Vaulted
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Image Post Preview */}
+                      <div className="p-4 rounded-xl bg-white border border-[#EADFCB] space-y-3">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-[#5C3A1E] uppercase tracking-wider text-[10px]">
+                            Daily 4K Master Post
+                          </span>
+                          <span className="font-mono text-[10px] text-[#2E7D4F] font-semibold">
+                            {latestPromoResult.imagePost.reachEstimate}
+                          </span>
+                        </div>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={latestPromoResult.imagePost.mediaUrl}
+                          alt={latestPromoResult.imagePost.title}
+                          className="w-full h-44 object-cover rounded-lg border border-[#EADFCB]"
+                        />
+                        <div>
+                          <p className="font-serif font-bold text-xs text-[#0F172A]">
+                            {latestPromoResult.imagePost.title}
+                          </p>
+                          <p className="text-[11px] text-[#64748B] line-clamp-2 mt-1 leading-relaxed">
+                            {latestPromoResult.imagePost.caption}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Video Reel Preview */}
+                      <div className="p-4 rounded-xl bg-white border border-[#EADFCB] space-y-3">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-[#5C3A1E] uppercase tracking-wider text-[10px] flex items-center gap-1">
+                            <Video className="w-3 h-3 text-[#D4A35A]" />
+                            Daily Commercial Motion Reel (9:16)
+                          </span>
+                          <span className="font-mono text-[10px] text-[#2E7D4F] font-semibold">
+                            {latestPromoResult.videoReel.reachEstimate}
+                          </span>
+                        </div>
+                        <div className="relative w-full h-44 rounded-lg overflow-hidden border border-[#EADFCB] bg-black">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={latestPromoResult.videoReel.mediaUrl}
+                            alt={latestPromoResult.videoReel.title}
+                            className="w-full h-full object-cover opacity-85"
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                            <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center text-[#5C3A1E] shadow-warm">
+                              <Play className="w-4 h-4 ml-0.5 fill-current" />
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="font-serif font-bold text-xs text-[#0F172A]">
+                            {latestPromoResult.videoReel.title}
+                          </p>
+                          <p className="text-[11px] text-[#64748B] line-clamp-2 mt-1 leading-relaxed">
+                            {latestPromoResult.videoReel.caption}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Section 2: 1-Click Auto-Publisher */}

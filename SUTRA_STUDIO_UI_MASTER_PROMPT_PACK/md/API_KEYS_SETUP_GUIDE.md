@@ -65,5 +65,5 @@ RESEND_API_KEY=your_resend_api_key
 # --- GPAY & DYNAMIC UPI CHECKOUT ---
 NEXT_PUBLIC_DEFAULT_UPI_VPA=9898234812@okaxis
 NEXT_PUBLIC_DEFAULT_UPI_PAYEE=Synapse Kinetic AI Studio
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=https://sutrastudios.in
 ```

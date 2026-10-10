@@ -3839,7 +3839,7 @@ export default function OrdersPage() {
             isOpen={isMasterOrderModalOpen}
             onClose={() => setIsMasterOrderModalOpen(false)}
             title="Commission Creative Project"
-            description="Select from 12 Studio Disciplines • Autonomous n8n Workflow Dispatch • Zero-Fee UPI & Razorpay"
+            description="Select from 7 Studio Disciplines • Autonomous n8n Workflow Dispatch • Zero-Fee UPI & Razorpay"
             maxWidth="2xl"
             variant="auto"
           >

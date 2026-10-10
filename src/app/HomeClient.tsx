@@ -342,19 +342,19 @@ export default function HomePage() {
         </section>
 
         {/* ===================================================
-            2. 12 SERVICES CATALOG
+            2. 7 SERVICES CATALOG
             =================================================== */}
         <section id="services" className="py-20 bg-[#FAF9F5] border-t border-[#EADFCB]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
             <SectionHeader
-              badge="OUR 12 DISCIPLINES"
+              badge="OUR 7 DISCIPLINES"
               title="Complete Creative &amp; Digital Solutions"
               subtitle="From photorealistic visual generation to enterprise web platforms — everything your business requires, crafted in one unified atelier."
               className="text-center"
             />
 
-            {/* 12-Card Responsive Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {/* 7-Card Responsive Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {SUTRA_SERVICES.map((service) => (
                 <ServiceCard key={service.id} service={service} />
               ))}
@@ -582,7 +582,7 @@ export default function HomePage() {
                       </li>
                       <li className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
-                        <span className="font-medium"><strong>All 12 Disciplines in 1 Place</strong> (3D, Video, Web, Brand)</span>
+                        <span className="font-medium"><strong>All 7 Disciplines in 1 Place</strong> (Visuals, 3D, Web, Ads, Brand)</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />

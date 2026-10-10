@@ -108,7 +108,7 @@ export function PortalSidebarInner({ contained = false }: { contained?: boolean 
           <SutraLogo variant="horizontal" size="sm" href={isAdmin ? "/admin" : "/dashboard"} />
         </div>
         <div className="flex items-center gap-2">
-          <NotificationBell />
+          <NotificationBell align="right" />
           <Avatar
             name={user?.displayName || (isAdmin ? "Admin" : "Client")}
             size="sm"
@@ -215,7 +215,7 @@ export function PortalSidebarInner({ contained = false }: { contained?: boolean 
                 </Link>
               )}
               <div className="flex items-center gap-1">
-                {!contained && !isCollapsed && <NotificationBell />}
+                {!contained && !isCollapsed && <NotificationBell align="left" />}
                 <button
                   type="button"
                   onClick={() => setIsCollapsed(!isCollapsed)}

@@ -39,7 +39,13 @@ export interface StudioNotificationItem {
   createdAt: string;
 }
 
-export function NotificationBell({ className = "" }: { className?: string }) {
+export function NotificationBell({
+  className = "",
+  align = "auto",
+}: {
+  className?: string;
+  align?: "left" | "right" | "auto";
+}) {
   const { user, role } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [tab, setTab] = useState<"all" | "unread">("unread");
@@ -254,7 +260,9 @@ export function NotificationBell({ className = "" }: { className?: string }) {
               transition={{ duration: 0.18 }}
               role="dialog"
               aria-label="Notifications"
-              className="fixed inset-x-0 bottom-0 sm:bottom-auto sm:inset-x-auto sm:absolute sm:left-0 sm:top-full sm:mt-2 w-full sm:w-96 max-w-[calc(100vw-1.5rem)] rounded-t-3xl sm:rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] shadow-2xl z-50 overflow-hidden text-xs text-[#0F172A] flex flex-col max-h-[85dvh] sm:max-h-[520px] pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:pb-0"
+              className={`fixed inset-x-0 bottom-0 sm:bottom-auto sm:inset-x-auto sm:absolute ${
+                align === "left" ? "sm:left-0 sm:right-auto" : "sm:right-0 sm:left-auto"
+              } sm:top-full sm:mt-2 w-full sm:w-96 max-w-[calc(100vw-1.5rem)] rounded-t-3xl sm:rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] shadow-2xl z-50 overflow-hidden text-xs text-[#0F172A] flex flex-col max-h-[85dvh] sm:max-h-[520px] pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:pb-0`}
             >
               {/* Mobile Drag Indicator Handle */}
               <div className="sm:hidden pt-2.5 pb-1 flex justify-center cursor-grab active:cursor-grabbing">

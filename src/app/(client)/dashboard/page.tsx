@@ -449,7 +449,7 @@ export default function ClientDashboardPage() {
                   ))}
                 </div>
 
-                {/* Step 1: Select Capability (12 Studio Capabilities) */}
+                {/* Step 1: Select Capability (7 Studio Capabilities) */}
                 {step === 1 && (
                   <div className="space-y-6">
                     <div className="text-center max-w-md mx-auto">
@@ -457,7 +457,7 @@ export default function ClientDashboardPage() {
                         Select Studio Capability
                       </h3>
                       <p className="text-xs text-[#64748B] mt-1">
-                        Choose from our 12 specialized disciplines to route to the correct workflow.
+                        Choose from our 7 specialized disciplines to route to the correct workflow.
                       </p>
                     </div>
 

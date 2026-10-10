@@ -22,12 +22,13 @@ export function Footer() {
   };
 
   const serviceLinks = [
-    { label: "Image Creation", href: "/services" },
-    { label: "Video Creation", href: "/services" },
-    { label: "3D Modeling & Spatial", href: "/services" },
-    { label: "Interior & Architectural", href: "/services" },
-    { label: "Web & App Flagships", href: "/services" },
-    { label: "Digital Workflow Automation", href: "/services" },
+    { label: "Commercial Visuals & Motion", href: "/services" },
+    { label: "Product 3D Modeling & CGI", href: "/services" },
+    { label: "360° Virtual Tours & VR", href: "/services" },
+    { label: "Interior Architecture & Spatial", href: "/services" },
+    { label: "Brand Identity Systems", href: "/services" },
+    { label: "Digital Marketing & Meta Ads", href: "/services" },
+    { label: "Web & Mobile App Development", href: "/services" },
   ];
 
   const studioLinks = [

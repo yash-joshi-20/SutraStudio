@@ -228,7 +228,7 @@ async function main(): Promise<void> {
   console.log("\n  IMPORTANT SECURITY DIRECTIVES:");
   console.log("  1. If you set ADMIN_INITIAL_PASSWORD in .env.local, DELETE IT NOW.");
   console.log("  2. Never commit, log, or share the admin password.");
-  console.log("  3. Sign in securely at: http://localhost:3000/admin/login\n");
+  console.log("  3. Sign in securely at: https://sutrastudios.in/admin/login\n");
 }
 
 main().catch((err) => {

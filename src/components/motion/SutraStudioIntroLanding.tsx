@@ -272,7 +272,7 @@ export function SutraStudioIntroLanding({
           </div>
 
           <p className="text-[10px] text-center text-[#94A3B8] font-sans">
-            Curating 12 studio capabilities • Real-Time GPU Workflows • Zero Noise
+            Curating 7 studio capabilities • Real-Time GPU Workflows • Zero Noise
           </p>
         </div>
       </motion.div>

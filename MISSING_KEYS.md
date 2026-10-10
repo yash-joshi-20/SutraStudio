@@ -19,7 +19,7 @@ Total missing services: **9** / **21** configured.
 | 4 | **Resend Email Dispatcher** | `HIGH` | `RESEND_API_KEY` | Client Invoices, Deliverable Alerts, Admin Missing-Key Daily Notice, Password Resets | https://resend.com → API Keys & Domains |
 | 5 | **SendGrid Email (Fallback)** | `LOW` | `SENDGRID_API_KEY` | Transactional Email Fallback | https://app.sendgrid.com → Settings → API Keys |
 | 6 | **Web Push (FCM / VAPID)** | `MEDIUM` | `NEXT_PUBLIC_FIREBASE_VAPID_KEY` | PWA Web Push, Live Chat Alerts, Deliverable Ready Notifications | https://console.firebase.google.com → Project Settings → Cloud Messaging → Web Push certificates |
-| 7 | **n8n Workflow Automation** | `HIGH` | `N8N_API_KEY` | W1-W8 Orchestration, Async Background Fulfillment, Admin Approval Webhooks, Discipline 12: AI Automation | Local n8n instance (http://localhost:5678) or Cloud n8n Dashboard |
+| 7 | **n8n Workflow Automation** | `HIGH` | `N8N_API_KEY` | W1-W8 Orchestration, Async Background Fulfillment, Admin Approval Webhooks, Discipline 12: AI Automation | Cloud n8n Dashboard (https://n8n.sutrastudios.in) or hosted instance |
 | 8 | **Meta Ads & Publishing** | `MEDIUM` | `META_APP_SECRET`, `META_PAGE_ACCESS_TOKEN` | Discipline 8: Meta Ads Launcher, Social Content Publishing, Instagram Campaign Sync | https://developers.facebook.com → Apps → App Dashboard |
 | 9 | **Security & Administrative Controls** | `CRITICAL` | `CRON_SECRET`, `TOKEN_ENCRYPTION_KEY` | Admin Lockout Defense, Scheduled Cron Authentication, AES-256-GCM Token Encryption | Generated locally via openssl and specified in .env.local |
 

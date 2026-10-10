@@ -199,9 +199,9 @@ export class N8nAutomationService {
     for (const p of pathsToTry) {
       candidateUrls.push(`${n8nBaseUrl}/webhook/${p}`);
       candidateUrls.push(`${n8nBaseUrl}/webhook-test/${p}`);
-      if (!candidateUrls.includes(`http://localhost:5678/webhook/${p}`)) {
-        candidateUrls.push(`http://localhost:5678/webhook/${p}`);
-        candidateUrls.push(`http://localhost:5678/webhook-test/${p}`);
+      const cloudN8n = `https://n8n.sutrastudios.in/webhook/${p}`;
+      if (!candidateUrls.includes(cloudN8n)) {
+        candidateUrls.push(cloudN8n);
       }
     }
 

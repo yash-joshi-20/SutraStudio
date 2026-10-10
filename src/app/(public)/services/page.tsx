@@ -41,6 +41,7 @@ import {
   Bot,
   Layers,
   Play,
+  Palette,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -48,9 +49,8 @@ const CATEGORIES = [
   "All",
   "Creative",
   "Design",
-  "Development",
   "Marketing",
-  "Automation",
+  "Development",
 ];
 
 const ICON_MAP: Record<string, React.ReactNode> = {
@@ -66,6 +66,7 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   Layout: <Layout className="w-5 h-5 text-[#5C3A1E]" />,
   Smartphone: <Smartphone className="w-5 h-5 text-[#5C3A1E]" />,
   Cpu: <Cpu className="w-5 h-5 text-[#5C3A1E]" />,
+  Palette: <Palette className="w-5 h-5 text-[#5C3A1E]" />,
 };
 
 export default function ServicesPage() {
@@ -107,7 +108,7 @@ export default function ServicesPage() {
             </div>
 
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold leading-[1.1] text-[#0F172A]">
-              12 Creative & Digital <span className="text-gold-gradient">Service Solutions</span>
+              7 Creative & Digital <span className="text-gold-gradient">Service Solutions</span>
             </h1>
 
             <p className="text-base sm:text-lg text-[#64748B] leading-relaxed font-sans">
@@ -506,9 +507,9 @@ export default function ServicesPage() {
                 title={`${selectedService.name} • 360° VR`}
                 subtitle="Interactive Equirectangular Spatial Tour"
               />
-            ) : selectedService.slug === "website-development" || selectedService.slug === "mobile-app-setup" ? (
-              <DeviceMockupShowcase initialMode={selectedService.slug === "mobile-app-setup" ? "mobile" : "laptop"} />
-            ) : selectedService.slug === "meta-ads-launcher" ? (
+            ) : selectedService.slug === "website-development" || selectedService.slug === "mobile-app-setup" || selectedService.slug === "web-mobile-development" ? (
+              <DeviceMockupShowcase initialMode="laptop" />
+            ) : selectedService.slug === "meta-ads-launcher" || selectedService.slug === "digital-marketing-ads" ? (
               <MetaAdCreativeMockup
                 headline={selectedService.description}
                 ctaText="Book Pipeline"

@@ -2598,7 +2598,7 @@ const [adminDataError, setAdminDataError] = useState("");
                 <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-pulse" />
                 <span>Pipelines Operational</span>
               </div>
-              <NotificationBell />
+              <NotificationBell align="right" />
             </div>
           </div>
 

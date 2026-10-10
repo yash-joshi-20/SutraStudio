@@ -1,7 +1,7 @@
 # PROJECT.md — SutraStudio Master Specification
 
 ## 1. Product Vision & Positioning
-**Sutra Studio** is an AI-powered creative and digital atelier selling **12 specialized disciplines** where traditional Indian aesthetic principles meet modern digital engineering.
+**Sutra Studio** is an AI-powered creative and digital atelier selling **7 specialized disciplines** where traditional Indian aesthetic principles meet modern digital engineering.
 - **Tagline**: Ideas ◆ Design ◆ Development ◆ Growth / Tradition Meets Technology
 - **Theme**: Premium white / warm ivory (`#FAF9F5`, `#FFFDF9`), charcoal typography (`#0F172A`), saffron brass accents (`#D4A35A`), warm sand (`#F8F5EF`), and deep brown grounding (`#5C3A1E`).
 - **Core Business Model**: Clients subscribe to **monthly packages (plans)** or commission **individual services** ("From ₹X"), collaborate with the conversational **Sutra AI** creative concierge, and receive finished deliverables **only after admin approval**.
@@ -9,22 +9,17 @@
 
 ---
 
-## 2. The 12 Studio Disciplines & Service Catalog
+## 2. The 7 Studio Disciplines & Service Catalog
 
 | # | Service Name | Category | Pricing Tier (INR) | Primary Deliverable Scope |
 | :--- | :--- | :--- | :--- | :--- |
-| 1 | **Image Creation** | Creative | From ₹9,999 | 4K key visuals, advertising graphics, social packs |
-| 2 | **Video Creation** | Creative | From ₹24,999 | 4K cinematic commercial reels, promo videos, audio |
-| 3 | **3D Modeling** | Design | From ₹34,999 | High-poly spatial renders, interactive GLTF/USDZ models |
-| 4 | **360 View** | Design | From ₹18,999 | Spherical HDR virtual architectural & showroom tours |
-| 5 | **Interior Design** | Design | From ₹29,999 | Lighting, materiality CGI & spatial interior design |
-| 6 | **Window Design** | Design | From ₹14,999 | Luxury retail storefront visual merchandising |
-| 7 | **Digital Marketing** | Marketing | From ₹19,999 | Omni-channel ad campaigns, multi-ratio formats |
-| 8 | **Meta Ads Launcher** | Marketing | From ₹12,999 | Direct Facebook & Instagram ad campaign launcher |
-| 9 | **Website Development** | Development | From ₹39,999 | Next.js editorial luxury web platforms (Sub-second speed) |
-| 10 | **Web App Development** | Development | From ₹59,999 | Full-stack client portals, SaaS dashboards & databases |
-| 11 | **Mobile App Setup** | Development | From ₹49,999 | Cross-platform iOS and Android apps on Expo |
-| 12 | **AI Automation** | Automation | From ₹24,999 | Intelligent agent pipelines, CRM sync & automations |
+| 1 | **Commercial Visuals & Motion** | Creative | From ₹1,499 | 4K key visuals, advertising graphics, commercial reels & shorts |
+| 2 | **Product 3D Modeling & CGI** | Design | From ₹2,499 | High-poly spatial renders, interactive WebGL GLTF/USDZ models |
+| 3 | **360° Virtual Tours & VR** | Design | From ₹4,999 | Spherical HDR virtual architectural & showroom tours |
+| 4 | **Interior Architecture & Spatial Staging** | Design | Custom Quote | Photorealistic interior/exterior CGI, room staging, elevations |
+| 5 | **Brand Identity & Design Systems** | Creative | From ₹4,999 | Complete visual identities, luxury typography, vector design tokens |
+| 6 | **Digital Marketing & Meta Ads** | Marketing | From ₹4,999 | Growth strategy, end-to-end Meta ad setup, creative ad packs |
+| 7 | **Website & Mobile App Development** | Development | Custom Quote | High-performance Next.js web applications, client portals & mobile apps |
 
 ---
 

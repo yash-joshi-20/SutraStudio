@@ -13,12 +13,34 @@ import {
   HardDrive,
   HelpCircle,
   Bot,
+  Video,
+  Box,
+  Compass,
+  Home,
+  Palette,
+  TrendingUp,
+  Globe,
+  Sparkles,
+  Layers,
+  ArrowRight,
 } from "lucide-react";
 import {
   PER_PROJECT_TIERS,
   MONTHLY_RETAINER_TIERS,
 } from "@/config/pricing";
+import { SUTRA_SERVICES } from "@/data/servicesData";
+import { STANDALONE_PACKAGES } from "@/config/packages";
 import { motion, AnimatePresence } from "framer-motion";
+
+const SERVICE_ICON_MAP: Record<string, React.ReactNode> = {
+  Video: <Video className="w-5 h-5 text-[#5C3A1E]" />,
+  Box: <Box className="w-5 h-5 text-[#5C3A1E]" />,
+  Compass: <Compass className="w-5 h-5 text-[#5C3A1E]" />,
+  Home: <Home className="w-5 h-5 text-[#5C3A1E]" />,
+  Palette: <Palette className="w-5 h-5 text-[#5C3A1E]" />,
+  TrendingUp: <TrendingUp className="w-5 h-5 text-[#5C3A1E]" />,
+  Globe: <Globe className="w-5 h-5 text-[#5C3A1E]" />,
+};
 
 const FAQS = [
   {
@@ -262,6 +284,146 @@ export default function PricingPage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* 7 Core Creative Disciplines & Direct Service Rates */}
+        <section className="w-full space-y-8 pt-6">
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
+              <span>INDIVIDUAL STUDIO DISCIPLINES</span>
+            </div>
+            <h2 className="font-serif text-3xl sm:text-4xl font-semibold text-[#0F172A]">
+              Starting Rates across <span className="text-gold-gradient">7 Core Disciplines</span>
+            </h2>
+            <p className="text-sm text-[#64748B] max-w-2xl mx-auto leading-relaxed">
+              Prefer single-service commissioning? Every discipline is engineered with dedicated creative direction, precision pipelines, and guaranteed SLA turnaround.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {SUTRA_SERVICES.map((srv) => (
+              <div
+                key={srv.id}
+                className="rounded-3xl p-6 bg-[#FFFDF9] border border-[#EADFCB] hover:border-[#D4A35A]/70 transition-all duration-300 shadow-xs flex flex-col justify-between group"
+              >
+                <div className="space-y-5">
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-center group-hover:scale-105 transition-transform">
+                      {SERVICE_ICON_MAP[srv.icon] || <Layers className="w-5 h-5 text-[#5C3A1E]" />}
+                    </div>
+                    <span className="text-[11px] font-mono px-2.5 py-1 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[#5C3A1E] font-medium">
+                      {srv.category}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h3 className="font-serif text-xl font-semibold text-[#0F172A] group-hover:text-[#5C3A1E] transition-colors">
+                      {srv.name}
+                    </h3>
+                    <p className="text-xs text-[#A98B57] font-medium mt-0.5">
+                      {srv.tagline}
+                    </p>
+                    <p className="text-xs text-[#64748B] mt-2 line-clamp-2 leading-relaxed">
+                      {srv.description}
+                    </p>
+                  </div>
+
+                  <div className="flex items-baseline justify-between pt-3 border-t border-[#EADFCB]/60">
+                    <div>
+                      <span className="text-[10px] uppercase tracking-wider text-[#94A3B8] block">Starting At</span>
+                      <span className="font-serif text-2xl font-bold text-[#5C3A1E]">
+                        {srv.startingPrice}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-[11px] font-mono text-[#64748B]">
+                      <Clock className="w-3.5 h-3.5 text-[#A98B57]" />
+                      <span>{srv.turnaround}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 pt-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#A98B57] block">
+                      Key Deliverables
+                    </span>
+                    <ul className="space-y-1.5 text-xs text-[#475569]">
+                      {srv.deliverables.slice(0, 3).map((d) => (
+                        <li key={d} className="flex items-center gap-2">
+                          <Check className="w-3 h-3 text-[#2E7D4F] shrink-0" />
+                          <span className="truncate">{d}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="pt-6 mt-4 border-t border-[#EADFCB]/40 flex items-center gap-2">
+                  <Link href={`/orders?service=${srv.slug}`} className="flex-1">
+                    <Button variant="primary" size="sm" className="w-full justify-center text-xs">
+                      {srv.isCustomQuote ? "Request Quote" : `Book ${srv.startingPrice}`}
+                    </Button>
+                  </Link>
+                  <Link href={`/services#${srv.slug}`} className="shrink-0">
+                    <Button variant="outline" size="sm" className="px-2.5 text-xs">
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Standalone Fast-Turnaround Creative Packs */}
+        <section className="w-full rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-10 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EADFCB] pb-5">
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#D4A35A]">
+                RAPID PRODUCTION COMMISSIONS
+              </span>
+              <h3 className="font-serif text-2xl font-semibold text-[#0F172A] mt-1">
+                Standalone Fast-Turnaround Packs
+              </h3>
+            </div>
+            <p className="text-xs text-[#64748B] max-w-sm">
+              Single-task high-velocity orders delivered directly into your Sutra Cloud Vault with guaranteed 24–48h SLA.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {STANDALONE_PACKAGES.map((pkg) => (
+              <div
+                key={pkg.id}
+                className="p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] hover:border-[#D4A35A] transition-all flex flex-col justify-between"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-serif font-semibold text-[#0F172A] text-base">
+                      {pkg.name}
+                    </span>
+                    <span className="font-serif font-bold text-lg text-[#5C3A1E]">
+                      {pkg.formattedPrice}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#64748B] line-clamp-2 leading-relaxed">
+                    {pkg.description}
+                  </p>
+                  <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#A98B57]">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>{pkg.turnaround}</span>
+                  </div>
+                </div>
+
+                <div className="pt-4 mt-3 border-t border-[#EADFCB]/60">
+                  <Link href={pkg.ctaHref} className="block">
+                    <Button variant="secondary" size="sm" className="w-full justify-center text-xs" withArrow>
+                      {pkg.ctaText}
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* Studio Service Guarantees Strip */}
         <div className="p-6 sm:p-8 rounded-3xl bg-[#FAF9F5] border border-[#EADFCB] grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs text-[#64748B]">

@@ -6,7 +6,7 @@ async function runPrompt1Verification() {
   console.log('==============================================================================\n');
 
   const apiKey = readEnv('NEXT_PUBLIC_FIREBASE_API_KEY');
-  const baseUrl = 'http://localhost:3000';
+  const baseUrl = readEnv('APP_BASE_URL') || 'https://sutrastudios.in';
 
   const testClientEmail = 'client.test.sutra@example.com';
   const testClientPassword = 'SutraClientPass2026!';
