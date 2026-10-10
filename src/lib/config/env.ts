@@ -202,13 +202,13 @@ export function readEnv(key: EnvKey): string {
   if (key === "ZOHO_MAIL_USER") return getVal("SMTP_USER") || getVal("ADMIN_EMAIL");
   if (key === "SMTP_APP_PASSWORD") return getVal("ZOHO_MAIL_PASSWORD");
   if (key === "ZOHO_MAIL_PASSWORD") return getVal("SMTP_APP_PASSWORD");
-  if (key === "N8N_BASE_URL") return getVal("N8N_HOST") || getVal("NEXT_PUBLIC_N8N_URL") || "https://sanitary-engine-pursuable.ngrok-free.dev";
+  if (key === "N8N_BASE_URL") return getVal("N8N_HOST") || getVal("NEXT_PUBLIC_N8N_URL") || "https://n8n.sutrastudios.in";
   if (key === "N8N_MASTER_DISPATCH_WEBHOOK") {
-    const base = getVal("N8N_BASE_URL") || getVal("N8N_HOST") || getVal("NEXT_PUBLIC_N8N_URL") || "https://sanitary-engine-pursuable.ngrok-free.dev";
+    const base = getVal("N8N_BASE_URL") || getVal("N8N_HOST") || getVal("NEXT_PUBLIC_N8N_URL") || "https://n8n.sutrastudios.in";
     return `${base.replace(/\/$/, "")}/webhook/sutra-master-dispatch`;
   }
   if (key === "N8N_INBOUND_WEBHOOK") {
-    const base = getVal("N8N_BASE_URL") || getVal("N8N_HOST") || getVal("NEXT_PUBLIC_N8N_URL") || "https://sanitary-engine-pursuable.ngrok-free.dev";
+    const base = getVal("N8N_BASE_URL") || getVal("N8N_HOST") || getVal("NEXT_PUBLIC_N8N_URL") || "https://n8n.sutrastudios.in";
     return `${base.replace(/\/$/, "")}/webhook/sutra-inbound-inquiry`;
   }
 

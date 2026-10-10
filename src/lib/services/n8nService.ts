@@ -81,7 +81,7 @@ export class N8nAutomationService {
       readEnv("N8N_BASE_URL") ||
       readEnv("N8N_HOST" as any) ||
       readPublicEnv("NEXT_PUBLIC_N8N_URL" as any) ||
-      "https://sanitary-engine-pursuable.ngrok-free.dev"
+      "https://n8n.sutrastudios.in"
     );
   }
 
@@ -192,16 +192,16 @@ export class N8nAutomationService {
     if (explicitWebhook) {
       candidateUrls.push(explicitWebhook);
     }
-    const ngrokDirect = "https://sanitary-engine-pursuable.ngrok-free.dev/webhook/sutra-master-dispatch";
-    if (!candidateUrls.includes(ngrokDirect)) {
-      candidateUrls.push(ngrokDirect);
+    const masterWebhook = readEnv("N8N_MASTER_DISPATCH_WEBHOOK");
+    if (masterWebhook && !candidateUrls.includes(masterWebhook)) {
+      candidateUrls.push(masterWebhook);
     }
     for (const p of pathsToTry) {
-      candidateUrls.push(`${n8nBaseUrl}/webhook/${p}`);
-      candidateUrls.push(`${n8nBaseUrl}/webhook-test/${p}`);
-      if (!candidateUrls.includes(`http://localhost:5678/webhook/${p}`)) {
-        candidateUrls.push(`http://localhost:5678/webhook/${p}`);
-        candidateUrls.push(`http://localhost:5678/webhook-test/${p}`);
+      if (!candidateUrls.includes(`${n8nBaseUrl}/webhook/${p}`)) {
+        candidateUrls.push(`${n8nBaseUrl}/webhook/${p}`);
+      }
+      if (!candidateUrls.includes(`${n8nBaseUrl}/webhook-test/${p}`)) {
+        candidateUrls.push(`${n8nBaseUrl}/webhook-test/${p}`);
       }
     }
 

@@ -142,7 +142,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:3000/api/n8n/workflows",
+        "url": "https://sutrastudios.in/api/n8n/workflows",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"action\": \"log_social_post\",\n  \"platform\": \"Instagram & Facebook\",\n  \"status\": \"Published\",\n  \"timestamp\": $now,\n  \"caption\": $('Prepare Media & URLs').first().json.caption,\n  \"imageUrl\": $('Prepare Media & URLs').first().json.imageUrl\n}",

@@ -497,12 +497,10 @@ export function MasterOrderForm({
       });
 
       const data = await res.json();
-      const generatedOrder = data.order || {
-        id: `ord_${Date.now()}`,
-        code: `STR-${Math.floor(1000 + Math.random() * 9000)}`,
-        title: resolvedTitle,
-        totalAmount: orderAmount,
-      };
+      if (!res.ok || !data.order) {
+        throw new Error(data.error || "Failed to register order on studio server.");
+      }
+      const generatedOrder = data.order;
 
       setCreatedOrder(generatedOrder);
 

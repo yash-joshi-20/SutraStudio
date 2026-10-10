@@ -2594,6 +2594,13 @@ const [adminDataError, setAdminDataError] = useState("");
                 <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
                 <span>Meta Ads & Marketing</span>
               </Link>
+              <Link
+                href="/admin/rebrand"
+                className="flex items-center gap-1.5 bg-[#FFFDF9] border border-[#EADFCB] hover:border-[#D4A35A] px-3 py-1.5 rounded-full text-xs text-[#5C3A1E] font-semibold transition-all shadow-2xs"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#A98B57]" />
+                <span>AI Media Rebrander</span>
+              </Link>
               <div className="flex items-center gap-2 bg-[#FFFDF9] border border-[#EADFCB] px-3.5 py-1.5 rounded-full text-xs text-[#2E7D4F] font-semibold shadow-xs">
                 <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-pulse" />
                 <span>Pipelines Operational</span>

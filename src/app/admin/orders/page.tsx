@@ -156,7 +156,7 @@ export default function AdminOrdersPage() {
         const directWebhookUrl =
           process.env.NEXT_PUBLIC_N8N_URL
             ? `${process.env.NEXT_PUBLIC_N8N_URL.replace(/\/$/, "")}/webhook/sutra-master-dispatch`
-            : "https://sanitary-engine-pursuable.ngrok-free.dev/webhook/sutra-master-dispatch";
+            : "https://n8n.sutrastudios.in/webhook/sutra-master-dispatch";
 
         const n8nRes = await fetch(directWebhookUrl, {
           method: "POST",

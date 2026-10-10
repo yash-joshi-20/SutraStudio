@@ -243,7 +243,7 @@ export async function POST(req: Request) {
     // 5. Trigger local n8n inbound webhook asynchronously
     try {
       const n8nInboundWebhook =
-        readEnv("N8N_INBOUND_WEBHOOK") || "http://localhost:5678/webhook/sutra-inbound-inquiry";
+        readEnv("N8N_INBOUND_WEBHOOK") || "https://n8n.sutrastudios.in/webhook/sutra-inbound-inquiry";
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2000);
 

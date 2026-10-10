@@ -11,12 +11,11 @@ export async function POST(req: Request) {
     const n8nBaseUrl =
       readEnv("N8N_BASE_URL") ||
       readEnv("N8N_HOST" as any) ||
-      "http://localhost:5678";
+      "https://n8n.sutrastudios.in";
     const candidateUrls = [
       readEnv("N8N_MASTER_DISPATCH_WEBHOOK"),
-      "https://sanitary-engine-pursuable.ngrok-free.dev/webhook/sutra-master-dispatch",
       `${n8nBaseUrl.replace(/\/$/, "")}/webhook/sutra-master-dispatch`,
-      "http://localhost:5678/webhook/sutra-master-dispatch",
+      "https://n8n.sutrastudios.in/webhook/sutra-master-dispatch",
     ].filter(Boolean) as string[];
 
     const dispatchPayload = {

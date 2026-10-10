@@ -368,9 +368,9 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
     description: "Background orchestration engine handling W1-W8 automated order fulfillment, approval hooks, and monthly retainer dispatch.",
     features: ["W1-W8 Orchestration", "Async Background Fulfillment", "Admin Approval Webhooks", "Discipline 12: AI Automation"],
     priority: "HIGH",
-    whereToGet: "Local n8n instance (http://localhost:5678) or Cloud n8n Dashboard",
+    whereToGet: "Cloud n8n (https://n8n.sutrastudios.in) or Hosted n8n Dashboard",
     requirements: [
-      { key: "N8N_BASE_URL", label: "n8n Instance URL", whereToGet: "http://localhost:5678 or your hosted n8n URL" },
+      { key: "N8N_BASE_URL", label: "n8n Instance URL", whereToGet: "https://n8n.sutrastudios.in or your hosted n8n URL" },
       { key: "N8N_WEBHOOK_SECRET", label: "n8n HMAC Secret", whereToGet: "32-byte secret generated via `openssl rand -hex 32`" },
       { key: "N8N_API_KEY", label: "n8n API Key", whereToGet: "n8n Settings → n8n API" },
     ],

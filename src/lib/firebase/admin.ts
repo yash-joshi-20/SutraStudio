@@ -75,6 +75,11 @@ function getAdminApp(): App {
 export function adminDb(): Firestore {
   if (dbInstance) return dbInstance;
   dbInstance = getFirestore(getAdminApp());
+  try {
+    dbInstance.settings({ ignoreUndefinedProperties: true });
+  } catch {
+    // Settings can only be applied once per process lifecycle
+  }
   return dbInstance;
 }
 

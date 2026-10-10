@@ -152,6 +152,26 @@ export type { OrderProgressInfo } from "@/lib/services/orderProgress";
 export type { FirestoreOrderRecord, OrderDeliverableItem } from "@/app/api/orders/route";
 
 /**
+ * Recursively strips undefined fields so Firestore document serialization never fails
+ */
+function cleanForFirestore<T>(data: T): any {
+  if (data === null || data === undefined) return null;
+  if (Array.isArray(data)) {
+    return data.map((item) => cleanForFirestore(item));
+  }
+  if (typeof data === "object" && !(data instanceof Date)) {
+    const cleaned: Record<string, any> = {};
+    for (const [key, value] of Object.entries(data)) {
+      if (value !== undefined) {
+        cleaned[key] = cleanForFirestore(value);
+      }
+    }
+    return cleaned;
+  }
+  return data;
+}
+
+/**
  * Persists an order directly to local disk and Firestore
  */
 async function persistOrder(order: FirestoreOrderRecord): Promise<void> {
@@ -162,9 +182,10 @@ async function persistOrder(order: FirestoreOrderRecord): Promise<void> {
   if (isFirebaseAdminReady()) {
     try {
       const db = adminDb();
-      await db.collection("orders").doc(order.id).set(order, { merge: true });
+      const sanitized = cleanForFirestore(order);
+      await db.collection("orders").doc(order.id).set(sanitized, { merge: true });
     } catch (err) {
-      console.warn(`[OrdersStore] Failed to persist order ${order.id} to Firestore:`, err);
+      console.error(`[OrdersStore] Failed to persist order ${order.id} to Firestore:`, err);
     }
   }
 }
