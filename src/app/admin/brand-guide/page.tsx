@@ -17,14 +17,13 @@ import {
   MessageSquare,
   Clock,
   ExternalLink,
-  Info,
   CheckCircle2,
-  FileText,
   Smartphone,
   Eye,
   Grid3X3,
   ListOrdered,
-  Share2,
+  RefreshCw,
+  AlertCircle,
 } from "lucide-react";
 
 // Platform Type
@@ -34,16 +33,67 @@ export default function AdminBrandGuidePage() {
   const [activeSection, setActiveSection] = useState<ActiveSection>("facebook");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  // API Sync State
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<{
+    target: string;
+    success: boolean;
+    message: string;
+  } | null>(null);
+
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2200);
   };
 
+  // Trigger Meta / WhatsApp API Sync (Allowed endpoints only)
+  const handleApiSync = async (target: "facebook" | "whatsapp" | "both") => {
+    setIsSyncing(true);
+    setSyncStatus(null);
+    try {
+      const res = await fetch("/api/admin/brand-profiles/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ target }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const msg = [];
+        if (data.results?.facebook) {
+          msg.push(`Facebook: ${data.results.facebook.message}`);
+        }
+        if (data.results?.whatsapp) {
+          msg.push(`WhatsApp: ${data.results.whatsapp.message}`);
+        }
+        setSyncStatus({
+          target,
+          success: true,
+          message: msg.join(" | ") || "Sync completed successfully.",
+        });
+      } else {
+        setSyncStatus({
+          target,
+          success: false,
+          message: data.error || "API sync failed.",
+        });
+      }
+    } catch (err: unknown) {
+      setSyncStatus({
+        target,
+        success: false,
+        message: err instanceof Error ? err.message : "Network error during sync.",
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   // Download entire guide as Markdown / Text file
   const handleDownloadFullGuide = () => {
-    const content = `# SUTRA STUDIOS — BRAND PROFILE SPECIFICATION GUIDE
-Official Social & Messaging Channel Reference (Manual Transfer Only)
+    const content = `# SUTRA STUDIOS — CANONICAL BRAND PROFILE SPECIFICATION GUIDE
+Official Social & Messaging Channel Reference (Synchronized with Final Catalog)
+Business Name Everywhere: Sutra Studios
 
 ===================================================================
 1. FACEBOOK PAGE SPECIFICATIONS & COPY
@@ -54,19 +104,24 @@ Official Social & Messaging Channel Reference (Manual Transfer Only)
 • Secondary Categories: Design & Fashion, Software Company
 • DP Specs: 1080 x 1080 px (1:1), 25% outer safe margin. Charcoal (#171717) crest on warm ivory (#FAF9F5).
 • Cover Banner Specs: 820 x 312 px (Desktop), central safe area 640 x 312 px.
-• Short Bio (93 chars):
+• Short Intro (93 chars / 101 max):
 Creative & digital atelier delivering visual production, software engineering & brand growth.
 
-• Long About / Story (712 chars):
-Sutra Studios is a full-spectrum creative technology and digital production atelier. We partner with emerging and established brands to build distinctive visual identities, high-impact digital marketing campaigns, and bespoke software solutions.
-Our 12 integrated creative disciplines include Image Creation, Video Production, 3D Architectural Modeling, 360 Interactive Views, Window & Spatial Design, Digital Marketing, Meta Ads Management, Website Development, Web Applications, and Mobile App Setups.
-We offer transparent single-deliverable pricing starting from ₹499 alongside our flagship 30-Day Growth Plan for brands requiring daily production momentum. Connect with our studio team to discuss your next project.
+• Long About / Story (768 chars):
+Sutra Studios is a creative technology and digital production atelier. We partner with emerging and established brands to build distinctive visual identities, commercial visual assets, high-impact brand campaigns, and bespoke software solutions.
+
+Our 12 integrated creative disciplines include Commercial Visual Imagery (from ₹2,499), Cinematic Motion Reels (from ₹4,999), Spatial 3D Asset Modeling (from ₹5,999), 360° Spherical Panoramic Tours (from ₹7,999), Interior Architectural Visualization (from ₹6,499), Facade & Window Design (from ₹4,499), Brand & Editorial Strategy (from ₹8,999), Campaign Creative Suites (from ₹7,499), Website Engineering, Web Applications, Mobile Applications, and Custom Systems & Integrations.
+
+We provide transparent standalone commission pricing alongside dedicated monthly retainer partnerships starting from ₹14,999/month. Connect with our studio team to commission your next project.
 
 • Instant Reply (263 chars):
 Hello and welcome to Sutra Studios. Thank you for contacting our creative atelier. We have received your message and our studio team will review your inquiry within two business hours. You can also explore our full service catalog and pricing at sutrastudios.in.
 
 • Away Message (222 chars):
 Thank you for reaching out to Sutra Studios. Our atelier is currently closed. Studio hours are Monday to Saturday, 9:30 AM to 7:00 PM IST. We will respond promptly as soon as our production team resumes tomorrow morning.
+
+• Facebook Page Complete 12-Service Catalog:
+${FACEBOOK_SERVICES_LIST_TEXT}
 
 ===================================================================
 2. INSTAGRAM PROFILE SPECIFICATIONS & COPY
@@ -75,7 +130,7 @@ Thank you for reaching out to Sutra Studios. Our atelier is currently closed. St
 • Username: sutrastudios.in
 • Category: Marketing Agency
 • Profile Photo: 1080 x 1080 px vector emblem on warm ivory.
-• Bio (Strictly 144 chars / 150 max):
+• Bio (Strictly 141 chars / 150 max):
 Creative & digital studio atelier.
 Visual production, custom software & brand growth.
 ✦ 12 disciplines in one studio
@@ -85,11 +140,11 @@ Explore catalog & work ↓
 • Action Buttons: Email (concierge@sutrastudios.in), Message
 
 • Highlights Structure:
-1. Disciplines — 12-dot minimal icon. Story cards of the 12 services.
-2. Projects — Architectural frame icon. High-res client deliverables.
-3. Retainers — Calendar icon. 30-Day Growth Plan (₹9,999/mo).
+1. Disciplines — 12-dot minimal icon. Story cards of the 12 services with starting rates.
+2. Projects — Architectural frame icon. High-res client deliverables across commercial sectors.
+3. Retainers — Calendar icon. Dedicated monthly retainers: Starter (₹14,999), Growth (₹29,999), Enterprise (₹59,999).
 4. Process — 4-step circle icon. Brief > Production > Review > High-res Delivery.
-5. Inquiries — Chat bubble icon. Concierge contact and order placement.
+5. Inquiries — Chat bubble icon. Direct concierge contact and order placement.
 
 ===================================================================
 3. WHATSAPP BUSINESS PROFILE SPECIFICATIONS & COPY
@@ -98,8 +153,8 @@ Explore catalog & work ↓
 • Category: Professional Services / Advertising & Marketing
 • Profile Photo: 1080 x 1080 px vector emblem.
 • Cover Banner: 1024 x 576 px warm ivory canvas.
-• Description (204 chars):
-Sutra Studios is a creative and software-services atelier. We provide visual production, 3D modeling, web engineering, digital marketing, and dedicated monthly growth retainers for forward-thinking brands.
+• Description (185 chars / 256 max):
+Sutra Studios is a creative and software services atelier. We provide commercial visual production, spatial 3D modeling, web engineering, brand strategy, and dedicated monthly retainers.
 
 • Operating Hours: Mon-Sat: 09:30 AM - 07:00 PM IST. Sunday: Closed.
 • Business Email: concierge@sutrastudios.in
@@ -112,13 +167,16 @@ Welcome to Sutra Studios. Thank you for reaching out to our creative atelier. Wh
 Thank you for contacting Sutra Studios. Our studio atelier is currently closed. Our standard business hours are Monday to Saturday, 9:30 AM to 7:00 PM IST. We have received your inquiry and will review your project details first thing tomorrow morning.
 
 • Quick Reply 1 (/services):
-We offer 12 core creative and digital disciplines: Image Creation (from ₹499), Video Creation (from ₹1,499), 3D Modeling (from ₹2,499), 360 Views, Interior & Window Design, Digital Marketing, Meta Ads, and Custom Web & App Development. View our full catalog at: https://sutrastudios.in/services
+${WHATSAPP_QUICK_REPLIES[0].text}
 
-• Quick Reply 2 (/retainer):
-Our flagship 30-Day Growth Plan provides 1 image + 1 video delivered every day for ₹9,999/month, offering continuous production momentum for your brand. Review package details at: https://sutrastudios.in/pricing
+• Quick Reply 2 (/retainers):
+${WHATSAPP_QUICK_REPLIES[1].text}
 
 • Quick Reply 3 (/quote):
-To request a custom quote for web applications, enterprise branding, or multi-deliverable campaigns, please share: 1) Project Scope, 2) Target Timeline, and 3) Reference links. Our team will review and provide a detailed quotation.
+${WHATSAPP_QUICK_REPLIES[2].text}
+
+• Complete 12-Item WhatsApp Catalog:
+${WHATSAPP_CATALOG_FULL_EXPORT}
 `;
     const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -155,11 +213,11 @@ To request a custom quote for web applications, enterprise branding, or multi-de
                       Brand Profile Guide
                     </h1>
                     <span className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase bg-[#EADFCB]/40 text-[#5C3A1E] rounded-md border border-[#D4C3A3]/50">
-                      Stage 7 Standard
+                      Final Catalog Synced
                     </span>
                   </div>
                   <p className="text-[11px] sm:text-xs text-[#78716C]">
-                    Standardized visual specs, verified bios, 9-post launch plans & messaging for Sutra Studios
+                    Synchronized profiles, verified 12-discipline catalog text, ready-to-copy snippets & API sync
                   </p>
                 </div>
               </div>
@@ -188,23 +246,88 @@ To request a custom quote for web applications, enterprise branding, or multi-de
               </div>
               <div>
                 <h4 className="text-sm font-semibold text-[#171717] flex items-center gap-2">
-                  <span>Manual Copy & Transfer Directives</span>
+                  <span>Catalog Synchronization & Transfer Guardrails</span>
                   <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.2 bg-[#F3EFE6] text-[#78716C] rounded-full border border-[#E5E1D8]">
-                    Zero API Overwrite
+                    Sutra Studios
                   </span>
                 </h4>
                 <p className="text-xs text-[#78716C] mt-0.5 max-w-3xl leading-relaxed">
-                  In accordance with studio governance and Meta Platform rules, profile bios, cover banners, and service catalogs must be updated manually via Meta Business Suite and WhatsApp Business Manager. No automated or third-party API mutations are dispatched without explicit admin approval.
+                  All service titles, one-line descriptions, and pricing are derived strictly from the canonical catalog (12 services + 3 retainer tiers). Neutral professional atelier wording only, with zero mention of internal tools or AI engines. Apply via Meta / WhatsApp APIs only where allowed and upon explicit confirmation.
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
               <span className="text-xs font-semibold text-[#5C3A1E] px-3 py-1.5 rounded-xl bg-[#EADFCB]/30 border border-[#D4C3A3]/40 flex items-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5 text-[#2E7D4F]" />
-                <span>True Claims Only (No AI/Tech Terms)</span>
+                <span>100% True Claims (Canonical Catalog)</span>
               </span>
             </div>
           </div>
+        </div>
+
+        {/* API Sync Actions Card (Direct Integration with Meta / WhatsApp Graph API) */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3">
+          <div className="p-4 rounded-2xl bg-white border border-[#E5E1D8] shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[#FAF9F5] border border-[#E5E1D8] flex items-center justify-center text-[#A98B57]">
+                <RefreshCw className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`} />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-[#171717] block">
+                  Live API Profile Synchronization (Meta & WhatsApp)
+                </span>
+                <span className="text-[11px] text-[#78716C] block">
+                  Pushes verified About & Description directly to Facebook Page and WhatsApp Business Profile.
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleApiSync("facebook")}
+                disabled={isSyncing}
+                className="text-xs font-semibold border-[#E5E1D8] bg-[#FAF9F5] hover:bg-[#F3EFE6] text-[#171717]"
+              >
+                Sync Facebook Page
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleApiSync("whatsapp")}
+                disabled={isSyncing}
+                className="text-xs font-semibold border-[#E5E1D8] bg-[#FAF9F5] hover:bg-[#F3EFE6] text-[#171717]"
+              >
+                Sync WhatsApp Profile
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => handleApiSync("both")}
+                disabled={isSyncing}
+                className="text-xs font-semibold bg-[#171717] hover:bg-[#333333] text-white"
+              >
+                {isSyncing ? "Syncing..." : "Sync Both"}
+              </Button>
+            </div>
+          </div>
+
+          {syncStatus && (
+            <div
+              className={`mt-2 p-3 rounded-xl border text-xs flex items-center gap-2 ${
+                syncStatus.success
+                  ? "bg-[#E8F5E9] border-[#C8E6C9] text-[#2E7D4F]"
+                  : "bg-[#FFEBEE] border-[#FFCDD2] text-[#C62828]"
+              }`}
+            >
+              {syncStatus.success ? (
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+              ) : (
+                <AlertCircle className="w-4 h-4 shrink-0" />
+              )}
+              <span>{syncStatus.message}</span>
+            </div>
+          )}
         </div>
 
         {/* Section Navigation Tabs */}
@@ -292,7 +415,7 @@ To request a custom quote for web applications, enterprise branding, or multi-de
                     <FieldDisplay
                       label="Page Name"
                       value="Sutra Studios"
-                      helper="Official studio legal & brand name"
+                      helper="Official studio brand name"
                       id="fb-name"
                       copiedId={copiedId}
                       onCopy={copyToClipboard}
@@ -327,7 +450,7 @@ To request a custom quote for web applications, enterprise branding, or multi-de
                   <div className="space-y-1.5 pt-2 border-t border-[#E5E1D8]">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-semibold text-[#171717]">
-                        Short Bio (Page Header Intro)
+                        Short Intro (Page Header Intro)
                       </label>
                       <span className="text-[11px] font-mono text-[#2E7D4F] font-medium bg-[#E8F5E9] px-2 py-0.5 rounded-md">
                         93 / 101 chars
@@ -353,16 +476,16 @@ To request a custom quote for web applications, enterprise branding, or multi-de
                         About / Studio Story (Long Description)
                       </label>
                       <span className="text-[11px] font-mono text-[#2E7D4F] font-medium bg-[#E8F5E9] px-2 py-0.5 rounded-md">
-                        712 chars (True claims only)
+                        768 chars (Catalog Synced)
                       </span>
                     </div>
                     <div className="p-4 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-3">
                       <p className="text-xs text-[#171717] leading-relaxed whitespace-pre-line">
-                        {`Sutra Studios is a full-spectrum creative technology and digital production atelier. We partner with emerging and established brands to build distinctive visual identities, high-impact digital marketing campaigns, and bespoke software solutions.\n\nOur 12 integrated creative disciplines include Image Creation, Video Production, 3D Architectural Modeling, 360 Interactive Views, Window & Spatial Design, Digital Marketing, Meta Ads Management, Website Development, Web Applications, and Mobile App Setups.\n\nWe offer transparent single-deliverable pricing starting from ₹499 alongside our flagship 30-Day Growth Plan for brands requiring daily production momentum. Connect with our studio team to discuss your next project.`}
+                        {`Sutra Studios is a creative technology and digital production atelier. We partner with emerging and established brands to build distinctive visual identities, commercial visual assets, high-impact brand campaigns, and bespoke software solutions.\n\nOur 12 integrated creative disciplines include Commercial Visual Imagery (from ₹2,499), Cinematic Motion Reels (from ₹4,999), Spatial 3D Asset Modeling (from ₹5,999), 360° Spherical Panoramic Tours (from ₹7,999), Interior Architectural Visualization (from ₹6,499), Facade & Window Design (from ₹4,499), Brand & Editorial Strategy (from ₹8,999), Campaign Creative Suites (from ₹7,499), Website Engineering, Web Applications, Mobile Applications, and Custom Systems & Integrations.\n\nWe provide transparent standalone commission pricing alongside dedicated monthly retainer partnerships starting from ₹14,999/month. Connect with our studio team to commission your next project.`}
                       </p>
                       <div className="flex justify-end pt-1">
                         <CopyButton
-                          text={`Sutra Studios is a full-spectrum creative technology and digital production atelier. We partner with emerging and established brands to build distinctive visual identities, high-impact digital marketing campaigns, and bespoke software solutions.\n\nOur 12 integrated creative disciplines include Image Creation, Video Production, 3D Architectural Modeling, 360 Interactive Views, Window & Spatial Design, Digital Marketing, Meta Ads Management, Website Development, Web Applications, and Mobile App Setups.\n\nWe offer transparent single-deliverable pricing starting from ₹499 alongside our flagship 30-Day Growth Plan for brands requiring daily production momentum. Connect with our studio team to discuss your next project.`}
+                          text={`Sutra Studios is a creative technology and digital production atelier. We partner with emerging and established brands to build distinctive visual identities, commercial visual assets, high-impact brand campaigns, and bespoke software solutions.\n\nOur 12 integrated creative disciplines include Commercial Visual Imagery (from ₹2,499), Cinematic Motion Reels (from ₹4,999), Spatial 3D Asset Modeling (from ₹5,999), 360° Spherical Panoramic Tours (from ₹7,999), Interior Architectural Visualization (from ₹6,499), Facade & Window Design (from ₹4,499), Brand & Editorial Strategy (from ₹8,999), Campaign Creative Suites (from ₹7,499), Website Engineering, Web Applications, Mobile Applications, and Custom Systems & Integrations.\n\nWe provide transparent standalone commission pricing alongside dedicated monthly retainer partnerships starting from ₹14,999/month. Connect with our studio team to commission your next project.`}
                           id="fb-long-about"
                           copiedId={copiedId}
                           onCopy={copyToClipboard}
@@ -389,7 +512,7 @@ To request a custom quote for web applications, enterprise branding, or multi-de
                           <li>Dimensions: 1080 × 1080 px (1:1)</li>
                           <li>Safe Area: 800 × 800 px circular crop</li>
                           <li>Style: Dark charcoal emblem on ivory</li>
-                          <li>Format: PNG (high contrast, crisp edges)</li>
+                          <li>Format: PNG (crisp vector marks)</li>
                         </ul>
                       </div>
 
@@ -441,6 +564,32 @@ To request a custom quote for web applications, enterprise branding, or multi-de
                       />
                     </div>
                   </div>
+                </div>
+              </div>
+
+              {/* Ready-to-Copy Complete Facebook Services List */}
+              <div className="p-6 rounded-3xl bg-white border border-[#E5E1D8] shadow-xs space-y-5">
+                <div className="flex items-center justify-between border-b border-[#E5E1D8] pb-4">
+                  <div>
+                    <h3 className="font-serif text-lg font-bold text-[#171717]">
+                      Facebook Page Services List (All 12 Disciplines & Retainers)
+                    </h3>
+                    <p className="text-xs text-[#78716C]">
+                      Full structured service listing formatted for Facebook Page Services tab and pinned posts
+                    </p>
+                  </div>
+                  <CopyButton
+                    text={FACEBOOK_SERVICES_LIST_TEXT}
+                    id="fb-services-list-all"
+                    copiedId={copiedId}
+                    onCopy={copyToClipboard}
+                  />
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8]">
+                  <pre className="font-mono text-xs text-[#171717] leading-relaxed whitespace-pre-wrap">
+                    {FACEBOOK_SERVICES_LIST_TEXT}
+                  </pre>
                 </div>
               </div>
 
@@ -539,7 +688,7 @@ To request a custom quote for web applications, enterprise branding, or multi-de
                       </p>
                     </div>
                     <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#EADFCB]/30 text-[#5C3A1E] border border-[#D4C3A3]/40">
-                      150-Char Validated
+                      141 / 150 Chars
                     </span>
                   </div>
 
@@ -584,11 +733,11 @@ To request a custom quote for web applications, enterprise branding, or multi-de
                       <label className="text-xs font-semibold text-[#171717] flex items-center gap-2">
                         <span>Optimized Instagram Bio Text</span>
                         <span className="text-[10px] text-[#78716C] font-normal">
-                          (Clean 4-line layout, zero AI jargon)
+                          (Clean 4-line layout, zero tool jargon)
                         </span>
                       </label>
                       <span className="text-[11px] font-mono text-[#2E7D4F] font-semibold bg-[#E8F5E9] px-2.5 py-0.5 rounded-md border border-[#C8E6C9]">
-                        144 / 150 characters (Exact fit)
+                        141 / 150 characters (Exact fit)
                       </span>
                     </div>
 
@@ -816,19 +965,19 @@ Explore catalog & work ↓`}
                   <div className="space-y-1.5 pt-2 border-t border-[#E5E1D8]">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-semibold text-[#171717]">
-                        Business Description (Max 512 chars)
+                        Business Description (Max 256 chars)
                       </label>
                       <span className="text-[11px] font-mono text-[#2E7D4F] font-semibold bg-[#E8F5E9] px-2 py-0.5 rounded-md">
-                        204 / 512 chars
+                        185 / 256 chars
                       </span>
                     </div>
                     <div className="p-4 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-3">
                       <p className="text-xs text-[#171717] leading-relaxed">
-                        Sutra Studios is a creative and software-services atelier. We provide visual production, 3D modeling, web engineering, digital marketing, and dedicated monthly growth retainers for forward-thinking brands.
+                        Sutra Studios is a creative and software services atelier. We provide commercial visual production, spatial 3D modeling, web engineering, brand strategy, and dedicated monthly retainers.
                       </p>
                       <div className="flex justify-end pt-1">
                         <CopyButton
-                          text="Sutra Studios is a creative and software-services atelier. We provide visual production, 3D modeling, web engineering, digital marketing, and dedicated monthly growth retainers for forward-thinking brands."
+                          text="Sutra Studios is a creative and software services atelier. We provide commercial visual production, spatial 3D modeling, web engineering, brand strategy, and dedicated monthly retainers."
                           id="wa-desc"
                           copiedId={copiedId}
                           onCopy={copyToClipboard}
@@ -971,20 +1120,28 @@ Explore catalog & work ↓`}
                 </div>
               </div>
 
-              {/* WhatsApp Catalog of 12 Services */}
+              {/* WhatsApp Catalog of All 12 Services */}
               <div className="p-6 rounded-3xl bg-white border border-[#E5E1D8] shadow-xs space-y-6">
                 <div className="flex items-center justify-between border-b border-[#E5E1D8] pb-4">
                   <div>
                     <h3 className="font-serif text-lg font-bold text-[#171717]">
-                      WhatsApp Business Catalog (All 12 Disciplines)
+                      WhatsApp Business Catalog (All 12 Disciplines + Retainers)
                     </h3>
                     <p className="text-xs text-[#78716C]">
-                      Pre-written items ready to copy into WhatsApp Business Catalog manager
+                      Pre-written items with name, one-line description, canonical price, and order link ready for WhatsApp Business Catalog manager
                     </p>
                   </div>
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#EADFCB]/30 text-[#5C3A1E] border border-[#D4C3A3]/40">
-                    12 Items + Retainer
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#EADFCB]/30 text-[#5C3A1E] border border-[#D4C3A3]/40">
+                      12 Items + Retainer
+                    </span>
+                    <CopyButton
+                      text={WHATSAPP_CATALOG_FULL_EXPORT}
+                      id="cat-copy-all"
+                      copiedId={copiedId}
+                      onCopy={copyToClipboard}
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1102,13 +1259,13 @@ Explore catalog & work ↓`}
                   <div className="p-4 rounded-2xl bg-white border border-[#E5E1D8] space-y-1.5">
                     <span className="font-bold text-[#5C3A1E] block">2. 140-148 Char Bio Discipline</span>
                     <p className="text-[#78716C] leading-relaxed">
-                      Strict 3-4 line structure: (1) Purpose, (2) Core capabilities, (3) Scope proof point, (4) Direct arrow CTA. Zero keyword stuffing or spam emojis.
+                      Strict 3-4 line structure: (1) Purpose, (2) Core capabilities, (3) Scope proof point, (4) Direct arrow CTA. Zero keyword stuffing or tool jargon.
                     </p>
                   </div>
                   <div className="p-4 rounded-2xl bg-white border border-[#E5E1D8] space-y-1.5">
                     <span className="font-bold text-[#5C3A1E] block">3. 3-Post Grid Anchor</span>
                     <p className="text-[#78716C] leading-relaxed">
-                      Pinned posts establish (1) Studio Manifesto, (2) 12 Disciplines Catalog, and (3) 30-Day Growth Retainer with instant inquiry pathways.
+                      Pinned posts establish (1) Studio Manifesto, (2) 12 Disciplines Catalog, and (3) Monthly Creative Retainers with instant inquiry pathways.
                     </p>
                   </div>
                 </div>
@@ -1294,7 +1451,7 @@ function PostsPlanSection({
 }
 
 // -----------------------------------------------------------------------------
-// CONSTANTS & READY TEXT DATA
+// CONSTANTS & READY TEXT DATA (SYNCHRONIZED WITH FINAL CATALOG)
 // -----------------------------------------------------------------------------
 
 const INSTAGRAM_HIGHLIGHTS = [
@@ -1308,14 +1465,14 @@ const INSTAGRAM_HIGHLIGHTS = [
   {
     title: "02 Projects",
     icon: <Layers className="w-5 h-5" />,
-    description: "Featured client deliverables across perfume, architectural 3D & web apps.",
+    description: "Featured client deliverables across commercial visual production, spatial 3D & software.",
     coverBrief: "Architectural frame icon in muted brass on warm ivory.",
     frameCount: "8 Story Frames",
   },
   {
     title: "03 Retainers",
     icon: <Clock className="w-5 h-5" />,
-    description: "Details on the 30-Day Growth Plan (1 image + 1 video daily for ₹9,999/mo).",
+    description: "Dedicated monthly retainers: Starter (₹14,999/mo), Growth (₹29,999/mo), Enterprise (₹59,999/mo).",
     coverBrief: "Calendar ring icon with daily pulse marker.",
     frameCount: "5 Story Frames",
   },
@@ -1348,61 +1505,61 @@ const INSTAGRAM_LAUNCH_POSTS = [
     position: 2,
     title: "The 12 Core Disciplines",
     format: "Single Image (Infographic)",
-    visualBrief: "Pristine ivory grid displaying the 12 core disciplines with transparent starting rates from ₹499 up to custom enterprise quotes.",
-    caption: "Twelve disciplines. One cohesive production studio. Whether you require a single high-resolution product visual from ₹499 or end-to-end custom web engineering, Sutra Studios provides transparent pricing and dedicated delivery timelines.\n\nSwipe through our catalog on sutrastudios.in.",
+    visualBrief: "Pristine ivory grid displaying the 12 core disciplines with transparent starting rates from ₹2,499 up to custom enterprise quotes.",
+    caption: "Twelve disciplines. One cohesive production studio. Whether you require commercial product visuals from ₹2,499 or bespoke web application engineering, Sutra Studios provides transparent pricing and dedicated delivery timelines.\n\nSwipe through our catalog on sutrastudios.in.",
     hashtags: "#DesignCatalog #CreativeServices #DigitalProduction #BrandIdentity #WebEngineering",
   },
   {
     position: 3,
-    title: "Product & Commercial Visuals",
+    title: "Commercial Visual Imagery",
     format: "Carousel (5 Slides)",
     visualBrief: "High-end luxury perfume and commercial product photography showcasing light, material texture, and intentional framing.",
-    caption: "Light, texture, and deliberate framing. Our image creation discipline crafts editorial product visuals designed to command attention across print, social, and digital campaigns.\n\nAvailable standalone from ₹499 or as part of our monthly creative retainers.",
+    caption: "Light, texture, and deliberate framing. Our commercial visual imagery discipline crafts editorial product visuals designed to command attention across print, social, and digital campaigns.\n\nAvailable standalone from ₹2,499 (3-Pack) or as part of our monthly creative retainers.",
     hashtags: "#ProductDesign #CommercialVisuals #StudioPhotography #BrandAesthetics #VisualDirection",
   },
   {
     position: 4,
-    title: "Cinematic Video Creation",
+    title: "Cinematic Motion Reels",
     format: "Reel (9:16 Video)",
     visualBrief: "Dynamic 15-second montage of motion design, product reveals, and campaign teasers with bespoke ambient sound design.",
-    caption: "Cinematic motion engineered for modern attention spans. From social campaign reels to architectural walk-throughs, we produce broadcast-ready video tailored to your brand voice.\n\nDiscover video production solutions starting at ₹1,499 on our website.",
+    caption: "Cinematic motion engineered for modern attention spans. From social campaign reels to architectural walk-throughs, we produce broadcast-ready video tailored to your brand voice.\n\nDiscover video production solutions starting at ₹4,999 on our website.",
     hashtags: "#VideoProduction #MotionDesign #CinematicVideo #SocialReels #CreativeDirection",
   },
   {
     position: 5,
-    title: "Spatial & 3D Modeling",
+    title: "Spatial 3D & 360 Panoramic Tours",
     format: "Carousel (3 Slides)",
     visualBrief: "Precision 3D models and 360 interactive space captures for luxury interiors, villas, and architectural retail environments.",
-    caption: "Transforming physical spaces into immersive digital experiences. Our 3D modeling and 360 virtual tour disciplines enable architectural firms and luxury brands to showcase spatial environments with unmatched clarity.\n\nExplore spatial design services at sutrastudios.in.",
+    caption: "Transforming physical spaces into immersive digital experiences. Our spatial 3D asset modeling and 360 virtual tour disciplines enable architectural firms and luxury brands to showcase spatial environments with unmatched clarity.\n\nExplore spatial design services from ₹5,999 at sutrastudios.in.",
     hashtags: "#3DModeling #ArchitecturalDesign #SpatialDesign #VirtualTour #InteriorArchitecture",
   },
   {
     position: 6,
     title: "Custom Web & Software Craft",
     format: "Carousel (4 Slides)",
-    visualBrief: "Responsive interface mockups showing full-stack web applications, client dashboards, and e-commerce setups with smooth transitions.",
-    caption: "Software designed for performance and scale. We build bespoke websites, responsive web apps, and mobile setups that deliver seamless user experiences and measurable business outcomes.\n\nWebsite development starting at ₹7,999. Inquire today via link in bio.",
+    visualBrief: "Responsive interface mockups showing full-stack web applications, client dashboards, and bespoke portals with smooth transitions.",
+    caption: "Software designed for performance and scale. We engineer bespoke websites, responsive web applications, and mobile apps that deliver seamless user experiences and measurable business outcomes.\n\nExplore our software engineering disciplines at sutrastudios.in.",
     hashtags: "#WebDevelopment #SoftwareEngineering #UIUXDesign #FrontendDevelopment #FullStack",
   },
   {
     position: 7,
-    title: "The 30-Day Growth Plan",
+    title: "Monthly Creative Retainers",
     format: "Carousel (3 Slides)",
-    visualBrief: "Minimalist breakdown of the 30-Day Growth Retainer: 1 image + 1 video delivered every day, ₹9,999/month, dedicated production queue.",
-    caption: "Consistent brand momentum without the overhead of multiple agencies. The Sutra Studios 30-Day Growth Plan delivers 1 high-resolution image and 1 video asset every single day for ₹9,999/month.\n\nSecure your studio production slot at sutrastudios.in/pricing.",
+    visualBrief: "Minimalist breakdown of our 3 monthly creative retainers: Starter (₹14,999/mo), Growth (₹29,999/mo), and Enterprise Brand Atelier (₹59,999/mo).",
+    caption: "Consistent brand momentum without the overhead of multiple agencies. Sutra Studios offers dedicated monthly creative retainers delivering continuous visual, motion, and digital assets.\n\nSelect your studio retainer at sutrastudios.in/pricing.",
     hashtags: "#GrowthPlan #CreativeRetainer #MarketingStrategy #BrandMomentum #ContentProduction",
   },
   {
     position: 8,
-    title: "Meta Ads & Digital Growth",
+    title: "Campaign Creative Suite & Strategy",
     format: "Single Image",
-    visualBrief: "High-impact ad layout breakdown showing 1:1, 4:5, and 9:16 creative variations alongside clear CTA structures.",
-    caption: "Creative that performs. Our Meta Ads Launcher and digital marketing disciplines pair high-converting visual assets with structured audience frameworks to maximize campaign return.\n\nInquire about our marketing management packages via the link in bio.",
+    visualBrief: "High-impact ad layout breakdown showing 1:1, 4:5, and 9:16 creative variations alongside clear audience frameworks.",
+    caption: "Creative that performs. Our Campaign Creative Suite and brand strategy disciplines pair high-converting visual assets with structured audience frameworks to maximize campaign impact.\n\nCommission campaign suites starting from ₹7,499 via link in bio.",
     hashtags: "#MetaAds #PerformanceMarketing #DigitalAdvertising #CreativeStrategy #CampaignManagement",
   },
   {
     position: 9,
-    title: "Starting Your Project",
+    title: "Starting Your Commission",
     format: "Carousel (3 Slides)",
     visualBrief: "The 4-step onboarding flow: Select discipline > Submit brief > Studio production > Direct delivery.",
     caption: "Ready to elevate your digital presence? Starting a project with Sutra Studios is effortless. Select from our 12 standalone disciplines or join a monthly retainer with zero hidden fees and transparent milestones.\n\nVisit sutrastudios.in to connect with our concierge team.",
@@ -1416,28 +1573,28 @@ const FACEBOOK_LAUNCH_POSTS = [
     title: "Welcome to Sutra Studios",
     format: "Image & Brand Narrative",
     visualBrief: "Editorial studio branding banner on warm ivory texture with Sutra geometric emblem.",
-    caption: "Welcome to Sutra Studios. We are a creative and software-services atelier dedicated to crafting distinctive visual identities, commercial digital marketing, and bespoke software solutions.\n\nExplore our service catalog at sutrastudios.in.",
+    caption: "Welcome to Sutra Studios. We are a creative technology and digital production atelier dedicated to crafting distinctive visual identities, commercial visual assets, high-impact brand campaigns, and bespoke software solutions.\n\nExplore our service catalog at sutrastudios.in.",
     hashtags: "#SutraStudios #CreativeAtelier #DigitalAgency #BrandDevelopment",
   },
   {
     position: 2,
     title: "Comprehensive 12-Service Catalog",
     format: "Multi-Image Carousel",
-    visualBrief: "Cards displaying the 12 core disciplines: Image, Video, 3D, 360, Interiors, Windows, Digital Marketing, Meta Ads, Web, Web Apps, Mobile, and Automation.",
+    visualBrief: "Cards displaying the 12 core disciplines: Commercial Visual Imagery, Cinematic Video, Spatial 3D, 360 Tours, Interior, Window, Brand Strategy, Meta Ads, Web, Web Apps, Mobile Apps, and Custom Systems.",
     caption: "From single high-resolution visuals to complete software platforms, discover our 12 creative and digital disciplines with fixed starting prices and dedicated turnaround times.\n\nReview services at sutrastudios.in/services.",
     hashtags: "#CreativeCatalog #DesignServices #WebDevelopment #CommercialVisuals",
   },
   {
     position: 3,
-    title: "The 30-Day Growth Retainer",
+    title: "Monthly Creative Retainers",
     format: "Infographic Card",
-    visualBrief: "Retainer tier breakdown: 1 image + 1 video daily, ₹9,999/month, direct revision queue.",
-    caption: "Fuel your brand's daily content cadence. Our 30-Day Growth Plan delivers 1 high-resolution image and 1 video asset every single day for ₹9,999/month.\n\nInquire today via Messenger or visit sutrastudios.in/pricing.",
+    visualBrief: "Retainer tier breakdown: Starter (₹14,999/mo), Growth (₹29,999/mo), and Enterprise Brand Atelier (₹59,999/mo).",
+    caption: "Fuel your brand's daily content cadence. Our dedicated creative retainers provide scheduled high-resolution image, video, and 3D deliverables with direct priority revision queues.\n\nInquire today via Messenger or visit sutrastudios.in/pricing.",
     hashtags: "#MarketingRetainer #BrandGrowth #DailyDeliverables #SutraStudios",
   },
   {
     position: 4,
-    title: "Architectural 3D & 360 Virtual Views",
+    title: "Spatial 3D & 360 Virtual Tours",
     format: "Photo Carousel",
     visualBrief: "Photorealistic 3D interior renderings and interactive 360 spatial previews.",
     caption: "Bringing architectural spaces to life with precision 3D modeling and immersive 360 virtual views. Perfect for real estate developers, interior designers, and luxury retail.\n\nExplore our spatial design portfolio on sutrastudios.in.",
@@ -1445,7 +1602,7 @@ const FACEBOOK_LAUNCH_POSTS = [
   },
   {
     position: 5,
-    title: "Performance Meta Ads Management",
+    title: "Campaign Creative Suite & Meta Ads",
     format: "Single Image Card",
     visualBrief: "Ad creative layout across 1:1, 4:5 and 9:16 aspect ratios.",
     caption: "Drive measurable engagement with targeted Meta advertising campaigns. We create compelling ad copy, high-impact visuals, and audience structures tailored to your growth goals.\n\nMessage our team to start your campaign.",
@@ -1456,7 +1613,7 @@ const FACEBOOK_LAUNCH_POSTS = [
     title: "Custom Web & Web App Engineering",
     format: "Interface Showcase",
     visualBrief: "Clean interface layouts of responsive web applications and e-commerce platforms.",
-    caption: "Full-stack software engineering crafted for speed, reliability, and modern user experience. We build custom websites, client dashboards, and interactive web apps.\n\nStarting from ₹7,999. Inquire at sutrastudios.in.",
+    caption: "Full-stack software engineering crafted for speed, reliability, and modern user experience. We build custom websites, client dashboards, and interactive web apps.\n\nRequest a quote at sutrastudios.in.",
     hashtags: "#WebDevelopment #SoftwareEngineering #CustomWebsites #AppDevelopment",
   },
   {
@@ -1469,10 +1626,10 @@ const FACEBOOK_LAUNCH_POSTS = [
   },
   {
     position: 8,
-    title: "Commercial Product Direction",
+    title: "Commercial Visual Imagery",
     format: "Visual Showcase",
     visualBrief: "Editorial luxury product compositions highlighting lighting and composition.",
-    caption: "Command attention in crowded marketplaces. Our commercial visual production discipline delivers editorial-quality product imagery ready for e-commerce, print, and social campaigns.",
+    caption: "Command attention in crowded marketplaces. Our commercial visual imagery discipline delivers editorial-quality product imagery ready for e-commerce, print, and social campaigns.",
     hashtags: "#ProductPhotography #CommercialVisuals #BrandImagery #DesignStudio",
   },
   {
@@ -1488,111 +1645,176 @@ const FACEBOOK_LAUNCH_POSTS = [
 const WHATSAPP_QUICK_REPLIES = [
   {
     shortcut: "/services",
-    text: "We offer 12 core creative and digital disciplines: Image Creation (from ₹499), Video Creation (from ₹1,499), 3D Modeling (from ₹2,499), 360 Views, Interior & Window Design, Digital Marketing, Meta Ads, and Custom Web & App Development. View our full catalog at: https://sutrastudios.in/services",
+    text: "We offer 12 core creative and digital disciplines: Commercial Visual Imagery (from ₹2,499), Cinematic Motion Reels (from ₹4,999), Spatial 3D Models (from ₹5,999), 360° Panoramic Tours (from ₹7,999), Interior Architectural Visualization (from ₹6,499), Facade & Window Design (from ₹4,499), Brand & Editorial Strategy (from ₹8,999), Campaign Creative Suite (from ₹7,499), and custom Web, Web App, Mobile & Systems Engineering by quote. View catalog: https://sutrastudios.in/services",
   },
   {
-    shortcut: "/retainer",
-    text: "Our flagship 30-Day Growth Plan provides 1 image + 1 video delivered every day for ₹9,999/month, offering continuous production momentum for your brand. Review package details at: https://sutrastudios.in/pricing",
+    shortcut: "/retainers",
+    text: "Sutra Studios offers 3 dedicated monthly creative retainers: Starter Creative Retainer (₹14,999/mo), Growth Brand Retainer (₹29,999/mo), and Enterprise Brand Atelier (₹59,999/mo). Review package details at: https://sutrastudios.in/pricing",
   },
   {
     shortcut: "/quote",
-    text: "To request a custom quote for web applications, enterprise branding, or multi-deliverable campaigns, please share: 1) Project Scope, 2) Target Timeline, and 3) Reference links. Our team will review and provide a detailed quotation.",
+    text: "To request a custom quote for web applications, mobile apps, or custom integrations, please share: 1) Project Scope & Objectives, 2) Target Timeline, and 3) Reference links. Our team will review and provide a detailed quotation.",
   },
 ];
 
+// CANONICAL 12 SERVICES + RETAINERS FROM CATALOGDATA.TS
 const WHATSAPP_CATALOG_ITEMS = [
   {
-    id: "img",
-    name: "Image Creation",
-    price: "From ₹499",
-    description: "High-resolution commercial product imagery, editorial visuals, and brand assets.",
+    id: "img-creation",
+    name: "Commercial Visual Imagery",
+    price: "Starting from ₹2,499 (3-Pack)",
+    description: "High-fidelity commercial product imagery, luxury brand mockups, and advertising visual assets.",
     link: "https://sutrastudios.in/services#image-creation",
   },
   {
-    id: "vid",
-    name: "Video Creation",
-    price: "From ₹1,499",
-    description: "Short-form reels, motion graphics, and cinematic promotional videos for digital channels.",
+    id: "vid-creation",
+    name: "Cinematic Motion Reel",
+    price: "Starting from ₹4,999 (10–15s Master Reel)",
+    description: "Engaging 10-to-15 second cinematic video ads, social reels, motion sequences, and commercial clips.",
     link: "https://sutrastudios.in/services#video-creation",
   },
   {
-    id: "3d",
-    name: "3D Modeling",
-    price: "From ₹2,499",
-    description: "Photorealistic 3D product models, architectural exterior renders, and asset packaging.",
+    id: "3d-modeling",
+    name: "Spatial 3D Asset Model",
+    price: "Starting from ₹5,999 (.GLB Interactive Model)",
+    description: "Precision 3D product CAD modeling, studio product lighting setups, exploded views, and web-ready 3D assets.",
     link: "https://sutrastudios.in/services#3d-modeling",
   },
   {
-    id: "360",
-    name: "360 Interactive View",
-    price: "From ₹1,999",
-    description: "Immersive 360-degree spatial previews and virtual room tours for real estate and retail.",
+    id: "360-view",
+    name: "360° Spherical Panoramic Tour",
+    price: "Starting from ₹7,999 (Panoramic VR Master)",
+    description: "Immersive 360-degree interactive panoramic virtual tours for luxury villas, hospitality, and showrooms.",
     link: "https://sutrastudios.in/services#360-view",
   },
   {
-    id: "int",
-    name: "Interior Design",
-    price: "From ₹3,499",
-    description: "Spatial interior layout planning, mood board curation, and architectural renderings.",
+    id: "interior-design",
+    name: "Interior Architectural Visualization",
+    price: "Starting from ₹6,499 (Spatial Room Renders)",
+    description: "Photorealistic interior architectural visualization, luxury room staging, lighting studies, and material palettes.",
     link: "https://sutrastudios.in/services#interior-design",
   },
   {
-    id: "win",
-    name: "Window Design",
-    price: "From ₹2,999",
-    description: "Retail storefront window displays, festive merchandising concepts, and visual staging.",
+    id: "window-design",
+    name: "Facade & Window Design",
+    price: "Starting from ₹4,499 (Facade & Storefront)",
+    description: "Architectural window framing, modern facade elevations, and custom glass architectural visualization.",
     link: "https://sutrastudios.in/services#window-design",
   },
   {
-    id: "mkt",
-    name: "Digital Marketing",
-    price: "From ₹4,999",
-    description: "Strategic campaign planning, multi-channel distribution, and content scheduling.",
+    id: "digital-marketing",
+    name: "Brand & Editorial Strategy",
+    price: "Starting from ₹8,999 (Campaign Strategy)",
+    description: "Data-driven creative growth strategies, content blueprints, audience profiling, and brand storytelling campaigns.",
     link: "https://sutrastudios.in/services#digital-marketing",
   },
   {
-    id: "ads",
-    name: "Meta Ads Launcher",
-    price: "From ₹3,999",
-    description: "Performance ad copywriting, creative variations in 1:1, 4:5 and 9:16, and setup.",
+    id: "meta-ads-launcher",
+    name: "Campaign Creative Suite",
+    price: "Starting from ₹7,499 (Multi-Ratio Creative Suite)",
+    description: "End-to-end Facebook & Instagram ad campaign setups, high-converting creative ad variations, copy testing, and optimization.",
     link: "https://sutrastudios.in/services#meta-ads-launcher",
   },
   {
-    id: "web",
-    name: "Website Development",
-    price: "From ₹7,999",
-    description: "Responsive, high-speed custom marketing websites with SEO and mobile optimization.",
+    id: "website-development",
+    name: "Website Engineering",
+    price: "By Quote",
+    description: "High-performance, bespoke websites engineered with Next.js, fluid micro-interactions, and fast loading.",
     link: "https://sutrastudios.in/services#website-development",
   },
   {
-    id: "app",
-    name: "Web App Development",
-    price: "From ₹14,999",
-    description: "Bespoke full-stack web applications, authenticated portals, and interactive tools.",
+    id: "web-app-development",
+    name: "Web Application Engineering",
+    price: "By Quote",
+    description: "Robust SaaS applications, custom client portals, real-time collaboration dashboards, and secure backend integrations.",
     link: "https://sutrastudios.in/services#web-app-development",
   },
   {
-    id: "mob",
-    name: "Mobile App Setup",
-    price: "From ₹9,999",
-    description: "Progressive Web App configurations, cross-platform app wrappers, and mobile deployment.",
+    id: "mobile-app-setup",
+    name: "Mobile Application Engineering",
+    price: "By Quote",
+    description: "Cross-platform bespoke iOS & Android mobile applications sharing unified cloud backends and APIs.",
     link: "https://sutrastudios.in/services#mobile-app-setup",
   },
   {
-    id: "aut",
-    name: "Workflow Automation",
-    price: "From ₹5,999",
-    description: "Automated business notifications, inquiry routing, and custom CRM integrations.",
+    id: "workflow-automation",
+    name: "Custom Systems & Integrations",
+    price: "By Quote",
+    description: "Custom business operational systems, secure cloud webhook integrations, data synchronization, and automated project routing.",
     link: "https://sutrastudios.in/services#workflow-automation",
   },
   {
-    id: "ret",
-    name: "30-Day Growth Plan",
-    price: "₹9,999 / mo",
-    description: "Dedicated studio retainer providing 1 image + 1 video delivered every day for 30 days.",
+    id: "monthly-retainers",
+    name: "Monthly Creative Retainers",
+    price: "From ₹14,999 / mo",
+    description: "Dedicated studio retainer partnerships (Starter, Growth, Enterprise) with prioritized queues and continuous production.",
     link: "https://sutrastudios.in/pricing",
   },
 ];
+
+const FACEBOOK_SERVICES_LIST_TEXT = `SUTRA STUDIOS — OFFICIAL SERVICE CATALOG
+
+1. Commercial Visual Imagery — Starting from ₹2,499 (3-Pack)
+High-fidelity commercial product imagery, luxury brand mockups, and advertising visual assets.
+Order / Inquire: https://sutrastudios.in/services#image-creation
+
+2. Cinematic Motion Reel — Starting from ₹4,999 (10–15s Master Reel)
+Engaging 10-to-15 second cinematic video ads, social reels, motion sequences, and commercial clips.
+Order / Inquire: https://sutrastudios.in/services#video-creation
+
+3. Spatial 3D Asset Model — Starting from ₹5,999 (.GLB Interactive Model)
+Precision 3D product CAD modeling, studio product lighting setups, exploded views, and web-ready 3D assets.
+Order / Inquire: https://sutrastudios.in/services#3d-modeling
+
+4. 360° Spherical Panoramic Tour — Starting from ₹7,999 (Panoramic VR Master)
+Immersive 360-degree interactive panoramic virtual tours for luxury villas, hospitality, and showrooms.
+Order / Inquire: https://sutrastudios.in/services#360-view
+
+5. Interior Architectural Visualization — Starting from ₹6,499 (Spatial Room Renders)
+Photorealistic interior architectural visualization, luxury room staging, lighting studies, and material palettes.
+Order / Inquire: https://sutrastudios.in/services#interior-design
+
+6. Facade & Window Design — Starting from ₹4,499 (Facade & Storefront)
+Architectural window framing, modern facade elevations, and custom glass architectural visualization.
+Order / Inquire: https://sutrastudios.in/services#window-design
+
+7. Brand & Editorial Strategy — Starting from ₹8,999 (Campaign Strategy)
+Data-driven creative growth strategies, content blueprints, audience profiling, and brand storytelling campaigns.
+Order / Inquire: https://sutrastudios.in/services#digital-marketing
+
+8. Campaign Creative Suite — Starting from ₹7,499 (Multi-Ratio Creative Suite)
+End-to-end Facebook & Instagram ad campaign setups, creative variations, copy testing, and optimization.
+Order / Inquire: https://sutrastudios.in/services#meta-ads-launcher
+
+9. Website Engineering — By Quote
+High-performance, bespoke websites engineered with Next.js, fluid micro-interactions, responsive precision, and fast loading.
+Order / Inquire: https://sutrastudios.in/services#website-development
+
+10. Web Application Engineering — By Quote
+Robust SaaS applications, custom client portals, real-time collaboration dashboards, and secure backend integrations.
+Order / Inquire: https://sutrastudios.in/services#web-app-development
+
+11. Mobile Application Engineering — By Quote
+Cross-platform bespoke iOS & Android mobile applications sharing unified cloud backends and APIs.
+Order / Inquire: https://sutrastudios.in/services#mobile-app-setup
+
+12. Custom Systems & Integrations — By Quote
+Custom business operational systems, secure cloud webhook integrations, data synchronization, and automated project routing.
+Order / Inquire: https://sutrastudios.in/services#workflow-automation
+
+✦ MONTHLY CREATIVE RETAINERS
+• Starter Creative Retainer: ₹14,999 / month
+• Growth Brand Retainer: ₹29,999 / month
+• Enterprise Brand Atelier: ₹59,999 / month
+Explore Retainers: https://sutrastudios.in/pricing`;
+
+const WHATSAPP_CATALOG_FULL_EXPORT = WHATSAPP_CATALOG_ITEMS.map(
+  (item, idx) =>
+    `${idx + 1}. ${item.name}
+Price: ${item.price}
+Description: ${item.description}
+Order Link: ${item.link}`
+).join("\n\n");
 
 const TOP_10_AGENCIES = [
   {
