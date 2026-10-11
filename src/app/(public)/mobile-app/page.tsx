@@ -284,19 +284,19 @@ export default function MobileAppLandingPage() {
 
               {/* Right Column: Realistic CSS Mobile Device Frame Mockup with Live Video Demo */}
               <div className="lg:col-span-5 flex justify-center">
-                <div className="relative w-full max-w-[320px] sm:max-w-[340px]">
+                <div className="relative w-full max-w-[280px] xs:max-w-[310px] sm:max-w-[340px]">
                   {/* Subtle golden ambient glow */}
                   <div className="absolute -inset-4 bg-gradient-to-tr from-[#D4A35A]/20 via-[#5C3A1E]/10 to-transparent rounded-[50px] blur-2xl" />
 
                   {/* Phone Chassis */}
-                  <div className="relative rounded-[44px] border-[6px] border-[#0F172A] bg-[#0F172A] shadow-2xl p-2.5 overflow-hidden">
+                  <div className="relative rounded-[40px] sm:rounded-[44px] border-[5px] sm:border-[6px] border-[#0F172A] bg-[#0F172A] shadow-2xl p-2 sm:p-2.5 overflow-hidden">
                     {/* Dynamic Island / Notch */}
-                    <div className="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-5 bg-[#0F172A] rounded-full z-30 flex items-center justify-end pr-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#1E293B]" />
+                    <div className="absolute top-3 sm:top-4 left-1/2 -translate-x-1/2 w-24 sm:w-28 h-4 sm:h-5 bg-[#0F172A] rounded-full z-30 flex items-center justify-end pr-2">
+                      <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#1E293B]" />
                     </div>
 
                     {/* Phone Screen Canvas with Video Stream */}
-                    <div className="rounded-[34px] bg-[#0F172A] overflow-hidden flex flex-col h-[620px] border border-[#EADFCB] text-[#0F172A] relative">
+                    <div className="rounded-[30px] sm:rounded-[34px] bg-[#0F172A] overflow-hidden flex flex-col h-[520px] xs:h-[560px] sm:h-[620px] border border-[#EADFCB] text-[#0F172A] relative">
                       {/* Background Video Stream */}
                       <BackgroundVideo
                         video="app-demo"

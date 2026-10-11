@@ -63,14 +63,15 @@ const FILTER_CATEGORIES = [
 ];
 
 const HERO_DISCIPLINES = [
-  { id: "image-creation", label: "Image Creation", output: "5x 4K UHD Master Visuals", price: "₹499", href: "/orders?service=image-creation" },
-  { id: "video-creation", label: "Video Creation", output: "2x 4K 60FPS Cinematic Reels", price: "₹1,499", href: "/orders?service=video-creation" },
-  { id: "3d-modeling", label: "3D Modeling", output: "GLB / OBJ / USDZ Spatial Mesh", price: "₹2,499", href: "/orders?service=3d-modeling" },
-  { id: "360-view", label: "360 View", output: "Interactive Spherical Virtual Tour", price: "₹4,999", href: "/orders?service=360-view" },
-  { id: "meta-ads-launcher", label: "Meta Ads Launcher", output: "Multi-Placement Ad Bundle", price: "₹4,999", href: "/orders?service=meta-ads-launcher" },
-  { id: "digital-marketing", label: "Brand Identity", output: "Complete Identity & Guidelines", price: "₹4,999", href: "/orders?service=digital-marketing" },
-  { id: "website-development", label: "Website Dev", output: "High-Performance Next.js Web", price: "Custom", href: "/orders?service=website-development" },
-  { id: "workflow-automation", label: "Automation", output: "Custom Integrations & Flows", price: "Custom", href: "/orders?service=workflow-automation" },
+  { id: "image-creation", label: "Image Creation", output: "4K UHD Master Visuals", price: "₹2,499", href: "/orders?service=image-creation" },
+  { id: "video-creation", label: "Video Reel", output: "2x 4K 60FPS Cinematic Cuts", price: "₹4,999", href: "/orders?service=video-creation" },
+  { id: "3d-modeling", label: "3D Spatial", output: "GLB / USDZ Precision Asset", price: "₹5,999", href: "/orders?service=3d-modeling" },
+  { id: "360-view", label: "360 VR Tour", output: "Equirectangular Spherical Tour", price: "₹7,999", href: "/orders?service=360-view" },
+  { id: "interior-design", label: "Interior Viz", output: "Photorealistic Room Staging", price: "₹6,499", href: "/orders?service=interior-design" },
+  { id: "meta-ads-launcher", label: "Meta Ads", output: "Multi-Placement Ad Bundle", price: "₹7,499", href: "/orders?service=meta-ads-launcher" },
+  { id: "digital-marketing", label: "Brand Strategy", output: "Complete Identity & Guidelines", price: "₹8,999", href: "/orders?service=digital-marketing" },
+  { id: "website-development", label: "Website Dev", output: "High-Performance Next.js Web", price: "By Quote", href: "/orders?service=website-development" },
+  { id: "workflow-automation", label: "Automation", output: "Custom Integrations & Flows", price: "By Quote", href: "/orders?service=workflow-automation" },
 ];
 
 export default function HomePage() {
