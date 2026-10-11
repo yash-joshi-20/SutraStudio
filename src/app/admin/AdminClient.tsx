@@ -153,44 +153,7 @@ interface ClientRecord {
   lastActive: string;
 }
 
-const CLIENTS_DATA: ClientRecord[] = [
-  {
-    id: "cli_001",
-    name: "Studio Living Architecture",
-    company: "Studio Living Architecture",
-    email: "contact@studioliving.com",
-    tier: "Enterprise",
-    driveFolderId: "vault_living_01",
-    activeOrders: 3,
-    lifetimeVolume: "₹45,000",
-    status: "Active",
-    lastActive: "Today",
-  },
-  {
-    id: "cli_002",
-    name: "Maison Aura Luxury Fragrances",
-    company: "Maison Aura Luxury Fragrances",
-    email: "atelier@maisonaura.com",
-    tier: "Growth",
-    driveFolderId: "vault_aura_02",
-    activeOrders: 2,
-    lifetimeVolume: "₹32,000",
-    status: "Active",
-    lastActive: "Yesterday",
-  },
-  {
-    id: "cli_003",
-    name: "Zenith Spatial & Interiors",
-    company: "Zenith Spatial & Interiors",
-    email: "design@zenithspatial.com",
-    tier: "Starter",
-    driveFolderId: "vault_zenith_03",
-    activeOrders: 1,
-    lifetimeVolume: "₹28,000",
-    status: "Active",
-    lastActive: "3 days ago",
-  },
-];
+const CLIENTS_DATA: ClientRecord[] = [];
 
 const AUDIT_LOGS: Array<{ id: string; event: string; actor: string; detail: string; time: string; type: string }> = [];
 
@@ -1788,39 +1751,8 @@ function AdminHubContent() {
   const [selectedClient, setSelectedClient] = useState<ClientRecord | null>(null);
 
   // Official Approvals Hub State
-  const [approvalsList, setApprovalsList] = useState([
-    {
-      id: "ord_001",
-      code: "#ORD-001",
-      client: "Yash Joshi (Studio Living)",
-      service: "3D Spatial Architecture",
-      deliverable: "Pavilion_Villa_Baked_Model.gltf",
-      submittedDate: "2026-09-28",
-      round: "Round 1 of 2",
-      status: "AWAITING APPROVAL",
-    },
-    {
-      id: "ord_003",
-      code: "#ORD-003",
-      client: "Aarav Mehta (Zenith Luxury)",
-      service: "Commercial Cinematic Reel",
-      deliverable: "Zenith_Commercial_Reel_1080p.mp4",
-      submittedDate: "2026-09-30",
-      round: "Final Cut",
-      status: "AWAITING APPROVAL",
-    },
-  ]);
-  const [officialApprovalsLog, setOfficialApprovalsLog] = useState([
-    {
-      approvalId: "appr_1790892011",
-      projectId: "ord_002",
-      client: "Yash Joshi",
-      status: "APPROVED",
-      message: "Your project has been approved and is ready for the next stage.",
-      adminId: "usr_admin_001",
-      timestamp: "2026-09-27 18:00",
-    },
-  ]);
+  const [approvalsList, setApprovalsList] = useState<any[]>([]);
+  const [officialApprovalsLog, setOfficialApprovalsLog] = useState<any[]>([]);
   const [approvalToast, setApprovalToast] = useState("");
 
   const handleIssueOfficialApproval = async (orderId: string, clientName: string) => {
@@ -2023,26 +1955,43 @@ function AdminHubContent() {
   }, [sessions, chatSearchQuery, chatFilter, chatDateFilter, realOrders]);
 
   const currentChatClient = useMemo(() => {
-    return (
-      CLIENTS_DATA.find(
-        (c) =>
-          c.id === currentSession?.id ||
-          c.email.toLowerCase() === (currentSession?.clientEmail || "").toLowerCase() ||
-          c.name.toLowerCase() === (currentSession?.clientName || "").toLowerCase()
-      ) || {
-        id: currentSession?.id || "cl-1",
-        name: currentSession?.clientName || "Client",
-        company: currentSession?.company || "Company",
-        email: currentSession?.clientEmail || "client@studio.com",
-        tier: "Enterprise" as const,
-        driveFolderId: currentSession?.vaultId || "drive_fld_sutra_001",
-        activeOrders: 1,
-        lifetimeVolume: "₹1,85,000",
-        status: "Active" as const,
-        lastActive: currentSession?.lastTime || "Recently",
-      }
-    );
-  }, [currentSession]);
+    const found = liveClients.find((item) => {
+      const c = item.profile || item;
+      return (
+        c.id === currentSession?.id ||
+        c.uid === currentSession?.clientId ||
+        (c.email && c.email.toLowerCase() === (currentSession?.clientEmail || "").toLowerCase()) ||
+        (c.name && c.name.toLowerCase() === (currentSession?.clientName || "").toLowerCase())
+      );
+    });
+    if (found) {
+      const c = found.profile || found;
+      return {
+        id: c.id || c.uid || currentSession?.id || "client",
+        name: c.name || currentSession?.clientName || "Client",
+        company: c.company || currentSession?.company || "Company",
+        email: c.email || currentSession?.clientEmail || "",
+        tier: (c.tier || "Starter") as "Starter" | "Growth" | "Enterprise",
+        driveFolderId: c.driveFolderId || currentSession?.vaultId || "",
+        activeOrders: found.activeOrdersCount || 0,
+        lifetimeVolume: found.lifetimeVolumeFormatted || "₹0",
+        status: (c.status || "Active") as "Active" | "Pending Brief" | "Under Review",
+        lastActive: c.lastActive || currentSession?.lastTime || "Recently",
+      };
+    }
+    return {
+      id: currentSession?.clientId || currentSession?.id || "client",
+      name: currentSession?.clientName || "Client",
+      company: currentSession?.company || "Company",
+      email: currentSession?.clientEmail || "",
+      tier: "Starter" as const,
+      driveFolderId: currentSession?.vaultId || "",
+      activeOrders: 0,
+      lifetimeVolume: "₹0",
+      status: "Active" as const,
+      lastActive: currentSession?.lastTime || "Recently",
+    };
+  }, [currentSession, liveClients]);
 
   const currentChatOrders = useMemo(() => {
     if (!currentSession) return [];
@@ -2457,13 +2406,7 @@ const [adminDataError, setAdminDataError] = useState("");
 
   // 8 AI Workflow Engines State
   const [workflowFilter, setWorkflowFilter] = useState("All");
-  const [workflowJobs, setWorkflowJobs] = useState([
-    { id: "run_three-d_9821", name: "3D Spatial Pipeline", order: "#ORD-001", status: "Running", progress: 65, duration: "1m 14s", target: "drive_fld_sutra_001/3D_RENDERS" },
-    { id: "run_video_8842", name: "Video Production Pipeline", order: "#ORD-003", status: "Completed", progress: 100, duration: "3m 40s", target: "drive_fld_sutra_001/VIDEOS" },
-    { id: "run_interior_7714", name: "Interior Architectural Engine", order: "#ORD-005", status: "Running", progress: 88, duration: "48s", target: "drive_fld_zenith_003/INTERIOR" },
-    { id: "run_website_6621", name: "Website Development Pipeline", order: "#ORD-002", status: "Completed", progress: 100, duration: "2m 10s", target: "drive_fld_sutra_001/CODE" },
-    { id: "run_app_5510", name: "App & Mobile Pipeline", order: "#ORD-007", status: "Running", progress: 40, duration: "25s", target: "drive_fld_vedic_005/APP" },
-  ]);
+  const [workflowJobs, setWorkflowJobs] = useState<any[]>([]);
   const [dispatchingWf, setDispatchingWf] = useState<string | null>(null);
   const [dispatchSuccess, setDispatchSuccess] = useState<string>("");
 
@@ -2515,46 +2458,7 @@ const [adminDataError, setAdminDataError] = useState("");
       });
     }
 
-    return CLIENTS_DATA.filter((client) => {
-      const matchesTier = tierFilter === "All" || client.tier === tierFilter;
-      const matchesSearch =
-        searchQuery === "" ||
-        client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        client.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        client.email.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesTier && matchesSearch;
-    }).map((c) => ({
-      profile: {
-        id: c.id,
-        uid: c.id,
-        name: c.name,
-        company: c.company,
-        email: c.email,
-        phone: "+91 98765 43210",
-        tier: c.tier,
-        status: c.status,
-        emailVerified: true,
-        driveFolderId: c.driveFolderId,
-        driveFolderLink: `https://drive.google.com/drive/folders/${c.driveFolderId}`,
-        joinedDate: "August 2026",
-        lastActive: c.lastActive,
-        adminNotes: [],
-      },
-      orders: [],
-      activeOrdersCount: c.activeOrders,
-      completedOrdersCount: 1,
-      lifetimeVolumeFormatted: c.lifetimeVolume,
-      totalSpentINR: 185000,
-      activePlan: {
-        planName: "Studio Growth Retainer",
-        type: "active",
-        statusLabel: "Active Monthly Retainer",
-        daysRemaining: 18,
-        billingCycle: "monthly",
-      },
-      notificationsCount: 2,
-      driveFolderLink: `https://drive.google.com/drive/folders/${c.driveFolderId}`,
-    }));
+    return [];
   }, [liveClients, tierFilter, searchQuery]);
 
   return (
@@ -2613,10 +2517,10 @@ const [adminDataError, setAdminDataError] = useState("");
           <div className="flex items-center gap-2 overflow-x-auto border-b border-[#EADFCB] pb-2 no-scrollbar">
             {[
               { id: "overview", label: "Operations Overview" },
-              { id: "clients", label: `Client Directory (${CLIENTS_DATA.length})` },
+              { id: "clients", label: `Client Directory (${liveClients.length})` },
               {
                 id: "approvals",
-                label: `Orders & Approvals (${realOrders.length > 0 ? realOrders.length : approvalsList.length})`,
+                label: `Orders & Approvals (${realOrders.length})`,
                 badge: pendingOrdersCount > 0 ? `${pendingOrdersCount} New` : undefined,
               },
               {

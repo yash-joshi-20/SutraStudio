@@ -11,7 +11,7 @@ interface Panorama360ViewerProps {
 }
 
 export function Panorama360Viewer({
-  imageUrl = "https://image.pollinations.ai/prompt/luxury%20modern%20penthouse%20living%20room%2C%20equirectangular%20360%20panorama%2C%20warm%20ivory%20and%20brass%2C%208k?width=4096&height=2048&nologo=true",
+  imageUrl = "/images/services/360-view.webp",
   title = "360° Architectural Panorama",
   className = "",
 }: Panorama360ViewerProps) {

@@ -212,10 +212,9 @@ async function runSecurityTests() {
     "Admin directory maintains authorized client database"
   );
   assert(
-    adminPageContent.includes("Studio Living Architecture") &&
-      adminPageContent.includes("Maison Aura Luxury Fragrances") &&
-      adminPageContent.includes("Zenith Spatial & Interiors"),
-    "Admin directory contains client profiles with active projects and orders"
+    adminPageContent.includes("liveClients") &&
+      adminPageContent.includes("filteredClients"),
+    "Admin directory maintains live synchronized client directory with empty states"
   );
   assert(
     adminPageContent.includes("selectedClient") &&

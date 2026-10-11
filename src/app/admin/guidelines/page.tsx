@@ -599,7 +599,7 @@ const META_ADS_STEPS = [
       },
     ],
     templateSnippet: `Campaign Name: [Client Code] - [Service/Product] - [Objective] - [Month Year]
-Example: SUTRA - Maison Aura Perfume - Leads - Oct 2026
+Example: SUTRA - ClientBrand - Leads - Oct 2026
 Objective: LEADS (Instant Form + WhatsApp Chat)
 Buying Type: Auction
 Budget Optimization: Advantage Campaign Budget (CBO) enabled for multi-ad-set testing`,

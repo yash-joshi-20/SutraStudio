@@ -177,7 +177,7 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
     ],
     badge: "4K Image",
     thumbnail:
-      "https://image.pollinations.ai/prompt/luxury%20perfume%20bottle%2C%20obsidian%20glass%2C%2024k%20gold%20cap%2C%20caustic%20refractions%2C%20warm%20saffron%20rim%20lighting%2C%20hasselblad%20commercial%20product%20shot%2C%208k?width=1200&height=800&nologo=true",
+      "/images/services/image-creation.webp",
     mediaType: "image",
     mediaFormat: "PNG / TIFF (3840×2160 4K UHD)",
     turnaround: "24–48 Hours",
@@ -279,7 +279,7 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
     ],
     badge: "Video",
     thumbnail:
-      "https://image.pollinations.ai/prompt/cinematic%20architectural%20film%20still%2C%20modern%20sandstone%20courtyard%20villa%20at%20sunset%2C%20ambient%20water%20reflection%2C%20anamorphic%20lens%20flare%2C%208k?width=1200&height=800&nologo=true",
+      "/images/services/video-creation.webp",
     mediaType: "video",
     mediaFormat: "ProRes 422 HQ / 4K MP4 (24fps / 60fps)",
     turnaround: "48–72 Hours",
@@ -375,7 +375,7 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
     ],
     badge: "3D",
     thumbnail:
-      "https://image.pollinations.ai/prompt/luxury%20modern%20armchair%203d%20render%2C%20emerald%20velvet%20and%20brushed%20brass%2C%20studio%20lighting%2C%20isolated%20on%20warm%20ivory%20plinth%2C%20octane%20render%2C%208k?width=1200&height=800&nologo=true",
+      "/images/services/3d-modeling.webp",
     mediaType: "3d",
     mediaFormat: "GLTF / USDZ / OBJ (4K PBR Textures)",
     turnaround: "48–72 Hours",
@@ -464,7 +464,7 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
     ],
     badge: "360°",
     thumbnail:
-      "https://image.pollinations.ai/prompt/equirectangular%20360%20degree%20panoramic%20luxury%20modern%20villa%20interior%2C%20floor%20to%20ceiling%20glass%2C%20calacatta%20marble%2C%20warm%20golden%20lighting%2C%208k%20seamless%20hdr%20spherical?width=2048&height=1024&nologo=true",
+      "/images/services/360-view.webp",
     mediaType: "360",
     mediaFormat: "Equirectangular HDR / WebXR Panoramas (8192×4096)",
     turnaround: "2–4 Days",
@@ -561,7 +561,7 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
     ],
     badge: "Interior",
     thumbnail:
-      "https://image.pollinations.ai/prompt/architectural%20interior%20rendering%2C%20minimalist%20luxury%20living%20space%2C%20intricate%20golden%20jali%20screens%2C%20calacatta%20gold%20marble%20floors%2C%20recessed%203000k%20warm%20led%2C%20hasselblad%20photography%2C%208k?width=1200&height=800&nologo=true",
+      "/images/services/interior-design.webp",
     mediaType: "image",
     mediaFormat: "High-Res Render Suite (4K PNG / EXR)",
     turnaround: "48–72 Hours",
@@ -657,7 +657,7 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
     ],
     badge: "Elevations",
     thumbnail:
-      "https://image.pollinations.ai/prompt/modern%20architectural%20facade%20elevation%2C%20geometric%20jali%20brass%20window%20framing%2C%20minimalist%20limestone%20villa%2C%20dramatic%20architectural%20shadows%2C%208k?width=1200&height=800&nologo=true",
+      "/images/services/window-design.webp",
     mediaType: "image",
     mediaFormat: "CAD DWG / 4K Render Passes (PNG)",
     turnaround: "24–48 Hours",
@@ -694,7 +694,7 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
         label: "Company / Brand Name & Industry",
         type: "text",
         required: true,
-        helpText: "e.g. Maison Luxury Fragrances (D2C Luxury Perfumery)",
+        helpText: "e.g. Royal Heritage Atelier (D2C Luxury Lifestyle)",
       },
       {
         key: "marketingGoals",
@@ -746,7 +746,7 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
     ],
     badge: "Growth",
     thumbnail:
-      "https://image.pollinations.ai/prompt/minimalist%20luxury%20brand%20strategy%20moodboard%2C%20gold%20foil%20typography%2C%20analytics%20charts%20on%20warm%20ivory%20paper%2C%20curated%20aesthetic%2C%208k?width=1200&height=800&nologo=true",
+      "/images/services/digital-marketing.webp",
     mediaType: "interactive",
     mediaFormat: "PDF Strategy Deck / Notion Workspace",
     turnaround: "3–5 Days",
@@ -835,7 +835,7 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
     ],
     badge: "Meta Ads",
     thumbnail:
-      "https://image.pollinations.ai/prompt/social%20media%20advertising%20campaign%20creative%2C%20luxury%20aesthetic%2C%20warm%20gold%20and%20obsidian%20palette%2C%20modern%20typography%2C%20commercial%20grade%2C%208k?width=1200&height=800&nologo=true",
+      "/images/services/meta-ads-launcher.webp",
     mediaType: "interactive",
     mediaFormat: "Multi-Ratio Ad Pack (1:1, 9:16, 16:9)",
     turnaround: "48 Hours",
@@ -941,7 +941,7 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
     ],
     badge: "Next.js",
     thumbnail:
-      "https://image.pollinations.ai/prompt/luxury%20creative%20studio%20website%20mockup%20on%20macbook%20pro%2C%20minimalist%20editorial%20layout%2C%20warm%20ivory%20and%20brass%20palette%2C%208k?width=1200&height=800&nologo=true",
+      "/images/services/website-development.webp",
     mediaType: "code",
     mediaFormat: "Next.js 16 / TypeScript / Tailwind CSS",
     turnaround: "5–7 Days",
@@ -1035,7 +1035,7 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
     ],
     badge: "Web App",
     thumbnail:
-      "https://image.pollinations.ai/prompt/dark%20mode%20saas%20dashboard%20ui%20design%2C%20obsidian%20glassmorphism%2C%20gold%20accent%20charts%2C%20enterprise%20portal%2C%20clean%20modern%2C%208k?width=1200&height=800&nologo=true",
+      "/images/services/web-app-development.webp",
     mediaType: "interactive",
     mediaFormat: "React / Firebase Cloud Firestore / Next.js",
     turnaround: "7–14 Days",
@@ -1127,7 +1127,7 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
     ],
     badge: "Mobile",
     thumbnail:
-      "https://image.pollinations.ai/prompt/luxury%20mobile%20app%20interface%20on%20iphone%2016%20pro%2C%20sutra%20studio%20concierge%20screen%2C%20warm%20gold%20accents%2C%20flawless%20ui%2C%208k?width=1200&height=800&nologo=true",
+      "/images/services/mobile-app-setup.webp",
     mediaType: "interactive",
     mediaFormat: "React Native Expo / iOS IPA / Android APK",
     turnaround: "10–14 Days",
@@ -1212,8 +1212,7 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
       "Real-Time Automated Google Drive Router",
     ],
     badge: "Automation",
-    thumbnail:
-      "https://image.pollinations.ai/prompt/abstract%20computational%20ai%20neural%20workflow%20diagram%2C%20flowing%20golden%20light%20lines%20on%20deep%20obsidian%20background%2C%20sacred%20geometry%20nodes%2C%208k?width=1200&height=800&nologo=true",
+    thumbnail: "/images/services/workflow-automation.webp",
     mediaType: "code",
     mediaFormat: "Cloud Workflow Engine + Secure Webhooks",
     turnaround: "48–72 Hours",

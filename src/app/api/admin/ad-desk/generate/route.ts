@@ -115,9 +115,9 @@ export async function POST(req: NextRequest) {
     );
     const seed = Math.floor(Math.random() * 900000) + 100000;
 
-    const creative1x1 = `https://image.pollinations.ai/prompt/${promptQuery}?width=1080&height=1080&nologo=true&seed=${seed}`;
-    const creative4x5 = `https://image.pollinations.ai/prompt/${promptQuery}?width=1080&height=1350&nologo=true&seed=${seed + 1}`;
-    const creative9x16 = `https://image.pollinations.ai/prompt/${promptQuery}?width=1080&height=1920&nologo=true&seed=${seed + 2}`;
+    const creative1x1 = "/images/services/meta-ads-launcher.webp";
+    const creative4x5 = "/images/services/image-creation.webp";
+    const creative9x16 = "/images/services/video-creation.webp";
 
     const campaignPackage = {
       id: `ad_camp_${Date.now()}`,

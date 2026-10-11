@@ -59,95 +59,7 @@ export interface MediaAsset {
   isVideo?: boolean;
 }
 
-const INITIAL_ASSETS: MediaAsset[] = [
-  {
-    id: "ast-1",
-    name: "Aura_Noir_4K_Final_Render_01.png",
-    type: "Image",
-    size: "18.4 MB",
-    folder: "/DELIVERABLES/03_FINAL_DELIVERY",
-    date: "Oct 05, 2026",
-    driveFileId: "drive_09a823bf_sutra",
-    resolution: "3840 x 2160 (4K UHD)",
-    checksum: "sha256:8f4b23c91e0a...",
-    thumbnail: "https://image.pollinations.ai/prompt/luxury%20perfume%20bottle%2C%20obsidian%20glass%2C%2024k%20gold%20cap%2C%20caustic%20refractions%2C%20warm%20saffron%20rim%20lighting%2C%20hasselblad%20commercial%20product%20shot%2C%208k?width=1200&height=800&nologo=true",
-    downloadUrl: "https://image.pollinations.ai/prompt/luxury%20perfume%20bottle%2C%20obsidian%20glass%2C%2024k%20gold%20cap%2C%20caustic%20refractions%2C%20warm%20saffron%20rim%20lighting%2C%20hasselblad%20commercial%20product%20shot%2C%208k?width=1200&height=800&nologo=true",
-  },
-  {
-    id: "ast-2",
-    name: "Zenith_Commercial_Reel_1080p.mp4",
-    type: "Video",
-    size: "84.2 MB",
-    folder: "/DELIVERABLES/02_DRAFTS",
-    date: "Oct 04, 2026",
-    driveFileId: "drive_89c314de_sutra",
-    resolution: "1920 x 1080 (ProRes 422)",
-    checksum: "sha256:3d1e9912ba44...",
-    thumbnail: "https://image.pollinations.ai/prompt/cinematic%20architectural%20film%20still%2C%20modern%20sandstone%20courtyard%20villa%20at%20sunset%2C%20ambient%20water%20reflection%2C%20anamorphic%20lens%20flare%2C%208k?width=1200&height=800&nologo=true",
-    downloadUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    isVideo: true,
-  },
-  {
-    id: "ast-3",
-    name: "Pavilion_Villa_Baked_Model.gltf",
-    type: "3D",
-    size: "42.1 MB",
-    folder: "/DELIVERABLES/02_DRAFTS",
-    date: "Oct 03, 2026",
-    driveFileId: "drive_55a120ef_sutra",
-    resolution: "142,000 Polygons (PBR)",
-    checksum: "sha256:7c9921e54f01...",
-    thumbnail: "https://image.pollinations.ai/prompt/luxury%20modern%20armchair%203d%20render%2C%20emerald%20velvet%20and%20brushed%20brass%2C%20studio%20lighting%2C%20isolated%20on%20warm%20ivory%20plinth%2C%20octane%20render%2C%208k?width=1200&height=800&nologo=true",
-  },
-  {
-    id: "ast-4",
-    name: "Pavilion_360_Virtual_Tour.hdr",
-    type: "360",
-    size: "65.0 MB",
-    folder: "/DELIVERABLES/03_FINAL_DELIVERY",
-    date: "Oct 02, 2026",
-    driveFileId: "drive_44b910ca_sutra",
-    resolution: "8192 x 4096 (Equirectangular)",
-    checksum: "sha256:5b8812ca43e9...",
-    thumbnail: "https://image.pollinations.ai/prompt/equirectangular%20360%20degree%20panoramic%20luxury%20modern%20villa%20interior%2C%20floor%20to%20ceiling%20glass%2C%20calacatta%20marble%2C%20warm%20golden%20lighting%2C%208k%20seamless%20hdr%20spherical?width=2048&height=1024&nologo=true",
-  },
-  {
-    id: "ast-5",
-    name: "Diwali_Meta_Ads_Creative_Pack.zip",
-    type: "Marketing",
-    size: "38.6 MB",
-    folder: "/DELIVERABLES/01_CLIENT_ASSETS",
-    date: "Oct 01, 2026",
-    driveFileId: "drive_77c891ff_sutra",
-    resolution: "3 Ratios (9:16, 1:1, 16:9)",
-    checksum: "sha256:22a498bb7621...",
-    thumbnail: "https://image.pollinations.ai/prompt/social%20media%20advertising%20campaign%20creative%2C%20luxury%20aesthetic%2C%20warm%20gold%20and%20obsidian%20palette%2C%20modern%20typography%2C%20commercial%20grade%2C%208k?width=1200&height=800&nologo=true",
-  },
-  {
-    id: "ast-6",
-    name: "Sutra_Brand_Guidelines_V2.pdf",
-    type: "Document",
-    size: "4.8 MB",
-    folder: "/BRAND_ASSETS",
-    date: "Sep 28, 2026",
-    driveFileId: "drive_33f789aa_sutra",
-    resolution: "Vector PDF (300 DPI)",
-    checksum: "sha256:1a8844ff0923...",
-    thumbnail: "https://image.pollinations.ai/prompt/minimalist%20luxury%20brand%20strategy%20moodboard%2C%20gold%20foil%20typography%2C%20analytics%20charts%20on%20warm%20ivory%20paper%2C%20curated%20aesthetic%2C%208k?width=1200&height=800&nologo=true",
-  },
-  {
-    id: "ast-7",
-    name: "Client_Brief_Assets_Raw.zip",
-    type: "Document",
-    size: "14.2 MB",
-    folder: "/DELIVERABLES/01_CLIENT_ASSETS",
-    date: "Sep 25, 2026",
-    driveFileId: "drive_11ff492a_sutra",
-    resolution: "Source Brief Assets",
-    checksum: "sha256:9e5520ee78ab...",
-    thumbnail: "https://image.pollinations.ai/prompt/architectural%20interior%20rendering%2C%20minimalist%20luxury%20living%20space%2C%20intricate%20golden%20jali%20screens%2C%20calacatta%20gold%20marble%20floors%2C%20recessed%203000k%20warm%20led%2C%20hasselblad%20photography%2C%208k?width=1200&height=800&nologo=true",
-  },
-];
+const INITIAL_ASSETS: MediaAsset[] = [];
 
 const DRIVE_FOLDERS = [
   { id: "all", name: "All Files", icon: Folder },
@@ -180,8 +92,8 @@ export default function MediaLibraryPage() {
     setIsLoading(true);
     setErrorMessage("");
     try {
-      const combinedAssets: MediaAsset[] = [...INITIAL_ASSETS];
-      const seenIds = new Set(INITIAL_ASSETS.map((a) => a.id));
+      const combinedAssets: MediaAsset[] = [];
+      const seenIds = new Set<string>();
 
       // 1. Fetch Orders to extract live project deliverables & AI generated assets
       const ordersRes = await fetch("/api/orders");
@@ -216,7 +128,7 @@ export default function MediaLibraryPage() {
                   driveFileId: d.driveFileId || `drive_${fileId.slice(0, 12)}`,
                   resolution: d.version ? `Version ${d.version}` : "Studio Production Deliverable",
                   checksum: d.checksum || `sha256:${fileId.slice(0, 16)}...`,
-                  thumbnail: d.previewUrl || (isVid ? "https://image.pollinations.ai/prompt/cinematic%20architectural%20film%20still%2C%20modern%20sandstone%20courtyard%20villa%20at%20sunset%2C%20ambient%20water%20reflection%2C%20anamorphic%20lens%20flare%2C%208k?width=1200&height=800&nologo=true" : "https://image.pollinations.ai/prompt/luxury%20perfume%20bottle%2C%20obsidian%20glass%2C%2024k%20gold%20cap%2C%20caustic%20refractions%2C%20warm%20saffron%20rim%20lighting%2C%20hasselblad%20commercial%20product%20shot%2C%208k?width=1200&height=800&nologo=true"),
+                  thumbnail: d.previewUrl || `/api/drive/file/${fileId}`,
                   downloadUrl: d.previewUrl,
                   sourceOrder: orderNum,
                   category: d.category || "final",
@@ -244,7 +156,7 @@ export default function MediaLibraryPage() {
                   driveFileId: gd.driveFileId || `drive_${fileId.slice(0, 12)}`,
                   resolution: "Studio Proprietary Pipeline (High-Definition 4K)",
                   checksum: `sha256:${fileId.slice(0, 16)}...`,
-                  thumbnail: gd.imageUrl || gd.videoUrl || "https://image.pollinations.ai/prompt/architectural%20interior%20rendering%2C%20minimalist%20luxury%20living%20space%2C%20intricate%20golden%20jali%20screens%2C%20calacatta%20gold%20marble%20floors%2C%20recessed%203000k%20warm%20led%2C%20hasselblad%20photography%2C%208k?width=1200&height=800&nologo=true",
+                  thumbnail: gd.imageUrl || gd.videoUrl || (gd.driveFileId ? `/api/drive/file/${gd.driveFileId}` : "/brand/sutra-brand-board-reference.png"),
                   downloadUrl: gd.imageUrl || gd.videoUrl || gd.meshUrl,
                   sourceOrder: orderNum,
                   category: "draft",
@@ -272,7 +184,7 @@ export default function MediaLibraryPage() {
                   driveFileId: att.driveFileId || `drive_${fileId.slice(0, 12)}`,
                   resolution: "Source Brief Material",
                   checksum: `sha256:${fileId.slice(0, 16)}...`,
-                  thumbnail: att.url || "https://image.pollinations.ai/prompt/minimalist%20luxury%20brand%20strategy%20moodboard%2C%20gold%20foil%20typography%2C%20analytics%20charts%20on%20warm%20ivory%20paper%2C%20curated%20aesthetic%2C%208k?width=1200&height=800&nologo=true",
+                  thumbnail: att.url || (att.driveFileId ? `/api/drive/file/${att.driveFileId}` : "/brand/sutra-brand-board-reference.png"),
                   downloadUrl: att.url,
                   sourceOrder: orderNum,
                   category: "client_asset",
@@ -306,7 +218,7 @@ export default function MediaLibraryPage() {
                   driveFileId: vf.driveFileId || `drive_${vf.id.slice(0, 12)}`,
                   resolution: vf.width && vf.height ? `${vf.width} x ${vf.height}` : "Sutra Cloud Vault Synced",
                   checksum: `sha256:${vf.id.slice(0, 16)}...`,
-                  thumbnail: vf.thumbnailUrl || vf.storageUrl || vf.driveUrl || "https://image.pollinations.ai/prompt/luxury%20perfume%20bottle%2C%20obsidian%20glass%2C%2024k%20gold%20cap%2C%20caustic%20refractions%2C%20warm%20saffron%20rim%20lighting%2C%20hasselblad%20commercial%20product%20shot%2C%208k?width=1200&height=800&nologo=true",
+                  thumbnail: vf.thumbnailUrl || vf.storageUrl || vf.driveUrl || "/brand/sutra-brand-board-reference.png",
                   downloadUrl: vf.storageUrl || vf.driveUrl,
                   isVideo: isVid,
                 });
@@ -687,11 +599,32 @@ export default function MediaLibraryPage() {
                 </div>
               ))}
             </div>
+          ) : assets.length === 0 ? (
+            <div className="py-20 text-center rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-10 max-w-lg mx-auto space-y-4 shadow-xs">
+              <div className="w-16 h-16 rounded-full bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-center mx-auto text-[#A98B57]">
+                <FolderOpen className="w-8 h-8 text-[#A98B57]" />
+              </div>
+              <h3 className="font-serif text-xl font-semibold text-[#0F172A]">
+                Your Deliverables Vault is Empty
+              </h3>
+              <p className="text-sm text-[#64748B] leading-relaxed">
+                No deliverables or assets have been created yet. When you place an order or your creative team generates renders and outputs, they will automatically appear in your dedicated vault.
+              </p>
+              <div className="pt-2 flex justify-center">
+                <Link
+                  href="/orders/new"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#5C3A1E] text-white text-xs font-semibold hover:bg-[#432A16] transition-all shadow-warm"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
+                  <span>Start a New Order</span>
+                </Link>
+              </div>
+            </div>
           ) : filteredAssets.length === 0 ? (
             <div className="py-16 text-center rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-8 max-w-md mx-auto space-y-3">
               <Search className="w-10 h-10 text-[#94A3B8] mx-auto opacity-50" />
               <h3 className="font-serif text-lg font-semibold text-[#0F172A]">
-                No Files Found
+                No Files Matched
               </h3>
               <p className="text-xs text-[#64748B]">
                 No files matched your search or folder filter.

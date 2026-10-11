@@ -14,9 +14,9 @@ export interface ProjectItem {
 export const SUTRA_PROJECTS: ProjectItem[] = [
   {
     id: "proj-perfume",
-    title: "Aura Noir — Luxury Fragrance Render",
+    title: "Noir Atelier — Luxury Fragrance Render",
     category: "Image",
-    client: "Studio Production Showcase",
+    client: "Concept sample",
     year: "2026",
     description:
       "4K photorealistic product render with caustic glass refraction and golden rim lighting.",
@@ -27,7 +27,7 @@ export const SUTRA_PROJECTS: ProjectItem[] = [
     id: "proj-villa",
     title: "The Banyan Pavilion — 360° Spatial Villa Tour",
     category: "3D",
-    client: "Architectural Showcase",
+    client: "Concept sample",
     year: "2026",
     description:
       "Interactive 360-degree virtual tour with ambient sunset lighting and teakwood architectural accents.",
@@ -36,9 +36,9 @@ export const SUTRA_PROJECTS: ProjectItem[] = [
   },
   {
     id: "proj-exterior",
-    title: "Zenith Courtyard — Architectural Film",
+    title: "The Courtyard Pavilion — Architectural Film",
     category: "Video",
-    client: "Studio Motion Showcase",
+    client: "Concept sample",
     year: "2026",
     description:
       "10-second commercial reel highlighting modern sandstone elevations and courtyard reflections.",
@@ -49,7 +49,7 @@ export const SUTRA_PROJECTS: ProjectItem[] = [
     id: "proj-interior",
     title: "Saffron Haven — Contemporary Living Suite",
     category: "Interior",
-    client: "Spatial Design Concept",
+    client: "Concept sample",
     year: "2026",
     description:
       "Warm neutral tones, custom arched partitions, brass accent hardware, and diffused morning light.",
@@ -58,9 +58,9 @@ export const SUTRA_PROJECTS: ProjectItem[] = [
   },
   {
     id: "proj-web",
-    title: "Kalyan Heritage — Interactive Brand Portal",
+    title: "Atelier Heritage — Interactive Brand Portal",
     category: "Website",
-    client: "Web Engineering Showcase",
+    client: "Concept sample",
     year: "2026",
     description:
       "High-performance responsive web experience celebrating artisanal craftsmanship with fluid scroll storytelling.",
@@ -71,7 +71,7 @@ export const SUTRA_PROJECTS: ProjectItem[] = [
     id: "proj-ads",
     title: "Meta Ads Growth Engine — Creative Campaign",
     category: "Marketing",
-    client: "Digital Growth Showcase",
+    client: "Concept sample",
     year: "2026",
     description:
       "Multi-variant creative ads campaign featuring high-CTR visual angles, strategic headlines, and audience testing.",

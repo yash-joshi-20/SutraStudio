@@ -30,6 +30,9 @@ export function ProjectCard({ project }: { project: ProjectItem }) {
             <span className="rounded-full bg-[#171717]/80 backdrop-blur-md px-3 py-1 text-[11px] font-medium text-white border border-white/10">
               {project.category}
             </span>
+            <span className="rounded-full bg-[#A98B57] px-2.5 py-0.5 text-[10px] font-semibold text-white tracking-wider shadow-xs">
+              Concept sample
+            </span>
             {project.badge === "360°" && (
               <span className="rounded-full bg-[#D4A35A] px-2.5 py-1 text-[11px] font-bold text-[#0F172A] flex items-center gap-1 shadow-sm">
                 <Compass className="w-3 h-3" />

@@ -31,55 +31,24 @@ interface ClientContext {
   pastOrders: number;
 }
 
-// Preset Clients
-const PRESET_CLIENTS: ClientContext[] = [
-  {
-    id: "cli_002",
-    name: "Maison Aura Luxury Fragrances",
-    company: "Maison Aura Luxury Fragrances",
-    email: "atelier@maisonaura.com",
-    tier: "Growth",
-    industry: "Luxury Fragrances & Artisanal Beauty",
-    colors: [
-      { hex: "#FAF9F5", usage: "Background Ivory" },
-      { hex: "#171717", usage: "Charcoal Primary" },
-      { hex: "#C5A059", usage: "Warm Gold Accent" },
-      { hex: "#5C3A1E", usage: "Earthy Amber" },
-    ],
-    services: ["Image Creation", "Video Creation", "Meta Ads Launcher", "Digital Marketing"],
-    pastOrders: 6,
-  },
-  {
-    id: "cli_001",
-    name: "Studio Living Architecture",
-    company: "Studio Living Architecture",
-    email: "contact@studioliving.com",
-    tier: "Enterprise",
-    industry: "High-End Residential Architecture & 3D Spatial",
-    colors: [
-      { hex: "#F3EFE6", usage: "Limestone Surface" },
-      { hex: "#0F172A", usage: "Deep Slate" },
-      { hex: "#A98B57", usage: "Muted Brass" },
-    ],
-    services: ["3D Modeling", "360 View", "Interior Design", "Website Development"],
-    pastOrders: 12,
-  },
-  {
-    id: "cli_003",
-    name: "Zenith Spatial & Interiors",
-    company: "Zenith Spatial & Interiors",
-    email: "design@zenithspatial.com",
-    tier: "Starter",
-    industry: "Commercial Interior Design & Retail Staging",
-    colors: [
-      { hex: "#FFFFFF", usage: "Studio White" },
-      { hex: "#262626", usage: "Matte Black" },
-      { hex: "#D4A35A", usage: "Ochre Accent" },
-    ],
-    services: ["Interior Design", "Window Design", "Image Creation"],
-    pastOrders: 3,
-  },
-];
+// Default Fallback Context when no clients exist
+const DEFAULT_CLIENT: ClientContext = {
+  id: "client_default",
+  name: "Studio Commission",
+  company: "Studio Commission",
+  email: "client@sutrastudio.com",
+  tier: "Starter",
+  industry: "Architecture & Luxury Design",
+  colors: [
+    { hex: "#FAF9F5", usage: "Background Ivory" },
+    { hex: "#171717", usage: "Charcoal Primary" },
+    { hex: "#A98B57", usage: "Muted Brass Accent" },
+  ],
+  services: ["Commercial Visuals", "Motion Production", "Meta Ads"],
+  pastOrders: 0,
+};
+
+const PRESET_CLIENTS: ClientContext[] = [];
 
 interface GeneratedCampaign {
   id: string;
@@ -126,12 +95,13 @@ export default function AdminAdDeskPage() {
 
 function AdDeskContent() {
   const searchParams = useSearchParams();
-  const initialClientId = searchParams?.get("clientId") || "cli_002";
+  const initialClientId = searchParams?.get("clientId") || "";
 
+  const [liveClients, setLiveClients] = useState<ClientContext[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>(initialClientId);
-  const [productInput, setProductInput] = useState<string>("Artisanal Amber Eau de Parfum");
+  const [productInput, setProductInput] = useState<string>("");
   const [goalInput, setGoalInput] = useState<string>("Leads (Instant Forms & WhatsApp)");
-  const [locationInput, setLocationInput] = useState<string>("Mumbai, Bandra & South Mumbai (+15 km)");
+  const [locationInput, setLocationInput] = useState<string>("Mumbai, Delhi NCR & Bengaluru");
   const [budgetInput, setBudgetInput] = useState<string>("₹2,500 / day");
   const [toneInput, setToneInput] = useState<string>("Luxury Atelier");
 
@@ -140,8 +110,40 @@ function AdDeskContent() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [clientHistory, setClientHistory] = useState<GeneratedCampaign[]>([]);
 
+  useEffect(() => {
+    fetch("/api/admin/clients")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.clients)) {
+          const mapped: ClientContext[] = data.clients.map((c: any) => {
+            const p = c.profile || c;
+            return {
+              id: p.id || p.uid,
+              name: p.name || p.company || "Client",
+              company: p.company || p.name || "Client",
+              email: p.email || "",
+              tier: (p.tier === "Enterprise" || p.tier === "Growth" ? p.tier : "Starter") as "Starter" | "Growth" | "Enterprise",
+              industry: "Architecture & Luxury Design",
+              colors: [
+                { hex: "#FAF9F5", usage: "Warm Ivory" },
+                { hex: "#171717", usage: "Charcoal" },
+                { hex: "#A98B57", usage: "Muted Brass" },
+              ],
+              services: ["Commercial Visuals", "Motion Production", "Meta Ads"],
+              pastOrders: c.completedOrdersCount || 0,
+            };
+          });
+          setLiveClients(mapped);
+          if (mapped.length > 0 && !selectedClientId) {
+            setSelectedClientId(mapped[0].id);
+          }
+        }
+      })
+      .catch(() => {});
+  }, [selectedClientId]);
+
   // Selected Client Object
-  const currentClient = PRESET_CLIENTS.find((c) => c.id === selectedClientId) || PRESET_CLIENTS[0];
+  const currentClient = liveClients.find((c) => c.id === selectedClientId) || liveClients[0] || DEFAULT_CLIENT;
 
   // Load client campaign history from localStorage
   const loadHistory = useCallback((clientId: string) => {
@@ -414,11 +416,15 @@ ${currentCampaign.altText}
                   onChange={(e) => setSelectedClientId(e.target.value)}
                   className="px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#171717] focus:outline-none focus:border-[#A98B57]"
                 >
-                  {PRESET_CLIENTS.map((client) => (
-                    <option key={client.id} value={client.id}>
-                      {client.name} ({client.tier})
-                    </option>
-                  ))}
+                  {liveClients.length === 0 ? (
+                    <option value="client_default">Studio Commission (Standard)</option>
+                  ) : (
+                    liveClients.map((client) => (
+                      <option key={client.id} value={client.id}>
+                        {client.name} ({client.tier})
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
             </div>
