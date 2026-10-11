@@ -73,20 +73,11 @@ const workflowsApiContent = fs.readFileSync(workflowsApiFile, "utf-8");
 const chatApiFile = path.join(rootDir, "src/app/api/chat/route.ts");
 const chatApiContent = fs.readFileSync(chatApiFile, "utf-8");
 
-// Helper to find active server port or fallback
+// Helper to find active server or fallback
 async function getActiveServerBaseUrl() {
-  const candidatePorts = [3001, 3000, 3002];
-  for (const port of candidatePorts) {
-    try {
-      const res = await fetch(`http://localhost:${port}/api/workflows`, {
-        headers: { "x-user-role": "admin" },
-      });
-      if (res.status === 200) {
-        return `http://localhost:${port}`;
-      }
-    } catch {
-      // try next
-    }
+  if (process.env.TEST_BASE_URL) return process.env.TEST_BASE_URL;
+  if (process.env.APP_BASE_URL && process.env.APP_BASE_URL.startsWith("http")) {
+    return process.env.APP_BASE_URL;
   }
   return null;
 }

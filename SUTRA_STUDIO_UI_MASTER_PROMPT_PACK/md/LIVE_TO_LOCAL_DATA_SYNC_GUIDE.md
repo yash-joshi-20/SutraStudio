@@ -41,16 +41,16 @@ npx n8n
 # અથવા Docker દ્વારા:
 # docker run -it --rm --name n8n -p 5678:5678 -v ~/.n8n:/home/node/.n8n n8nio/n8n
 ```
-તમારું n8n હવે `http://localhost:5678` પર ખૂલશે.
+તમારું n8n હવે પોર્ટ `5678` પર રન થશે.
 
 ---
 
 ### સ્ટેપ ૨: લોકલ n8n ને લાઈવ ઈન્ટરનેટ સાથે કનેક્ટ કરો (Expose with ngrok or Cloudflare)
-લાઈવ Supabase ડેટાબેઝ તમારા લોકલ કમ્પ્યુટરને વેબહુક મોકલી શકે તે માટે ફ્રી ટનલિંગ ટૂલ વાપરો:
+લાઈવ Sutra Studio પ્લેટફોર્મ તમારા n8n એન્જિનને વેબહુક મોકલી શકે તે માટે સુરક્ષિત ટનલિંગ ટૂલ વાપરો:
 
 #### વિકલ્પ A: Cloudflare Tunnel (100% Free & Unlimited)
 ```bash
-cloudflared tunnel --url http://localhost:5678
+cloudflared tunnel --url $N8N_LOCAL_TUNNEL_URL
 ```
 તમને એક લિંક મળશે: `https://your-custom-subdomain.trycloudflare.com`
 

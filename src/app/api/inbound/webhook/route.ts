@@ -251,7 +251,7 @@ export async function POST(req: Request) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-sutra-secret": readEnv("N8N_WEBHOOK_SECRET") || "sutra_n8n_sec_live_9941a8",
+          "x-sutra-secret": readEnv("N8N_WEBHOOK_SECRET") || "",
         },
         body: JSON.stringify(inquiryRecord),
         signal: controller.signal,

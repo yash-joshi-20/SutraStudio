@@ -105,13 +105,8 @@ export function sameOrigin(req: Request): boolean {
     const originHost = new URL(origin).host;
     if (originHost === host) return true;
     if (process.env.NODE_ENV !== "production") {
-      const isLocal = (h: string) =>
-        h.startsWith("localhost") ||
-        h.startsWith("127.0.0.1") ||
-        h.startsWith("192.168.") ||
-        h.startsWith("10.") ||
-        h.startsWith("172.");
-      if (isLocal(originHost) && isLocal(host)) return true;
+      const devHosts = (process.env.DEV_ALLOWED_HOSTS || "").split(",").map((s) => s.trim()).filter(Boolean);
+      if (devHosts.length > 0 && devHosts.some((dh) => originHost.includes(dh) && host.includes(dh))) return true;
     }
     return false;
   } catch {

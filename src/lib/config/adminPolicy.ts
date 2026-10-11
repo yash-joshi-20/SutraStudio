@@ -39,7 +39,9 @@ export function isAllowedAdminIp(ip: string | null | undefined): boolean {
   if (list.length === 0) return true; // Optional setting: allow all if unconfigured
   if (!ip) return false;
   const cleanIp = ip.trim();
-  return list.includes(cleanIp) || list.includes("127.0.0.1") || list.includes("::1");
+  const isDev = process.env.NODE_ENV !== "production";
+  const devIps = (readEnv("DEV_ALLOWED_IPS" as any) || "").split(",").map((s) => s.trim()).filter(Boolean);
+  return list.includes(cleanIp) || (isDev && devIps.includes(cleanIp));
 }
 
 /**

@@ -71,5 +71,5 @@ export function getClientIp(req: Request): string {
   if (forwarded) {
     return forwarded.split(",")[0].trim();
   }
-  return req.headers.get("x-real-ip") || "127.0.0.1";
+  return req.headers.get("x-real-ip") || "unknown";
 }
