@@ -10,23 +10,14 @@
 
 import { NextResponse } from "next/server";
 import { runAgencySelfPromotionWorkflow } from "@/lib/services/marketingAutoPublisher";
-import { readEnv } from "@/lib/config/env";
+import { authorizeScheduledCall } from "@/lib/api/cronAuth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   try {
-    const authHeader = req.headers.get("authorization");
-    const cronSecret = readEnv("CRON_SECRET");
-
-    // Optional bearer validation if CRON_SECRET is configured
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      // In development or local runs, allow manual test if dev secret passed
-      const url = new URL(req.url);
-      const isManualTest = url.searchParams.get("test") === "true";
-      if (!isManualTest) {
-        return NextResponse.json({ error: "Unauthorized cron trigger." }, { status: 401 });
-      }
+    if (!(await authorizeScheduledCall(req))) {
+      return NextResponse.json({ error: "Unauthorized cron trigger." }, { status: 401 });
     }
 
     const result = await runAgencySelfPromotionWorkflow();

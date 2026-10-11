@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
 import { AuditLogService } from "@/lib/services/auditLogService";
+import { assertAdminSession } from "@/lib/auth/requestRole";
 
 export interface ClientDemoRecord {
   id: string;
@@ -51,7 +52,10 @@ const SEED_DEMOS: ClientDemoRecord[] = [
 
 let IN_MEMORY_DEMOS: ClientDemoRecord[] = [...SEED_DEMOS];
 
-export async function GET() {
+export async function GET(req: Request) {
+  const gate = await assertAdminSession(req);
+  if (!gate.authorized) return gate.response;
+
   try {
     let demos: ClientDemoRecord[] = [];
 
@@ -94,6 +98,10 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const gate = await assertAdminSession(req);
+  if (!gate.authorized) return gate.response;
+  const { user } = gate;
+
   try {
     const body = await req.json();
     const {
@@ -151,9 +159,9 @@ export async function POST(req: Request) {
 
     AuditLogService.record({
       who: {
-        uid: "admin",
-        email: "yashjoshi20@zohomail.in",
-        name: "Studio Admin",
+        uid: user.uid,
+        email: user.email,
+        name: user.name || "Studio Admin",
         role: "admin",
       },
       what: "SYSTEM_CONFIG_UPDATED",
@@ -179,6 +187,9 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+  const gate = await assertAdminSession(req);
+  if (!gate.authorized) return gate.response;
+
   try {
     const url = new URL(req.url);
     const id = url.searchParams.get("id");

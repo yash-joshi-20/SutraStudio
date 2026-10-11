@@ -1,11 +1,48 @@
 import { NextResponse } from "next/server";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { readEnv } from "@/lib/config/env";
 import { generateChatResponse } from "@/lib/ai/llm";
 import { EmailService } from "@/lib/services/emailProvider";
 import { OrderPipelineService, OrderSource } from "@/lib/services/orderPipeline";
 import { MetaMessagingService } from "@/lib/services/metaMessagingService";
+import { checkRateLimit, getClientIp } from "@/lib/security/rateLimiter";
 
 export const dynamic = "force-dynamic";
+
+// In-memory deduplication set for processed inbound message IDs
+const processedMessageIds = new Map<string, number>();
+
+function isDuplicateMessage(messageId: string): boolean {
+  if (!messageId) return false;
+  const now = Date.now();
+  if (processedMessageIds.size > 5000) {
+    for (const [id, time] of processedMessageIds.entries()) {
+      if (now - time > 3600 * 1000) processedMessageIds.delete(id);
+    }
+  }
+  if (processedMessageIds.has(messageId)) {
+    return true;
+  }
+  processedMessageIds.set(messageId, now);
+  return false;
+}
+
+function verifyMetaSignature(rawBody: string, signatureHeader: string | null): boolean {
+  const secret = readEnv("META_APP_SECRET");
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") return false;
+    return true; // dev fallback if not configured in development
+  }
+  if (!signatureHeader || !signatureHeader.startsWith("sha256=")) {
+    return false;
+  }
+  const providedHex = signatureHeader.slice(7).trim();
+  const calculatedHex = createHmac("sha256", secret).update(rawBody).digest("hex");
+  const bufA = Buffer.from(providedHex, "utf8");
+  const bufB = Buffer.from(calculatedHex, "utf8");
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
+}
 
 /**
  * Mask sensitive phone number or email for client privacy and log safety.
@@ -75,11 +112,13 @@ export async function GET(req: Request) {
 
     const expectedToken =
       readEnv("WHATSAPP_VERIFY_TOKEN") ||
-      readEnv("META_VERIFY_TOKEN") ||
-      readEnv("META_GRAPH_ACCESS_TOKEN") ||
-      "sutra_wa_verify_2026";
+      readEnv("META_VERIFY_TOKEN");
 
-    if (mode === "subscribe" && (token === expectedToken || token === "sutra_wa_verify_2026" || !token)) {
+    if (!expectedToken) {
+      return new Response("Webhook verification token not configured", { status: 500 });
+    }
+
+    if (mode === "subscribe" && token && token === expectedToken) {
       return new Response(challenge || "ok", {
         status: 200,
         headers: { "Content-Type": "text/plain" },
@@ -97,7 +136,40 @@ export async function GET(req: Request) {
  */
 export async function POST(req: Request) {
   try {
-    const rawBody = await req.json().catch(() => ({}));
+    const ip = getClientIp(req);
+    const rateCheck = checkRateLimit(`inbound_${ip}`, { maxRequests: 60, windowSeconds: 60 });
+    if (!rateCheck.success) {
+      return NextResponse.json(
+        { error: "Too many inbound requests. Please retry later." },
+        { status: 429, headers: { "Retry-After": String(rateCheck.resetInSeconds) } }
+      );
+    }
+
+    const rawText = await req.text();
+    const signatureHeader = req.headers.get("x-hub-signature-256");
+
+    let rawBody: any = {};
+    try {
+      rawBody = JSON.parse(rawText);
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
+    }
+
+    const isMetaPayload = Boolean(
+      rawBody.entry ||
+      rawBody.object === "instagram" ||
+      rawBody.object === "page" ||
+      rawBody.object === "whatsapp_business_account" ||
+      signatureHeader
+    );
+
+    if (isMetaPayload) {
+      const isValidSig = verifyMetaSignature(rawText, signatureHeader);
+      if (!isValidSig) {
+        return NextResponse.json({ error: "Unauthorized: Invalid or missing X-Hub-Signature-256." }, { status: 401 });
+      }
+    }
+
     let source: OrderSource = "whatsapp";
     let senderId = "";
     let clientName = "Studio Client";
@@ -123,6 +195,22 @@ export async function POST(req: Request) {
     // C. Meta Comment on Feed / Post (Comment-to-DM)
     const feedChange = entry?.changes?.[0];
     const isComment = feedChange?.field === "comments" || feedChange?.field === "feed";
+
+    // Deduplication check
+    const messageId =
+      waMessage?.id ||
+      messaging?.message?.mid ||
+      feedChange?.value?.comment_id ||
+      rawBody.messageId ||
+      rawBody.id;
+
+    if (messageId && isDuplicateMessage(messageId)) {
+      return NextResponse.json({
+        success: true,
+        duplicate: true,
+        message: "Duplicate message ID ignored.",
+      });
+    }
 
     if (waMessage) {
       source = "whatsapp";

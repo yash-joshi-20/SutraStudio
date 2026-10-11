@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { N8nAutomationService, N8nWorkflowPayload } from "@/lib/services/n8nService";
 import { OrdersStore } from "@/lib/services/ordersStore";
+import { assertAdminSession } from "@/lib/auth/requestRole";
 
 export async function POST(req: Request) {
+  const gate = await assertAdminSession(req);
+  if (!gate.authorized) return gate.response;
+
   try {
     const payload = (await req.json()) as N8nWorkflowPayload;
 

@@ -406,12 +406,36 @@ service cloud.firestore {
     /* ---------------- leads & inquiries ---------------- */
 
     match /leads/{leadId} {
-      allow create: if true; // Public lead capture
+      // Validated public lead capture with length and schema bounds
+      allow create: if request.resource.data.keys().hasAll(['name', 'createdAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 100
+        && (!('email' in request.resource.data) || (request.resource.data.email is string && request.resource.data.email.size() <= 120))
+        && (!('phone' in request.resource.data) || (request.resource.data.phone is string && request.resource.data.phone.size() <= 30))
+        && (!('company' in request.resource.data) || (request.resource.data.company is string && request.resource.data.company.size() <= 120))
+        && (!('requirement' in request.resource.data) || (request.resource.data.requirement is string && request.resource.data.requirement.size() <= 4000))
+        && !('website_hp' in request.resource.data)
+        && !('honeypot' in request.resource.data);
       allow read, update, delete: if isAdmin();
     }
 
     match /inquiries/{inquiryId} {
-      allow create: if true; // Public contact/inquiry form
+      // Validated public contact/inquiry form
+      allow create: if request.resource.data.keys().hasAll(['name', 'email', 'message', 'createdAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 0
+        && request.resource.data.email.size() <= 120
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 4000
+        && (!('phone' in request.resource.data) || (request.resource.data.phone is string && request.resource.data.phone.size() <= 30))
+        && (!('service' in request.resource.data) || (request.resource.data.service is string && request.resource.data.service.size() <= 100))
+        && !('website' in request.resource.data)
+        && !('honeypot' in request.resource.data);
       allow read, update, delete: if isAdmin();
     }
 

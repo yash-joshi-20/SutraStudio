@@ -502,7 +502,7 @@ export class OpenRouterService {
     }
 
     let inputText = options.text;
-    let isZdr = false;
+    const isZdr = false;
 
     // Zero-data-retention guardrail for embeddings
     if (options.containsClientData) {

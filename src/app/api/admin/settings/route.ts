@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { StudioSettingsStore } from "@/lib/services/studioSettingsStore";
-import { requestRole } from "@/lib/auth/requestRole";
+import { requestRole, assertAdminSession } from "@/lib/auth/requestRole";
 
 export async function GET(req: Request) {
   const userRole = await requestRole(req);
@@ -24,10 +24,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const userRole = await requestRole(req);
-  if (userRole !== "admin") {
-    return NextResponse.json({ error: "Forbidden: Admin access required." }, { status: 403 });
-  }
+  const auth = await assertAdminSession(req);
+  if (!auth.ok) return auth.response;
 
   try {
     const updates = await req.json();

@@ -1,0 +1,929 @@
+[
+  {
+    "route": "/api/account/brand-kits",
+    "methods": "GET, POST, PATCH, DELETE",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/account/orders/repeat",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/account/profile",
+    "methods": "GET, PUT, PATCH",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/admin/ad-desk/generate",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/admin/ai-console",
+    "methods": "POST",
+    "hasRequireAdmin": true,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/admin/brand-profiles/sync",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/admin/catalog",
+    "methods": "GET, PATCH",
+    "hasRequireAdmin": true,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/admin/clients",
+    "methods": "GET, PATCH",
+    "hasRequireAdmin": true,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/admin/deliverables",
+    "methods": "GET, POST, PATCH",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/admin/demos",
+    "methods": "GET, POST, DELETE",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/admin/inquiries",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/admin/integrations",
+    "methods": "GET, POST",
+    "hasRequireAdmin": true,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/admin/kpis",
+    "methods": "GET",
+    "hasRequireAdmin": false,
+    "hasRequestRole": true,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/admin/marketing/dispatch",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/admin/marketing/meta-ads",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/admin/marketing/publish",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/admin/notification-settings",
+    "methods": "GET, PATCH",
+    "hasRequireAdmin": false,
+    "hasRequestRole": true,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/admin/outreach/draft",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": true,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/admin/outreach/record",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": true,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/admin/provider-router",
+    "methods": "GET, POST",
+    "hasRequireAdmin": true,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/admin/reports/channels",
+    "methods": "GET",
+    "hasRequireAdmin": false,
+    "hasRequestRole": true,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/admin/settings",
+    "methods": "GET, POST",
+    "hasRequireAdmin": true,
+    "hasRequestRole": true,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/admin/storage-usage",
+    "methods": "GET",
+    "hasRequireAdmin": true,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/audit-logs",
+    "methods": "GET",
+    "hasRequireAdmin": true,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/auth/admin-login",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/auth/change-email",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/auth/change-password",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/auth/client-login",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/auth/forgot-password",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/auth/logout",
+    "methods": "POST, DELETE",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/auth/register",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/auth/resend-verification",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/auth/reset-password",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/auth/session",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/brand-kits",
+    "methods": "GET, POST, PUT, DELETE",
+    "hasRequireAdmin": false,
+    "hasRequestRole": true,
+    "hasRequestUid": true,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/chat",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": true,
+    "hasRequestUid": true,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/chatbot",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/client/delete-account",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/client/export-data",
+    "methods": "GET",
+    "hasRequireAdmin": false,
+    "hasRequestRole": true,
+    "hasRequestUid": true,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/cms",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/companies",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/coupons",
+    "methods": "GET, POST, PATCH, DELETE",
+    "hasRequireAdmin": true,
+    "hasRequestRole": true,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/cron/agency-daily-promo",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": true
+  },
+  {
+    "route": "/api/cron/notifications",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": true
+  },
+  {
+    "route": "/api/cron/retainer-dispatch",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": true
+  },
+  {
+    "route": "/api/cron/retention",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": true
+  },
+  {
+    "route": "/api/custom-projects",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": true,
+    "hasRequestUid": true,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/daily-engine",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": true,
+    "hasRequestUid": true,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/documents",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/drive/archive",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": true,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/drive/file/[fileId]",
+    "methods": "GET",
+    "hasRequireAdmin": true,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/drive/file/[fileId]/share",
+    "methods": "GET, POST, DELETE",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/drive/folder/[folderId]",
+    "methods": "GET",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/drive/folders",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": true,
+    "hasRequestUid": true,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/drive/upload/complete",
+    "methods": "POST",
+    "hasRequireAdmin": true,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/drive/upload/session",
+    "methods": "POST",
+    "hasRequireAdmin": true,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/drive/upload/token",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/drive/validate-link",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/files",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/inbound/email",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/inbound/meta",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/inbound/webhook",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/inbound/whatsapp",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/inquiries",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/knowledge-base",
+    "methods": "GET, POST, PATCH, DELETE",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/knowledge-base/search",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/leads",
+    "methods": "GET, POST",
+    "hasRequireAdmin": true,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": true,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/media/clean",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/media-vault",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": true,
+    "hasRequestUid": true,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/meta-ads/campaigns",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": true,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/meta-ads/connect",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/n8n/dispatch",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/n8n/orders",
+    "methods": "GET",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": true
+  },
+  {
+    "route": "/api/n8n/retry",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/n8n/subscriptions",
+    "methods": "GET",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": true
+  },
+  {
+    "route": "/api/n8n/webhook",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": true
+  },
+  {
+    "route": "/api/notifications",
+    "methods": "GET, POST, PATCH",
+    "hasRequireAdmin": true,
+    "hasRequestRole": true,
+    "hasRequestUid": true,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/orders/cancel",
+    "methods": "POST",
+    "hasRequireAdmin": true,
+    "hasRequestRole": true,
+    "hasRequestUid": true,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/orders/comments",
+    "methods": "GET, POST",
+    "hasRequireAdmin": true,
+    "hasRequestRole": true,
+    "hasRequestUid": true,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/orders/deliver",
+    "methods": "POST",
+    "hasRequireAdmin": true,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/orders/drafts/confirm",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": true,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/orders/drafts",
+    "methods": "GET, POST, DELETE",
+    "hasRequireAdmin": false,
+    "hasRequestRole": true,
+    "hasRequestUid": true,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/orders/review",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": true,
+    "hasRequestUid": true,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/orders",
+    "methods": "GET, POST, PATCH",
+    "hasRequireAdmin": false,
+    "hasRequestRole": true,
+    "hasRequestUid": false,
+    "hasAuthUser": true,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/orders/status",
+    "methods": "POST",
+    "hasRequireAdmin": true,
+    "hasRequestRole": true,
+    "hasRequestUid": true,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/payment/verify",
+    "methods": "",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/payments/cancel-subscription",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": true,
+    "hasRequestUid": true,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/payments/create",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": true,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/payments/extend-period",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": true,
+    "hasRequestUid": true,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/payments/refund",
+    "methods": "POST",
+    "hasRequireAdmin": true,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/payments/renew",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": true,
+    "hasRequestUid": true,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/payments/verify",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": true,
+    "hasRequestUid": true,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/payments/webhook",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/pipeline",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": true,
+    "hasRequestUid": true,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/plans",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/quotes",
+    "methods": "GET, POST",
+    "hasRequireAdmin": true,
+    "hasRequestRole": true,
+    "hasRequestUid": true,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/sanitize",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/share",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/share/[token]",
+    "methods": "GET, DELETE",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/submissions/review",
+    "methods": "POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/submissions",
+    "methods": "GET, POST, PATCH",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": true,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/submissions/[id]",
+    "methods": "GET, PATCH, DELETE",
+    "hasRequireAdmin": false,
+    "hasRequestRole": false,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  },
+  {
+    "route": "/api/workflows",
+    "methods": "GET, POST",
+    "hasRequireAdmin": false,
+    "hasRequestRole": true,
+    "hasRequestUid": false,
+    "hasAuthUser": false,
+    "hasBearerOrSecret": false
+  }
+]

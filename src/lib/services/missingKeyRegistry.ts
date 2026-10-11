@@ -42,7 +42,8 @@ export interface MissingKeyRecord {
 }
 
 /**
- * Ensures backup directory exists and creates local timestamped backup of env files before modification.
+ * Ensures backup directory exists and creates local timestamped backup of non-secret env template files.
+ * Security Directive S1: Never write .bak copies of secrets (.env.local).
  */
 export function backupEnvFiles(): void {
   try {
@@ -50,10 +51,7 @@ export function backupEnvFiles(): void {
       fs.mkdirSync(BACKUP_DIR, { recursive: true });
     }
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-    if (fs.existsSync(ENV_LOCAL_PATH)) {
-      const backupPath = path.join(BACKUP_DIR, `.env.local.${timestamp}.bak`);
-      fs.copyFileSync(ENV_LOCAL_PATH, backupPath);
-    }
+    // Only back up template file (.env.example); NEVER write .bak copies of live secrets (.env.local)
     if (fs.existsSync(ENV_EXAMPLE_PATH)) {
       const backupPath = path.join(BACKUP_DIR, `.env.example.${timestamp}.bak`);
       fs.copyFileSync(ENV_EXAMPLE_PATH, backupPath);

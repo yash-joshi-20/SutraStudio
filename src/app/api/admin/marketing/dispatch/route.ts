@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { runAgencySelfPromotionWorkflow } from "@/lib/services/marketingAutoPublisher";
+import { assertAdminSession } from "@/lib/auth/requestRole";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+  const gate = await assertAdminSession(req);
+  if (!gate.authorized) return gate.response;
+
   try {
     const body = await req.json().catch(() => ({}));
     const { theme, prompt, disciplineId } = body;

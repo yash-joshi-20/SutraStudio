@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { readEnv } from "@/lib/config/env";
+import { assertAdminSession } from "@/lib/auth/requestRole";
 
 export async function POST(req: Request) {
+  const gate = await assertAdminSession(req);
+  if (!gate.authorized) return gate.response;
+
   try {
     const body = await req.json().catch(() => ({}));
     const { target } = body; // "facebook" | "whatsapp" | "both"

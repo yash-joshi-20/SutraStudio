@@ -18,9 +18,14 @@
  */
 
 import "server-only";
-import { getAuthenticatedUser } from "@/lib/auth/serverAuth";
+import { NextResponse } from "next/server";
+import { getAuthenticatedUser, type AuthenticatedUser } from "@/lib/auth/serverAuth";
 
 export type TrustedRole = "admin" | "client";
+
+export type AuthSessionResult =
+  | { authorized: true; ok: true; user: AuthenticatedUser; response?: never }
+  | { authorized: false; ok: false; user?: never; response: NextResponse };
 
 export async function requestRole(req: Request): Promise<TrustedRole> {
   try {
@@ -54,4 +59,47 @@ export async function requestUid(req: Request): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * Robust API session assertion for admin endpoints.
+ * Returns 401 if unauthenticated, 403 if not admin.
+ * Provides verified session user with email and uid.
+ */
+export async function assertAdminSession(req: Request): Promise<AuthSessionResult> {
+  const user = await getAuthenticatedUser(req);
+  if (!user.isAuthenticated) {
+    return {
+      authorized: false,
+      ok: false,
+      response: NextResponse.json({ error: "Unauthorized: Please sign in to continue." }, { status: 401 }),
+    };
+  }
+  if (!user.isAdmin) {
+    return {
+      authorized: false,
+      ok: false,
+      response: NextResponse.json(
+        { error: "Forbidden: Administrator clearance is required for this action." },
+        { status: 403 }
+      ),
+    };
+  }
+  return { authorized: true, ok: true, user };
+}
+
+/**
+ * Robust API session assertion for client endpoints.
+ * Returns 401 if unauthenticated.
+ */
+export async function assertUserSession(req: Request): Promise<AuthSessionResult> {
+  const user = await getAuthenticatedUser(req);
+  if (!user.isAuthenticated || !user.uid) {
+    return {
+      authorized: false,
+      ok: false,
+      response: NextResponse.json({ error: "Unauthorized: Please sign in to continue." }, { status: 401 }),
+    };
+  }
+  return { authorized: true, ok: true, user };
 }

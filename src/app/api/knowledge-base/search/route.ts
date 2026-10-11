@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getAuthenticatedUser } from "@/lib/auth/serverAuth";
 
 const knowledgeBase: any[] = [];
 const knowledgeChunks: any[] = [];
@@ -13,13 +14,16 @@ const kcStore = globalThis.__kbc || (globalThis.__kbc = knowledgeChunks);
 
 export async function POST(req: Request) {
   try {
+    const user = await getAuthenticatedUser(req);
     const { query, client_id } = await req.json();
     
-    // Simple keyword search over approved+published only
+    // Scoped search over approved + published
+    const targetClientId = user.isAdmin ? client_id : (user.isAuthenticated ? user.uid : undefined);
+
     const results = kbStore.filter(k => 
       k.approved === true && 
       k.published === true &&
-      (!client_id || k.client_id === client_id) &&
+      (!targetClientId || k.client_id === targetClientId || k.client_id === "client_default" || !k.client_id) &&
       (k.title?.toLowerCase().includes(query?.toLowerCase()) || 
        k.content?.toLowerCase().includes(query?.toLowerCase()))
     );

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
 import { AuditLogService } from "@/lib/services/auditLogService";
+import { assertAdminSession } from "@/lib/auth/requestRole";
 
 const DEFAULT_SITE_CONTENT = {
   hero: {
@@ -77,6 +78,9 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const auth = await assertAdminSession(req);
+    if (!auth.ok) return auth.response;
+
     const body = await req.json();
     const updated = {
       hero: { ...DEFAULT_SITE_CONTENT.hero, ...(body.hero || {}) },
@@ -98,9 +102,9 @@ export async function POST(req: Request) {
 
     AuditLogService.record({
       who: {
-        uid: "admin_cms",
-        email: "yashjoshi20@zohomail.in",
-        name: "Admin CMS",
+        uid: auth.user.uid,
+        email: auth.user.email || "admin@sutrastudios.in",
+        name: auth.user.name || "Studio Admin",
         role: "admin",
       },
       what: "SYSTEM_CONFIG_UPDATED",

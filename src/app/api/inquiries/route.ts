@@ -2,16 +2,46 @@ import { NextResponse } from "next/server";
 import { EmailService } from "@/lib/services/emailProvider";
 import { readEnv } from "@/lib/config/env";
 import { adminDb } from "@/lib/firebase/admin";
+import { checkRateLimit, getClientIp } from "@/lib/security/rateLimiter";
 
 export async function POST(req: Request) {
   try {
+    const ip = getClientIp(req);
+    const limit = checkRateLimit(`inquiry_${ip}`, { maxRequests: 5, windowSeconds: 300 });
+    if (!limit.success) {
+      return NextResponse.json(
+        { error: "Too many inquiries submitted from this connection. Please wait a few minutes." },
+        { status: 429, headers: { "Retry-After": String(limit.resetInSeconds) } }
+      );
+    }
+
     const body = await req.json();
 
-    if (!body.name || !body.email || !body.message) {
+    // Honeypot check: reject spam bots silently
+    if (body.website || body.honeypot || body._gotcha || body.company_url_hp) {
+      return NextResponse.json({
+        success: true,
+        inquiryId: `inq_${Date.now()}`,
+        message: "Inquiry received and assigned to client concierge.",
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    const name = String(body.name || "").trim().slice(0, 100);
+    const email = String(body.email || "").trim().toLowerCase().slice(0, 120);
+    const message = String(body.message || "").trim().slice(0, 4000);
+    const phone = body.phone ? String(body.phone).trim().slice(0, 30) : null;
+    const service = body.service ? String(body.service).trim().slice(0, 100) : "General Inquiry";
+
+    if (!name || !email || !message) {
       return NextResponse.json(
         { error: "Name, email, and message are required" },
         { status: 400 }
       );
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ error: "Please provide a valid email address." }, { status: 400 });
     }
 
     const inquiryId = `inq_${Date.now()}`;
@@ -25,11 +55,11 @@ export async function POST(req: Request) {
     try {
       await adminDb().collection("inquiries").doc(inquiryId).set({
         id: inquiryId,
-        name: body.name,
-        email: body.email,
-        phone: body.phone || null,
-        service: body.service || "General Inquiry",
-        message: body.message,
+        name,
+        email,
+        phone,
+        service,
+        message,
         createdAt: new Date().toISOString(),
         status: "new",
       });

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requestRole } from "@/lib/auth/requestRole";
+import { assertAdminSession } from "@/lib/auth/requestRole";
 import { OrderPipelineService, type OrderSource } from "@/lib/services/orderPipeline";
 
 /**
@@ -7,10 +7,8 @@ import { OrderPipelineService, type OrderSource } from "@/lib/services/orderPipe
  * Logs a manually transmitted message from the Outreach Desk into the order's unified conversation history.
  */
 export async function POST(req: Request) {
-  const userRole = await requestRole(req);
-  if (userRole === "client") {
-    return NextResponse.json({ error: "Forbidden: Admin clearance required." }, { status: 403 });
-  }
+  const auth = await assertAdminSession(req);
+  if (!auth.ok) return auth.response;
 
   try {
     const { orderId, channel, text, recipientHandle } = await req.json();
@@ -26,7 +24,7 @@ export async function POST(req: Request) {
       sender: "studio",
       channel: validChannel,
       text,
-      authorName: "Studio Admin (Manual Outreach)",
+      authorName: auth.user.email || auth.user.uid || "Studio Admin",
       metadata: {
         manualOutreachDesk: true,
         recipientHandle: recipientHandle || null,

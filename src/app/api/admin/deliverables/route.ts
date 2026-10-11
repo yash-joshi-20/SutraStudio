@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
+import { timingSafeEqual } from "node:crypto";
 import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
 import { AuditLogService } from "@/lib/services/auditLogService";
+import { readEnv } from "@/lib/config/env";
+import { assertAdminSession } from "@/lib/auth/requestRole";
 
 export interface DeliverableRecord {
   deliverableId: string;
@@ -25,6 +28,9 @@ export interface DeliverableRecord {
 const IN_MEMORY_DELIVERABLES: DeliverableRecord[] = [];
 
 export async function GET(req: Request) {
+  const gate = await assertAdminSession(req);
+  if (!gate.authorized) return gate.response;
+
   try {
     const url = new URL(req.url);
     const orderId = url.searchParams.get("orderId");
@@ -66,6 +72,31 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  // Constant-time verification of n8n webhook secret
+  const providedSecret =
+    req.headers.get("x-sutra-secret") ||
+    req.headers.get("x-n8n-secret") ||
+    req.headers.get("x-webhook-secret") ||
+    req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ||
+    "";
+
+  const expectedSecret = readEnv("N8N_WEBHOOK_SECRET");
+
+  const secretsMatch = (aStr: string, bStr: string): boolean => {
+    if (!aStr || !bStr) return false;
+    const a = Buffer.from(aStr);
+    const b = Buffer.from(bStr);
+    if (a.length !== b.length) return false;
+    return timingSafeEqual(a, b);
+  };
+
+  if (!secretsMatch(providedSecret, expectedSecret)) {
+    return NextResponse.json(
+      { success: false, error: "Unauthorized: Invalid or missing n8n webhook secret." },
+      { status: 401 }
+    );
+  }
+
   try {
     let body = await req.json();
     if (typeof body === "string") {
@@ -212,9 +243,13 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
+  const gate = await assertAdminSession(req);
+  if (!gate.authorized) return gate.response;
+  const { user } = gate;
+
   try {
     const body = await req.json();
-    const { deliverableId, action, notes, adminEmail = "yashjoshi20@zohomail.in" } = body;
+    const { deliverableId, action, notes } = body;
 
     if (!deliverableId || !action) {
       return NextResponse.json(
@@ -245,7 +280,7 @@ export async function PATCH(req: Request) {
     const newStatus = action === "approve" ? "released" : "rejected";
     currentRecord.status = newStatus;
     currentRecord.reviewedAt = new Date().toISOString();
-    currentRecord.reviewedBy = adminEmail;
+    currentRecord.reviewedBy = user.email || user.uid;
     if (notes) currentRecord.notes = notes;
 
     // Persist status change
@@ -278,9 +313,9 @@ export async function PATCH(req: Request) {
 
     AuditLogService.record({
       who: {
-        uid: adminEmail,
-        email: adminEmail,
-        name: "Studio Admin",
+        uid: user.uid,
+        email: user.email,
+        name: user.name || "Studio Admin",
         role: "admin",
       },
       what: action === "approve" ? "ORDER_DELIVERED" : "STATUS_UPDATED",

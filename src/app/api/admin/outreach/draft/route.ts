@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requestRole } from "@/lib/auth/requestRole";
+import { assertAdminSession } from "@/lib/auth/requestRole";
 import { OrdersStore } from "@/lib/services/ordersStore";
 
 interface DraftRequestPayload {
@@ -15,10 +15,8 @@ interface DraftRequestPayload {
 }
 
 export async function POST(req: Request) {
-  const userRole = await requestRole(req);
-  if (userRole === "client") {
-    return NextResponse.json({ error: "Forbidden: Admin clearance required." }, { status: 403 });
-  }
+  const auth = await assertAdminSession(req);
+  if (!auth.ok) return auth.response;
 
   try {
     const body: DraftRequestPayload = await req.json();

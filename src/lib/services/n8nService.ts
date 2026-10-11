@@ -80,7 +80,6 @@ export class N8nAutomationService {
     return (
       readEnv("N8N_BASE_URL") ||
       readEnv("N8N_HOST" as any) ||
-      readPublicEnv("NEXT_PUBLIC_N8N_URL" as any) ||
       "https://n8n.sutrastudios.in"
     );
   }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
 import { readEnv } from "@/lib/config/env";
 import { AuditLogService } from "@/lib/services/auditLogService";
+import { assertAdminSession } from "@/lib/auth/requestRole";
 
 export const dynamic = "force-dynamic";
 
@@ -74,7 +75,10 @@ const IN_MEMORY_CLIENT_CAMPAIGNS: MetaAdCampaignRecord[] = [
   },
 ];
 
-export async function GET() {
+export async function GET(req: Request) {
+  const gate = await assertAdminSession(req);
+  if (!gate.authorized) return gate.response;
+
   try {
     let campaigns: MetaAdCampaignRecord[] = [];
     if (isFirebaseAdminReady()) {
@@ -115,6 +119,10 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const gate = await assertAdminSession(req);
+  if (!gate.authorized) return gate.response;
+  const { user } = gate;
+
   try {
     const body = await req.json().catch(() => ({}));
     const {
@@ -160,7 +168,7 @@ export async function POST(req: Request) {
       try {
         await adminDb().collection("meta_ads_campaigns").doc(campaignId).set(newCampaign);
         AuditLogService.record({
-          who: { uid: "admin_master", email: "admin@sutrastudio.com", name: "Studio Admin", role: "admin" },
+          who: { uid: user.uid, email: user.email, name: user.name || "Studio Admin", role: "admin" },
           what: "SYSTEM_CONFIG_UPDATED",
           targetType: "system",
           targetId: campaignId,

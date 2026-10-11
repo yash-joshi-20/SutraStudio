@@ -1,23 +1,37 @@
 import { NextResponse } from "next/server";
+import { assertUserSession } from "@/lib/auth/requestRole";
 
 const companies: any[] = [];
 
 export async function GET(req: Request) {
+  const auth = await assertUserSession(req);
+  if (!auth.ok) return auth.response;
+
   const url = new URL(req.url);
   const clientId = url.searchParams.get('client_id');
   let filtered = companies;
-  if (clientId) filtered = filtered.filter(c => c.client_id === clientId);
+
+  if (auth.user.role !== "admin") {
+    filtered = filtered.filter(c => c.client_id === auth.user.uid);
+  } else if (clientId) {
+    filtered = filtered.filter(c => c.client_id === clientId);
+  }
+
   return NextResponse.json({ companies: filtered });
 }
 
 export async function POST(req: Request) {
+  const auth = await assertUserSession(req);
+  if (!auth.ok) return auth.response;
+
   try {
     const body = await req.json();
     const now = new Date().toISOString();
+    const clientId = auth.user.role === "admin" ? (body.client_id || auth.user.uid) : auth.user.uid;
     const company = {
       id: `comp_${Date.now()}`,
-      client_id: body.client_id,
       ...body,
+      client_id: clientId,
       created_at: now,
       updated_at: now,
     };

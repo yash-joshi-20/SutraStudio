@@ -467,6 +467,55 @@ async function runSecurityTests() {
     "Admin possesses master authority to publish updated pricing and content to live site"
   );
 
+  // -------------------------------------------------------------
+  // TEST 15: S1 Master Route Guard & Secret Protection Matrix
+  // -------------------------------------------------------------
+  console.log("\n▶ TEST 15: S1 Route Hardening & Secret Defense Matrix");
+
+  const n8nDispatchContent = fs.readFileSync(path.join(rootDir, "src/app/api/n8n/dispatch/route.ts"), "utf-8");
+  assert(
+    n8nDispatchContent.includes("assertAdminSession"),
+    "/api/n8n/dispatch strictly gated by assertAdminSession"
+  );
+
+  const deliverablesContent = fs.readFileSync(path.join(rootDir, "src/app/api/admin/deliverables/route.ts"), "utf-8");
+  assert(
+    deliverablesContent.includes("assertAdminSession") &&
+      deliverablesContent.includes("timingSafeEqual") &&
+      deliverablesContent.includes("N8N_WEBHOOK_SECRET"),
+    "/api/admin/deliverables gates GET/PATCH with assertAdminSession and POST with timingSafeEqual N8N_WEBHOOK_SECRET"
+  );
+
+  const publishContent = fs.readFileSync(path.join(rootDir, "src/app/api/admin/marketing/publish/route.ts"), "utf-8");
+  assert(
+    publishContent.includes("assertAdminSession") &&
+      publishContent.includes("approved"),
+    "/api/admin/marketing/publish requires assertAdminSession + explicit approval flag"
+  );
+
+  const filesContent = fs.readFileSync(path.join(rootDir, "src/app/api/files/route.ts"), "utf-8");
+  assert(
+    filesContent.includes("assertUserSession") &&
+      (filesContent.includes("effectiveClientId") || filesContent.includes("requestedClientId")),
+    "/api/files requires verified session with multi-tenant ownership isolation"
+  );
+
+  const webhookContent = fs.readFileSync(path.join(rootDir, "src/app/api/inbound/webhook/route.ts"), "utf-8");
+  assert(
+    webhookContent.includes("verifyMetaSignature") &&
+      webhookContent.includes("timingSafeEqual") &&
+      !webhookContent.includes("sutra_wa_verify_2026"),
+    "/api/inbound/webhook verifies X-Hub-Signature-256 HMAC and removed hardcoded fallback token"
+  );
+
+  const cronPromoContent = fs.readFileSync(path.join(rootDir, "src/app/api/cron/agency-daily-promo/route.ts"), "utf-8");
+  const cronRetainerContent = fs.readFileSync(path.join(rootDir, "src/app/api/cron/retainer-dispatch/route.ts"), "utf-8");
+  assert(
+    cronPromoContent.includes("authorizeScheduledCall") &&
+      cronRetainerContent.includes("authorizeScheduledCall"),
+    "/api/cron/* routes strictly gated by authorizeScheduledCall"
+  );
+
   console.log("\n========================================================");
   console.log(`   SECURITY ACCEPTANCE: ${passedTests}/${totalTests} TESTS PASSED (100%) `);
   console.log("========================================================\n");

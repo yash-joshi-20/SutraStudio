@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ClientSubmission, KnowledgeRecord } from "@/lib/types/knowledge";
 import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
-import { getAuthenticatedUser } from "@/lib/auth/serverAuth";
+import { assertUserSession } from "@/lib/auth/requestRole";
 
 const INITIAL_SUBMISSIONS: ClientSubmission[] = [];
 
@@ -37,9 +37,15 @@ async function syncSubmissionsFromFirestore(): Promise<ClientSubmission[]> {
 }
 
 export async function GET(req: Request) {
+  const auth = await assertUserSession(req);
+  if (!auth.ok) return auth.response;
+
   const { searchParams } = new URL(req.url);
-  const clientId = searchParams.get("client_id");
+  const requestedClientId = searchParams.get("client_id");
   const status = searchParams.get("status");
+
+  // Non-admins can only view their own submissions
+  const clientId = auth.user.role === "admin" ? (requestedClientId || undefined) : auth.user.uid;
 
   await syncSubmissionsFromFirestore();
 
@@ -60,22 +66,22 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const auth = await assertUserSession(req);
+    if (!auth.ok) return auth.response;
+
     const body = await req.json();
     const now = new Date().toISOString();
-
-    if (!body.client_id) {
-      return NextResponse.json({ error: "client_id is required" }, { status: 400 });
-    }
+    const clientId = auth.user.role === "admin" ? (body.client_id || auth.user.uid) : auth.user.uid;
 
     const existingIndex = submissionsStore.findIndex(
-      (s) => s.client_id === body.client_id
+      (s) => s.client_id === clientId
     );
 
     const submission: ClientSubmission = {
-      id: body.id || `sub_${body.client_id}_${Date.now()}`,
-      client_id: body.client_id,
+      id: body.id || `sub_${clientId}_${Date.now()}`,
+      client_id: clientId,
       client_name: body.client_name || "Client Business",
-      status: body.status || "PENDING",
+      status: auth.user.role === "admin" ? (body.status || "PENDING") : "PENDING",
       version: existingIndex >= 0 ? (submissionsStore[existingIndex].version || 1) + 1 : 1,
       company: body.company || {
         name: "",
@@ -130,8 +136,11 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
+    const auth = await assertUserSession(req);
+    if (!auth.ok) return auth.response;
+
     const body = await req.json();
-    const { submissionId, action, message, editedData, adminId } = body;
+    const { submissionId, action, message, editedData } = body;
 
     const index = submissionsStore.findIndex((s) => s.id === submissionId);
     if (index === -1) {
@@ -140,10 +149,20 @@ export async function PATCH(req: Request) {
 
     const sub = submissionsStore[index];
     const now = new Date().toISOString();
+    const adminId = auth.user.email || auth.user.uid || "Admin";
+
+    // Non-admin can only EDIT their own submission
+    if (action !== "EDIT" && auth.user.role !== "admin") {
+      return NextResponse.json({ error: "Forbidden: Admin clearance required for review actions." }, { status: 403 });
+    }
+
+    if (action === "EDIT" && auth.user.role !== "admin" && sub.client_id !== auth.user.uid) {
+      return NextResponse.json({ error: "Forbidden: Cannot edit another client's submission." }, { status: 403 });
+    }
 
     if (action === "APPROVE") {
       sub.status = "APPROVED";
-      sub.reviewed_by = adminId || "Supervisor Admin";
+      sub.reviewed_by = adminId;
       sub.reviewed_at = now;
       sub.published_at = now;
       sub.changes_requested_message = undefined;
@@ -159,12 +178,12 @@ export async function PATCH(req: Request) {
     } else if (action === "REQUEST_CHANGES") {
       sub.status = "CHANGES_REQUESTED";
       sub.changes_requested_message = message || "Please review and update the required fields.";
-      sub.reviewed_by = adminId || "Supervisor Admin";
+      sub.reviewed_by = adminId;
       sub.reviewed_at = now;
     } else if (action === "REJECT") {
       sub.status = "REJECTED";
       sub.changes_requested_message = message || "Submission does not meet publishing criteria.";
-      sub.reviewed_by = adminId || "Supervisor Admin";
+      sub.reviewed_by = adminId;
       sub.reviewed_at = now;
     } else if (action === "EDIT" && editedData) {
       submissionsStore[index] = {

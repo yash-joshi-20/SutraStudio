@@ -46,6 +46,7 @@ yarn-error.log*
 
 # environment files
 .env
+.env*
 .env.*
 .env.local
 .env.development.local
@@ -62,7 +63,12 @@ public/brand_backup/
 scripts/backups/env-backups/
 *.env.backup*
 *.env.bak*
+*.bak
+**/*.bak
 
+# Local disk stores & sensitive runtime data
+data/
+/data/
 
 # Service Account Keys & Secrets
 *service-account*.json
@@ -73,15 +79,8 @@ google-credentials.json
 *credentials*.json
 *.key
 *.pem
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
 secrets/
+/secrets/
 
 # Archives & ZIP files (Do not upload to GitHub)
 *.zip
@@ -104,3 +103,5 @@ docs/237868e8-ad3f-4ffe-b657-8a05d0d5695f.jpg
 # Local n8n Workflows & Exports (Do not upload to GitHub)
 n8n/
 
+# TypeScript build cache
+*.tsbuildinfo

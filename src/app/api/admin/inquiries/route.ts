@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { readEnv } from "@/lib/config/env";
 import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
 import { EmailService } from "@/lib/services/emailProvider";
+import { assertAdminSession } from "@/lib/auth/requestRole";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +62,10 @@ const INITIAL_DEMO_INQUIRIES = [
 ];
 
 export async function GET(req: Request) {
+  const gate = await assertAdminSession(req);
+  if (!gate.authorized) return gate.response;
+  const { user } = gate;
+
   try {
     const { searchParams } = new URL(req.url);
     const channelFilter = searchParams.get("channel");
@@ -104,7 +109,7 @@ export async function GET(req: Request) {
       inquiries,
       count: inquiries.length,
       config: {
-        adminEmail: "yashjoshi20@zohomail.in",
+        adminEmail: user.email || "admin@sutrastudios.in",
         hasWhatsAppId: Boolean(readEnv("WHATSAPP_PHONE_NUMBER_ID")),
         hasMetaToken: Boolean(readEnv("META_GRAPH_ACCESS_TOKEN")),
         hasZohoSmtp: Boolean(readEnv("SMTP_USER") || readEnv("ZOHO_MAIL_USER")),
@@ -119,6 +124,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const gate = await assertAdminSession(req);
+  if (!gate.authorized) return gate.response;
+
   try {
     const body = await req.json();
     const action = body.action || "reply";

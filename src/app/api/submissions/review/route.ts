@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { assertAdminSession } from "@/lib/auth/requestRole";
 
 declare global {
   var __submissions: any[] | undefined;
@@ -12,7 +13,11 @@ const reviewsStore = globalThis.__reviews || (globalThis.__reviews = []);
 
 export async function POST(req: Request) {
   try {
-    const { submission_id, action, message, admin_id } = await req.json();
+    const auth = await assertAdminSession(req);
+    if (!auth.ok) return auth.response;
+
+    const { submission_id, action, message } = await req.json();
+    const admin_id = auth.user.email || auth.user.uid || "admin";
     
     const idx = submissionsStore.findIndex(s => s.id === submission_id);
     if (idx === -1) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -23,7 +28,7 @@ export async function POST(req: Request) {
     reviewsStore.push({
       id: `rev_${Date.now()}`,
       submission_id,
-      admin_id: admin_id || 'admin_001',
+      admin_id,
       action,
       message,
       created_at: now,

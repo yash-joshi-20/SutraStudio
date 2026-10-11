@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { assertUserSession, assertAdminSession } from "@/lib/auth/requestRole";
 
 const submissions: any[] = []; // shared in memory conceptually; use module scope
 
@@ -10,18 +11,33 @@ declare global {
 const store = globalThis.__submissions || (globalThis.__submissions = []);
 
 export async function GET(req: Request, { params }: any) {
+  const auth = await assertUserSession(req);
+  if (!auth.ok) return auth.response;
+
   const id = params?.id;
   const submission = store.find(s => s.id === id);
   if (!submission) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+  if (auth.user.role !== "admin" && submission.client_id && submission.client_id !== auth.user.uid) {
+    return NextResponse.json({ error: "Forbidden: Cross-tenant access denied." }, { status: 403 });
+  }
+
   return NextResponse.json({ submission });
 }
 
 export async function PATCH(req: Request, { params }: any) {
+  const auth = await assertUserSession(req);
+  if (!auth.ok) return auth.response;
+
   try {
     const body = await req.json();
     const id = params?.id;
     const idx = store.findIndex(s => s.id === id);
     if (idx === -1) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+    if (auth.user.role !== "admin" && store[idx].client_id && store[idx].client_id !== auth.user.uid) {
+      return NextResponse.json({ error: "Forbidden: Cross-tenant update denied." }, { status: 403 });
+    }
     
     store[idx] = {
       ...store[idx],
@@ -36,6 +52,9 @@ export async function PATCH(req: Request, { params }: any) {
 }
 
 export async function DELETE(req: Request, { params }: any) {
+  const auth = await assertAdminSession(req);
+  if (!auth.ok) return auth.response;
+
   const id = params?.id;
   const idx = store.findIndex(s => s.id === id);
   if (idx === -1) return NextResponse.json({ error: 'Not found' }, { status: 404 });

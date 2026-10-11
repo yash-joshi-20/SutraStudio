@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
 import { getAuthenticatedUser } from "@/lib/auth/serverAuth";
+import { checkRateLimit, getClientIp } from "@/lib/security/rateLimiter";
 
 export async function GET(req: Request) {
   try {
@@ -31,8 +32,32 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const ip = getClientIp(req);
+    const limit = checkRateLimit(`lead_${ip}`, { maxRequests: 10, windowSeconds: 300 });
+    if (!limit.success) {
+      return NextResponse.json(
+        { error: "Too many lead submissions from this connection. Please wait a few minutes." },
+        { status: 429, headers: { "Retry-After": String(limit.resetInSeconds) } }
+      );
+    }
+
     const body = await req.json();
-    if (!body.name || (!body.email && !body.phone)) {
+
+    // Honeypot check: reject bots silently
+    if (body.website_hp || body.honeypot || body._gotcha) {
+      return NextResponse.json(
+        { success: true, lead: { id: `lead_${Date.now()}`, name: body.name || "Lead" } },
+        { status: 201 }
+      );
+    }
+
+    const name = String(body.name || "").trim().slice(0, 100);
+    const email = body.email ? String(body.email).trim().toLowerCase().slice(0, 120) : "";
+    const phone = body.phone ? String(body.phone).trim().slice(0, 30) : "";
+    const company = body.company ? String(body.company).trim().slice(0, 120) : "";
+    const requirement = body.requirement ? String(body.requirement).trim().slice(0, 4000) : "";
+
+    if (!name || (!email && !phone)) {
       return NextResponse.json(
         { error: "Name and either email or phone number are required." },
         { status: 400 }
@@ -43,11 +68,11 @@ export async function POST(req: Request) {
     const leadId = `lead_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const lead = {
       id: leadId,
-      name: String(body.name).trim(),
-      email: body.email ? String(body.email).trim().toLowerCase() : "",
-      phone: body.phone ? String(body.phone).trim() : "",
-      company: body.company ? String(body.company).trim() : "",
-      requirement: body.requirement ? String(body.requirement).trim() : "",
+      name,
+      email,
+      phone,
+      company,
+      requirement,
       status: body.status || "New",
       source: body.source || "chatbot",
       client_id: body.client_id || "",

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
 import { readEnv } from "@/lib/config/env";
 import { AuditLogService } from "@/lib/services/auditLogService";
+import { assertAdminSession } from "@/lib/auth/requestRole";
 
 export const dynamic = "force-dynamic";
 
@@ -103,7 +104,10 @@ function generateDynamicPublications(): MarketingPublicationRecord[] {
 
 let IN_MEMORY_PUBLICATIONS: MarketingPublicationRecord[] = [];
 
-export async function GET() {
+export async function GET(req: Request) {
+  const gate = await assertAdminSession(req);
+  if (!gate.authorized) return gate.response;
+
   try {
     let publications: MarketingPublicationRecord[] = [];
     if (isFirebaseAdminReady()) {
@@ -142,8 +146,21 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const gate = await assertAdminSession(req);
+  if (!gate.authorized) return gate.response;
+  const { user } = gate;
+
   try {
     const body = await req.json().catch(() => ({}));
+
+    // Must have explicit approval flag
+    if (!body.approved && !body.explicitApproval && !body.isApproved) {
+      return NextResponse.json(
+        { success: false, error: "Explicit admin approval flag (approved: true) is required to publish marketing content." },
+        { status: 400 }
+      );
+    }
+
     const {
       title = "Sutra Studio Daily Master Reel",
       caption = "Harmonizing classical Indian aesthetic doctrines with autonomous generative AI workflows. #SutraStudio",
@@ -207,7 +224,7 @@ export async function POST(req: Request) {
       try {
         await adminDb().collection("marketing_publications").doc(pubId).set(record);
         AuditLogService.record({
-          who: { uid: "admin_master", email: "admin@sutrastudio.com", name: "Studio Admin", role: "admin" },
+          who: { uid: user.uid, email: user.email, name: user.name || "Studio Admin", role: "admin" },
           what: "SYSTEM_CONFIG_UPDATED",
           targetType: "system",
           targetId: pubId,

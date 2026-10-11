@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { assertAdminSession } from "@/lib/auth/requestRole";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,9 @@ interface GenerateAdRequest {
 }
 
 export async function POST(req: NextRequest) {
+  const gate = await assertAdminSession(req);
+  if (!gate.authorized) return gate.response;
+
   try {
     const body: GenerateAdRequest = await req.json();
     const { client, product, goal, location, budget, tone = "Luxury Atelier" } = body;

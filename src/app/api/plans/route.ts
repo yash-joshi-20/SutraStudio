@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { assertAdminSession } from "@/lib/auth/requestRole";
 
 const plans: any[] = [];
 
@@ -8,6 +9,9 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const auth = await assertAdminSession(req);
+    if (!auth.ok) return auth.response;
+
     const body = await req.json();
     const now = new Date().toISOString();
     const plan = {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { OrderPipelineService } from "@/lib/services/orderPipeline";
-import { requestRole } from "@/lib/auth/requestRole";
+import { assertAdminSession } from "@/lib/auth/requestRole";
 
 /**
  * GET /api/admin/reports/channels
@@ -8,10 +8,8 @@ import { requestRole } from "@/lib/auth/requestRole";
  * new_order, chat, whatsapp, email, instagram, facebook, ad_campaign, referral
  */
 export async function GET(req: Request) {
-  const userRole = await requestRole(req);
-  if (userRole === "client") {
-    return NextResponse.json({ error: "Forbidden: Admin access required." }, { status: 403 });
-  }
+  const auth = await assertAdminSession(req);
+  if (!auth.ok) return auth.response;
 
   try {
     const report = await OrderPipelineService.getChannelAttributionReport();
