@@ -291,6 +291,17 @@ export async function createProfileOnSignup(input: SignupInput): Promise<UserPro
   const profile = buildProfile(input);
   await ref.set({ ...profile, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
 
+  // Idempotently provision the client's Drive folder under Clients/<ClientName>_<clientId>/
+  try {
+    const { provisionClientDriveFolders } = await import("@/lib/services/googleDriveService");
+    await provisionClientDriveFolders({
+      clientId: input.uid,
+      clientName: input.name || "Client",
+    });
+  } catch (driveErr) {
+    console.warn("[session] Client Drive folder provisioning fallback:", driveErr);
+  }
+
   await adminDb()
     .collection("consents")
     .doc(`${input.uid}_${Date.now()}`)

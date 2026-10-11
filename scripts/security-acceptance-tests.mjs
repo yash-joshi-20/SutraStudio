@@ -569,6 +569,82 @@ async function runSecurityTests() {
     "Unauthorized payment verification denied: /api/admin/payments/verify and reject guarded by assertAdminSession (admin only, audit-logged)"
   );
 
+  // -------------------------------------------------------------
+  // TEST: Google Drive Per-Client Storage & Isolation Directives
+  // -------------------------------------------------------------
+  console.log("\n▶ TEST: Google Drive Per-Client Folders & Storage Isolation");
+
+  // 1. Cross-client file access isolation (download, rename, delete)
+  const driveFileRoutePath = path.join(rootDir, "src/app/api/drive/file/[fileId]/route.ts");
+  const driveFileRouteContent = fs.readFileSync(driveFileRoutePath, "utf-8");
+  assert(
+    driveFileRouteContent.includes("record.clientId !== user.uid") &&
+      driveFileRouteContent.includes("This file is not part of your account") &&
+      driveFileRouteContent.includes("forbidden(\"Forbidden: Cannot rename files") &&
+      driveFileRouteContent.includes("forbidden(\"Forbidden: Cannot delete files"),
+    "Cross-client file isolation enforced: non-owners cannot download, rename, or delete files (GET/PATCH/DELETE)"
+  );
+
+  const driveFilesListRoutePath = path.join(rootDir, "src/app/api/drive/files/route.ts");
+  const driveFilesListRouteContent = fs.readFileSync(driveFilesListRoutePath, "utf-8");
+  assert(
+    driveFilesListRouteContent.includes("const effectiveClientId = isAdmin ?") &&
+      driveFilesListRouteContent.includes(": userId"),
+    "Multi-tenant file listing enforced: clients can only list their own registered files"
+  );
+
+  // 2. Drive token failure & health check returns 503 + admin alert
+  const driveHealthRoutePath = path.join(rootDir, "src/app/api/admin/health/drive/route.ts");
+  const driveHealthRouteContent = fs.readFileSync(driveHealthRoutePath, "utf-8");
+  assert(
+    driveHealthRouteContent.includes("checkDriveHealth") &&
+      driveHealthRouteContent.includes("assertAdminSession") &&
+      driveHealthRouteContent.includes("status: 503"),
+    "Drive token failure health check: /api/admin/health/drive returns 503 when token fails or Drive unreachable"
+  );
+
+  const googleDriveServicePath = path.join(rootDir, "src/lib/services/googleDriveService.ts");
+  const googleDriveServiceContent = fs.readFileSync(googleDriveServicePath, "utf-8");
+  assert(
+    googleDriveServiceContent.includes("checkDriveHealth") &&
+      googleDriveServiceContent.includes("NotificationsStore.add") &&
+      googleDriveServiceContent.includes("Google Drive Storage Offline"),
+    "Drive failure notification alert: checkDriveHealth dispatches admin alert notification on failure"
+  );
+
+  // 3. Client folder hierarchy and privacy: Clients/<ClientName>_<clientId>/ (Inputs, Deliverables, Invoices, Admin)
+  assert(
+    googleDriveServiceContent.includes("provisionClientDriveFolders") &&
+      googleDriveServiceContent.includes("clientFolderTitle = `${cleanName}_${cleanId}`") &&
+      googleDriveServiceContent.includes("Inputs") &&
+      googleDriveServiceContent.includes("Deliverables") &&
+      googleDriveServiceContent.includes("Invoices") &&
+      googleDriveServiceContent.includes("Admin"),
+    "Per-client folder contract enforced: Clients/<ClientName>_<clientId>/ with Inputs, Deliverables, Invoices, and Admin folder"
+  );
+
+  // 4. Client Drive link concealment (drive.google.com URLs not shown to clients)
+  const folderRoutePath = path.join(rootDir, "src/app/api/drive/folder/[folderId]/route.ts");
+  const folderRouteContent = fs.readFileSync(folderRoutePath, "utf-8");
+  const foldersRoutePath = path.join(rootDir, "src/app/api/drive/folders/route.ts");
+  const foldersRouteContent = fs.readFileSync(foldersRoutePath, "utf-8");
+  assert(
+    folderRouteContent.includes("driveUrl: user.role === \"admin\" ?") &&
+      folderRouteContent.includes("openInDriveUrl: user.role === \"admin\" ?") &&
+      foldersRouteContent.includes("sanitizeFoldersForClient") &&
+      foldersRouteContent.includes("delete sanitized.subfolders[key].link"),
+    "Drive link concealment: raw Google Drive URLs stripped for non-admin clients (stream only via authenticated proxy)"
+  );
+
+  // 5. Audit logging for file upload and download
+  assert(
+    driveFileRouteContent.includes("AuditLogService.record") &&
+      driveFileRouteContent.includes("downloaded file") &&
+      driveFilesListRouteContent.includes("AuditLogService.record") &&
+      driveFilesListRouteContent.includes("uploaded file"),
+    "File audit logging enforced: upload and download actions recorded in administrative audit ledger"
+  );
+
   console.log("\n========================================================");
   console.log(`   SECURITY ACCEPTANCE: ${passedTests}/${totalTests} TESTS PASSED (100%) `);
   console.log("========================================================\n");

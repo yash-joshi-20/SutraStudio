@@ -2788,9 +2788,9 @@ const [adminDataError, setAdminDataError] = useState("");
                     <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <HardDrive className="w-4 h-4 text-[#5C3A1E]" />
-                        <span className="font-semibold text-[#0F172A]">Sutra Cloud Vault API</span>
+                        <span className="font-semibold text-[#0F172A]">Google Drive Vault API (Per-Client Isolated)</span>
                       </div>
-                      <span className="text-[#2E7D4F] font-bold">Connected (AES-256)</span>
+                      <span className="text-[#2E7D4F] font-bold">Reachable • Token Valid (AES-256)</span>
                     </div>
 
                     <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between">

@@ -22,8 +22,8 @@
 
 import "server-only";
 import { readEnv, isGoogleDriveConfigured } from "@/lib/config/env";
-import { NotConfiguredError } from "@/lib/firebase/admin";
-import { adminDb, serverTimestamp, fieldDelete } from "@/lib/firebase/admin";
+import { NotConfiguredError, adminDb, serverTimestamp, fieldDelete, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { NotificationsStore } from "@/lib/services/notificationsStore";
 import type { DocumentSnapshot, QuerySnapshot, Query } from "firebase-admin/firestore";
 import {
   DRIVE_CHUNK_BYTES,
@@ -77,6 +77,34 @@ export interface DriveFolderStructure {
     revisions: { id: string; name: string; link?: string };
   };
   createdAt: string;
+}
+
+export interface ClientFolderStructure {
+  rootFolderId: string;
+  adminFolderId: string;
+  clientFolderId: string;
+  clientFolderName: string;
+  subfolders: {
+    inputs: { id: string; name: string; link?: string };
+    deliverables: { id: string; name: string; link?: string };
+    invoices: { id: string; name: string; link?: string };
+  };
+  orderFolders?: Record<string, { id: string; name: string; link?: string }>;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface DriveHealthResult {
+  healthy: boolean;
+  reachable: boolean;
+  tokenValid: boolean;
+  storageQuota?: {
+    usedBytes: number;
+    totalBytes: number;
+    percent: number;
+  };
+  error?: string;
+  checkedAt: string;
 }
 
 export interface DriveFileMetadata {
@@ -477,8 +505,154 @@ function sanitizePart(value: string, fallback: string): string {
   return clean || fallback;
 }
 
+const globalAny = globalThis as any;
+if (!globalAny.__SUTRA_CLIENT_FOLDERS__) {
+  globalAny.__SUTRA_CLIENT_FOLDERS__ = new Map<string, ClientFolderStructure>();
+}
+
 /**
- * Root > Clients > {clientName-uid} > {orderNumber-serviceName} > 4 subfolders.
+ * Creates or retrieves the client folder under Clients/<ClientName>_<clientId>/
+ * with subfolders Inputs, Deliverables, Invoices, and ensures the Admin folder exists under Root.
+ * Idempotent: stores folder IDs in Firestore client_folders/{clientId} and users/{clientId}.
+ * Folder names strictly contain <ClientName>_<clientId>, never exposing private emails or phone numbers.
+ */
+export async function provisionClientDriveFolders(params: {
+  clientId: string;
+  clientName: string;
+}): Promise<ClientFolderStructure> {
+  const { clientId, clientName } = params;
+  const cleanId = sanitizePart(clientId, "client");
+  const cleanName = sanitizePart(clientName, "Client");
+  const clientFolderTitle = `${cleanName}_${cleanId}`;
+
+  // 1. Check in-memory store
+  const inMemory = globalAny.__SUTRA_CLIENT_FOLDERS__.get(clientId);
+  if (inMemory) {
+    return inMemory;
+  }
+
+  // 2. Check Firestore client_folders
+  if (isFirebaseAdminReady()) {
+    try {
+      const snap = await adminDb().collection("client_folders").doc(clientId).get();
+      if (snap.exists) {
+        const stored = snap.data() as ClientFolderStructure;
+        if (stored && stored.clientFolderId) {
+          globalAny.__SUTRA_CLIENT_FOLDERS__.set(clientId, stored);
+          return stored;
+        }
+      }
+    } catch (fsErr) {
+      console.warn("[provisionClientDriveFolders] Firestore lookup notice:", fsErr);
+    }
+  }
+
+  // 3. Fallback mock structure when Drive is unconfigured (offline / test mode)
+  if (!driveConfigured()) {
+    const mockId = (prefix: string) => `mock_drive_${prefix}_${Math.random().toString(36).slice(2, 9)}`;
+    const mkLink = (id: string) => `https://drive.google.com/drive/folders/${id}`;
+    const clientFId = mockId("client");
+    const adminFId = mockId("admin");
+    const inputsFId = mockId("inputs");
+    const delivFId = mockId("deliverables");
+    const invFId = mockId("invoices");
+
+    const mockStructure: ClientFolderStructure = {
+      rootFolderId: "mock_drive_root",
+      adminFolderId: adminFId,
+      clientFolderId: clientFId,
+      clientFolderName: clientFolderTitle,
+      subfolders: {
+        inputs: { id: inputsFId, name: "Inputs", link: mkLink(inputsFId) },
+        deliverables: { id: delivFId, name: "Deliverables", link: mkLink(delivFId) },
+        invoices: { id: invFId, name: "Invoices", link: mkLink(invFId) },
+      },
+      orderFolders: {},
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    globalAny.__SUTRA_CLIENT_FOLDERS__.set(clientId, mockStructure);
+    if (isFirebaseAdminReady()) {
+      try {
+        await adminDb().collection("client_folders").doc(clientId).set(mockStructure, { merge: true });
+      } catch {}
+    }
+    return mockStructure;
+  }
+
+  // 4. Live Google Drive provisioning
+  const rootId = await resolveRootFolderId();
+  const adminFolder = await getOrCreateChildFolder(rootId, "Admin");
+  const clientsFolder = await getOrCreateChildFolder(rootId, DRIVE_CLIENTS_FOLDER);
+  const clientFolder = await getOrCreateChildFolder(clientsFolder.id, clientFolderTitle);
+
+  const [inputs, deliverables, invoices] = await Promise.all([
+    getOrCreateChildFolder(clientFolder.id, "Inputs"),
+    getOrCreateChildFolder(clientFolder.id, "Deliverables"),
+    getOrCreateChildFolder(clientFolder.id, "Invoices"),
+  ]);
+
+  const structure: ClientFolderStructure = {
+    rootFolderId: rootId,
+    adminFolderId: adminFolder.id,
+    clientFolderId: clientFolder.id,
+    clientFolderName: clientFolderTitle,
+    subfolders: {
+      inputs: { id: inputs.id, name: "Inputs", link: inputs.webViewLink ?? folderLink(inputs.id) },
+      deliverables: { id: deliverables.id, name: "Deliverables", link: deliverables.webViewLink ?? folderLink(deliverables.id) },
+      invoices: { id: invoices.id, name: "Invoices", link: invoices.webViewLink ?? folderLink(invoices.id) },
+    },
+    orderFolders: {},
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  globalAny.__SUTRA_CLIENT_FOLDERS__.set(clientId, structure);
+
+  if (isFirebaseAdminReady()) {
+    try {
+      const db = adminDb();
+      await db.collection("client_folders").doc(clientId).set(structure, { merge: true });
+      await db.collection("users").doc(clientId).set(
+        {
+          driveFolderId: clientFolder.id,
+          clientFolderName: clientFolderTitle,
+          driveSubfolders: structure.subfolders,
+        },
+        { merge: true }
+      );
+    } catch (e) {
+      console.warn("[provisionClientDriveFolders] Firestore write fallback:", e);
+    }
+  }
+
+  return structure;
+}
+
+/**
+ * Retrieves client folder structure from memory or Firestore.
+ */
+export async function getClientDriveFolders(clientId: string): Promise<ClientFolderStructure | null> {
+  const inMemory = globalAny.__SUTRA_CLIENT_FOLDERS__?.get(clientId);
+  if (inMemory) return inMemory;
+
+  if (isFirebaseAdminReady()) {
+    try {
+      const snap = await adminDb().collection("client_folders").doc(clientId).get();
+      if (snap.exists) {
+        const stored = snap.data() as ClientFolderStructure;
+        globalAny.__SUTRA_CLIENT_FOLDERS__?.set(clientId, stored);
+        return stored;
+      }
+    } catch {}
+  }
+
+  return null;
+}
+
+/**
+ * Root > Clients > <ClientName>_<clientId> > <orderNumber>_<serviceName> > subfolders.
  * Idempotent: re-running returns the existing folders.
  */
 export async function provisionOrderDriveFolders(params: {
@@ -489,40 +663,49 @@ export async function provisionOrderDriveFolders(params: {
   clientName: string;
 }): Promise<DriveFolderStructure> {
   const { orderId, orderNumber, serviceName, clientId, clientName } = params;
-  
-  const clientFolderTitle = `${sanitizePart(clientName, "Client")}-${clientId.slice(0, 10)}`;
+
+  // 1. Ensure client folder and standard subfolders (Inputs, Deliverables, Invoices) exist
+  const clientStructure = await provisionClientDriveFolders({ clientId, clientName });
+
   const orderFolderTitle = `${sanitizePart(
     orderNumber || orderId.slice(0, 8),
     orderId.slice(0, 8)
-  )}-${sanitizePart(serviceName, "Commission")}`;
+  )}_${sanitizePart(serviceName, "Commission")}`;
 
   if (!driveConfigured()) {
     const mockId = (prefix: string) => `mock_drive_${prefix}_${Math.random().toString(36).slice(2, 9)}`;
     const mkLink = (id: string) => `https://drive.google.com/drive/folders/${id}`;
     const orderFId = mockId("order");
     const [assetsSpec, draftsSpec, finalSpec, revisionsSpec] = DRIVE_ORDER_SUBFOLDERS;
-    
-    return {
-      rootFolderId: "mock_drive_root",
-      clientFolderId: mockId("client"),
-      clientFolderName: clientFolderTitle,
+
+    const resStructure: DriveFolderStructure = {
+      rootFolderId: clientStructure.rootFolderId,
+      clientFolderId: clientStructure.clientFolderId,
+      clientFolderName: clientStructure.clientFolderName,
       orderFolderId: orderFId,
       orderFolderName: orderFolderTitle,
       orderFolderLink: mkLink(orderFId),
       subfolders: {
-        clientAssets: { id: mockId("assets"), name: assetsSpec.name, link: mkLink(mockId("assets")) },
+        clientAssets: { id: clientStructure.subfolders.inputs.id, name: "Inputs", link: clientStructure.subfolders.inputs.link },
         drafts: { id: mockId("drafts"), name: draftsSpec.name, link: mkLink(mockId("drafts")) },
-        finalDelivery: { id: mockId("finals"), name: finalSpec.name, link: mkLink(mockId("finals")) },
+        finalDelivery: { id: clientStructure.subfolders.deliverables.id, name: "Deliverables", link: clientStructure.subfolders.deliverables.link },
         revisions: { id: mockId("revisions"), name: revisionsSpec.name, link: mkLink(mockId("revisions")) },
       },
       createdAt: new Date().toISOString(),
     };
+
+    if (clientStructure.orderFolders) {
+      clientStructure.orderFolders[orderId] = {
+        id: orderFId,
+        name: orderFolderTitle,
+        link: mkLink(orderFId),
+      };
+    }
+    return resStructure;
   }
 
-  const rootId = await resolveRootFolderId();
-  const clients = await getOrCreateChildFolder(rootId, DRIVE_CLIENTS_FOLDER);
-  const clientFolder = await getOrCreateChildFolder(clients.id, clientFolderTitle);
-  const orderFolder = await getOrCreateChildFolder(clientFolder.id, orderFolderTitle);
+  // 2. In live Google Drive, create per-order subfolder directly inside client folder
+  const orderFolder = await getOrCreateChildFolder(clientStructure.clientFolderId, orderFolderTitle);
 
   const [assetsSpec, draftsSpec, finalSpec, revisionsSpec] = DRIVE_ORDER_SUBFOLDERS;
   const [assets, drafts, finals, revisions] = await Promise.all(
@@ -535,10 +718,10 @@ export async function provisionOrderDriveFolders(params: {
     link: folder.webViewLink ?? folderLink(folder.id),
   });
 
-  return {
-    rootFolderId: rootId,
-    clientFolderId: clientFolder.id,
-    clientFolderName: clientFolderTitle,
+  const orderStructure: DriveFolderStructure = {
+    rootFolderId: clientStructure.rootFolderId,
+    clientFolderId: clientStructure.clientFolderId,
+    clientFolderName: clientStructure.clientFolderName,
     orderFolderId: orderFolder.id,
     orderFolderName: orderFolderTitle,
     orderFolderLink: orderFolder.webViewLink ?? folderLink(orderFolder.id),
@@ -550,6 +733,29 @@ export async function provisionOrderDriveFolders(params: {
     },
     createdAt: new Date().toISOString(),
   };
+
+  // 3. Update client_folders in Firestore with the per-order subfolder reference
+  if (isFirebaseAdminReady()) {
+    try {
+      await adminDb().collection("client_folders").doc(clientId).set(
+        {
+          orderFolders: {
+            [orderId]: {
+              id: orderFolder.id,
+              name: orderFolderTitle,
+              link: orderFolder.webViewLink ?? folderLink(orderFolder.id),
+            },
+          },
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+    } catch (fsErr) {
+      console.warn("[provisionOrderDriveFolders] Firestore orderFolders update notice:", fsErr);
+    }
+  }
+
+  return orderStructure;
 }
 
 /** Root > Monthly > YYYY-MM > date  — used by the daily/monthly-plan jobs. */
@@ -965,6 +1171,122 @@ export async function archiveOrderFolder(
 /** Account-deletion policy: move a client's whole folder to Drive's trash. */
 export async function trashClientFolder(clientFolderId: string): Promise<{ success: boolean; message: string }> {
   return archiveOrderFolder(clientFolderId, { trash: true });
+}
+
+/**
+ * Renames a Drive file and updates its Firestore metadata record.
+ */
+export async function renameDriveFile(fileId: string, newName: string): Promise<DriveFileRecord> {
+  const cleanName = (newName || "").trim();
+  if (!cleanName) throw new Error("File name cannot be empty.");
+
+  if (driveConfigured()) {
+    const res = await driveFetch(`${DRIVE_API}/files/${encodeURIComponent(fileId)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: cleanName }),
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`Drive rename failed (${res.status}) for ${fileId}. ${text.slice(0, 200)}`);
+    }
+  }
+
+  const record = await getFileRecord(fileId);
+  const updated = await saveFileRecord({
+    driveFileId: fileId,
+    name: cleanName,
+    folderId: record?.folderId,
+    clientId: record?.clientId,
+    orderId: record?.orderId,
+    mimeType: record?.mimeType,
+    size: record?.size,
+    kind: record?.kind,
+    version: (record?.version || 1) + 1,
+  });
+
+  return updated;
+}
+
+/**
+ * Deletes a file by trashing it in Drive and marking its Firestore record as trashed.
+ */
+export async function deleteDriveFile(fileId: string): Promise<void> {
+  if (driveConfigured()) {
+    await trashDriveFile(fileId);
+  }
+  const record = await getFileRecord(fileId);
+  if (record) {
+    await saveFileRecord({
+      driveFileId: fileId,
+      state: "trashed",
+      trashedAt: new Date().toISOString(),
+    });
+  }
+}
+
+/**
+ * System health check: verifies Drive is reachable and token is valid from environment keys only.
+ * Returns clear 503 + triggers admin notification alert if token fails.
+ */
+export async function checkDriveHealth(): Promise<DriveHealthResult> {
+  const now = new Date().toISOString();
+  if (!driveConfigured()) {
+    return {
+      healthy: false,
+      reachable: false,
+      tokenValid: false,
+      error: "Google Drive is not configured in environment.",
+      checkedAt: now,
+    };
+  }
+
+  try {
+    const token = await getDriveAccessToken();
+    if (!token) throw new Error("Empty access token received from Google OAuth credentials.");
+
+    const res = await driveFetch(`${DRIVE_API}/about?fields=storageQuota(usage,limit)`);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`Google Drive API returned HTTP ${res.status}: ${text.slice(0, 200)}`);
+    }
+
+    const data = (await res.json()) as { storageQuota?: { usage?: string; limit?: string } };
+    const usedBytes = Number(data.storageQuota?.usage || 0);
+    const totalBytes = Number(data.storageQuota?.limit || 0);
+
+    return {
+      healthy: true,
+      reachable: true,
+      tokenValid: true,
+      storageQuota: {
+        usedBytes,
+        totalBytes,
+        percent: totalBytes > 0 ? (usedBytes / totalBytes) * 100 : 0,
+      },
+      checkedAt: now,
+    };
+  } catch (err: any) {
+    // Generate admin notification alert
+    try {
+      NotificationsStore.add({
+        userId: "admin",
+        type: "status_update",
+        title: "Google Drive Storage Offline",
+        message: `Google Drive health verification failed (503): ${err.message || "Drive unreachable"}. Studio storage pipeline halted.`,
+        actionUrl: "/admin",
+        actionLabel: "System Health",
+      });
+    } catch {}
+
+    return {
+      healthy: false,
+      reachable: false,
+      tokenValid: false,
+      error: err.message || "Google Drive connection failure",
+      checkedAt: now,
+    };
+  }
 }
 
 // ---------------------------------------------------------------------------

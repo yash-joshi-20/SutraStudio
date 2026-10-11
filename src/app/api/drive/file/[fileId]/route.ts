@@ -1,20 +1,25 @@
 /**
- * SUTRA STUDIO — Authenticated Drive download / preview proxy (STEP 30)
+ * SUTRA STUDIO — Authenticated Drive File Handler (Proxy, Rename, Delete)
  *
- * The browser never talks to Drive directly here. We resolve the caller's
- * session, confirm the requested file is REGISTERED to that uid (admins may
- * open any client's file), and only then relay the bytes with Range support.
+ * GET: Streams file bytes directly from Drive. Ownership verified. Download audit-logged.
+ * PATCH: Renames file. Ownership verified. Rename audit-logged.
+ * DELETE: Moves file to trash. Ownership verified. Delete audit-logged.
  *
- * Replaces the previous handler, which read `x-user-id` and then ignored it —
- * an effectively unauthenticated proxy to arbitrary Drive file IDs.
- *
- * Uses `mapApiError` rather than `guarded()` because the success path returns a
- * streaming `Response`, not a `NextResponse`.
+ * Multi-tenant isolation:
+ * - A client may only view, download, rename, or delete files belonging to their own account.
+ * - Administrators have supervisor access across all studio client files.
  */
 
-import { mapApiError, notFound, badRequest } from "@/lib/api/response";
+import { mapApiError, notFound, badRequest, forbidden, ok } from "@/lib/api/response";
 import { requireUser } from "@/lib/auth/session";
-import { getFileRecord, openDriveDownload, isGoogleNative } from "@/lib/services/googleDriveService";
+import {
+  getFileRecord,
+  openDriveDownload,
+  isGoogleNative,
+  renameDriveFile,
+  deleteDriveFile,
+} from "@/lib/services/googleDriveService";
+import { AuditLogService } from "@/lib/services/auditLogService";
 
 export const dynamic = "force-dynamic";
 
@@ -34,9 +39,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ fileId: 
     const isAdmin = user.role === "admin";
     const record = await getFileRecord(fileId);
 
-    // Ownership: an admin may open anything the app can reach; a client only
-    // files registered to THEIR uid. An unregistered id is a 404 for non-admins
-    // rather than a 403, so we do not leak which ids exist.
+    // Ownership check: an admin may open anything; a client only files registered to their uid.
     if (!isAdmin) {
       if (!record || record.clientId !== user.uid || record.state === "trashed") {
         return notFound("This file is not part of your account.");
@@ -45,7 +48,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ fileId: 
 
     if (record && isGoogleNative(record.mimeType)) {
       return badRequest(
-        "This is a Google Doc/Sheet and cannot be downloaded as a file. Open it from the client's Drive folder instead."
+        "This is a Google Doc/Sheet and cannot be downloaded as raw bytes."
       );
     }
 
@@ -55,6 +58,24 @@ export async function GET(req: Request, { params }: { params: Promise<{ fileId: 
 
     const result = await openDriveDownload(fileId, range ?? undefined);
     if (!result) return notFound("The file could no longer be found in Drive.");
+
+    // Audit log file download / streaming
+    try {
+      AuditLogService.record({
+        who: {
+          uid: user.uid,
+          email: user.email,
+          name: user.name || "Client",
+          role: user.role,
+        },
+        what: "STATUS_UPDATED",
+        targetType: "order",
+        targetId: fileId,
+        targetTitle: record?.name || fileId,
+        note: `${user.role === "admin" ? "Admin" : "Client"} downloaded file "${record?.name || fileId}" (size: ${record?.size || "unknown"} bytes).`,
+        type: "info",
+      });
+    } catch {}
 
     const headers = new Headers();
     headers.set("Content-Type", record?.mimeType ?? "application/octet-stream");
@@ -73,6 +94,99 @@ export async function GET(req: Request, { params }: { params: Promise<{ fileId: 
     if (!result.stream) return notFound("Drive returned no content for this file.");
 
     return new Response(result.stream, { status: result.status, headers });
+  } catch (err) {
+    return mapApiError(err);
+  }
+}
+
+export async function PATCH(req: Request, { params }: { params: Promise<{ fileId: string }> }) {
+  try {
+    const { fileId } = await params;
+    if (!fileId) return badRequest("Missing file id.");
+
+    const user = await requireUser();
+    const isAdmin = user.role === "admin";
+    const record = await getFileRecord(fileId);
+
+    if (!record || record.state === "trashed") {
+      return notFound("File not found or already trashed.");
+    }
+
+    // Ownership check: only owner or admin may rename
+    if (!isAdmin && record.clientId !== user.uid) {
+      return forbidden("Forbidden: Cannot rename files belonging to another client.");
+    }
+
+    const body = await req.json().catch(() => ({}));
+    const newName = (body.name ?? "").trim();
+    if (!newName) return badRequest("A new file name is required.");
+
+    const oldName = record.name;
+    const updated = await renameDriveFile(fileId, newName);
+
+    // Audit log file rename
+    try {
+      AuditLogService.record({
+        who: {
+          uid: user.uid,
+          email: user.email,
+          name: user.name || "User",
+          role: user.role,
+        },
+        what: "STATUS_UPDATED",
+        targetType: "order",
+        targetId: fileId,
+        targetTitle: newName,
+        note: `Renamed file from "${oldName}" to "${newName}".`,
+        type: "info",
+      });
+    } catch {}
+
+    return ok({ success: true, file: updated });
+  } catch (err) {
+    return mapApiError(err);
+  }
+}
+
+export async function DELETE(req: Request, { params }: { params: Promise<{ fileId: string }> }) {
+  try {
+    const { fileId } = await params;
+    if (!fileId) return badRequest("Missing file id.");
+
+    const user = await requireUser();
+    const isAdmin = user.role === "admin";
+    const record = await getFileRecord(fileId);
+
+    if (!record || record.state === "trashed") {
+      return notFound("File not found or already trashed.");
+    }
+
+    // Ownership check: only owner or admin may delete
+    if (!isAdmin && record.clientId !== user.uid) {
+      return forbidden("Forbidden: Cannot delete files belonging to another client.");
+    }
+
+    await deleteDriveFile(fileId);
+
+    // Audit log file deletion
+    try {
+      AuditLogService.record({
+        who: {
+          uid: user.uid,
+          email: user.email,
+          name: user.name || "User",
+          role: user.role,
+        },
+        what: "STATUS_UPDATED",
+        targetType: "order",
+        targetId: fileId,
+        targetTitle: record.name,
+        note: `Deleted file "${record.name}" from studio vault.`,
+        type: "warning",
+      });
+    } catch {}
+
+    return ok({ success: true, message: `File "${record.name}" removed.` });
   } catch (err) {
     return mapApiError(err);
   }

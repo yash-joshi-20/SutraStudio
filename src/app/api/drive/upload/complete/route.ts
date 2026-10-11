@@ -18,6 +18,7 @@ import {
   saveFileRecord,
 } from "@/lib/services/googleDriveService";
 import { DRIVE_MAX_FILE_BYTES, DRIVE_MAX_FILE_LABEL, type DriveCategoryKey } from "@/lib/config/driveStorage";
+import { AuditLogService } from "@/lib/services/auditLogService";
 
 export const dynamic = "force-dynamic";
 
@@ -108,6 +109,24 @@ export async function POST(req: Request) {
       notes: body.notes ?? "",
       adminName: user.name || user.email || "Studio Producer",
     });
+
+    // Audit log upload event
+    try {
+      AuditLogService.record({
+        who: {
+          uid: user.uid,
+          email: user.email,
+          name: user.name || "User",
+          role: user.role,
+        },
+        what: "STATUS_UPDATED",
+        targetType: "order",
+        targetId: order.id,
+        targetTitle: name,
+        note: `${user.role === "admin" ? "Admin" : "Client"} uploaded file "${name}" (${mb(sizeBytes)}) to ${kindKey} folder.`,
+        type: "info",
+      });
+    } catch {}
 
     return ok({
       success: true,

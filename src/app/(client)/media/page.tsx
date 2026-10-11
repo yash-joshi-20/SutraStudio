@@ -150,12 +150,12 @@ const INITIAL_ASSETS: MediaAsset[] = [
 ];
 
 const DRIVE_FOLDERS = [
-  { id: "all", name: "All Deliverables", icon: Folder },
-  { id: "03_FINAL_DELIVERY", name: "Final Masters", path: "/DELIVERABLES/03_FINAL_DELIVERY" },
-  { id: "02_DRAFTS", name: "Creative Drafts", path: "/DELIVERABLES/02_DRAFTS" },
-  { id: "BRAND_ASSETS", name: "Brand & Campaign Ads", path: "/BRAND_ASSETS" },
-  { id: "01_CLIENT_ASSETS", name: "Brief Materials", path: "/DELIVERABLES/01_CLIENT_ASSETS" },
-  { id: "04_REVISIONS", name: "Revision Passes", path: "/DELIVERABLES/04_REVISIONS" },
+  { id: "all", name: "All Files", icon: Folder },
+  { id: "Inputs", name: "Inputs & Briefs", path: "/Inputs" },
+  { id: "Deliverables", name: "Deliverables & Renders", path: "/Deliverables" },
+  { id: "Invoices", name: "Invoices & Receipts", path: "/Invoices" },
+  { id: "02_DRAFTS", name: "Creative Drafts", path: "/Drafts" },
+  { id: "04_REVISIONS", name: "Revision Passes", path: "/Revisions" },
 ];
 
 export default function MediaLibraryPage() {
@@ -308,6 +308,42 @@ export default function MediaLibraryPage() {
                   checksum: `sha256:${vf.id.slice(0, 16)}...`,
                   thumbnail: vf.thumbnailUrl || vf.storageUrl || vf.driveUrl || "https://image.pollinations.ai/prompt/luxury%20perfume%20bottle%2C%20obsidian%20glass%2C%2024k%20gold%20cap%2C%20caustic%20refractions%2C%20warm%20saffron%20rim%20lighting%2C%20hasselblad%20commercial%20product%20shot%2C%208k?width=1200&height=800&nologo=true",
                   downloadUrl: vf.storageUrl || vf.driveUrl,
+                  isVideo: isVid,
+                });
+              }
+            });
+          }
+        }
+      } catch {
+        // quiet
+      }
+
+      // 3. Fetch Drive Files endpoint (authenticated proxy, zero Google Drive links exposed)
+      try {
+        const driveRes = await fetch("/api/drive/files");
+        if (driveRes.ok) {
+          const driveData = await driveRes.json();
+          if (Array.isArray(driveData.files)) {
+            driveData.files.forEach((df: any) => {
+              if (!seenIds.has(df.driveFileId)) {
+                seenIds.add(df.driveFileId);
+                const isVid = df.mimeType?.includes("video");
+                const isImg = df.mimeType?.includes("image");
+                const is3D = df.mimeType?.includes("model") || df.name?.endsWith(".gltf") || df.name?.endsWith(".glb");
+                const isInv = df.name?.toLowerCase().includes("invoice") || df.name?.toLowerCase().includes("receipt");
+                const folderName = isInv ? "Invoices" : df.kind === "client_assets" ? "Inputs" : "Deliverables";
+                combinedAssets.unshift({
+                  id: df.driveFileId,
+                  name: df.name,
+                  type: isVid ? "Video" : isImg ? "Image" : is3D ? "3D" : "Document",
+                  size: df.size ? `${(df.size / (1024 * 1024)).toFixed(1)} MB` : "1.0 MB",
+                  folder: `/${folderName}`,
+                  date: df.createdAt ? new Date(df.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Drive Vault File",
+                  driveFileId: df.driveFileId,
+                  resolution: "Sutra Cloud Vault Synced",
+                  checksum: `sha256:${df.driveFileId.slice(0, 16)}...`,
+                  thumbnail: df.previewUrl || `/api/drive/file/${df.driveFileId}`,
+                  downloadUrl: df.downloadUrl || `/api/drive/file/${df.driveFileId}?download=true`,
                   isVideo: isVid,
                 });
               }

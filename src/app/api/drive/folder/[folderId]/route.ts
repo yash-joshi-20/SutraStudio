@@ -39,9 +39,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ folderId
       folderId,
       orderId: order?.id ?? null,
       clientName: order?.clientName ?? null,
-      driveUrl: folderLink(folderId),
-      /** The browser navigates here — Drive enforces its own auth on top. */
-      openUrl: folderLink(folderId),
+      driveUrl: user.role === "admin" ? folderLink(folderId) : undefined,
+      openInDriveUrl: user.role === "admin" ? folderLink(folderId) : undefined,
+      openUrl: user.role === "admin" ? folderLink(folderId) : undefined,
       fileCount: records.length,
       files: records.slice(0, 50).map((r) => ({
         driveFileId: r.driveFileId,
