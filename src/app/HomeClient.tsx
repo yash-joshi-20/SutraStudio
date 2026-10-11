@@ -26,7 +26,6 @@ import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import {
   Play,
   Sparkles,
-  Bot,
   Layers,
   Zap,
   Target,
@@ -160,32 +159,11 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  {/* Action Buttons */}
+                  {/* Action Button */}
                   <div className="hero-cta flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-2">
                     <Link href={activeDisciplineData.href || "/orders"} className="w-full sm:w-auto">
                       <Button variant="primary" size="lg" withArrow className="w-full sm:w-auto shadow-warm justify-center">
                         Start Commission ({activeDisciplineData.price})
-                      </Button>
-                    </Link>
-
-                    <Button
-                      variant="secondary"
-                      size="lg"
-                      leftIcon={<Play className="w-4 h-4 text-[#5C3A1E] fill-current" />}
-                      onClick={() => setDemoModalOpen(true)}
-                      className="w-full sm:w-auto justify-center"
-                    >
-                      Watch Showreel
-                    </Button>
-
-                    <Link href="/chat" className="w-full sm:w-auto">
-                      <Button
-                        variant="ghost"
-                        size="lg"
-                        leftIcon={<Bot className="w-4 h-4 text-[#D4A35A]" />}
-                        className="w-full sm:w-auto justify-center text-[#5C3A1E] hover:bg-[#F4EFE6]"
-                      >
-                        Studio Concierge
                       </Button>
                     </Link>
                   </div>
