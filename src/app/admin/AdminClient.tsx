@@ -8498,19 +8498,34 @@ const [adminDataError, setAdminDataError] = useState("");
                 </div>
 
                 {/* Footer Controls */}
-                <div className="flex items-center justify-between pt-4 border-t border-[#EADFCB]/60">
-                  <Link
-                    href={`/chat?client=${encodeURIComponent(profile.email || profile.name)}`}
-                    onClick={() => {
-                      setSelectedDossier(null);
-                      setSelectedClient(null);
-                    }}
-                  >
-                    <Button variant="secondary" size="sm" className="gap-1.5">
-                      <MessageSquare className="w-3.5 h-3.5 text-[#D4A35A]" />
-                      Open Chat Thread
-                    </Button>
-                  </Link>
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-4 border-t border-[#EADFCB]/60">
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/chat?client=${encodeURIComponent(profile.email || profile.name)}`}
+                      onClick={() => {
+                        setSelectedDossier(null);
+                        setSelectedClient(null);
+                      }}
+                    >
+                      <Button variant="secondary" size="sm" className="gap-1.5">
+                        <MessageSquare className="w-3.5 h-3.5 text-[#D4A35A]" />
+                        Open Chat Thread
+                      </Button>
+                    </Link>
+
+                    <Link
+                      href={`/admin/ad-desk?clientId=${encodeURIComponent(profile.id || profile.uid || "cli_002")}`}
+                      onClick={() => {
+                        setSelectedDossier(null);
+                        setSelectedClient(null);
+                      }}
+                    >
+                      <Button variant="secondary" size="sm" className="gap-1.5 bg-[#FFFDF9] border border-[#EADFCB] hover:border-[#D4A35A] text-[#171717]">
+                        <Megaphone className="w-3.5 h-3.5 text-[#D4A35A]" />
+                        Ad Copy Desk
+                      </Button>
+                    </Link>
+                  </div>
 
                   <Button
                     variant="primary"

@@ -60,6 +60,8 @@ export const CLIENT_NAV_ITEMS: PortalNavItem[] = [
 export const ADMIN_NAV_ITEMS: PortalNavItem[] = [
   { name: "Dashboard (KPIs)", href: "/admin", tabKey: "overview", icon: Activity },
   { name: "Brand Profile Guide", href: "/admin/brand-guide", icon: BookOpen },
+  { name: "Ad Copy Desk", href: "/admin/ad-desk", icon: Megaphone },
+  { name: "Agency Guidelines", href: "/admin/guidelines", icon: FileText },
   { name: "Meta Ads & Marketing", href: "/admin/marketing", icon: Megaphone },
   { name: "Orders Ledger", href: "/admin?tab=approvals", tabKey: "approvals", icon: ShoppingBag },
   { name: "Client Directory", href: "/admin?tab=clients", tabKey: "clients", icon: User },
