@@ -81,7 +81,7 @@ export class N8nAutomationService {
       readEnv("N8N_BASE_URL") ||
       readEnv("N8N_HOST" as any) ||
       readPublicEnv("NEXT_PUBLIC_N8N_URL" as any) ||
-      "https://sanitary-engine-pursuable.ngrok-free.dev"
+      "https://n8n.sutrastudios.in"
     );
   }
 
@@ -191,10 +191,6 @@ export class N8nAutomationService {
     const candidateUrls: string[] = [];
     if (explicitWebhook) {
       candidateUrls.push(explicitWebhook);
-    }
-    const ngrokDirect = "https://sanitary-engine-pursuable.ngrok-free.dev/webhook/sutra-master-dispatch";
-    if (!candidateUrls.includes(ngrokDirect)) {
-      candidateUrls.push(ngrokDirect);
     }
     for (const p of pathsToTry) {
       candidateUrls.push(`${n8nBaseUrl}/webhook/${p}`);

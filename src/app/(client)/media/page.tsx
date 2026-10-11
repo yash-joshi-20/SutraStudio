@@ -39,6 +39,8 @@ import {
   Share2,
 } from "lucide-react";
 import { RouteGuard } from "@/components/auth/RouteGuard";
+import { ThreeDModelViewer } from "@/components/viewers/ThreeDModelViewer";
+import { Panorama360Viewer } from "@/components/viewers/Panorama360Viewer";
 
 export interface MediaAsset {
   id: string;
@@ -891,9 +893,21 @@ export default function MediaLibraryPage() {
         >
           {selectedAsset && (
             <div className="space-y-5">
-              {/* Media Preview Canvas / Video Player */}
+              {/* Media Preview Canvas / Video Player / 3D & 360 Viewers */}
               <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-[#171717] border border-[#EADFCB] flex items-center justify-center">
-                {selectedAsset.isVideo ? (
+                {selectedAsset.type === "3D" ? (
+                  <ThreeDModelViewer
+                    modelUrl={selectedAsset.downloadUrl}
+                    title={selectedAsset.name}
+                    className="w-full h-full"
+                  />
+                ) : selectedAsset.type === "360" ? (
+                  <Panorama360Viewer
+                    imageUrl={selectedAsset.downloadUrl || selectedAsset.thumbnail}
+                    title={selectedAsset.name}
+                    className="w-full h-full"
+                  />
+                ) : selectedAsset.isVideo ? (
                   <video
                     src={selectedAsset.downloadUrl || selectedAsset.thumbnail}
                     controls
@@ -909,14 +923,16 @@ export default function MediaLibraryPage() {
                     className="object-contain"
                   />
                 )}
-                <div className="absolute top-3 left-3 z-10 flex items-center gap-2 pointer-events-none">
-                  <span className="rounded-full bg-[#171717]/85 backdrop-blur-md px-3 py-1 text-xs font-semibold text-white border border-white/10 uppercase tracking-wider">
-                    {selectedAsset.type}
-                  </span>
-                  <span className="rounded-full bg-[#D4A35A] px-2.5 py-1 text-xs font-bold text-[#0F172A] shadow-xs">
-                    {selectedAsset.size}
-                  </span>
-                </div>
+                {selectedAsset.type !== "3D" && selectedAsset.type !== "360" && (
+                  <div className="absolute top-3 left-3 z-10 flex items-center gap-2 pointer-events-none">
+                    <span className="rounded-full bg-[#171717]/85 backdrop-blur-md px-3 py-1 text-xs font-semibold text-white border border-white/10 uppercase tracking-wider">
+                      {selectedAsset.type}
+                    </span>
+                    <span className="rounded-full bg-[#D4A35A] px-2.5 py-1 text-xs font-bold text-[#0F172A] shadow-xs">
+                      {selectedAsset.size}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Metadata Details Grid */}

@@ -107,7 +107,6 @@ export async function runAgencySelfPromotionWorkflow(options?: {
     "https://n8n.sutrastudios.in";
   const candidateUrls = [
     readEnv("N8N_MASTER_DISPATCH_WEBHOOK"),
-    "https://sanitary-engine-pursuable.ngrok-free.dev/webhook/sutra-master-dispatch",
     `${n8nBaseUrl.replace(/\/$/, "")}/webhook/sutra-master-dispatch`,
     "https://n8n.sutrastudios.in/webhook/sutra-master-dispatch",
   ].filter(Boolean) as string[];
