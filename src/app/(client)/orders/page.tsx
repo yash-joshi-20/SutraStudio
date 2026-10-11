@@ -57,6 +57,7 @@ import { computeOrderProgress, type OrderProgressInfo } from "@/lib/services/ord
 import { uploadFileToDrive } from "@/lib/drive/useDriveUpload";
 import { soundSystem } from "@/lib/audio/soundSystem";
 import { AnimatedCheckSuccess, AnimatedReminderClock } from "@/components/ui/AnimatedStatusIcons";
+import { SyncManager } from "@/lib/sync/syncService";
 
 // Unified Order Item representing both legacy and modern Firestore orders
 interface OrderItem {
@@ -515,9 +516,15 @@ export default function OrdersPage() {
           ],
         }));
         setOrders(mapped);
+        SyncManager.setCachedOrders(mapped);
       }
     } catch {
-      setOrdersError("Unable to connect to order pipeline. Check network or reload.");
+      const cached = SyncManager.getCachedOrders();
+      if (cached && cached.length > 0) {
+        setOrders(cached);
+      } else {
+        setOrdersError("Unable to connect to order pipeline. Check network or reload.");
+      }
     } finally {
       if (!silent) setIsLoadingOrders(false);
     }
@@ -541,9 +548,15 @@ export default function OrdersPage() {
     };
     window.addEventListener("sutra_orders_changed", handleOrderEvent);
 
+    // Cross-window / cross-device broadcast listeners
+    const unsubOrder = SyncManager.subscribe("ORDERS_UPDATED", () => loadOrders(true));
+    const unsubStatus = SyncManager.subscribe("ORDER_STATUS_CHANGED", () => loadOrders(true));
+
     return () => {
       clearInterval(interval);
       window.removeEventListener("sutra_orders_changed", handleOrderEvent);
+      unsubOrder();
+      unsubStatus();
     };
   }, [loadOrders, loadCatalogs]);
 

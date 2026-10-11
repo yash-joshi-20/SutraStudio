@@ -1104,6 +1104,23 @@ export async function PATCH(req: Request) {
       OrdersStore.update(targetOrder.id, targetOrder);
       await OrdersStore.updateAsync(targetOrder.id, targetOrder);
 
+      // Dispatch live status update notification to the client
+      try {
+        NotificationsStore.add({
+          userId: targetOrder.clientUid || targetOrder.clientId || targetOrder.clientEmail,
+          type: "status_update",
+          title: `Order #${targetOrder.orderNumber || targetOrder.code} Status Updated`,
+          message: `Your commission for ${targetOrder.service} has transitioned to: ${statusLabel}.`,
+          orderId: targetOrder.id,
+          orderNumber: targetOrder.orderNumber || targetOrder.code,
+          actionUrl: "/orders",
+          actionLabel: "View Order",
+          recipientEmail: targetOrder.clientEmail,
+        });
+      } catch (err) {
+        console.warn("[Orders API] Error dispatching client status notification:", err);
+      }
+
       // Record in immutable Administrative Audit Trail
       try {
         AuditLogService.record({

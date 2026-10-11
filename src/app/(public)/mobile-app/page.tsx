@@ -33,6 +33,7 @@ import {
   Compass,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { LiveAppSimulator } from "@/components/mobile-app/LiveAppSimulator";
 
 export default function MobileAppLandingPage() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -40,6 +41,7 @@ export default function MobileAppLandingPage() {
   const [showIosGuide, setShowIosGuide] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [activeScreenTab, setActiveScreenTab] = useState<number>(0);
+  const [phoneMode, setPhoneMode] = useState<"interactive" | "video">("interactive");
 
   // Capture PWA beforeinstallprompt event
   useEffect(() => {
@@ -282,8 +284,36 @@ export default function MobileAppLandingPage() {
                 </div>
               </div>
 
-              {/* Right Column: Realistic CSS Mobile Device Frame Mockup with Live Video Demo */}
-              <div className="lg:col-span-5 flex justify-center">
+              {/* Right Column: Realistic CSS Mobile Device Frame Mockup with Live Interactive App or Video Demo */}
+              <div className="lg:col-span-5 flex flex-col items-center">
+                {/* Simulator Mode Switcher Pill */}
+                <div className="mb-3.5 inline-flex items-center gap-1.5 p-1 rounded-2xl bg-white border border-[#EADFCB] shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={() => setPhoneMode("interactive")}
+                    className={`px-3 py-1 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                      phoneMode === "interactive"
+                        ? "bg-[#5C3A1E] text-white shadow-2xs"
+                        : "text-[#64748B] hover:text-[#0F172A]"
+                    }`}
+                  >
+                    <Smartphone className="w-3.5 h-3.5" />
+                    <span>Live Interactive App</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPhoneMode("video")}
+                    className={`px-3 py-1 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                      phoneMode === "video"
+                        ? "bg-[#5C3A1E] text-white shadow-2xs"
+                        : "text-[#64748B] hover:text-[#0F172A]"
+                    }`}
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>Showreel Video</span>
+                  </button>
+                </div>
+
                 <div className="relative w-full max-w-[280px] xs:max-w-[310px] sm:max-w-[340px]">
                   {/* Subtle golden ambient glow */}
                   <div className="absolute -inset-4 bg-gradient-to-tr from-[#D4A35A]/20 via-[#5C3A1E]/10 to-transparent rounded-[50px] blur-2xl" />
@@ -295,20 +325,23 @@ export default function MobileAppLandingPage() {
                       <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#1E293B]" />
                     </div>
 
-                    {/* Phone Screen Canvas with Video Stream */}
-                    <div className="rounded-[30px] sm:rounded-[34px] bg-[#0F172A] overflow-hidden flex flex-col h-[520px] xs:h-[560px] sm:h-[620px] border border-[#EADFCB] text-[#0F172A] relative">
-                      {/* Background Video Stream */}
-                      <BackgroundVideo
-                        video="app-demo"
-                        layout="fill"
-                        overlay="none"
-                        showPlayPauseToggle={false}
-                        priority
-                      />
+                    {/* Phone Screen Canvas */}
+                    <div className="rounded-[30px] sm:rounded-[34px] bg-[#FAF9F5] overflow-hidden flex flex-col h-[520px] xs:h-[560px] sm:h-[620px] border border-[#EADFCB] text-[#0F172A] relative">
+                      {phoneMode === "interactive" ? (
+                        <LiveAppSimulator />
+                      ) : (
+                        <BackgroundVideo
+                          video="app-demo"
+                          layout="fill"
+                          overlay="none"
+                          showPlayPauseToggle={false}
+                          priority
+                        />
+                      )}
 
                       {/* Home indicator bar */}
-                      <div className="absolute bottom-2 inset-x-0 py-1 flex justify-center z-20">
-                        <div className="w-24 h-1 bg-[#FFFDF9] rounded-full opacity-60" />
+                      <div className="absolute bottom-1.5 inset-x-0 py-1 flex justify-center z-30 pointer-events-none">
+                        <div className="w-20 sm:w-24 h-1 bg-[#0F172A] rounded-full opacity-30" />
                       </div>
                     </div>
                   </div>

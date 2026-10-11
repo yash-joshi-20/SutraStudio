@@ -7,6 +7,7 @@ import { RouteGuard } from "@/components/auth/RouteGuard";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
+import { SyncManager } from "@/lib/sync/syncService";
 import {
   ShieldCheck,
   RefreshCw,
@@ -259,6 +260,15 @@ export default function AdminOrdersPage() {
         }),
       });
 
+      // Broadcast real-time status change to client portal and mobile app views
+      SyncManager.broadcast("ORDER_STATUS_CHANGED", {
+        orderId: order.id,
+        status: "in_production",
+        paymentStatus: "paid",
+        deliverables: returnedDeliverables,
+      });
+      SyncManager.broadcast("NOTIFICATIONS_UPDATED", {});
+
       setDispatchStatus("✓ Success! Assets Vaulted & Order Placed In Production.");
       setInspectingOrder((prev) =>
         prev
@@ -299,6 +309,14 @@ export default function AdminOrdersPage() {
           notes: "Payment rejected / UTR invalid.",
         }),
       });
+
+      SyncManager.broadcast("ORDER_STATUS_CHANGED", {
+        orderId,
+        status: "cancelled",
+        paymentStatus: "failed",
+      });
+      SyncManager.broadcast("NOTIFICATIONS_UPDATED", {});
+
       fetchOrders(true);
       setInspectingOrder(null);
     } catch (e) {

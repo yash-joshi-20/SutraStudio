@@ -24,6 +24,7 @@ import { useAuth } from "@/lib/auth/authContext";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { soundSystem } from "@/lib/audio/soundSystem";
 import { AnimatedBellIcon } from "@/components/ui/AnimatedStatusIcons";
+import { SyncManager } from "@/lib/sync/syncService";
 
 export interface StudioNotificationItem {
   id: string;
@@ -49,35 +50,50 @@ export function NotificationBell({
   const { user, role } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [tab, setTab] = useState<"all" | "unread">("unread");
-  const [notifications, setNotifications] = useState<StudioNotificationItem[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const cachedNotifs = SyncManager.getCachedNotifications();
+  const [notifications, setNotifications] = useState<StudioNotificationItem[]>(cachedNotifs.notifications);
+  const [unreadCount, setUnreadCount] = useState(cachedNotifs.unreadCount);
   const [isLoading, setIsLoading] = useState(false);
   const [isMuted, setIsMuted] = useState(soundSystem.getMuted());
+  const [pushPermission, setPushPermission] = useState<NotificationPermission>(
+    typeof window !== "undefined" && "Notification" in window ? Notification.permission : "default"
+  );
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const prevUnreadCountRef = useRef<number>(0);
+  const prevUnreadCountRef = useRef<number>(cachedNotifs.unreadCount);
   const hasInitializedRef = useRef<boolean>(false);
 
   const fetchNotifications = useCallback(async () => {
     try {
-      const res = await fetch("/api/notifications", {
-        headers: {},
-      });
+      const res = await fetch("/api/notifications");
       if (res.ok) {
         const data = await res.json();
         const items = data.notifications || [];
         const unread = data.unreadCount || 0;
         setNotifications(items);
         setUnreadCount(unread);
+        SyncManager.setCachedNotifications(items, unread);
 
-        // If new notifications arrived after initial load, play chime
+        // If new notifications arrived after initial load, play chime & trigger push notification
         if (hasInitializedRef.current && unread > prevUnreadCountRef.current) {
           soundSystem.play("notification");
+          if (items.length > 0) {
+            SyncManager.showPushNotification(items[0].title || "Sutra Studio Notification", {
+              body: items[0].message,
+              actionUrl: items[0].actionUrl || "/orders",
+              orderId: items[0].orderId,
+            });
+          }
         }
         prevUnreadCountRef.current = unread;
         hasInitializedRef.current = true;
       }
     } catch {
-      // quiet fallback
+      // quiet fallback to cache
+      const cached = SyncManager.getCachedNotifications();
+      if (cached.notifications.length > 0) {
+        setNotifications(cached.notifications);
+        setUnreadCount(cached.unreadCount);
+      }
     }
   }, [user?.uid, role]);
 
@@ -91,15 +107,39 @@ export function NotificationBell({
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 8000);
+    const interval = setInterval(fetchNotifications, 7000);
     const handleOrderChange = () => fetchNotifications();
     window.addEventListener("sutra_orders_changed", handleOrderChange);
+
+    // Cross-tab real-time listener from SyncManager
+    const unsubRead = SyncManager.subscribe("NOTIFICATION_READ", (payload: any) => {
+      if (payload.allRead) {
+        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+        setUnreadCount(0);
+      } else if (payload.id) {
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === payload.id ? { ...n, read: true } : n))
+        );
+        setUnreadCount((c) => Math.max(0, c - 1));
+      }
+    });
+
+    const unsubUpdated = SyncManager.subscribe("NOTIFICATIONS_UPDATED", () => {
+      fetchNotifications();
+    });
 
     return () => {
       clearInterval(interval);
       window.removeEventListener("sutra_orders_changed", handleOrderChange);
+      unsubRead();
+      unsubUpdated();
     };
   }, [fetchNotifications]);
+
+  const handleRequestPush = async () => {
+    const perm = await SyncManager.requestNotificationPermission();
+    setPushPermission(perm);
+  };
 
   // Close dropdown on click outside or escape key
   useEffect(() => {
@@ -126,6 +166,13 @@ export function NotificationBell({
 
   const handleMarkAsRead = async (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+    // Optimistic local and broadcast
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+    setUnreadCount((c) => Math.max(0, c - 1));
+    SyncManager.broadcast("NOTIFICATION_READ", { id });
+
     try {
       await fetch("/api/notifications", {
         method: "PATCH",
@@ -134,17 +181,23 @@ export function NotificationBell({
         },
         body: JSON.stringify({ id }),
       });
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-      );
-      setUnreadCount((c) => Math.max(0, c - 1));
     } catch {
-      // fallback
+      // offline fallback
+      SyncManager.queueOfflineMutation({
+        endpoint: "/api/notifications",
+        method: "PATCH",
+        body: { id },
+        description: `Mark notification #${id} as read`,
+      });
     }
   };
 
   const handleMarkAllAsRead = async () => {
     setIsLoading(true);
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setUnreadCount(0);
+    SyncManager.broadcast("NOTIFICATION_READ", { allRead: true });
+
     try {
       await fetch("/api/notifications", {
         method: "PATCH",
@@ -153,10 +206,13 @@ export function NotificationBell({
         },
         body: JSON.stringify({ markAllAsRead: true }),
       });
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-      setUnreadCount(0);
     } catch {
-      // fallback
+      SyncManager.queueOfflineMutation({
+        endpoint: "/api/notifications",
+        method: "PATCH",
+        body: { markAllAsRead: true },
+        description: "Mark all notifications as read",
+      });
     } finally {
       setIsLoading(false);
     }

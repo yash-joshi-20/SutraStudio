@@ -31,6 +31,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { useConfirm } from "@/hooks/useConfirm";
+import { SyncManager } from "@/lib/sync/syncService";
 
 export default function ProfilePage() {
   const { user, profile: authProfile, logout, logoutEverywhere } = useAuth();
@@ -40,20 +41,20 @@ export default function ProfilePage() {
   const [saved, setSaved] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
 
-  // Seeded from the verified server profile. Empty string means "not provided
-  // yet" — never a placeholder identity presented as real data.
+  // Seeded from the verified server profile or cached profile.
+  const cachedProfile = SyncManager.getCachedProfile();
   const [profile, setProfile] = useState({
-    fullName: authProfile?.displayName || user?.displayName || "",
+    fullName: authProfile?.displayName || user?.displayName || cachedProfile?.displayName || "",
     jobTitle: "",
     email: user?.email || "",
-    phone: authProfile?.phone || "",
-    companyName: authProfile?.companyName || "",
-    companyWebsite: authProfile?.website || "",
-    location: authProfile?.billing?.city || "",
-    driveFolder: authProfile?.driveFolderId || "",
+    phone: authProfile?.phone || cachedProfile?.phone || "",
+    companyName: authProfile?.companyName || cachedProfile?.companyName || "",
+    companyWebsite: authProfile?.website || cachedProfile?.website || "",
+    location: authProfile?.billing?.city || cachedProfile?.billing?.city || "",
+    driveFolder: authProfile?.driveFolderId || cachedProfile?.driveFolderId || "",
   });
 
-  // Keep form in sync when auth profile loads asynchronously
+  // Keep form in sync when auth profile loads asynchronously or via real-time sync
   React.useEffect(() => {
     if (user || authProfile) {
       setProfile((prev) => ({
@@ -67,6 +68,20 @@ export default function ProfilePage() {
         driveFolder: authProfile?.driveFolderId || prev.driveFolder,
       }));
     }
+
+    const unsub = SyncManager.subscribe("PROFILE_UPDATED", (updated: any) => {
+      if (updated) {
+        setProfile((prev) => ({
+          ...prev,
+          fullName: updated.displayName || updated.fullName || prev.fullName,
+          phone: updated.phone || prev.phone,
+          companyName: updated.companyName || prev.companyName,
+          companyWebsite: updated.website || prev.companyWebsite,
+        }));
+      }
+    });
+
+    return () => unsub();
   }, [user, authProfile]);
 
   // Password Change State
@@ -89,23 +104,50 @@ export default function ProfilePage() {
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaveLoading(true);
+
+    const payload = {
+      displayName: profile.fullName,
+      phone: profile.phone,
+      companyName: profile.companyName,
+      website: profile.companyWebsite,
+    };
+
+    // Optimistic local cache & broadcast across tabs and mobile-app view
+    SyncManager.setCachedProfile({
+      ...authProfile,
+      displayName: profile.fullName,
+      phone: profile.phone,
+      companyName: profile.companyName,
+      website: profile.companyWebsite,
+    });
+    SyncManager.broadcast("PROFILE_UPDATED", payload);
+
     try {
-      await fetch("/api/account/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({
-          displayName: profile.fullName,
-          phone: profile.phone,
-          companyName: profile.companyName,
-          website: profile.companyWebsite,
-        }),
-      });
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        SyncManager.queueOfflineMutation({
+          endpoint: "/api/account/profile",
+          method: "PATCH",
+          body: payload,
+          description: "Update client profile details",
+        });
+      } else {
+        await fetch("/api/account/profile", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify(payload),
+        });
+      }
       setSaved(true);
       setIsEditing(false);
       setTimeout(() => setSaved(false), 3500);
     } catch {
-      // non-blocking fallback
+      SyncManager.queueOfflineMutation({
+        endpoint: "/api/account/profile",
+        method: "PATCH",
+        body: payload,
+        description: "Update client profile details",
+      });
       setSaved(true);
       setIsEditing(false);
     } finally {
