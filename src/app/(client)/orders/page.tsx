@@ -264,6 +264,30 @@ export default function OrdersPage() {
     const packageParam = params.get("package");
     const serviceParam = params.get("service");
 
+    const utmSource = params.get("utm_source");
+    const utmMedium = params.get("utm_medium");
+    const utmCampaign = params.get("utm_campaign");
+    const utmTerm = params.get("utm_term");
+    const utmContent = params.get("utm_content");
+    const referralParam = params.get("ref") || params.get("referral");
+
+    if (utmSource || utmCampaign || referralParam) {
+      const attributionData = {
+        utm_source: utmSource || undefined,
+        utm_medium: utmMedium || undefined,
+        utm_campaign: utmCampaign || undefined,
+        utm_term: utmTerm || undefined,
+        utm_content: utmContent || undefined,
+        referralCode: referralParam || undefined,
+        referrer: typeof document !== "undefined" ? document.referrer || undefined : undefined,
+        landingPage: window.location.pathname,
+        capturedAt: new Date().toISOString(),
+      };
+      try {
+        sessionStorage.setItem("sutra_attribution", JSON.stringify(attributionData));
+      } catch {}
+    }
+
     if (amountParam && !isNaN(Number(amountParam))) {
       const parsedAmount = Number(amountParam);
       const customCode = refParam
@@ -847,7 +871,20 @@ export default function OrdersPage() {
     setSubmitError(null);
 
     try {
-      const effectiveClientUid = user?.uid || (user?.email ? user.email : (clientContact.email ? clientContact.email : "usr_client_001"));
+      let storedAttribution: any = {};
+      try {
+        const raw = sessionStorage.getItem("sutra_attribution");
+        if (raw) storedAttribution = JSON.parse(raw);
+      } catch {}
+
+      const computedSource = storedAttribution.referralCode
+        ? "referral"
+        : storedAttribution.utm_source || storedAttribution.utm_campaign
+        ? "ad_campaign"
+        : "new_order";
+
+      const effectiveClientUid = user?.uid || "client";
+
       const payload: any = {
         type: orderType,
         clientUid: effectiveClientUid,
@@ -860,7 +897,8 @@ export default function OrdersPage() {
           ...uploadedFiles.map((f) => ({ name: f.name, size: f.size })),
           ...(driveLink ? [{ name: "External Vault Drive Folder", url: driveLink }] : []),
         ],
-        source: "dashboard",
+        source: computedSource,
+        attribution: Object.keys(storedAttribution).length > 0 ? storedAttribution : undefined,
         driveFolderId: profile?.driveFolderId || "",
         skipPayment: directSubmit,
         paymentMethod: directSubmit ? "invoice" : "razorpay_checkout",

@@ -151,6 +151,11 @@ export { computeOrderProgress } from "@/lib/services/orderProgress";
 export type { OrderProgressInfo } from "@/lib/services/orderProgress";
 export type { FirestoreOrderRecord, OrderDeliverableItem } from "@/app/api/orders/route";
 
+function cleanForFirestore<T>(data: T): T {
+  if (data === null || data === undefined) return null as any;
+  return JSON.parse(JSON.stringify(data, (_, value) => (value === undefined ? null : value)));
+}
+
 /**
  * Persists an order directly to local disk and Firestore
  */
@@ -162,7 +167,8 @@ async function persistOrder(order: FirestoreOrderRecord): Promise<void> {
   if (isFirebaseAdminReady()) {
     try {
       const db = adminDb();
-      await db.collection("orders").doc(order.id).set(order, { merge: true });
+      const sanitized = cleanForFirestore(order);
+      await db.collection("orders").doc(order.id).set(sanitized, { merge: true });
     } catch (err) {
       console.warn(`[OrdersStore] Failed to persist order ${order.id} to Firestore:`, err);
     }

@@ -42,12 +42,21 @@ import {
 } from "@/config/marketingPromoConcepts";
 
 export default function AdminMarketingPage() {
-  const [activeTab, setActiveTab] = useState<"self_promo" | "client_ads">("self_promo");
+  const [activeTab, setActiveTab] = useState<"self_promo" | "client_ads" | "attribution">("self_promo");
   const [loading, setLoading] = useState(true);
   const [isDispatchingPromo, setIsDispatchingPromo] = useState(false);
   const [isPublishingAsset, setIsPublishingAsset] = useState(false);
   const [isDeployingAd, setIsDeployingAd] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  // Channel Attribution & Funnel Performance State
+  const [channelReport, setChannelReport] = useState<any>(null);
+  const [isLoadingReport, setIsLoadingReport] = useState(false);
+  const [utmService, setUtmService] = useState("visual_imagery");
+  const [utmSource, setUtmSource] = useState("meta_ads");
+  const [utmMedium, setUtmMedium] = useState("cpc");
+  const [utmCampaign, setUtmCampaign] = useState("summer_heritage_2026");
+  const [copiedUtmLink, setCopiedUtmLink] = useState(false);
 
   // Underlying Generative Engine Telemetry & Dispatch Controls
   const [visualModel, setVisualModel] = useState("FLUX.1 Pro (4K Pass)");
@@ -277,6 +286,13 @@ export default function AdminMarketingPage() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            <Link
+              href="/admin/outreach"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] hover:border-[#D4A35A] hover:bg-[#FFFFFF] text-xs font-semibold text-[#5C3A1E] transition-all shadow-2xs"
+            >
+              <Send className="w-3.5 h-3.5 text-[#5C3A1E]" />
+              <span>Outreach Desk</span>
+            </Link>
             <Link
               href="/admin/inquiries"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] hover:border-[#D4A35A] hover:bg-[#FFFFFF] text-xs font-semibold text-[#8C6D32] transition-all shadow-2xs"
@@ -628,7 +644,7 @@ export default function AdminMarketingPage() {
           </div>
 
           {/* Master Tab Selector */}
-          <div className="flex items-center gap-3 border-b border-[#EADFCB] pb-3">
+          <div className="flex flex-wrap items-center gap-3 border-b border-[#EADFCB] pb-3">
             <button
               onClick={() => setActiveTab("self_promo")}
               className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
@@ -651,6 +667,26 @@ export default function AdminMarketingPage() {
             >
               <TrendingUp className="w-4 h-4" />
               <span>TAB B: Client Meta Ads Launcher</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab("attribution");
+                setIsLoadingReport(true);
+                fetch("/api/admin/reports/channels")
+                  .then((r) => r.json())
+                  .then((d) => setChannelReport(d))
+                  .catch(() => {})
+                  .finally(() => setIsLoadingReport(false));
+              }}
+              className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                activeTab === "attribution"
+                  ? "bg-[#5C3A1E] text-white shadow-warm"
+                  : "bg-[#FFFDF9] border border-[#EADFCB] text-[#64748B] hover:text-[#0F172A]"
+              }`}
+            >
+              <Layers className="w-4 h-4" />
+              <span>TAB C: 8-Channel Attribution &amp; Performance</span>
             </button>
           </div>
 
@@ -1253,6 +1289,285 @@ export default function AdminMarketingPage() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB C: 8-CHANNEL ATTRIBUTION & PIPELINE PERFORMANCE */}
+          {/* ========================================================================= */}
+          {activeTab === "attribution" && (
+            <div className="space-y-8">
+              {/* Header Overview Banner */}
+              <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#A98B57] flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5 text-[#D4A35A]" />
+                    Unified Order Pipeline Intelligence
+                  </span>
+                  <h2 className="font-serif text-2xl font-bold text-[#0F172A] mt-1">
+                    8-Channel Marketing Attribution &amp; Funnel Performance
+                  </h2>
+                  <p className="text-xs text-[#64748B] mt-1 max-w-2xl">
+                    Every inbound touchpoint across client dashboard, chat, WhatsApp, email, social DMs, and paid campaigns feeds into one central pipeline.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      setIsLoadingReport(true);
+                      fetch("/api/admin/reports/channels")
+                        .then((r) => r.json())
+                        .then((d) => setChannelReport(d))
+                        .catch(() => {})
+                        .finally(() => setIsLoadingReport(false));
+                    }}
+                    isLoading={isLoadingReport}
+                    leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
+                  >
+                    Refresh Metrics
+                  </Button>
+                </div>
+              </div>
+
+              {/* KPI Summary Ribbon */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="p-5 rounded-2xl bg-white border border-[#EADFCB] shadow-2xs space-y-1">
+                  <span className="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider block">Total Pipeline Orders</span>
+                  <span className="font-serif font-bold text-2xl text-[#0F172A] block">
+                    {channelReport?.totalOrders || 0}
+                  </span>
+                  <span className="text-[10px] text-[#2E7D4F]">Across all 8 intake sources</span>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-white border border-[#EADFCB] shadow-2xs space-y-1">
+                  <span className="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider block">Confirmed Pipeline Revenue</span>
+                  <span className="font-serif font-bold text-2xl text-[#5C3A1E] block">
+                    ₹{(channelReport?.totalRevenueINR || 0).toLocaleString("en-IN")}
+                  </span>
+                  <span className="text-[10px] text-[#2E7D4F]">Paid &amp; Active Commissions</span>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-white border border-[#EADFCB] shadow-2xs space-y-1">
+                  <span className="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider block">Draft Orders Staged</span>
+                  <span className="font-serif font-bold text-2xl text-amber-700 block">
+                    {channelReport?.bySource
+                      ? Object.values(channelReport.bySource).reduce((sum: number, c: any) => sum + (c.drafts || 0), 0)
+                      : 0}
+                  </span>
+                  <span className="text-[10px] text-amber-800">Awaiting client login &amp; verification</span>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-white border border-[#EADFCB] shadow-2xs space-y-1">
+                  <span className="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider block">Active Intake Channels</span>
+                  <span className="font-serif font-bold text-2xl text-[#0F172A] block">8 / 8</span>
+                  <span className="text-[10px] text-[#2E7D4F]">Webhook &amp; Meta Graph v21.0 Online</span>
+                </div>
+              </div>
+
+              {/* 8-Channel Performance Breakdown Table */}
+              <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] overflow-hidden shadow-xs">
+                <div className="p-6 border-b border-[#EADFCB] bg-[#FAF9F5]">
+                  <h3 className="font-serif text-lg font-bold text-[#0F172A]">
+                    Source Breakdown &amp; Conversion Efficiency
+                  </h3>
+                  <p className="text-xs text-[#64748B]">
+                    Detailed telemetry comparing volume, draft-to-paid conversion rates, and revenue per channel.
+                  </p>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs text-[#0F172A]">
+                    <thead className="bg-[#FAF9F5]/70 text-[#5C3A1E] font-semibold border-b border-[#EADFCB]">
+                      <tr>
+                        <th className="p-4">Channel Source</th>
+                        <th className="p-4">Inquiry / Total Orders</th>
+                        <th className="p-4">Draft Orders</th>
+                        <th className="p-4">Confirmed &amp; Paid</th>
+                        <th className="p-4">Confirmed Revenue (₹)</th>
+                        <th className="p-4">Conversion Rate</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#F0ECE1]">
+                      {[
+                        { key: "new_order", label: "Client Dashboard Wizard", color: "bg-stone-100 text-stone-800" },
+                        { key: "chat", label: "Studio AI Assistant Chat", color: "bg-purple-50 text-purple-800" },
+                        { key: "whatsapp", label: "WhatsApp Cloud Webhook", color: "bg-emerald-50 text-emerald-800" },
+                        { key: "email", label: "Studio Mailbox Inbound", color: "bg-blue-50 text-blue-800" },
+                        { key: "instagram", label: "Instagram Direct & Comments", color: "bg-pink-50 text-pink-800" },
+                        { key: "facebook", label: "Facebook Page Messaging", color: "bg-indigo-50 text-indigo-800" },
+                        { key: "ad_campaign", label: "Meta Paid Ads & Campaigns", color: "bg-amber-50 text-amber-800" },
+                        { key: "referral", label: "Partner & Organic Referrals", color: "bg-teal-50 text-teal-800" },
+                      ].map((item) => {
+                        const data = channelReport?.bySource?.[item.key] || { count: 0, drafts: 0, confirmed: 0, revenueINR: 0 };
+                        const conversionRate = data.count > 0 ? Math.round((data.confirmed / data.count) * 100) : 0;
+
+                        return (
+                          <tr key={item.key} className="hover:bg-[#FAF9F5]/50 transition-colors">
+                            <td className="p-4">
+                              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold ${item.color}`}>
+                                {item.label}
+                              </span>
+                            </td>
+                            <td className="p-4 font-mono font-bold text-xs">{data.count}</td>
+                            <td className="p-4 font-mono text-amber-700 font-semibold">{data.drafts}</td>
+                            <td className="p-4 font-mono text-[#2E7D4F] font-bold">{data.confirmed}</td>
+                            <td className="p-4 font-serif font-bold text-sm text-[#5C3A1E]">
+                              ₹{data.revenueINR.toLocaleString("en-IN")}
+                            </td>
+                            <td className="p-4">
+                              <span className="font-semibold text-xs text-[#0F172A]">{conversionRate}%</span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Top UTM Campaigns & Campaign Link Generator */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                {/* Top UTM Campaigns (6 cols) */}
+                <div className="lg:col-span-6 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between border-b border-[#EADFCB] pb-3">
+                    <h3 className="font-serif text-base font-bold text-[#0F172A]">
+                      Top Performing UTM Ad Campaigns
+                    </h3>
+                    <span className="text-[11px] text-[#64748B]">Ranked by Revenue</span>
+                  </div>
+
+                  {channelReport?.topCampaigns && channelReport.topCampaigns.length > 0 ? (
+                    <div className="space-y-2.5">
+                      {channelReport.topCampaigns.map((camp: any, idx: number) => (
+                        <div
+                          key={camp.campaign || idx}
+                          className="p-3.5 rounded-xl bg-white border border-[#EADFCB] flex items-center justify-between text-xs"
+                        >
+                          <div>
+                            <span className="font-semibold text-[#0F172A] block">{camp.campaign}</span>
+                            <span className="text-[11px] text-[#64748B]">{camp.orders} order(s) attributed</span>
+                          </div>
+                          <span className="font-serif font-bold text-sm text-[#5C3A1E]">
+                            ₹{camp.revenueINR.toLocaleString("en-IN")}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-6 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] text-center text-xs text-[#64748B]">
+                      No custom UTM campaigns captured yet. Use the Link Builder on the right to launch tracked campaigns!
+                    </div>
+                  )}
+                </div>
+
+                {/* Built-in Trackable Campaign Link Generator (6 cols) */}
+                <div className="lg:col-span-6 rounded-3xl bg-white border border-[#EADFCB] p-6 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between border-b border-[#EADFCB] pb-3">
+                    <h3 className="font-serif text-base font-bold text-[#0F172A]">
+                      Trackable Campaign URL Generator
+                    </h3>
+                    <span className="text-[11px] text-[#D4A35A] font-semibold">Automatic Attribution</span>
+                  </div>
+
+                  <p className="text-xs text-[#64748B] leading-relaxed">
+                    Generate UTM-tagged URLs for social ads, bio links, and influencer partnerships. Any order originating from these links will automatically record the channel and campaign on the order.
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-[#0F172A] mb-1">Target Service</label>
+                      <select
+                        value={utmService}
+                        onChange={(e) => setUtmService(e.target.value)}
+                        className="w-full text-xs px-3 py-2 rounded-xl border border-[#EADFCB] bg-[#FAF9F5] focus:outline-none focus:ring-1 focus:ring-[#D4A35A]"
+                      >
+                        <option value="visual_imagery">Visual Imagery (₹2,499)</option>
+                        <option value="video_reel">Video Reel (₹4,999)</option>
+                        <option value="model_3d">3D Model (₹5,999)</option>
+                        <option value="tour_360">360 Tour (₹7,999)</option>
+                        <option value="interior_viz">Interior Viz (₹6,499)</option>
+                        <option value="brand_strategy">Brand Strategy (₹8,999)</option>
+                        <option value="starter">Starter Plan (₹14,999/mo)</option>
+                        <option value="growth">Growth Plan (₹29,999/mo)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-[#0F172A] mb-1">UTM Source</label>
+                      <select
+                        value={utmSource}
+                        onChange={(e) => setUtmSource(e.target.value)}
+                        className="w-full text-xs px-3 py-2 rounded-xl border border-[#EADFCB] bg-[#FAF9F5] focus:outline-none focus:ring-1 focus:ring-[#D4A35A]"
+                      >
+                        <option value="meta_ads">Meta Ads (Instagram/FB)</option>
+                        <option value="instagram_bio">Instagram Bio Link</option>
+                        <option value="facebook_page">Facebook Page Link</option>
+                        <option value="whatsapp_broadcast">WhatsApp Broadcast</option>
+                        <option value="newsletter">Studio Newsletter</option>
+                        <option value="influencer">Influencer Collaboration</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-[#0F172A] mb-1">UTM Campaign Name</label>
+                      <input
+                        type="text"
+                        value={utmCampaign}
+                        onChange={(e) => setUtmCampaign(e.target.value)}
+                        placeholder="e.g. summer_heritage_2026"
+                        className="w-full text-xs px-3 py-2 rounded-xl border border-[#EADFCB] bg-white focus:outline-none focus:ring-1 focus:ring-[#D4A35A] font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-[#0F172A] mb-1">UTM Medium</label>
+                      <input
+                        type="text"
+                        value={utmMedium}
+                        onChange={(e) => setUtmMedium(e.target.value)}
+                        placeholder="e.g. cpc, social, referral"
+                        className="w-full text-xs px-3 py-2 rounded-xl border border-[#EADFCB] bg-white focus:outline-none focus:ring-1 focus:ring-[#D4A35A] font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Generated URL Box */}
+                  <div className="space-y-1.5 pt-2 border-t border-[#EADFCB]">
+                    <span className="text-[11px] font-semibold text-[#0F172A] block">Tracked URL Output:</span>
+                    {(() => {
+                      const generatedUrl = `https://sutrastudios.in/orders?service=${utmService}&utm_source=${utmSource}&utm_medium=${utmMedium}&utm_campaign=${encodeURIComponent(utmCampaign)}`;
+                      return (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            readOnly
+                            value={generatedUrl}
+                            className="flex-1 text-xs px-3 py-2 rounded-xl border border-[#EADFCB] bg-[#FAF9F5] font-mono text-[#5C3A1E] select-all focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (navigator?.clipboard?.writeText) {
+                                navigator.clipboard.writeText(generatedUrl);
+                                setCopiedUtmLink(true);
+                                setTimeout(() => setCopiedUtmLink(false), 2500);
+                              }
+                            }}
+                            className="px-3 py-2 rounded-xl bg-[#5C3A1E] text-white text-xs font-semibold hover:bg-[#8B6508] transition-colors shrink-0 cursor-pointer flex items-center gap-1"
+                          >
+                            {copiedUtmLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                            <span>{copiedUtmLink ? "Copied!" : "Copy"}</span>
+                          </button>
+                        </div>
+                      );
+                    })()}
+                  </div>
                 </div>
               </div>
             </div>

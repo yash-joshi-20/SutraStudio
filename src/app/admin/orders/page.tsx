@@ -28,6 +28,9 @@ import {
   Film,
   LayoutGrid,
   List as ListIcon,
+  MessageSquare,
+  Send,
+  Mail,
 } from "lucide-react";
 
 interface AdminOrderRecord {
@@ -47,6 +50,28 @@ interface AdminOrderRecord {
   paymentStatus?: string;
   screenshotUrl?: string;
   createdAt: string;
+  source?: string;
+  isDraft?: boolean;
+  confirmToken?: string;
+  attribution?: {
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+    referrer?: string;
+  };
+  channelMetadata?: {
+    platformSenderId?: string;
+    replyWindowExpiresAt?: string;
+    isReplyWindowActive?: boolean;
+  };
+  conversationHistory?: Array<{
+    id: string;
+    sender: "client" | "studio" | "assistant" | "system";
+    channel: string;
+    text: string;
+    timestamp: string;
+    authorName?: string;
+  }>;
   serviceDetails?: any;
   deliverables?: Array<{
     driveFileId?: string;
@@ -59,6 +84,49 @@ interface AdminOrderRecord {
     category?: string;
   }>;
 }
+
+function renderChannelBadge(source?: string, isDraft?: boolean) {
+  const norm = (source || "new_order").toLowerCase();
+  let label = "Wizard";
+  let bg = "bg-stone-100 text-stone-700 border-stone-200";
+
+  if (norm === "whatsapp") {
+    label = "WhatsApp";
+    bg = "bg-emerald-50 text-emerald-800 border-emerald-200";
+  } else if (norm === "instagram") {
+    label = "Instagram";
+    bg = "bg-pink-50 text-pink-800 border-pink-200";
+  } else if (norm === "facebook") {
+    label = "Facebook";
+    bg = "bg-indigo-50 text-indigo-800 border-indigo-200";
+  } else if (norm === "email") {
+    label = "Email";
+    bg = "bg-blue-50 text-blue-800 border-blue-200";
+  } else if (norm === "chat") {
+    label = "AI Chat";
+    bg = "bg-purple-50 text-purple-800 border-purple-200";
+  } else if (norm === "ad_campaign") {
+    label = "Ad Campaign";
+    bg = "bg-amber-50 text-amber-800 border-amber-200";
+  } else if (norm === "referral") {
+    label = "Referral";
+    bg = "bg-teal-50 text-teal-800 border-teal-200";
+  }
+
+  return (
+    <div className="flex items-center gap-1.5 flex-wrap">
+      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${bg}`}>
+        {label}
+      </span>
+      {isDraft && (
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800 border border-amber-300">
+          Draft
+        </span>
+      )}
+    </div>
+  );
+}
+
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<AdminOrderRecord[]>([]);
@@ -281,6 +349,11 @@ export default function AdminOrdersPage() {
             </div>
 
             <div className="flex items-center gap-2.5">
+              <Link href="/admin/outreach">
+                <Button variant="secondary" size="sm" leftIcon={<MessageSquare className="w-3.5 h-3.5 text-[#5C3A1E]" />}>
+                  Outreach Desk
+                </Button>
+              </Link>
               <Link href="/admin/reviews">
                 <Button variant="secondary" size="sm" leftIcon={<Sparkles className="w-3.5 h-3.5 text-[#A98B57]" />}>
                   Deliverable Reviews
@@ -387,9 +460,12 @@ export default function AdminOrdersPage() {
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-mono font-bold text-xs text-[#5C3A1E]">
-                        {ord.orderNumber || ord.code || ord.id}
-                      </span>
+                      <div className="space-y-1">
+                        <span className="font-mono font-bold text-xs text-[#5C3A1E] block">
+                          {ord.orderNumber || ord.code || ord.id}
+                        </span>
+                        {renderChannelBadge(ord.source, Boolean(ord.isDraft || ord.status === "draft"))}
+                      </div>
                       <Badge
                         variant={
                           ord.status === "in_production"
@@ -486,6 +562,7 @@ export default function AdminOrdersPage() {
                       <span className="font-mono font-bold text-xs text-[#5C3A1E] block">
                         {ord.orderNumber || ord.code || ord.id}
                       </span>
+                      {renderChannelBadge(ord.source, Boolean(ord.isDraft || ord.status === "draft"))}
                       <Badge
                         variant={
                           ord.status === "in_production"
@@ -589,6 +666,10 @@ export default function AdminOrdersPage() {
             >
               <div className="space-y-4">
                 <div className="p-4 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] space-y-2 text-xs">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#64748B]">Channel Source:</span>
+                    <div>{renderChannelBadge(inspectingOrder.source, Boolean(inspectingOrder.isDraft || inspectingOrder.status === "draft"))}</div>
+                  </div>
                   <div className="flex justify-between">
                     <span className="text-[#64748B]">Client:</span>
                     <span className="font-semibold text-[#0F172A]">{inspectingOrder.clientName} ({inspectingOrder.clientEmail})</span>
@@ -605,6 +686,77 @@ export default function AdminOrdersPage() {
                       {inspectingOrder.utrNumber || "Manual / Pending"}
                     </span>
                   </div>
+
+                  {inspectingOrder.attribution && (
+                    <div className="pt-2 border-t border-[#EADFCB]/60 text-[11px] space-y-1 text-[#64748B]">
+                      <span className="font-semibold text-[#0F172A] block text-xs">Attribution Tracking:</span>
+                      {inspectingOrder.attribution.utm_campaign && (
+                        <div>Campaign: <strong className="text-[#5C3A1E]">{inspectingOrder.attribution.utm_campaign}</strong></div>
+                      )}
+                      {inspectingOrder.attribution.utm_source && (
+                        <div>UTM Source: <strong className="text-[#5C3A1E]">{inspectingOrder.attribution.utm_source}</strong></div>
+                      )}
+                      {inspectingOrder.attribution.referrer && (
+                        <div>Referrer: <span>{inspectingOrder.attribution.referrer}</span></div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Outreach Desk Quick Jump */}
+                  <div className="pt-2 border-t border-[#EADFCB]/60 flex items-center justify-between">
+                    <span className="text-[11px] text-[#64748B]">Studio Outreach:</span>
+                    <Link
+                      href={`/admin/outreach`}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#5C3A1E] hover:text-[#8B6508] transition-colors"
+                    >
+                      <MessageSquare className="w-3 h-3" />
+                      <span>Open Outreach Desk</span>
+                      <ExternalLink className="w-2.5 h-2.5" />
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Single Conversation History Thread */}
+                <div className="space-y-2 pt-2 border-t border-[#EADFCB]">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <MessageSquare className="w-4 h-4 text-[#5C3A1E]" />
+                      <span className="text-xs font-bold text-[#0F172A]">
+                        Unified Conversation History ({inspectingOrder.conversationHistory?.length || 0})
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-[#64748B]">Cross-Channel Timeline</span>
+                  </div>
+
+                  {inspectingOrder.conversationHistory && inspectingOrder.conversationHistory.length > 0 ? (
+                    <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+                      {inspectingOrder.conversationHistory.map((msg, idx) => {
+                        const isClient = msg.sender === "client";
+                        return (
+                          <div
+                            key={msg.id || idx}
+                            className={`p-3 rounded-xl text-xs space-y-1 ${
+                              isClient
+                                ? "bg-white border border-[#EADFCB] mr-4"
+                                : "bg-[#FAF6EE] border border-[#D4A35A]/40 ml-4"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between text-[10px] text-[#64748B]">
+                              <span className="font-semibold text-[#0F172A]">
+                                {msg.authorName || (isClient ? inspectingOrder.clientName : "Studio Staff")} ({msg.channel})
+                              </span>
+                              <span>{new Date(msg.timestamp).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}</span>
+                            </div>
+                            <p className="text-[#1E293B] whitespace-pre-wrap">{msg.text}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-center text-xs text-[#64748B]">
+                      No messages logged yet in this channel conversation history.
+                    </div>
+                  )}
                 </div>
 
                 {inspectingOrder.screenshotUrl && (

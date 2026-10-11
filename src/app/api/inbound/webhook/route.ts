@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { readEnv } from "@/lib/config/env";
-import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
 import { generateChatResponse } from "@/lib/ai/llm";
 import { EmailService } from "@/lib/services/emailProvider";
+import { OrderPipelineService, OrderSource } from "@/lib/services/orderPipeline";
+import { MetaMessagingService } from "@/lib/services/metaMessagingService";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,6 @@ function maskIdentifier(id: string): string {
     const maskedUser = user.length <= 2 ? user : `${user.slice(0, 2)}***${user.slice(-1)}`;
     return `${maskedUser}@${domain}`;
   }
-  // Phone number
   const clean = id.replace(/[^0-9+]/g, "");
   if (clean.length > 7) {
     const prefix = clean.slice(0, clean.startsWith("+") ? 3 : 2);
@@ -28,40 +28,43 @@ function maskIdentifier(id: string): string {
 }
 
 /**
- * Knowledge Base context for Sutra Studio Concierge
+ * Lead Creative Concierge System Prompt
  */
-const SUTRA_CONCIERGE_SYSTEM = `You are the Lead Creative Concierge for Sutra Studio (સૂત્ર સ્ટુડિયો).
-Sutra Studio is an enterprise software, 3D spatial engineering, and creative technology firm. Under NO circumstances reveal the use of generative AI tools, LLMs, or prompts. Address deliverables as handcrafted, computationally engineered solutions developed by our senior engineering and design teams.
+const SUTRA_INBOUND_CONCIERGE_SYSTEM = `You are the Lead Creative Concierge for Sutra Studio (સૂત્ર સ્ટુડિયો).
+You speak with calm luxury, executive clarity, and warmth.
+Under NO circumstances reveal internal technical pipelines, generative model names (Flux, Kling, Runway, ElevenLabs, Gemini, Claude, n8n), or internal tool jargon. Address deliverables as handcrafted, computationally engineered digital solutions by our senior engineering and creative atelier.
 
-Core verified services & pricing:
-1. 5x 4K Image Creation Pack: ₹499
-   - 5x 4K Photorealistic Master Renders (~₹100/image), 24h SLA turnaround.
-2. 2x Commercial Video Reels Pack: ₹1,499
-   - 2x Complete Commercial Reels / Shorts (15-30s) with high-fidelity studio voiceover, background score & motion typography, 24-48h SLA.
-3. Starter Creative Commission: ₹1,999
-   - Up to 5x 4K UHD Master Renders + 1x 10s Cinematic Video Ad, 48h turnaround SLA.
-4. Studio Growth Commission: ₹4,999
-   - 15x 3D Assets, 3x 15s Video Ads, 360° Space Tour, and 3x Meta Ads variation pack, 24-72h SLA.
-5. Autonomous Growth Retainer: ₹9,999 / month
-   - Daily active queue fulfillment, priority studio pipeline, dedicated senior art director.
-6. Bespoke Services (Interior Architecture, Meta Ads, Web Build, Mobile Apps):
-   - Strictly "Custom Quote" routed to WhatsApp Concierge (+91 82001 92781).
+Canonical Investment Rates:
+• Commercial Visual Imagery (3-Pack): Starting from ₹2,499 (24–48h SLA)
+• Cinematic Motion Reel (10–15s): Starting from ₹4,999 (48h SLA)
+• Spatial 3D Asset Model (.glb): Starting from ₹5,999 (48–72h SLA)
+• 360° Spherical Panoramic Tour: Starting from ₹7,999 (48–72h SLA)
+• Interior Architectural Visualization: Starting from ₹6,499 (48–72h SLA)
+• Facade & Window Design: Starting from ₹4,499 (48h SLA)
+• Brand & Editorial Strategy: Starting from ₹8,999 (3–5 Days SLA)
+• Campaign Creative Suite: Starting from ₹7,499 (48h SLA)
+• Website Engineering: By Quote (7–14 Days SLA)
+• Web Application Engineering: By Quote (14–28 Days SLA)
+• Mobile Application Engineering: By Quote (14–21 Days SLA)
+• Custom Systems & Integrations: By Quote (3–7 Days SLA)
 
-Direct Payment & Instant Commission Settlement:
-- Direct Zero-Fee UPI VPA: yashjoshi7355-1@okicici (Payee: Yash Joshi / Sutra Studio)
-- Online Commissioning Portal: https://sutrastudios.in/orders
-- Official Studio Email: yashjoshi20@zohomail.in
+Monthly Retainers:
+• Starter Creative Retainer: ₹14,999 / month (12 deliverables/mo)
+• Growth Brand Retainer: ₹29,999 / month (24 deliverables/mo)
+• Enterprise Brand Atelier: ₹59,999 / month (Daily production, 60+ deliverables/mo)
 
-Rules for your response:
-1. Greet the client warmly with "Namaste" or appropriate greeting.
-2. Answer their query directly, concisely, and professionally using enterprise studio vocabulary.
-3. Recommend the appropriate package based on their requirements.
-4. Mention the instant UPI VPA (yashjoshi7355-1@okicici) or commissioning link.
-5. If the client asked in Gujarati, reply in courteous, polished Gujarati with English pricing terms. If Hindi, reply in Hindi. If English, reply in refined, concise English.
-6. Keep the response concise (2-4 brief paragraphs max) so it looks clean in WhatsApp or email.`;
+Direct Payment: Google Pay (GPay) direct merchant settlement upon scope review.
+
+Response Directives:
+1. Greet the client warmly with "Namaste" or courteous professional greeting.
+2. Directly acknowledge their specific creative or software requirement.
+3. Recommend the best matching capability and state its canonical starting price.
+4. Inform them that an official order draft has been prepared for their review, and provide the secure link to review their brief, log in, and confirm on the website.
+5. If the client writes in Gujarati, reply in polished Gujarati with clear English service names. If Hindi, in Hindi. If English, in refined luxury English.
+6. Keep response concise (1-2 short paragraphs) suitable for WhatsApp, Instagram DM, or email.`;
 
 /**
- * 1. GET: Meta WhatsApp Cloud API Webhook Challenge Verification
+ * 1. GET: Meta WhatsApp & Meta Graph API Webhook Challenge Verification
  */
 export async function GET(req: Request) {
   try {
@@ -72,6 +75,7 @@ export async function GET(req: Request) {
 
     const expectedToken =
       readEnv("WHATSAPP_VERIFY_TOKEN") ||
+      readEnv("META_VERIFY_TOKEN") ||
       readEnv("META_GRAPH_ACCESS_TOKEN") ||
       "sutra_wa_verify_2026";
 
@@ -89,189 +93,245 @@ export async function GET(req: Request) {
 }
 
 /**
- * 2. POST: Inbound Callback ingestion (WhatsApp Cloud API, Zoho Mail Webhook, n8n)
+ * 2. POST: Inbound Callback Ingestion (WhatsApp, Email, Instagram, Facebook)
  */
 export async function POST(req: Request) {
   try {
     const rawBody = await req.json().catch(() => ({}));
-    let channel: "WhatsApp" | "Email" = "WhatsApp";
-    let sender = "";
+    let source: OrderSource = "whatsapp";
+    let senderId = "";
     let clientName = "Studio Client";
+    let clientEmail = "";
+    let clientPhone = "";
     let incomingQuery = "";
+    let isCommentReply = false;
+    let commentId: string | undefined = undefined;
+    let postUrl: string | undefined = undefined;
 
-    // A. Detect Meta WhatsApp Cloud API Webhook payload
+    // A. Meta WhatsApp Cloud API
     const entry = rawBody.entry?.[0];
     const change = entry?.changes?.[0]?.value;
     const waMessage = change?.messages?.[0];
     const waContact = change?.contacts?.[0];
 
+    // B. Meta Instagram or Facebook Messaging DM
+    const messaging = entry?.messaging?.[0];
+    const isMetaDm = Boolean(messaging);
+    const isInstagramObj = rawBody.object === "instagram";
+    const isPageObj = rawBody.object === "page";
+
+    // C. Meta Comment on Feed / Post (Comment-to-DM)
+    const feedChange = entry?.changes?.[0];
+    const isComment = feedChange?.field === "comments" || feedChange?.field === "feed";
+
     if (waMessage) {
-      channel = "WhatsApp";
-      sender = waMessage.from || "";
+      source = "whatsapp";
+      clientPhone = waMessage.from || "";
+      senderId = clientPhone;
       clientName = waContact?.profile?.name || "WhatsApp Client";
       incomingQuery =
         waMessage.text?.body ||
         waMessage.caption ||
         waMessage.interactive?.button_reply?.title ||
         "Inquiry received via WhatsApp";
+    } else if (isMetaDm) {
+      source = isInstagramObj ? "instagram" : "facebook";
+      senderId = messaging.sender?.id || "meta_user";
+      clientName = isInstagramObj ? "Instagram Client" : "Facebook Client";
+      incomingQuery = messaging.message?.text || `Inquiry received via ${source.toUpperCase()} DM`;
+    } else if (isComment && feedChange?.value) {
+      source = isInstagramObj ? "instagram" : "facebook";
+      isCommentReply = true;
+      commentId = feedChange.value.comment_id || feedChange.value.id;
+      senderId = feedChange.value.from?.id || "meta_commenter";
+      clientName = feedChange.value.from?.name || "Meta User";
+      incomingQuery = feedChange.value.message || "Comment on Studio Post";
+      postUrl = feedChange.value.post_id ? `https://facebook.com/${feedChange.value.post_id}` : undefined;
     } else {
-      // B. Zoho Mail / Inbound JSON / n8n dispatch format
-      channel =
-        rawBody.channel?.toLowerCase() === "email" || (rawBody.from && rawBody.from.includes("@"))
-          ? "Email"
-          : "WhatsApp";
-      sender = rawBody.from || rawBody.email || rawBody.phone || "client@sutrastudio.com";
-      clientName = rawBody.name || rawBody.senderName || "Studio Client";
-      incomingQuery =
-        rawBody.message ||
-        rawBody.text ||
-        rawBody.query ||
-        rawBody.subject ||
-        "Inquiry regarding Sutra Studio creative commissions";
+      // D. Email / Zoho Mail / Webhook JSON
+      const isEmail =
+        rawBody.channel?.toLowerCase() === "email" ||
+        rawBody.source?.toLowerCase() === "email" ||
+        (rawBody.from && rawBody.from.includes("@")) ||
+        (rawBody.email && rawBody.email.includes("@"));
+
+      if (isEmail) {
+        source = "email";
+        clientEmail = rawBody.from || rawBody.email || "client@sutrastudio.com";
+        senderId = clientEmail;
+        clientName = rawBody.name || rawBody.senderName || "Studio Client";
+        incomingQuery =
+          rawBody.message ||
+          rawBody.text ||
+          rawBody.query ||
+          rawBody.subject ||
+          "Creative commission inquiry arriving via Studio Mailbox";
+      } else {
+        // Fallback channel normalization
+        source = OrderPipelineService.normalizeSource(rawBody.source || rawBody.channel || "whatsapp");
+        senderId = rawBody.from || rawBody.phone || rawBody.email || "anonymous_lead";
+        clientName = rawBody.name || "Studio Client";
+        if (senderId.includes("@")) clientEmail = senderId;
+        else if (senderId.match(/^[0-9+]+$/)) clientPhone = senderId;
+        incomingQuery = rawBody.message || rawBody.text || "Direct studio inquiry";
+      }
     }
 
-    const maskedFrom = maskIdentifier(sender);
-    const inquiryId = `inq_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-    const timestamp = new Date().toISOString();
+    // 1. Intelligent intent classification to identify target service/plan
+    const queryLower = incomingQuery.toLowerCase();
+    let targetServiceId = "img-creation";
+    let targetType: "service" | "monthly_plan" = "service";
+    let targetPlanId: string | undefined = undefined;
 
-    // 1. Generate autonomous AI response via Gemini 2.0 Flash / LLM cascade
-    let aiResponse = "";
+    if (queryLower.includes("retainer") || queryLower.includes("plan") || queryLower.includes("monthly") || queryLower.includes("પ્લાન")) {
+      targetType = "monthly_plan";
+      targetPlanId = queryLower.includes("starter")
+        ? "studio-starter"
+        : queryLower.includes("enterprise")
+        ? "autonomous-growth-retainer"
+        : "studio-growth";
+    } else if (queryLower.includes("video") || queryLower.includes("reel") || queryLower.includes("ad") || queryLower.includes("વિડિયો")) {
+      targetServiceId = "vid-creation";
+    } else if (queryLower.includes("3d") || queryLower.includes("model") || queryLower.includes("glb") || queryLower.includes("મોડેલ")) {
+      targetServiceId = "3d-modeling";
+    } else if (queryLower.includes("360") || queryLower.includes("panorama") || queryLower.includes("tour") || queryLower.includes("ટૂર")) {
+      targetServiceId = "360-view";
+    } else if (queryLower.includes("interior") || queryLower.includes("room") || queryLower.includes("ઇન્ટિરિયર")) {
+      targetServiceId = "interior-design";
+    } else if (queryLower.includes("window") || queryLower.includes("facade") || queryLower.includes("elevation")) {
+      targetServiceId = "window-design";
+    } else if (queryLower.includes("marketing") || queryLower.includes("strategy") || queryLower.includes("માર્કેટિંગ")) {
+      targetServiceId = "digital-marketing";
+    } else if (queryLower.includes("meta") || queryLower.includes("campaign") || queryLower.includes("instagram ads")) {
+      targetServiceId = "meta-ads";
+    } else if (queryLower.includes("web app") || queryLower.includes("saas") || queryLower.includes("portal")) {
+      targetServiceId = "webapp-dev";
+    } else if (queryLower.includes("website") || queryLower.includes("landing")) {
+      targetServiceId = "web-dev";
+    } else if (queryLower.includes("mobile") || queryLower.includes("app") || queryLower.includes("ios") || queryLower.includes("android")) {
+      targetServiceId = "mobile-setup";
+    } else if (queryLower.includes("automation") || queryLower.includes("integration") || queryLower.includes("webhook")) {
+      targetServiceId = "ai-automation";
+    }
+
+    // 2. CREATE DRAFT ORDER in Firebase Pipeline
+    const draftResult = await OrderPipelineService.createDraftOrder({
+      source,
+      clientName,
+      clientEmail: clientEmail || undefined,
+      clientPhone: clientPhone || undefined,
+      type: targetType,
+      serviceId: targetServiceId,
+      planId: targetPlanId,
+      requirements: incomingQuery,
+      initialMessage: incomingQuery,
+      channelMetadata: {
+        platformSenderId: senderId,
+        isCommentReply,
+        commentId,
+        postUrl,
+        optInStatus: true,
+      },
+    });
+
+    const { order, confirmUrl } = draftResult;
+
+    // 3. Synthesize Bespoke Studio Response via Gemini
+    let aiConciergeText = "";
     try {
-      aiResponse = await generateChatResponse({
-        system: SUTRA_CONCIERGE_SYSTEM,
+      aiConciergeText = await generateChatResponse({
+        system: `${SUTRA_INBOUND_CONCIERGE_SYSTEM}\n\nORDER DRAFT DETAILS:\n- Service / Plan: ${order.service}\n- Total Investment: ₹${order.totalAmount?.toLocaleString("en-IN")}\n- Secure Confirmation Link: ${confirmUrl}`,
         messages: [{ role: "user", content: incomingQuery }],
         temperature: 0.5,
-        maxTokens: 500,
+        maxTokens: 400,
       });
-    } catch (aiErr: any) {
-      console.warn("[Inbound AI] Fallback response invoked:", aiErr.message);
-      aiResponse =
-        "Namaste! Thank you for reaching out to Sutra Studio. Our creative commissions start with the 5x 4K Master Render Pack at ₹499, 2x Commercial Video Reels Pack at ₹1,499, Starter Creative Commission at ₹1,999 (48h turnaround, 5x 4K UHD renders, 1x concept reel), Studio Growth at ₹4,999 (15x 3D assets, 3x commercial video reels, 360 tour), and our Autonomous Growth Retainer at ₹9,999/month. Bespoke architecture and web solutions are scoped via custom quote. You can confirm your commission instantly via UPI: yashjoshi7355-1@okicici or at https://sutrastudios.in/orders. Yash Joshi and our concierge team will follow up directly.";
+    } catch {
+      aiConciergeText = `Namaste! Thank you for connecting with Sutra Studio regarding ${order.service}. We have prepared your draft commission brief (#${order.orderNumber}) at ₹${order.totalAmount?.toLocaleString("en-IN")}.\n\nPlease review your brief and confirm payment on our secure portal here: ${confirmUrl}\n\nOur creative atelier is ready to begin upon your confirmation.`;
     }
 
-    // 2. Dispatch automated response back to client
-    let outboundNote = "Delivered via autonomous engine";
+    // Ensure the confirmUrl is explicitly present in message
+    if (!aiConciergeText.includes(confirmUrl)) {
+      aiConciergeText += `\n\nReview & Confirm on Sutra Studio: ${confirmUrl}`;
+    }
 
-    if (channel === "WhatsApp") {
-      const waPhoneId = readEnv("WHATSAPP_PHONE_NUMBER_ID");
-      const metaToken = readEnv("META_GRAPH_ACCESS_TOKEN");
+    // 4. DISPATCH OUTBOUND REPLY via Appropriate Channel API
+    let dispatchStatus = "Delivered";
+    let dispatchNote = "";
 
-      if (waPhoneId && metaToken && !metaToken.includes("USER_") && sender.match(/^[0-9+]+$/)) {
-        try {
-          const waRes = await fetch(
-            `https://graph.facebook.com/v21.0/${waPhoneId}/messages`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${metaToken}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                messaging_product: "whatsapp",
-                recipient_type: "individual",
-                to: sender.replace("+", ""),
-                type: "text",
-                text: { body: aiResponse },
-              }),
-            }
-          );
-          if (!waRes.ok) {
-            const errData = await waRes.json().catch(() => ({}));
-            console.warn("[WhatsApp Dispatch] Meta Graph API warning:", errData);
-            outboundNote = "Meta WhatsApp ready (mock/pending verification)";
-          }
-        } catch (dispatchErr: any) {
-          console.warn("[WhatsApp Dispatch] Error:", dispatchErr.message);
-          outboundNote = "Queued in delivery log";
-        }
+    if (source === "whatsapp" && clientPhone) {
+      const waSendRes = await MetaMessagingService.sendWhatsAppMessage({
+        toPhone: clientPhone,
+        text: aiConciergeText,
+      });
+      dispatchStatus = waSendRes.success ? "Delivered" : "Queued";
+      dispatchNote = waSendRes.note || waSendRes.error || "WhatsApp Cloud API response";
+    } else if (source === "instagram" || source === "facebook") {
+      if (isCommentReply && commentId) {
+        const commentRes = await MetaMessagingService.sendCommentPrivateReply({
+          commentId,
+          text: aiConciergeText,
+          channel: source,
+        });
+        dispatchStatus = commentRes.success ? "Delivered" : "Queued";
+        dispatchNote = commentRes.note || commentRes.error || "Meta comment private reply";
       } else {
-        outboundNote = "Delivered (WhatsApp sandbox mode)";
+        const dmRes = await MetaMessagingService.sendMetaDirectMessage({
+          recipientId: senderId,
+          text: aiConciergeText,
+          channel: source,
+        });
+        dispatchStatus = dmRes.success ? "Delivered" : "Queued";
+        dispatchNote = dmRes.note || dmRes.error || "Meta direct message response";
       }
-    } else {
-      // Email channel via Zoho SMTP
+    } else if (source === "email" && clientEmail) {
       try {
         const supportInbox = readEnv("ZOHO_MAIL_USER") || "yashjoshi20@zohomail.in";
         await EmailService.dispatchNotificationEmail({
-          to: sender.includes("@") ? sender : supportInbox,
+          to: clientEmail,
           type: "new_inquiry",
-          title: `Sutra Studio Concierge Response`,
-          message: aiResponse,
+          title: `Sutra Studio — Commission Draft #${order.orderNumber}`,
+          message: aiConciergeText,
           priority: "high",
           replyTo: supportInbox,
-          actionUrl: process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudios.in",
-          actionLabel: "View Sutra Studio",
+          actionUrl: confirmUrl,
+          actionLabel: "Review & Confirm Order",
         });
-      } catch (emailErr: any) {
-        console.warn("[Zoho Email Dispatch] Error:", emailErr.message);
-        outboundNote = "Delivered (Zoho SMTP queued)";
+        dispatchStatus = "Delivered";
+        dispatchNote = "Delivered via Zoho SMTP";
+      } catch (mailErr: any) {
+        dispatchStatus = "Queued";
+        dispatchNote = mailErr.message;
       }
     }
 
-    // 3. Assemble Inquiry Record
-    const inquiryRecord = {
-      id: inquiryId,
-      channel,
-      from: sender,
-      maskedFrom,
-      name: clientName,
-      query: incomingQuery,
-      response: aiResponse,
-      status: "Delivered",
-      deliveryNote: outboundNote,
-      timestamp,
-      pricingMentioned: {
-        starter: "₹3,499",
-        growth: "₹7,999",
-        retainer: "₹14,999",
-        upi: "yashjoshi7355-1@okicici",
-      },
+    // 5. RECORD OUTBOUND CONVERSATION HISTORY
+    await OrderPipelineService.recordMessage(order.id, {
+      sender: "studio",
+      channel: source,
+      text: aiConciergeText,
+      authorName: "Sutra Studio Concierge",
       metadata: {
-        model: "Gemini 2.0 Flash / LLM Multi-Cascade",
-        source: "Inbound Webhook",
+        confirmUrl,
+        dispatchStatus,
+        dispatchNote,
       },
-    };
-
-    // 4. Persist to Firestore collection `admin_inquiries`
-    if (isFirebaseAdminReady()) {
-      try {
-        await adminDb().collection("admin_inquiries").doc(inquiryId).set(inquiryRecord);
-      } catch (dbErr: any) {
-        console.warn("[Firestore admin_inquiries] DB write warning:", dbErr.message);
-      }
-    }
-
-    // 5. Trigger local n8n inbound webhook asynchronously
-    try {
-      const n8nInboundWebhook =
-        readEnv("N8N_INBOUND_WEBHOOK") || "https://n8n.sutrastudios.in/webhook/sutra-inbound-inquiry";
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000);
-
-      fetch(n8nInboundWebhook, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-sutra-secret": readEnv("N8N_WEBHOOK_SECRET") || "",
-        },
-        body: JSON.stringify(inquiryRecord),
-        signal: controller.signal,
-      })
-        .catch(() => {})
-        .finally(() => clearTimeout(timeoutId));
-    } catch {
-      // Async fire-and-forget
-    }
+    });
 
     return NextResponse.json({
       success: true,
-      inquiryId,
-      inquiry: inquiryRecord,
-      message: `Inquiry successfully processed by studio concierge and recorded to admin_inquiries.`,
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      source,
+      isDraft: true,
+      confirmUrl,
+      replyMessage: aiConciergeText,
+      dispatchNote,
+      maskedSender: maskIdentifier(senderId),
     });
   } catch (error: any) {
-    console.error("[Inbound Webhook Root Error]", error);
+    console.error("[Inbound Webhook Error]", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to process inbound webhook" },
+      { success: false, error: error.message || "Failed to process inbound webhook." },
       { status: 500 }
     );
   }

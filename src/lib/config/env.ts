@@ -102,6 +102,10 @@ export type EnvKey =
   | "META_AD_ACCOUNT_ID"
   | "WHATSAPP_PHONE_NUMBER_ID"
   | "WHATSAPP_VERIFY_TOKEN"
+  | "WHATSAPP_ACCESS_TOKEN"
+  | "META_VERIFY_TOKEN"
+  | "FACEBOOK_PAGE_ACCESS_TOKEN"
+  | "INSTAGRAM_ACCESS_TOKEN"
   | "FACEBOOK_PAGE_ID"
   | "INSTAGRAM_HANDLE"
   | "NEXT_PUBLIC_INSTAGRAM_URL"
@@ -209,6 +213,11 @@ export function readEnv(key: EnvKey): string {
     const base = getVal("N8N_BASE_URL") || getVal("N8N_HOST") || getVal("NEXT_PUBLIC_N8N_URL") || "https://sanitary-engine-pursuable.ngrok-free.dev";
     return `${base.replace(/\/$/, "")}/webhook/sutra-inbound-inquiry`;
   }
+
+  if (key === "WHATSAPP_ACCESS_TOKEN") return getVal("META_GRAPH_ACCESS_TOKEN") || getVal("META_ACCESS_TOKEN");
+  if (key === "META_VERIFY_TOKEN") return getVal("WHATSAPP_VERIFY_TOKEN");
+  if (key === "FACEBOOK_PAGE_ACCESS_TOKEN") return getVal("META_PAGE_ACCESS_TOKEN") || getVal("META_GRAPH_ACCESS_TOKEN");
+  if (key === "INSTAGRAM_ACCESS_TOKEN") return getVal("META_PAGE_ACCESS_TOKEN") || getVal("META_GRAPH_ACCESS_TOKEN");
 
   return "";
 }

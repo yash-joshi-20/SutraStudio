@@ -4,6 +4,7 @@ import { notConfigured } from "@/lib/api/response";
 import { generateOrderNumber } from "@/lib/types/database";
 import { PaymentsService } from "@/lib/services/payments";
 import { provisionOrderDriveFolders } from "@/lib/services/googleDriveService";
+import { OrderPipelineService } from "@/lib/services/orderPipeline";
 
 export interface OrderCommentItem {
   id: string;
@@ -40,6 +41,7 @@ export interface FirestoreOrderRecord {
   title: string;
   service: string;
   status:
+    | "draft"
     | "pending_payment"
     | "pending_verification"
     | "paid"
@@ -109,7 +111,53 @@ export interface FirestoreOrderRecord {
     fileSize?: string;
     mimeType?: string;
   }[];
-  source?: "dashboard" | "ai_chat" | "whatsapp" | "email" | "contact_page" | "offline" | "qr_upi" | string;
+  source?:
+    | "new_order"
+    | "chat"
+    | "whatsapp"
+    | "email"
+    | "instagram"
+    | "facebook"
+    | "ad_campaign"
+    | "referral"
+    | "dashboard"
+    | "ai_chat"
+    | string;
+  isDraft?: boolean;
+  confirmToken?: string;
+  confirmUrl?: string;
+  confirmedAt?: string;
+  attribution?: {
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+    utm_term?: string;
+    utm_content?: string;
+    referrer?: string;
+    referralCode?: string;
+    landingPage?: string;
+  };
+  channelMetadata?: {
+    platformSenderId?: string;
+    platformRecipientId?: string;
+    threadId?: string;
+    isCommentReply?: boolean;
+    commentId?: string;
+    postUrl?: string;
+    optInStatus?: boolean;
+    lastInboundAt?: string;
+    replyWindowExpiresAt?: string;
+    isReplyWindowActive?: boolean;
+  };
+  conversationHistory?: Array<{
+    id: string;
+    sender: "client" | "studio" | "assistant" | "system";
+    channel: string;
+    text: string;
+    timestamp: string;
+    channelMessageId?: string;
+    authorName?: string;
+  }>;
   chatId?: string;
   statusLabel?: string;
   deliverablePreview?: string;
@@ -655,7 +703,31 @@ export async function POST(req: Request) {
       attachments: Array.isArray(body.attachments) ? body.attachments : [],
       status: initialStatus,
       statusLabel: initialStatusLabel,
-      source: sourceChannel || body.source || "dashboard",
+      source: OrderPipelineService.normalizeSource(sourceChannel || body.source || "new_order", body.attribution),
+      isDraft: Boolean(body.isDraft || (initialStatus as string) === "draft"),
+      confirmToken: body.confirmToken || ((initialStatus as string) === "draft" ? OrderPipelineService.generateConfirmToken() : undefined),
+      attribution: body.attribution || {
+        utm_source: body.utm_source,
+        utm_medium: body.utm_medium,
+        utm_campaign: body.utm_campaign,
+        utm_term: body.utm_term,
+        utm_content: body.utm_content,
+        referralCode: body.referralCode || body.ref,
+        landingPage: body.landingPage,
+      },
+      channelMetadata: body.channelMetadata,
+      conversationHistory: Array.isArray(body.conversationHistory) && body.conversationHistory.length > 0
+        ? body.conversationHistory
+        : [
+            {
+              id: `msg_${Date.now()}_init`,
+              sender: "client",
+              channel: OrderPipelineService.normalizeSource(sourceChannel || body.source || "new_order", body.attribution),
+              text: combinedRequirements || `Order submitted via ${OrderPipelineService.normalizeSource(sourceChannel || body.source || "new_order", body.attribution)}.`,
+              timestamp: now,
+              authorName: clientName || "Studio Client",
+            },
+          ],
       chatId: body.chatId,
       clientUid,
       clientId: clientUid,

@@ -83,16 +83,29 @@ export interface PlanDocument {
 export type OrderType = "service" | "monthly_plan";
 
 export type OrderStatus =
+  | "draft"
   | "pending"
   | "confirmed"
   | "in_progress"
   | "completed"
   | "cancelled"
-  // Legacy / UI mapping aliases
   | "awaiting_approval"
-  | "revision_requested";
+  | "revision_requested"
+  | "pending_payment"
+  | "paid";
 
-export type OrderSource = "dashboard" | "ai_chat";
+export type OrderSource =
+  | "new_order"
+  | "chat"
+  | "whatsapp"
+  | "email"
+  | "instagram"
+  | "facebook"
+  | "ad_campaign"
+  | "referral"
+  | "dashboard"
+  | "ai_chat"
+  | string;
 
 export interface OrderItemDetail {
   serviceId?: string;

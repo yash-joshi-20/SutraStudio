@@ -2581,6 +2581,13 @@ const [adminDataError, setAdminDataError] = useState("");
             {/* System Status Pills & Notification Bell */}
             <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap justify-end">
               <Link
+                href="/admin/outreach"
+                className="flex items-center gap-1.5 bg-[#FFFDF9] border border-[#EADFCB] hover:border-[#D4A35A] px-3 py-1.5 rounded-full text-xs text-[#5C3A1E] font-semibold transition-all shadow-2xs"
+              >
+                <Send className="w-3.5 h-3.5 text-[#5C3A1E]" />
+                <span>Outreach Desk</span>
+              </Link>
+              <Link
                 href="/admin/inquiries"
                 className="flex items-center gap-1.5 bg-[#FFFDF9] border border-[#EADFCB] hover:border-[#D4A35A] px-3 py-1.5 rounded-full text-xs text-[#8C6D32] font-semibold transition-all shadow-2xs"
               >
