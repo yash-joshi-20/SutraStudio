@@ -40,7 +40,6 @@ You only need to configure two variables to receive money directly into your ban
 |---|---|---|---|
 | **`NEXT_PUBLIC_DEFAULT_UPI_VPA`** | Your Google Pay / Bank UPI ID | `synapsekinetic@oksbi` or `yourbusiness@upi` | `.env.local` OR [Admin API Keys Manager](file:///d:/home/website/src/app/admin/api-keys/page.tsx) |
 | **`NEXT_PUBLIC_DEFAULT_UPI_PAYEE`** | Your Business / Payee Name | `Synapse Kinetic AI Studio` | `.env.local` OR [Admin API Keys Manager](file:///d:/home/website/src/app/admin/api-keys/page.tsx) |
-| **`NEXT_PUBLIC_RAZORPAY_URL`** | Razorpay Instant Payment Handle | `https://razorpay.me/@79144506` | `.env.local` OR [Admin API Keys Manager](file:///d:/home/website/src/app/admin/api-keys/page.tsx) |
 
 ---
 

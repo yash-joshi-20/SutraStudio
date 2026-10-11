@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { isFirebaseAdminReady, adminMissingKeys } from "@/lib/firebase/admin";
 import { notConfigured } from "@/lib/api/response";
 import { generateOrderNumber } from "@/lib/types/database";
-import { PaymentsService } from "@/lib/services/payments";
+import { PaymentsStore } from "@/lib/services/paymentsStore";
 import { provisionOrderDriveFolders } from "@/lib/services/googleDriveService";
 import { OrderPipelineService } from "@/lib/services/orderPipeline";
 
@@ -653,7 +653,7 @@ export async function POST(req: Request) {
       ? "Direct UPI UTR Submitted — Awaiting Studio Confirmation"
       : isDirectInvoice
       ? "Confirmed — In Studio Production Queue"
-      : "Pending Payment via Razorpay / UPI";
+      : "Pending Payment (Pay by UPI QR)";
 
     const initialPaymentStatus: FirestoreOrderRecord["paymentStatus"] = isDirectPaid
       ? "paid"
@@ -762,7 +762,7 @@ export async function POST(req: Request) {
             ? `Order created with verified payment (${body.paymentMethod || "UPI / Direct"}). Placed in production queue.`
             : isDirectInvoice
             ? `Commission placed directly (Pay on Invoice / Direct Brief). Added to studio queue.`
-            : `Order placed with server-recomputed catalog pricing (₹${finalPayableAmount.toLocaleString("en-IN")}${appliedCouponCode ? `, Coupon ${appliedCouponCode} applied` : ""}). Awaiting Razorpay payment.`,
+            : `Order placed with server-recomputed catalog pricing (₹${finalPayableAmount.toLocaleString("en-IN")}${appliedCouponCode ? `, Coupon ${appliedCouponCode} applied` : ""}). Awaiting Pay by UPI QR settlement.`,
         },
       ],
       createdAt: now,
@@ -787,40 +787,25 @@ export async function POST(req: Request) {
       console.warn("[Orders API] Drive folder auto-provision error:", driveErr);
     }
 
-    // Create official Razorpay Order via server-side API (amount in paise, receipt = orderNumber)
-    const razorpayOrder = await PaymentsService.createRazorpayOrder({
-      amountINR: finalPayableAmount,
-      orderNumber,
+    // Create locked UPI QR payment record
+    const paymentRecord = await PaymentsStore.getOrCreatePaymentRecord({
       orderId: newOrder.id,
+      orderNumber,
+      amountINR: finalPayableAmount,
       clientId: clientUid,
       clientEmail: newOrder.clientEmail,
-      description: `${title} (${orderCode})`,
+      clientName: newOrder.clientName,
     });
 
-    newOrder.razorpayOrderId = razorpayOrder.razorpayOrderId;
-
-    // Monthly Plan: Provision Razorpay Recurring Subscription
+    // Monthly Plan: Setup cycle dates (no auto-charge per studio directives)
     if (orderType === "monthly_plan") {
-      try {
-        const sub = await PaymentsService.createRazorpaySubscription({
-          planId: body.planId || "studio-growth",
-          planName: primaryServiceName,
-          monthlyPriceINR: calculatedTotal,
-          billingCycle: body.billingCycle,
-          orderId: newOrder.id,
-          clientId: clientUid,
-          customerEmail: newOrder.clientEmail,
-        });
-        newOrder.subscriptionId = sub.subscriptionId;
-        newOrder.subscriptionStatus = sub.status;
-        newOrder.trialEndsAt = sub.trialEndsAt;
-        newOrder.currentPeriodStart = sub.currentPeriodStart;
-        newOrder.currentPeriodEnd = sub.currentPeriodEnd;
-        newOrder.nextBillingDate = sub.nextBillingDate;
-        newOrder.autoRenew = true;
-      } catch (subErr) {
-        console.warn("[Razorpay Subscriptions] Error initializing subscription:", subErr);
-      }
+      const currentPeriodStart = now;
+      const currentPeriodEnd = new Date(new Date(now).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      newOrder.subscriptionStatus = "active";
+      newOrder.currentPeriodStart = currentPeriodStart;
+      newOrder.currentPeriodEnd = currentPeriodEnd;
+      newOrder.nextBillingDate = currentPeriodEnd;
+      newOrder.autoRenew = false;
     }
 
     // Store in collection & persist to Firestore
@@ -871,16 +856,18 @@ export async function POST(req: Request) {
       orderNumber: newOrder.orderNumber,
       code: newOrder.code,
       totalAmount: newOrder.totalAmount,
-      razorpay: {
-        orderId: razorpayOrder.razorpayOrderId,
-        amountInPaise: razorpayOrder.amountInPaise,
-        currency: razorpayOrder.currency,
-        keyId: razorpayOrder.keyId,
-        isTestMode: razorpayOrder.isTestMode,
-        subscriptionId: newOrder.subscriptionId,
+      payment: {
+        id: paymentRecord.id,
+        amountINR: paymentRecord.amountINR,
+        currency: paymentRecord.currency,
+        status: paymentRecord.status,
+        upiUri: paymentRecord.upiUri,
+        vpa: paymentRecord.vpa,
+        payeeName: paymentRecord.payeeName,
+        note: paymentRecord.note,
       },
       message:
-        "Order securely registered in Firestore with server-verified pricing. Razorpay order initialized.",
+        "Order securely registered in Firestore with server-verified pricing. UPI QR payment intent initialized.",
     });
   } catch {
     return NextResponse.json(
@@ -1061,7 +1048,7 @@ export async function PATCH(req: Request) {
         statusLabel = "Cancelled";
       } else if (rawStatus === "pending_payment") {
         normalizedStatus = "pending_payment";
-        statusLabel = "Pending Payment via Razorpay";
+        statusLabel = "Pending Payment — Pay by UPI QR";
       } else if (rawStatus === "paid") {
         normalizedStatus = "paid";
         statusLabel = "Payment Verified — In Studio Queue";

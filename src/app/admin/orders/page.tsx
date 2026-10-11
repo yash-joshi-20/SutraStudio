@@ -168,143 +168,77 @@ export default function AdminOrdersPage() {
     return () => clearInterval(interval);
   }, [fetchOrders]);
 
-  // Client-triggered dispatch to Master n8n engine (via server relay & direct tunnel)
+  // Verify UPI Payment (Admin only, audit-logged) & start work (dispatch to n8n)
   const handleVerifyAndDispatch = async (order: AdminOrderRecord) => {
     setIsDispatching(true);
-    setDispatchStatus("Connecting to Sutra Master n8n engine...");
+    setDispatchStatus("Verifying UPI payment in ledger and dispatching to studio pipeline...");
 
-    const currentOrigin =
-      typeof window !== "undefined" && window.location.origin
-        ? window.location.origin
-        : "https://sutrastudios.in";
-
-    const orderPayload = {
-      orderId: order.id,
-      orderCode: order.orderNumber || order.code || order.id,
-      sourceChannel: "admin_dispatch",
-      client: {
-        name: order.clientName,
-        email: order.clientEmail,
-        phone: order.clientPhone || "",
-        brandName: order.brandName || order.clientName,
-      },
-      package: {
-        name: order.packageName || order.service || "Studio Creative",
-        price: order.totalAmount || order.amountPaid || 3499,
-      },
-      serviceDetails: order.serviceDetails || {
-        niche: "Luxury Creative Architecture",
-      },
-      appBaseUrl: currentOrigin,
-      dispatchedBy: "Studio Administrator",
-      dispatchedAt: new Date().toISOString(),
-    };
-
-    let localN8nAck = false;
-    let returnedDeliverables: any[] = [];
-
-    // 1. Dispatch via production server relay (/api/n8n/dispatch) to avoid CORS/mixed-content blocks
     try {
-      const serverRes = await fetch("/api/n8n/dispatch", {
+      const res = await fetch("/api/admin/payments/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...orderPayload,
-          workflowId: "sutra-master-dispatch",
-          isAdminDispatch: true,
-          force: true,
-        }),
-      });
-      const data = await serverRes.json().catch(() => ({}));
-      if (serverRes.ok && data.success) {
-        localN8nAck = true;
-        returnedDeliverables = data.deliverables || data.output?.deliverables || [];
-        setDispatchStatus("✓ Pipeline executed! 4K Master Render & Commercial Video Reel generated. Vaulting...");
-      } else {
-        setDispatchStatus("Server pipeline dispatched. Updating order status in production...");
-      }
-    } catch {
-      setDispatchStatus("Proceeding with production order status update...");
-    }
-
-    // 2. Update Firestore order status to in_production and vault deliverables
-    try {
-      await fetch("/api/orders", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "update_status",
           orderId: order.id,
-          status: "in_production",
-          paymentStatus: "paid",
-          deliverables: returnedDeliverables,
-          notes: localN8nAck
-            ? "Dispatched to studio creative engine. 4K Master Render & Commercial Reel vaulted."
-            : "Dispatched to production pipeline.",
+          notes: "Verified by Studio Administrator via Payments to Verify queue",
         }),
       });
 
-      // Broadcast real-time status change to client portal and mobile app views
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Payment verification failed.");
+      }
+
+      setDispatchStatus("✓ Payment verified! Order marked paid and dispatched to n8n.");
       SyncManager.broadcast("ORDER_STATUS_CHANGED", {
         orderId: order.id,
         status: "in_production",
         paymentStatus: "paid",
-        deliverables: returnedDeliverables,
       });
       SyncManager.broadcast("NOTIFICATIONS_UPDATED", {});
 
-      setDispatchStatus("✓ Success! Assets Vaulted & Order Placed In Production.");
-      setInspectingOrder((prev) =>
-        prev
-          ? {
-              ...prev,
-              status: "in_production",
-              paymentStatus: "paid",
-              deliverables: [
-                ...(prev.deliverables || []),
-                ...returnedDeliverables,
-              ],
-            }
-          : null
-      );
       fetchOrders(true);
       setTimeout(() => {
         setDispatchStatus(null);
         setIsDispatching(false);
-      }, 2500);
+        setInspectingOrder(null);
+      }, 1500);
     } catch (e: any) {
-      setDispatchStatus(`Status update failed: ${e?.message || e}`);
+      setDispatchStatus(`Verification error: ${e?.message || e}`);
       setIsDispatching(false);
     }
   };
 
-  // Reject / Flag order
+  // Reject / Flag payment (Admin only, audit-logged)
   const handleRejectOrder = async (orderId: string) => {
-    if (!confirm("Are you sure you want to flag/reject this payment verification?")) return;
+    const reason = prompt("Enter reason for payment rejection (e.g. UTR not found on bank statement, mismatched amount):");
+    if (!reason || !reason.trim()) return;
+
     try {
-      await fetch("/api/orders", {
-        method: "PATCH",
+      const res = await fetch("/api/admin/payments/reject", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "update_status",
           orderId,
-          status: "cancelled",
-          paymentStatus: "failed",
-          notes: "Payment rejected / UTR invalid.",
+          reason: reason.trim(),
         }),
       });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to reject payment.");
+      }
 
       SyncManager.broadcast("ORDER_STATUS_CHANGED", {
         orderId,
         status: "cancelled",
-        paymentStatus: "failed",
+        paymentStatus: "rejected",
       });
       SyncManager.broadcast("NOTIFICATIONS_UPDATED", {});
 
       fetchOrders(true);
       setInspectingOrder(null);
-    } catch (e) {
-      alert("Failed to reject order");
+    } catch (e: any) {
+      alert(`Failed to reject payment: ${e?.message || e}`);
     }
   };
 
@@ -319,7 +253,10 @@ export default function AdminOrdersPage() {
 
     const matchesStatus =
       statusFilter === "all" ||
-      (statusFilter === "pending" && ord.status === "pending_verification") ||
+      (statusFilter === "pending" &&
+        (ord.status === "pending_verification" ||
+          ord.paymentStatus === "pending_verification" ||
+          ord.paymentStatus === "payment_submitted")) ||
       (statusFilter === "in_production" && ord.status === "in_production") ||
       (statusFilter === "completed" && ord.status === "completed");
 
@@ -390,7 +327,7 @@ export default function AdminOrdersPage() {
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
                 {[
                   { id: "all", label: "All Orders" },
-                  { id: "pending", label: "Pending Verification" },
+                  { id: "pending", label: "Payments to verify" },
                   { id: "in_production", label: "In Production" },
                   { id: "completed", label: "Completed" },
                 ].map((f) => (
@@ -881,7 +818,7 @@ export default function AdminOrdersPage() {
                     onClick={() => handleRejectOrder(inspectingOrder.id)}
                     className="text-red-600 hover:text-red-700 w-full sm:w-auto"
                   >
-                    Reject / Flag
+                    Reject Payment
                   </Button>
 
                   <Button
@@ -893,9 +830,7 @@ export default function AdminOrdersPage() {
                     className="w-full sm:w-auto"
                     leftIcon={<Play className="w-4 h-4" />}
                   >
-                    {inspectingOrder.deliverables && inspectingOrder.deliverables.length > 0
-                      ? "Re-Dispatch & Synthesize to n8n"
-                      : "Verify & Dispatch to Local n8n"}
+                    Verify Payment & Start Work
                   </Button>
                 </div>
               </div>

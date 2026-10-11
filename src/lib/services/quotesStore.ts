@@ -5,7 +5,7 @@ import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
 
 /**
  * SUTRA STUDIO — Custom Quotes Engine
- * Enables bespoke project scoping, custom pricing proposals, and direct Razorpay checkout conversion.
+ * Enables bespoke project scoping, custom pricing proposals, and direct Pay by UPI QR checkout conversion.
  */
 
 export interface CustomQuoteRecord {
@@ -30,7 +30,7 @@ export interface CustomQuoteRecord {
   revisionRoundsIncluded?: number;
   validUntil?: string;
   adminNotes?: string;
-  razorpayPaymentLink?: string;
+  upiPaymentLink?: string;
   convertedOrderId?: string;
   createdAt: string;
   updatedAt: string;

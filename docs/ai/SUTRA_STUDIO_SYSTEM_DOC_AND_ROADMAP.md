@@ -62,25 +62,25 @@ sequenceDiagram
 
 ---
 
-## 4. Google Pay (GPay / UPI) પેમેન્ટ પ્રોસેસ સ્ટેપ-બાય-સ્ટેપ
+## 4. Pay by UPI QR (GPay / UPI) પેમેન્ટ પ્રોસેસ સ્ટેપ-બાય-સ્ટેપ
 
-સુત્ર સ્ટુડિયોમાં Razorpay ગેટવે જોડાયેલો છે, જે **Google Pay (GPay), PhonePe, Paytm, અને UPI QR** ને ડિફોલ્ટ સપોર્ટ કરે છે.
+સુત્ર સ્ટુડિયોમાં ૧૦૦% ઝીરો-કમિશન ડાયરેક્ટ **Pay by UPI QR** સિસ્ટમ જોડાયેલી છે, જે **Google Pay, PhonePe, Paytm, BHIM, અને Cred** ને ડિફોલ્ટ સપોર્ટ કરે છે.
 
-### GPay સક્રિય કરવાના સ્ટેપ:
-1. **Razorpay Dashboard લૉગિન**:
-   - [dashboard.razorpay.com](https://dashboard.razorpay.com) પર જાઓ.
-2. **UPI / Google Pay Settings**:
-   - `Settings` → `Payment Methods` → `UPI` વિકલ્પમાં જાઓ.
-   - `Google Pay (UPI Intent & QR)` ને **Enable** કરો.
-3. **API Keys કનેક્ટ કરો**:
-   - `Settings` → `API Keys` માંથી `Key ID` અને `Key Secret` મેળવો.
+### Pay by UPI QR સક્રિય કરવાના સ્ટેપ:
+1. **Merchant UPI VPA સેટ કરો**:
    - તમારા `.env.local` માં મૂકો:
      ```env
-     NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_live_xxxxxxxx
-     RAZORPAY_KEY_SECRET=xxxxxxxxxxxxxxxxxxxx
+     UPI_MERCHANT_VPA=yashjoshi7355-1@okicici
+     UPI_MERCHANT_NAME=Yash Joshi
+     NEXT_PUBLIC_MERCHANT_UPI_VPA=yashjoshi7355-1@okicici
+     NEXT_PUBLIC_MERCHANT_NAME=Yash Joshi
      ```
-4. **ચેકઆઉટ અનુભવ**:
-   - જ્યારે ક્લાયન્ટ "Pay Now" દબાવશે, ત્યારે મોબાઇલ પર સીધી **Google Pay App** ઓપન થશે (UPI Intent) અને ડેસ્કટોપ પર **GPay સ્કેન QR કોડ** આવશે.
+2. **ચેકઆઉટ અનુભવ**:
+   - સર્વર દ્વારા લૉક કરેલી રકમ સાથે ડાયનેમિક UPI QR કોડ દેખાશે.
+   - મોબાઇલ પર "Pay with UPI app" બટન દબાવતા સીધી UPI એપ ખૂલશે.
+   - પેમેન્ટ પૂર્ણ કર્યા પછી ક્લાયન્ટ ૧૨-ડિજિટ UTR નંબર સબમિટ કરશે.
+3. **એડમિન વેરિફિકેશન**:
+   - એડમિન "Payments to verify" કતારમાં રકમ, UTR અને સ્ક્રીનશૉટ ચકાસીને "Verify Payment & Start Work" કરશે, જે ઓર્ડરને paid સ્ટેટસમાં લાવી n8n પાઇપલાઇન શરૂ કરશે.
 
 ---
 

@@ -1,189 +1,119 @@
 import { NextResponse } from "next/server";
-import { PaymentsService, UtrVerificationRequest } from "@/lib/services/payments";
+import { PaymentsStore } from "@/lib/services/paymentsStore";
 import { OrdersStore } from "@/lib/services/ordersStore";
-import { requestRole, requestUid } from "@/lib/auth/requestRole";
+import { getAuthenticatedUser } from "@/lib/auth/serverAuth";
 
-export interface RazorpayVerifyRequestBody {
-  orderId?: string;
-  razorpay_order_id?: string;
-  razorpay_payment_id?: string;
-  razorpay_signature?: string;
-  paymentMethod?: string;
-  // Legacy UTR fallback
-  utrNumber?: string;
-  amountINR?: number;
-}
-
+/**
+ * POST /api/payments/verify
+ * Handles UPI UTR payment submission from checkout modals/pages.
+ * Razorpay verification is permanently removed.
+ */
 export async function POST(req: Request) {
   try {
-    const callerUid = await requestUid(req);
-    const callerRole = await requestRole(req);
-    const body = (await req.json()) as RazorpayVerifyRequestBody;
+    const user = await getAuthenticatedUser(req);
+    const body = await req.json();
 
-    // =========================================================================
-    // CASE A: Official Razorpay Signature Verification (HMAC-SHA256)
-    // =========================================================================
-    if (body.razorpay_order_id && body.razorpay_payment_id && body.razorpay_signature) {
-      const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = body;
+    // Catch discontinued Razorpay payload
+    if (body.razorpay_order_id || body.razorpay_payment_id || body.razorpay_signature) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Razorpay payment integration has been discontinued. All transactions are processed via Pay by UPI QR.",
+        },
+        { status: 400 }
+      );
+    }
 
-      const isValidSignature = PaymentsService.verifyRazorpaySignature({
-        razorpayOrderId: razorpay_order_id,
-        razorpayPaymentId: razorpay_payment_id,
-        razorpaySignature: razorpay_signature,
-      });
+    const orderId = body.orderId || body.order_id;
+    const utrNumber = body.utrNumber || body.utr;
 
-      if (!isValidSignature) {
-        OrdersStore.logPaymentEvent({
-          orderId: body.orderId || razorpay_order_id,
-          eventType: "payment.signature_mismatch",
-          paymentId: razorpay_payment_id,
-          source: "checkout",
-          payload: { razorpay_order_id, razorpay_payment_id },
-        });
+    if (!orderId || !utrNumber) {
+      return NextResponse.json(
+        { error: "orderId and utrNumber are required parameters." },
+        { status: 400 }
+      );
+    }
 
+    const cleanUtr = String(utrNumber).trim().toUpperCase();
+    if (!/^[0-9A-Z]{12,16}$/.test(cleanUtr)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid UTR format. Please provide a valid 12-digit bank reference number from your UPI receipt.",
+        },
+        { status: 422 }
+      );
+    }
+
+    // Lookup order
+    const order = (await OrdersStore.findByIdAsync(orderId)) || OrdersStore.findById(orderId);
+    if (!order) {
+      return NextResponse.json(
+        { error: "Order record not found." },
+        { status: 404 }
+      );
+    }
+
+    // Ownership check for clients
+    if (user.isAuthenticated && user.role === "client") {
+      const ownerUid = order.clientUid || order.clientId;
+      if (
+        ownerUid &&
+        ownerUid !== user.uid &&
+        (!user.email || !order.clientEmail || order.clientEmail.toLowerCase() !== user.email.toLowerCase())
+      ) {
         return NextResponse.json(
-          {
-            success: false,
-            error: "Security Alert: Invalid Razorpay cryptographic signature. Payment verification rejected.",
-          },
-          { status: 400 }
-        );
-      }
-
-      // Lookup target order
-      const targetId = body.orderId || razorpay_order_id;
-      const order = OrdersStore.findById(targetId);
-
-      if (!order) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Order record not found in studio database.",
-          },
-          { status: 404 }
-        );
-      }
-
-      // Multi-tenant authorization check
-      if (callerRole === "client" && callerUid && order.clientUid !== callerUid && order.clientId !== callerUid) {
-        return NextResponse.json(
-          { error: "Forbidden: You are not authorized to verify payment on this order." },
+          { error: "Forbidden: You are not authorized to submit payment for this order." },
           { status: 403 }
         );
       }
+    }
 
-      // Idempotency guard: prevent duplicate processing on double-click or webhook race
-      if (order.paymentStatus === "paid" || OrdersStore.isWebhookProcessed(razorpay_payment_id)) {
-        return NextResponse.json(
-          {
-            success: true,
-            verified: true,
-            alreadyProcessed: true,
-            orderId: order.id,
-            orderNumber: order.orderNumber,
-            paymentId: razorpay_payment_id,
-            amountPaid: order.amountPaid || order.totalAmount,
-            order,
-            message: `Payment ${razorpay_payment_id} was already verified and logged.`,
-          },
-          { status: 200 }
-        );
-      }
-
-      OrdersStore.markWebhookProcessed(razorpay_payment_id);
-
-      // Mark order as paid in store
-      const updatedOrder = OrdersStore.markAsPaid({
-        orderId: order.id,
-        razorpayPaymentId: razorpay_payment_id,
-        razorpayOrderId: razorpay_order_id,
-        razorpaySignature: razorpay_signature,
-        amountPaid: order.totalAmount,
-        paymentMethod: body.paymentMethod || "razorpay",
-        source: "checkout",
-      });
-
+    // Prevent duplicate processing if already paid
+    if (order.paymentStatus === "paid") {
       return NextResponse.json(
         {
           success: true,
           verified: true,
+          alreadyProcessed: true,
           orderId: order.id,
           orderNumber: order.orderNumber,
-          paymentId: razorpay_payment_id,
           amountPaid: order.totalAmount,
-          order: updatedOrder,
-          message: `Payment ${razorpay_payment_id} cryptographically verified via HMAC-SHA256 signature. Order status updated to paid.`,
+          message: "Payment on this order was already verified and logged.",
         },
         { status: 200 }
       );
     }
 
-    // =========================================================================
-    // CASE B: Legacy UTR Validation
-    // =========================================================================
-    if (body.utrNumber && body.orderId) {
-      const verification = PaymentsService.verifyUtr(body as UtrVerificationRequest);
-      if (!verification.success) {
-        return NextResponse.json(verification, { status: 422 });
-      }
+    const result = await PaymentsStore.submitUtr({
+      orderId,
+      utrNumber: cleanUtr,
+      screenshotUrl: body.screenshotUrl,
+      screenshotDriveFileId: body.screenshotDriveFileId,
+      clientUid: user.isAuthenticated ? user.uid : undefined,
+    });
 
-      const order = OrdersStore.findById(body.orderId);
-      if (order) {
-        const now = new Date().toISOString();
-        OrdersStore.update(order.id, {
-          paymentStatus: "awaiting_confirmation",
-          statusLabel: "Direct UPI UTR Submitted — Awaiting Studio Bank Confirmation",
-          updatedAt: now,
-        });
-
-        if (!order.statusHistory) order.statusHistory = [];
-        order.statusHistory.push({
-          status: order.status || "pending_payment",
-          changedAt: now,
-          changedBy: "client",
-          note: `Direct UPI UTR (${body.utrNumber}) submitted. Awaiting studio administrator bank confirmation.`,
-        });
-
-        OrdersStore.logPaymentEvent({
-          orderId: order.id,
-          eventType: "payment.utr_submitted",
-          amountINR: body.amountINR || order.totalAmount,
-          paymentId: `utr_${body.utrNumber}`,
-          source: "checkout",
-          payload: { utrNumber: body.utrNumber, paymentMode: body.paymentMethod },
-        });
-
-        // Alert Studio Admin
-        try {
-          const { NotificationsStore } = await import("@/lib/services/notificationsStore");
-          NotificationsStore.add({
-            userId: "usr_admin_001",
-            type: "status_update",
-            title: "Direct UPI UTR Submitted",
-            message: `Client submitted UTR ${body.utrNumber} for Order #${order.orderNumber || order.code} (₹${(body.amountINR || order.totalAmount || 0).toLocaleString("en-IN")}). Awaiting bank credit confirmation.`,
-            orderId: order.id,
-            orderNumber: order.orderNumber || order.code,
-            actionUrl: "/admin",
-          });
-        } catch {}
-      }
-
-      return NextResponse.json(verification, { status: 200 });
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, error: result.error },
+        { status: 409 }
+      );
     }
 
-    return NextResponse.json(
-      {
-        error:
-          "Invalid verification payload. Expected razorpay_order_id, razorpay_payment_id, and razorpay_signature.",
-      },
-      { status: 400 }
-    );
+    return NextResponse.json({
+      success: true,
+      verified: false,
+      status: "payment_submitted",
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      amountINR: result.payment?.amountINR ?? order.totalAmount,
+      utrNumber: cleanUtr,
+      message: `UTR ${cleanUtr} submitted. Zero-commission payment is awaiting studio administrator ledger verification before production begins.`,
+      payment: result.payment,
+    }, { status: 200 });
   } catch (error) {
     return NextResponse.json(
-      {
-        error: "Internal payment verification failed.",
-        details: error instanceof Error ? error.message : String(error),
-      },
+      { error: "Internal payment verification failed.", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

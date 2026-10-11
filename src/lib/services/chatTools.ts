@@ -4,7 +4,7 @@
  */
 
 import { OrdersStore, computeOrderProgress } from "@/lib/services/ordersStore";
-import { PaymentsService } from "@/lib/services/payments";
+import { PaymentsStore } from "@/lib/services/paymentsStore";
 import { provisionOrderDriveFolders } from "@/lib/services/googleDriveService";
 import { NotificationsStore } from "@/lib/services/notificationsStore";
 import { SEED_CATALOG_SERVICES, SEED_CATALOG_PLANS, CatalogService, CatalogPlan } from "@/lib/services/serviceCatalog";
@@ -222,14 +222,11 @@ export class ChatToolsService {
       console.warn("[ChatTools] Drive provision error fallback:", driveErr);
     }
 
-    // Create server-side Razorpay order
-    const razorpayOrder = await PaymentsService.createRazorpayOrder({
+    // Lock server-side payment record in Firestore & generate UPI QR intent
+    await PaymentsStore.getOrCreatePaymentRecord({
+      orderId,
       amountINR: computedTotal,
       orderNumber,
-      orderId,
-      clientId: clientUid,
-      clientEmail,
-      description: `${orderTitle} (${orderCode}) — AI Chat Commission`,
     });
 
     const newOrder: any = {
@@ -329,9 +326,7 @@ export class ChatToolsService {
         orderNumber,
         service: primaryServiceName,
         totalAmount: computedTotal,
-        razorpayOrderId: razorpayOrder.razorpayOrderId,
-        keyId: razorpayOrder.keyId,
-        paid: true,
+        paid: false,
       },
       driveUploadFolder: driveFolderLink,
       summaryMessage: `✓ I have confirmed and queued your commission **#${orderNumber}** for **${primaryServiceName}** (₹${computedTotal.toLocaleString("en-IN")}, Est. Delivery: ${estDeliveryDays} days, ${revsIncluded} revisions). You can view and manage this order directly in **My Orders**.`,
@@ -383,13 +378,10 @@ export class ChatToolsService {
 
     const totalAmount = order.totalAmount || 0;
 
-    const rzpOrder = await PaymentsService.createRazorpayOrder({
+    const payment = await PaymentsStore.getOrCreatePaymentRecord({
+      orderId: order.id,
       amountINR: totalAmount,
       orderNumber: order.orderNumber || order.code,
-      orderId: order.id,
-      clientId: params.clientUid,
-      clientEmail: order.clientEmail,
-      description: `${order.title} Checkout`,
     });
 
     return {
@@ -397,8 +389,8 @@ export class ChatToolsService {
       orderNumber: order.orderNumber,
       service: order.service,
       totalAmount,
-      razorpayOrderId: rzpOrder.razorpayOrderId,
-      keyId: rzpOrder.keyId,
+      upiUri: payment.upiUri,
+      upiString: payment.upiUri,
       paid: false,
     };
   }
@@ -448,13 +440,10 @@ export class ChatToolsService {
 
     const totalAmount = order.totalAmount || 0;
 
-    const rzpOrder = await PaymentsService.createRazorpayOrder({
+    const payment = await PaymentsStore.getOrCreatePaymentRecord({
+      orderId: order.id,
       amountINR: totalAmount,
       orderNumber: `REN-${order.orderNumber || order.code}`,
-      orderId: order.id,
-      clientId: params.clientUid,
-      clientEmail: order.clientEmail,
-      description: `Subscription Renewal for ${order.service}`,
     });
 
     return {
@@ -463,9 +452,9 @@ export class ChatToolsService {
       orderNumber: order.orderNumber,
       service: order.service,
       renewalAmount: totalAmount,
-      razorpayOrderId: rzpOrder.razorpayOrderId,
-      keyId: rzpOrder.keyId,
-      message: `Renewal checkout initialized for ${order.service} (₹${totalAmount.toLocaleString("en-IN")}). Please proceed with payment.`,
+      upiUri: payment.upiUri,
+      upiString: payment.upiUri,
+      message: `Renewal checkout initialized for ${order.service} (₹${totalAmount.toLocaleString("en-IN")}). Please proceed with payment by UPI QR.`,
     };
   }
 

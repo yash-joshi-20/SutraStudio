@@ -19,7 +19,7 @@ import { ServiceCatalogService } from "@/lib/services/serviceCatalog";
 
 export const dynamic = "force-dynamic";
 
-/** Razorpay caps a single payment well below this; anything higher is a typo. */
+/** Upper bound sanity check for catalog pricing; anything higher is a typo. */
 const MAX_PRICE_RUPEES = 10_000_000;
 
 export async function GET() {

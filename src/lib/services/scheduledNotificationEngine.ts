@@ -6,6 +6,7 @@
 import { OrdersStore } from "./ordersStore";
 import { NotificationsStore } from "./notificationsStore";
 import { NotificationSettingsStore } from "./notificationSettingsStore";
+import { PaymentsStore } from "./paymentsStore";
 
 export interface ScheduledJobResult {
   success: boolean;
@@ -115,16 +116,30 @@ export class ScheduledNotificationEngine {
             const clientKey = `monthly_expiring_5d_client_${orderId}_${periodEndStr}`;
             const adminKey = `monthly_expiring_5d_admin_${orderId}_${periodEndStr}`;
 
-            // Client Notification
+            // Create next cycle's payment record and generate UPI QR link
+            let nextCyclePayment: any = null;
+            if (!options?.dryRun) {
+              try {
+                nextCyclePayment = await PaymentsStore.getOrCreatePaymentRecord({
+                  orderId,
+                  amountINR: o.totalAmount || 0,
+                  orderNumber,
+                });
+              } catch (pErr) {
+                console.warn("Could not create next cycle payment record:", pErr);
+              }
+            }
+
+            // Client Notification with new QR payment link
             const { duplicate: dc } = await NotificationsStore.addWithIdempotency({
               userId: clientUid,
               type: "monthly_expiring_5d",
               title: "Monthly Retainer Expiring in 5 Days",
-              message: `Your ${serviceName} cycle concludes on ${periodEnd.toLocaleDateString("en-IN")}. Renew today to reserve studio continuity.`,
+              message: `Your ${serviceName} cycle concludes on ${periodEnd.toLocaleDateString("en-IN")}. Complete renewal via Pay by UPI QR to preserve continuous studio production.`,
               orderId,
               orderNumber,
-              actionUrl: "/orders",
-              actionLabel: "Renew Retainer",
+              actionUrl: `/orders?pay=${orderId}`,
+              actionLabel: "Pay by UPI QR",
               idempotencyKey: clientKey,
               recipientEmail: clientEmail,
             });
@@ -302,7 +317,7 @@ export class ScheduledNotificationEngine {
               orderId,
               orderNumber,
               actionUrl: "/orders",
-              actionLabel: "Pay via Razorpay",
+              actionLabel: "Pay by UPI QR",
               idempotencyKey: unpaidKey,
               recipientEmail: clientEmail,
             });

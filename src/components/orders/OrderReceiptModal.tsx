@@ -16,7 +16,9 @@ export interface ReceiptOrderData {
   }[];
   totalAmount?: number;
   amountPaid?: number;
-  paymentStatus?: "unpaid" | "paid" | "failed" | "refunded";
+  paymentStatus?: "unpaid" | "paid" | "failed" | "refunded" | "pending_verification";
+  paymentReference?: string;
+  utrNumber?: string;
   razorpayPaymentId?: string;
   razorpayOrderId?: string;
   paymentMethod?: string;
@@ -148,16 +150,11 @@ export function OrderReceiptModal({ order, isOpen, onClose }: OrderReceiptModalP
                 Order Reference: <span className="font-medium text-[#171717]">{order.orderNumber}</span>
               </p>
               <p className="text-[#737373]">
-                Payment Gateway: <span className="font-medium text-[#171717]">Razorpay Secure</span>
+                Payment Method: <span className="font-medium text-[#171717]">Direct UPI QR (Verified)</span>
               </p>
               <p className="text-[#737373]">
-                Payment ID: <span className="font-mono text-[#171717]">{order.razorpayPaymentId || "pay_verified_sutra"}</span>
+                Bank UTR / Reference: <span className="font-mono text-[#171717]">{order.utrNumber || order.paymentReference || order.razorpayPaymentId || "pay_verified_sutra"}</span>
               </p>
-              {order.razorpayOrderId && (
-                <p className="text-[#737373]">
-                  Razorpay Order ID: <span className="font-mono text-[#171717]">{order.razorpayOrderId}</span>
-                </p>
-              )}
             </div>
           </div>
 
@@ -227,7 +224,7 @@ export function OrderReceiptModal({ order, isOpen, onClose }: OrderReceiptModalP
           {/* Footer Note */}
           <div className="pt-4 border-t border-[#E5E1D8] text-center text-[11px] text-[#A3A3A3] space-y-1">
             <p>Sutra Studio Atelier — Modern Creative Technology & 3D Visual Architecture</p>
-            <p>GSTIN: 24AABCS1234F1Z8 | Razorpay Merchant Partner Account</p>
+            <p>GSTIN: 24AABCS1234F1Z8 | Direct UPI Merchant Settlement</p>
             <p>Thank you for partnering with Sutra Studio. Your digital master assets will be vaulted to Sutra Cloud Vault.</p>
           </div>
         </div>

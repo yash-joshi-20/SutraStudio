@@ -8,8 +8,7 @@
  *    otherwise from the seed corpus in serviceCatalog.
  *  • A client-supplied amount is ALWAYS ignored. Nothing in a request body can
  *    set what a client pays.
- *  • Everything is validated and priced in integer paise-free rupees and then
- *    converted to paise only at the Razorpay boundary.
+ *  • Everything is validated and priced in integer rupees for Pay by UPI QR checkout.
  */
 
 import "server-only";

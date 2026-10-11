@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server";
-import { PaymentsService, PaymentIntentOptions } from "@/lib/services/payments";
+import { PaymentsStore } from "@/lib/services/paymentsStore";
 import { OrdersStore } from "@/lib/services/ordersStore";
 import { getAuthenticatedUser } from "@/lib/auth/serverAuth";
 
+/**
+ * POST /api/payments/create
+ * Creates / retrieves a locked UPI QR payment record for an order.
+ * Amount is strictly locked from the database record (never client-supplied).
+ */
 export async function POST(req: Request) {
   try {
     const user = await getAuthenticatedUser(req);
-    const body = (await req.json()) as (PaymentIntentOptions & { orderId: string });
+    const body = await req.json();
 
     if (!body.orderId) {
       return NextResponse.json(
@@ -39,7 +44,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // If order already paid, prevent double charge
+    // If order already paid, prevent duplicate payment
     if (order.paymentStatus === "paid") {
       return NextResponse.json(
         { error: "Order has already been verified and paid.", paymentStatus: "paid" },
@@ -47,72 +52,49 @@ export async function POST(req: Request) {
       );
     }
 
-    // Server-recomputed amount directly from official order record (never trust client)
-    const amountINR = order.totalAmount;
-    if (!amountINR || typeof amountINR !== "number" || amountINR <= 0) {
+    // Server-recomputed locked amount directly from official order record
+    const amountINR = Number(order.totalAmount);
+    if (!amountINR || amountINR <= 0) {
       return NextResponse.json(
         { error: "Invalid order amount. The specified order has no valid price configured." },
         { status: 400 }
       );
     }
 
-    const orderNumber = order.orderNumber || order.code;
-    if (!orderNumber) {
-      return NextResponse.json(
-        { error: "Order is missing an assigned order number." },
-        { status: 400 }
-      );
-    }
+    const orderNumber = order.orderNumber || order.code || `ORD-${Date.now()}`;
+    const clientEmail = order.clientEmail || (user.isAuthenticated ? user.email : body.customerEmail) || "";
+    const clientId = order.clientUid || order.clientId || (user.isAuthenticated ? user.uid : body.clientId) || "client";
+    const clientName = order.clientName || user.name || "Studio Client";
 
-    const clientEmail = order.clientEmail || (user.isAuthenticated ? user.email : body.customerEmail);
-    if (!clientEmail) {
-      return NextResponse.json(
-        { error: "A verified client email address is required for payment processing." },
-        { status: 400 }
-      );
-    }
-
-    const clientId = order.clientUid || order.clientId || (user.isAuthenticated ? user.uid : body.clientId);
-    if (!clientId) {
-      return NextResponse.json(
-        { error: "A valid client identification is required for payment initialization." },
-        { status: 400 }
-      );
-    }
-
-    const razorpayOrder = await PaymentsService.createRazorpayOrder({
-      amountINR,
+    const paymentRecord = await PaymentsStore.getOrCreatePaymentRecord({
+      orderId: order.id,
       orderNumber,
-      orderId: body.orderId,
+      amountINR,
       clientId,
+      clientName,
       clientEmail,
-      description: order?.title || body.description || `Sutra Studio Commission ${orderNumber}`,
     });
-
-    // Update order with newly assigned Razorpay Order ID if missing
-    if (order && !order.razorpayOrderId) {
-      OrdersStore.update(order.id, {
-        razorpayOrderId: razorpayOrder.razorpayOrderId,
-      });
-    }
 
     return NextResponse.json({
       success: true,
-      provider: "RAZORPAY",
-      razorpayOrderId: razorpayOrder.razorpayOrderId,
-      amountInPaise: razorpayOrder.amountInPaise,
-      currency: razorpayOrder.currency,
-      keyId: razorpayOrder.keyId,
-      isTestMode: razorpayOrder.isTestMode,
+      provider: "UPI_DYNAMIC_QR",
+      paymentId: paymentRecord.id,
+      amountINR: paymentRecord.amountINR,
+      currency: "INR",
+      status: paymentRecord.status,
+      upiUri: paymentRecord.upiUri,
+      vpa: paymentRecord.vpa,
+      payeeName: paymentRecord.payeeName,
+      note: paymentRecord.note,
       orderNumber,
-      orderTitle: order?.title,
-      clientName: order?.clientName,
+      orderTitle: order.title,
+      clientName,
       clientEmail,
-      clientPhone: order?.clientPhone,
+      clientPhone: order.clientPhone,
     }, { status: 200 });
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to initialize Razorpay checkout intent.", details: error instanceof Error ? error.message : String(error) },
+      { error: "Failed to initialize UPI QR payment intent.", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

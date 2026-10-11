@@ -18,7 +18,8 @@ const CLIENT_SAFE_ENV_KEYS = new Set([
   "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
   "NEXT_PUBLIC_FIREBASE_APP_ID",
   "NEXT_PUBLIC_FIREBASE_VAPID_KEY",
-  "NEXT_PUBLIC_RAZORPAY_KEY_ID",
+  "NEXT_PUBLIC_MERCHANT_UPI_VPA",
+  "NEXT_PUBLIC_MERCHANT_NAME",
   "NEXT_PUBLIC_APP_URL",
   "NEXT_PUBLIC_GA_MEASUREMENT_ID",
   "NEXT_PUBLIC_INSTAGRAM_URL",
@@ -51,10 +52,10 @@ export type EnvKey =
   | "FIREBASE_CLIENT_EMAIL"
   | "FIREBASE_PRIVATE_KEY"
   | "FIREBASE_PROJECT_ID"
-  | "NEXT_PUBLIC_RAZORPAY_KEY_ID"
-  | "RAZORPAY_KEY_ID"
-  | "RAZORPAY_KEY_SECRET"
-  | "RAZORPAY_WEBHOOK_SECRET"
+  | "UPI_MERCHANT_VPA"
+  | "UPI_MERCHANT_NAME"
+  | "NEXT_PUBLIC_MERCHANT_UPI_VPA"
+  | "NEXT_PUBLIC_MERCHANT_NAME"
   | "GOOGLE_DRIVE_CLIENT_ID"
   | "GOOGLE_DRIVE_CLIENT_SECRET"
   | "GOOGLE_DRIVE_REFRESH_TOKEN"
@@ -249,8 +250,18 @@ export function readPublicEnv(key: EnvKey): string {
       return (process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY ?? "").trim();
     case "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET":
       return (process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? "").trim();
-    case "NEXT_PUBLIC_RAZORPAY_KEY_ID":
-      return (process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? "").trim();
+    case "NEXT_PUBLIC_MERCHANT_UPI_VPA":
+      return (
+        process.env.NEXT_PUBLIC_MERCHANT_UPI_VPA ??
+        process.env.UPI_MERCHANT_VPA ??
+        "yashjoshi7355-1@okicici"
+      ).trim();
+    case "NEXT_PUBLIC_MERCHANT_NAME":
+      return (
+        process.env.NEXT_PUBLIC_MERCHANT_NAME ??
+        process.env.UPI_MERCHANT_NAME ??
+        "Yash Joshi"
+      ).trim();
     case "NEXT_PUBLIC_APP_URL":
       return (process.env.NEXT_PUBLIC_APP_URL ?? "").trim();
     case "NEXT_PUBLIC_GA_MEASUREMENT_ID":
@@ -313,12 +324,8 @@ export function isGoogleDriveConfigured(): boolean {
   return hasOAuth || hasServiceAccount;
 }
 
-export function isRazorpayConfigured(): boolean {
-  return isEnvSet("RAZORPAY_KEY_ID") && isEnvSet("RAZORPAY_KEY_SECRET");
-}
-
-export function isRazorpayWebhookConfigured(): boolean {
-  return isEnvSet("RAZORPAY_WEBHOOK_SECRET");
+export function isUpiConfigured(): boolean {
+  return true;
 }
 
 export function isPushConfigured(): boolean {

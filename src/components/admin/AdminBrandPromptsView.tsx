@@ -555,7 +555,7 @@ Your job is to expand web app requirements into full software engineering specif
 2. STATE MANAGEMENT: Optimistic UI updates, Context API, cache invalidation.
 3. ROLE-BASED ACCESS CONTROL (RBAC): Admin, Client, Editor permissions with RouteGuard and session cookies.
 4. REAL-TIME DATA: Firestore snapshot listeners, live status badges, order ledger sync.
-5. PAYMENT INTEGRATION: Razorpay checkout popup, server-side HMAC-SHA256 signature verification.
+5. PAYMENT INTEGRATION: Pay by UPI QR checkout, server-side locked amounts, single-use UTR ledger verification.
 6. SECURITY & AUDIT: httpOnly secure cookies, input sanitization, automated audit log ledger.
 
 ## OUTPUT FORMAT

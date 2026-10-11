@@ -474,26 +474,47 @@ export interface UserProfileDocument {
   lastActive?: string;
 }
 
+export type PaymentRecordStatus =
+  | "awaiting_payment"
+  | "payment_submitted"
+  | "verified"
+  | "paid"
+  | "rejected"
+  | "expired"
+  | "refunded";
+
 export interface PaymentRecordDocument {
   id: string;
   orderId: string;
-  orderNumber?: string;
+  orderNumber: string;
   clientId: string;
+  clientName?: string;
   clientEmail?: string;
   amountINR: number;
-  currency: string;
-  status: "pending" | "paid" | "failed" | "refunded";
-  gateway: "razorpay" | "upi_manual" | "stripe" | "test";
-  razorpayOrderId?: string;
-  razorpayPaymentId?: string;
-  razorpaySignature?: string;
-  upiUtr?: string;
-  upiScreenshotUrl?: string;
-  refundedAmountINR?: number;
-  refundReason?: string;
-  createdAt: string;
+  currency: "INR";
+  status: PaymentRecordStatus;
+  gateway: "upi_qr";
+  upiUri: string;
+  vpa: string;
+  payeeName: string;
+  note: string;
+  utrNumber?: string;
+  screenshotUrl?: string;
+  screenshotDriveFileId?: string;
+  cycleIndex?: number;
+  submittedAt?: string;
   verifiedAt?: string;
   verifiedBy?: string;
+  rejectionReason?: string;
+  rejectedAt?: string;
+  rejectedBy?: string;
+  refundedAmountINR?: number;
+  refundReason?: string;
+  refundedAt?: string;
+  refundedBy?: string;
+  createdAt: string;
+  updatedAt: string;
+  expiresAt?: string;
 }
 
 export interface NotificationDocument {

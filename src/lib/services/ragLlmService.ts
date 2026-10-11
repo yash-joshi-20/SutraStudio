@@ -133,8 +133,7 @@ export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
 • **Merchant VPA**: \`yashjoshi7355-1@okicici\` (Yash Joshi)
 • **Instant Mobile Deep-Linking**: 1-Click payment via Google Pay, PhonePe, Paytm, or BHIM.
 • **Dynamic QR Codes**: Generated on-demand with exact order amount and order code.
-• **UTR Verification**: Submit the 12-digit Bank Transaction Reference Number (UTR) from your GPay/UPI receipt to instantly verify payment and unlock production pipelines (T+0 instant settlement).
-• **Razorpay & Credit Cards**: Standard credit cards and net banking available via Razorpay checkout.`,
+• **Zero Gateway Fees**: 100% direct merchant settlement via Pay by UPI QR.`,
     source: "GPAY_AND_UPI_PAYMENT_ENGINE_SPEC.md",
     status: "approved",
     approved_by: "Supervisor Admin",

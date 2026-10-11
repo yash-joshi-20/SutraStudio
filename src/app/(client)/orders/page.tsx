@@ -48,7 +48,6 @@ import {
   QrCode,
 } from "lucide-react";
 import { RouteGuard } from "@/components/auth/RouteGuard";
-import { openRazorpayCheckout } from "@/lib/services/razorpayClient";
 import { OrderReceiptModal, ReceiptOrderData } from "@/components/orders/OrderReceiptModal";
 import { PaymentModal } from "@/components/checkout/PaymentModal";
 import { MasterOrderForm } from "@/components/orders/MasterOrderForm";
@@ -1023,79 +1022,10 @@ export default function OrdersPage() {
         }
       }
 
-      // If online Razorpay checkout requested and orderId returned
-      if (!directSubmit && data.razorpay && data.razorpay.orderId) {
-        await openRazorpayCheckout({
-          key: data.razorpay.keyId,
-          amount: data.razorpay.amountInPaise,
-          currency: data.razorpay.currency || "INR",
-          name: "Sutra Studio",
-          description: `${newOrderCreated.title} (${newOrderCreated.orderNumber})`,
-          order_id: data.razorpay.orderId,
-          prefill: {
-            name: clientContact.name,
-            email: clientContact.email,
-            contact: clientContact.phone,
-          },
-          theme: {
-            color: "#5C3A1E",
-          },
-          onSuccess: async (rzpRes) => {
-            try {
-              const verifyRes = await fetch("/api/payments/verify", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  orderId: data.order.id,
-                  razorpay_order_id: rzpRes.razorpay_order_id,
-                  razorpay_payment_id: rzpRes.razorpay_payment_id,
-                  razorpay_signature: rzpRes.razorpay_signature,
-                  paymentMethod: "razorpay_checkout",
-                }),
-              });
-
-              const verifyData = await verifyRes.json();
-              if (verifyRes.ok && verifyData.success) {
-                const verifiedOrder: OrderItem = {
-                  ...newOrderCreated,
-                  status: "paid",
-                  statusLabel: "Payment Verified — In Studio Queue",
-                  paymentStatus: "paid",
-                  razorpayOrderId: rzpRes.razorpay_order_id,
-                  razorpayPaymentId: rzpRes.razorpay_payment_id,
-                  amountPaid: data.order.totalAmount,
-                  paidAt: new Date().toISOString(),
-                };
-                setCreatedOrderResult(verifiedOrder);
-                setOrders((prev) => [verifiedOrder, ...prev.filter((o) => o.id !== verifiedOrder.id)]);
-                setFlowStep("success");
-                window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
-              } else {
-                setCreatedOrderResult(newOrderCreated);
-                setFlowStep("success");
-              }
-            } catch {
-              setCreatedOrderResult(newOrderCreated);
-              setFlowStep("success");
-            }
-          },
-          onDismiss: () => {
-            // Unblock on dismiss: Show confirmed success screen with invoice details
-            setCreatedOrderResult(newOrderCreated);
-            setFlowStep("success");
-            window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
-          },
-          onFailure: (rzpErr) => {
-            setCreatedOrderResult(newOrderCreated);
-            setFlowStep("success");
-            window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
-          },
-        });
-      } else {
-        setCreatedOrderResult(newOrderCreated);
-        setFlowStep("success");
+      setCreatedOrderResult(newOrderCreated);
+      setFlowStep("success");
+      if (!directSubmit) {
+        setPaymentModalOrder(newOrderCreated);
       }
 
       soundSystem.play("order_success");
@@ -1107,90 +1037,9 @@ export default function OrdersPage() {
     }
   };
 
-  // Retry Razorpay Payment for any Unpaid / Pending Commission
+  // Open UPI QR Payment Modal for any Unpaid / Pending Commission
   const handleRetryPayment = async (order: OrderItem) => {
-    setRetryingOrderId(order.id);
-    try {
-      const res = await fetch("/api/payments/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          orderId: order.id,
-          amountINR: order.totalAmount,
-          customerEmail: order.clientEmail || user?.email,
-          description: order.title,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.razorpayOrderId) {
-        throw new Error(data.error || "Failed to initialize Razorpay checkout intent.");
-      }
-
-      await openRazorpayCheckout({
-        key: data.keyId,
-        amount: data.amountInPaise,
-        currency: data.currency || "INR",
-        name: "Sutra Studio",
-        description: `${order.title} (${order.orderNumber || order.code})`,
-        order_id: data.razorpayOrderId,
-        prefill: {
-          name: order.clientName || user?.displayName || "Studio Client",
-          email: order.clientEmail || user?.email || "client@sutrastudio.com",
-          contact: order.clientPhone || "",
-        },
-        theme: {
-          color: "#5C3A1E",
-        },
-        onSuccess: async (rzpRes) => {
-          try {
-            const verifyRes = await fetch("/api/payments/verify", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                orderId: order.id,
-                razorpay_order_id: rzpRes.razorpay_order_id,
-                razorpay_payment_id: rzpRes.razorpay_payment_id,
-                razorpay_signature: rzpRes.razorpay_signature,
-              }),
-            });
-            const verifyData = await verifyRes.json();
-            if (verifyRes.ok && verifyData.success) {
-              setOrders((prev) =>
-                prev.map((o) =>
-                  o.id === order.id
-                    ? {
-                        ...o,
-                        status: "paid",
-                        statusLabel: "Payment Verified — In Studio Queue",
-                        paymentStatus: "paid",
-                        razorpayOrderId: rzpRes.razorpay_order_id,
-                        razorpayPaymentId: rzpRes.razorpay_payment_id,
-                        amountPaid: order.totalAmount,
-                        paidAt: new Date().toISOString(),
-                      }
-                    : o
-                )
-              );
-              window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
-            }
-          } catch (vErr) {
-            console.error("Retry verification error:", vErr);
-          }
-        },
-        onFailure: (err) => {
-          alert(`Payment attempt unsuccessful: ${err.description || err.reason}`);
-        },
-      });
-    } catch (err: any) {
-      alert(`Unable to open Razorpay checkout: ${err.message}`);
-    } finally {
-      setRetryingOrderId(null);
-    }
+    setPaymentModalOrder(order);
   };
 
   // Client Cancellation of Monthly Subscription or Free Trial
@@ -1249,43 +1098,9 @@ export default function OrdersPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to initialize renewal.");
 
-      await openRazorpayCheckout({
-        order_id: data.razorpay.orderId,
-        amount: data.razorpay.amountInPaise,
-        currency: data.razorpay.currency,
-        key: data.razorpay.keyId,
-        name: "SUTRA STUDIO",
-        description: `Monthly Renewal: ${order.title}`,
-        prefill: {
-          name: clientContact.name || user?.displayName || "Studio Client",
-          email: clientContact.email || user?.email || "client@sutrastudio.com",
-          contact: clientContact.phone || "",
-        },
-        onSuccess: async (rzpRes) => {
-          try {
-            await fetch("/api/payments/verify", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                orderId: order.id,
-                razorpay_order_id: rzpRes.razorpay_order_id,
-                razorpay_payment_id: rzpRes.razorpay_payment_id,
-                razorpay_signature: rzpRes.razorpay_signature,
-              }),
-            });
-            window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
-          } catch (vErr) {
-            console.error("Renewal verification error:", vErr);
-          }
-        },
-        onFailure: (err) => {
-          alert(`Renewal payment unsuccessful: ${err.description || err.reason}`);
-        },
-      });
+      setPaymentModalOrder(order);
     } catch (err: any) {
-      alert(`Unable to open Razorpay checkout for renewal: ${err.message}`);
+      alert(`Unable to open payment modal for renewal: ${err.message}`);
     } finally {
       setRetryingOrderId(null);
     }
@@ -3890,7 +3705,7 @@ export default function OrdersPage() {
             isOpen={isMasterOrderModalOpen}
             onClose={() => setIsMasterOrderModalOpen(false)}
             title="Commission Creative Project"
-            description="Select from 7 Studio Disciplines • Autonomous n8n Workflow Dispatch • Zero-Fee UPI & Razorpay"
+            description="Select from 7 Studio Disciplines • Autonomous n8n Workflow Dispatch • Pay by UPI QR"
             maxWidth="2xl"
             variant="auto"
           >

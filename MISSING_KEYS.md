@@ -9,19 +9,17 @@
 
 ## Missing Integrations Summary
 
-Total missing services: **9** / **21** configured.
+Total missing services: **7** / **20** configured.
 
 | # | Integration | Priority | Missing Variables | Impacted Features | Where to Get |
 |---|---|---|---|---|---|
 | 1 | **Google Drive Storage Vault** | `CRITICAL` | `GOOGLE_DRIVE_CLIENT_SECRET`, `GOOGLE_DRIVE_REFRESH_TOKEN` | 5TB Media Vault, 3D Spatial Renders, Commercial Video Storage, High-Resolution Render Delivery, Client Uploads | https://console.cloud.google.com → Credentials → OAuth 2.0 Client IDs + Run scripts/get-drive-refresh-token.ts |
-| 2 | **Razorpay Payment Gateway** | `CRITICAL` | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `NEXT_PUBLIC_RAZORPAY_KEY_ID` | Online Checkout, Order Settlement, Invoices, Monthly Retainer Billing, Automated Refunds | https://dashboard.razorpay.com → Settings → API Keys → Generate Key |
-| 3 | **Razorpay Webhooks** | `HIGH` | `RAZORPAY_WEBHOOK_SECRET` | Payment Webhook Handlers, Instant Order Confirmation, Subscription Auto-Charge Sync | https://dashboard.razorpay.com → Webhooks → Add New Webhook (/api/payments/webhook) |
-| 4 | **Resend Email Dispatcher** | `HIGH` | `RESEND_API_KEY` | Client Invoices, Deliverable Alerts, Admin Missing-Key Daily Notice, Password Resets | https://resend.com → API Keys & Domains |
-| 5 | **SendGrid Email (Fallback)** | `LOW` | `SENDGRID_API_KEY` | Transactional Email Fallback | https://app.sendgrid.com → Settings → API Keys |
-| 6 | **Web Push (FCM / VAPID)** | `MEDIUM` | `NEXT_PUBLIC_FIREBASE_VAPID_KEY` | PWA Web Push, Live Chat Alerts, Deliverable Ready Notifications | https://console.firebase.google.com → Project Settings → Cloud Messaging → Web Push certificates |
-| 7 | **n8n Workflow Automation** | `HIGH` | `N8N_API_KEY` | W1-W8 Orchestration, Async Background Fulfillment, Admin Approval Webhooks, Discipline 12: AI Automation | Cloud n8n Dashboard (https://n8n.sutrastudios.in) or hosted instance |
-| 8 | **Meta Ads & Publishing** | `MEDIUM` | `META_APP_SECRET`, `META_PAGE_ACCESS_TOKEN` | Discipline 8: Meta Ads Launcher, Social Content Publishing, Instagram Campaign Sync | https://developers.facebook.com → Apps → App Dashboard |
-| 9 | **Security & Administrative Controls** | `CRITICAL` | `CRON_SECRET`, `TOKEN_ENCRYPTION_KEY` | Admin Lockout Defense, Scheduled Cron Authentication, AES-256-GCM Token Encryption | Generated locally via openssl and specified in .env.local |
+| 2 | **Resend Email Dispatcher** | `HIGH` | `RESEND_API_KEY` | Client Invoices, Deliverable Alerts, Admin Missing-Key Daily Notice, Password Resets | https://resend.com → API Keys & Domains |
+| 3 | **SendGrid Email (Fallback)** | `LOW` | `SENDGRID_API_KEY` | Transactional Email Fallback | https://app.sendgrid.com → Settings → API Keys |
+| 4 | **Web Push (FCM / VAPID)** | `MEDIUM` | `NEXT_PUBLIC_FIREBASE_VAPID_KEY` | PWA Web Push, Live Chat Alerts, Deliverable Ready Notifications | https://console.firebase.google.com → Project Settings → Cloud Messaging → Web Push certificates |
+| 5 | **n8n Workflow Automation** | `HIGH` | `N8N_API_KEY` | W1-W8 Orchestration, Async Background Fulfillment, Admin Approval Webhooks, Discipline 12: AI Automation | Cloud n8n Dashboard (https://n8n.sutrastudios.in) or hosted instance |
+| 6 | **Meta Ads & Publishing** | `MEDIUM` | `META_APP_SECRET`, `META_PAGE_ACCESS_TOKEN` | Discipline 8: Meta Ads Launcher, Social Content Publishing, Instagram Campaign Sync | https://developers.facebook.com → Apps → App Dashboard |
+| 7 | **Security & Administrative Controls** | `CRITICAL` | `CRON_SECRET`, `TOKEN_ENCRYPTION_KEY` | Admin Lockout Defense, Scheduled Cron Authentication, AES-256-GCM Token Encryption | Generated locally via openssl and specified in .env.local |
 
 ---
 
@@ -31,6 +29,7 @@ Total missing services: **9** / **21** configured.
 |---|---|---|
 | **Firebase Web Client** | Core Platform | `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_APP_ID`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` |
 | **Firebase Admin (Server)** | Authentication | `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` |
+| **UPI QR Payment Gateway** | Payments | `UPI_MERCHANT_VPA`, `UPI_MERCHANT_NAME`, `NEXT_PUBLIC_MERCHANT_UPI_VPA`, `NEXT_PUBLIC_MERCHANT_NAME` |
 | **Google Gemini AI** | AI Providers | `GEMINI_API_KEY` |
 | **FLUX / BFL Pro** | AI Providers | `BFL_API_KEY` |
 | **Kling AI Video Engine** | AI Providers | `KLING_API_KEY` |

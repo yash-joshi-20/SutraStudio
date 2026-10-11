@@ -37,9 +37,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { LotusSymbol } from "@/components/brand/SutraLogo";
 import { motion, AnimatePresence } from "framer-motion";
-import { openRazorpayCheckout } from "@/lib/services/razorpayClient";
 import { PaymentModal } from "@/components/checkout/PaymentModal";
 import { useAuth } from "@/lib/auth/authContext";
 import { usePathname, useRouter } from "next/navigation";
@@ -71,8 +69,6 @@ interface ChatMessage {
     orderNumber: string;
     service: string;
     totalAmount: number;
-    razorpayOrderId: string;
-    keyId: string;
     paid?: boolean;
     paymentId?: string;
   };
@@ -493,7 +489,6 @@ export function FloatingChatModal() {
     message: "",
   });
   const [handoffSubmitted, setHandoffSubmitted] = useState(false);
-  const [isProcessingPayment, setIsProcessingPayment] = useState<string | null>(null);
   const [selectedChatOrder, setSelectedChatOrder] = useState<NonNullable<ChatMessage["orderDraft"]> | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
@@ -552,87 +547,6 @@ export function FloatingChatModal() {
     setAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handlePayChatOrder = async (msgId: string, draft: NonNullable<ChatMessage["orderDraft"]>) => {
-    if (!isAuthenticated || !user) {
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem("sutra_pending_chat_order", JSON.stringify(draft));
-      }
-      router.push(`/login?returnTo=${encodeURIComponent("/orders")}`);
-      return;
-    }
-
-    setIsProcessingPayment(draft.orderId);
-    try {
-      await openRazorpayCheckout({
-        key: draft.keyId,
-        amountINR: draft.totalAmount,
-        currency: "INR",
-        name: "Sutra Studio",
-        description: `${draft.service} Commission (#${draft.orderNumber})`,
-        order_id: draft.razorpayOrderId,
-        prefill: {
-          name: user.displayName || "Studio Client",
-          email: user.email || "client@sutrastudio.com",
-          contact: user.phone || "+91 98765 43210",
-        },
-        onSuccess: async (response) => {
-          try {
-            const verifyRes = await fetch("/api/payments/verify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                orderId: draft.orderId,
-              }),
-            });
-            const verifyData = await verifyRes.json();
-            if (!verifyRes.ok || !verifyData.verified) {
-              throw new Error(verifyData.error || "Payment signature verification failed");
-            }
-
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === msgId
-                  ? {
-                      ...m,
-                      orderDraft: {
-                        ...m.orderDraft!,
-                        paid: true,
-                        paymentId: response.razorpay_payment_id,
-                      },
-                    }
-                  : m
-              )
-            );
-
-            const confirmationMsg: ChatMessage = {
-              id: `bot_confirm_${Date.now()}`,
-              sender: "bot",
-              text: `✓ Payment verified! Razorpay Transaction ID: ${response.razorpay_payment_id}. Your order #${draft.orderNumber} is now officially paid and has moved to our active production pipeline. You can review all details in My Orders.`,
-              time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-            };
-            setMessages((prev) => [...prev, confirmationMsg]);
-            window.dispatchEvent(new Event("sutra_orders_changed"));
-          } catch (err: any) {
-            alert(`Payment verification failed: ${err.message}`);
-          }
-        },
-        onDismiss: () => {
-          setIsProcessingPayment(null);
-        },
-        onError: (err: any) => {
-          setIsProcessingPayment(null);
-          alert(`Payment failed: ${err.description || err.message || "Unknown error"}`);
-        },
-      });
-    } catch (err: any) {
-      alert(`Could not launch Razorpay: ${err.message}`);
-    } finally {
-      setIsProcessingPayment(null);
-    }
-  };
 
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend || input).trim();
@@ -947,22 +861,7 @@ export function FloatingChatModal() {
                                 className="w-full text-xs justify-center gap-1.5 !bg-[#5C3A1E] hover:!bg-[#462B16] text-white shadow-xs"
                               >
                                 <QrCode className="w-3.5 h-3.5 text-[#D4A35A]" />
-                                <span>Zero-Fee UPI QR (₹{msg.orderDraft.totalAmount.toLocaleString("en-IN")})</span>
-                              </Button>
-
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={isProcessingPayment === msg.orderDraft.orderId}
-                                onClick={() => handlePayChatOrder(msg.id, msg.orderDraft!)}
-                                className="w-full text-xs justify-center gap-1.5 border-[#EADFCB] hover:bg-[#FAF9F5]"
-                              >
-                                {isProcessingPayment === msg.orderDraft.orderId ? (
-                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                ) : (
-                                  <CreditCard className="w-3.5 h-3.5" />
-                                )}
-                                <span>Pay via Razorpay / Cards</span>
+                                <span>Pay by UPI QR (₹{msg.orderDraft.totalAmount.toLocaleString("en-IN")})</span>
                               </Button>
                             </div>
                           ) : (

@@ -336,12 +336,14 @@ export class OrdersStore {
 
   public static markAsPaid(params: {
     orderId: string;
-    razorpayPaymentId: string;
-    razorpayOrderId?: string;
-    razorpaySignature?: string;
+    paymentId?: string;
+    utrNumber?: string;
     amountPaid?: number;
     paymentMethod?: string;
-    source?: "checkout" | "webhook";
+    source?: "checkout" | "webhook" | "refund" | "admin" | "client_portal" | "admin_portal";
+    razorpayPaymentId?: string;
+    razorpayOrderId?: string;
+    razorpaySignature?: string;
   }): FirestoreOrderRecord | undefined {
     const order = this.findById(params.orderId);
     if (!order) return undefined;
@@ -350,12 +352,11 @@ export class OrdersStore {
     order.status = "paid";
     order.statusLabel = "Payment Verified — In Studio Queue";
     order.paymentStatus = "paid";
-    order.razorpayPaymentId = params.razorpayPaymentId;
-    if (params.razorpayOrderId) order.razorpayOrderId = params.razorpayOrderId;
-    if (params.razorpaySignature) order.razorpaySignature = params.razorpaySignature;
+    const refCode = params.utrNumber || params.paymentId || params.razorpayPaymentId || `pay_${Date.now()}`;
+    if (params.utrNumber) (order as any).utrNumber = params.utrNumber;
     order.amountPaid = params.amountPaid || order.totalAmount;
     order.paidAt = now;
-    order.paymentMethod = params.paymentMethod || "razorpay";
+    order.paymentMethod = params.paymentMethod || "UPI_QR";
     order.updatedAt = now;
 
     if (!order.statusHistory) order.statusHistory = [];
@@ -363,7 +364,7 @@ export class OrdersStore {
       status: "paid",
       changedAt: now,
       changedBy: "system",
-      note: `Payment verified via Razorpay (${params.razorpayPaymentId}) via ${params.source || "checkout"}.`,
+      note: `Payment verified (${refCode}) via ${params.source || "upi_qr"}.`,
     });
 
     persistOrder(order).catch(() => {});
@@ -372,7 +373,7 @@ export class OrdersStore {
       orderId: order.id,
       eventType: "payment.verified",
       amountINR: order.amountPaid,
-      paymentId: params.razorpayPaymentId,
+      paymentId: refCode,
       source: params.source || "checkout",
     });
 
@@ -938,7 +939,9 @@ export class OrdersStore {
    */
   public static convertTrialToPaid(params: {
     orderId: string;
-    razorpayPaymentId: string;
+    paymentId?: string;
+    utrNumber?: string;
+    razorpayPaymentId?: string;
     amountPaid: number;
   }): { success: boolean; order?: FirestoreOrderRecord; error?: string } {
     const order = this.findById(params.orderId);
@@ -947,11 +950,13 @@ export class OrdersStore {
 
     const now = new Date().toISOString();
     const nextPeriodEnd = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString();
+    const refId = params.utrNumber || params.paymentId || params.razorpayPaymentId || `pay_${Date.now()}`;
 
     order.status = "active";
     order.statusLabel = "Active Retainer Subscription";
     order.paymentStatus = "paid";
-    order.razorpayPaymentId = params.razorpayPaymentId;
+    order.paymentReference = refId;
+    order.utrNumber = params.utrNumber;
     order.amountPaid = params.amountPaid;
     order.paidAt = now;
     order.currentPeriodStart = now;
@@ -963,7 +968,7 @@ export class OrdersStore {
       status: "active",
       changedAt: now,
       changedBy: "system",
-      note: `Trial successfully converted to active paid retainer. First billing verified via Razorpay (${params.razorpayPaymentId}).`,
+      note: `Trial successfully converted to active paid retainer. First billing verified via UPI QR (${refId}).`,
     });
 
     persistOrder(order).catch(() => {});
@@ -1040,7 +1045,7 @@ export class OrdersStore {
       status: order.status,
       changedAt: now,
       changedBy: "client",
-      note: `Client cancelled order before production kickoff. Reason: ${params.reason || "Self-service cancellation"}.${wasPaid ? " 100% refund initiated via Razorpay." : ""}`,
+      note: `Client cancelled order before production kickoff. Reason: ${params.reason || "Self-service cancellation"}.${wasPaid ? " 100% refund initiated via manual settlement." : ""}`,
     });
 
     persistOrder(order).catch(() => {});
@@ -1060,7 +1065,7 @@ export class OrdersStore {
   }
 
   /**
-   * Administrative refund execution via Razorpay.
+   * Administrative refund execution.
    */
   public static adminRefundOrder(params: {
     orderId: string;
@@ -1084,7 +1089,7 @@ export class OrdersStore {
       status: "refunded",
       changedAt: now,
       changedBy: params.adminName || "admin",
-      note: `Administrative refund of ₹${refundAmount.toLocaleString("en-IN")} executed via Razorpay. Reason: ${params.reason}`,
+      note: `Administrative refund of ₹${refundAmount.toLocaleString("en-IN")} recorded. Reason: ${params.reason}`,
     });
 
     persistOrder(order).catch(() => {});

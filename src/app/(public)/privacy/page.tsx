@@ -76,7 +76,7 @@ export default function PrivacyPage() {
                 3. Financial & Invoice Records
               </h2>
               <p>
-                All billing calculations, GST numbers, and payment milestones processed via Razorpay or Stripe are stored with end-to-end cryptographic signatures. Raw credit card numbers are never retained on Sutra Studio servers.
+                All billing calculations, GST numbers, and payment milestones processed via Pay by UPI QR or direct banking are stored with end-to-end audit logs. Banking credentials and UPI PINs are never requested or retained on Sutra Studio servers.
               </p>
             </section>
 

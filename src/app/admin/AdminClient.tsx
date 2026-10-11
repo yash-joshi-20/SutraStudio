@@ -1619,11 +1619,11 @@ function AdminHubContent() {
     }
   };
 
-  // Administrative Refund Action via Secure Razorpay Backend Function
+  // Administrative Refund Action via Manual Settlement
   const handleAdminRefundOrder = async (order: AdminOrder) => {
     const defaultReason = "Administrative client commission refund";
     const confirmPrompt = window.prompt(
-      `Enter refund reason to process a full refund of ₹${(order.totalAmount || 0).toLocaleString("en-IN")} via Razorpay:`,
+      `Enter refund reason to process a full refund of ₹${(order.totalAmount || 0).toLocaleString("en-IN")} via manual settlement:`,
       defaultReason
     );
     if (!confirmPrompt) return;
@@ -5085,10 +5085,10 @@ const [adminDataError, setAdminDataError] = useState("");
                           setOrderCurrentPage(1);
                         }}
                         className="w-full px-3 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] cursor-pointer font-medium text-[#5C3A1E]"
-                        title="Razorpay Payment Status"
+                        title="Payment Status"
                       >
                         <option value="all">All Payments</option>
-                        <option value="paid">Paid via Razorpay</option>
+                        <option value="paid">Paid & Verified</option>
                         <option value="unpaid">Unpaid / Pending</option>
                         <option value="failed">Failed</option>
                         <option value="refunded">Refunded</option>
@@ -6115,7 +6115,7 @@ const [adminDataError, setAdminDataError] = useState("");
                             <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70">
                               <span className="text-[10px] text-[#94A3B8] font-bold block">Method / Gateway</span>
                               <span className="font-mono text-[11px] font-semibold text-[#0F172A] capitalize">
-                                {inspectingAdminOrder.paymentMethod || (inspectingAdminOrder.razorpayPaymentId ? "Razorpay" : "Invoice / UPI")}
+                                {inspectingAdminOrder.paymentMethod || "UPI QR"}
                               </span>
                             </div>
                             <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70">

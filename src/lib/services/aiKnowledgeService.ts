@@ -188,7 +188,7 @@ let MEMORY_KNOWLEDGE: KnowledgeBaseEntry[] = [
     title: "Pricing Rules, Currency & Billing Cycles",
     category: "business_rules",
     question: "What currency does Sutra Studio use and what discounts apply to quarterly or annual plans?",
-    answer: "All services and subscriptions are priced strictly in Indian Rupees (₹ INR). Subscriptions offer a 5% discount on quarterly billing (e.g. ₹37,047 for Growth) and a 15% discount on annual billing (e.g. ₹1,32,589 for Growth). Single commissions require upfront payment via Razorpay.",
+    answer: "All services and subscriptions are priced strictly in Indian Rupees (₹ INR). Subscriptions offer a 5% discount on quarterly billing (e.g. ₹37,047 for Growth) and a 15% discount on annual billing (e.g. ₹1,32,589 for Growth). Single commissions require upfront payment via Pay by UPI QR.",
     status: "active",
     source: "admin_manual",
     createdAt: "2026-09-16T11:00:00.000Z",

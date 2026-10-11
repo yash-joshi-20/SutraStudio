@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
-import { PaymentsService } from "@/lib/services/payments";
+import { PaymentsStore } from "@/lib/services/paymentsStore";
 import { OrdersStore } from "@/lib/services/ordersStore";
-import { adminDb } from "@/lib/firebase/admin";
 import { requestRole, requestUid } from "@/lib/auth/requestRole";
 
+/**
+ * POST /api/payments/renew
+ * Generates the next subscription cycle's UPI QR payment record.
+ * Subscriptions have NO auto-charge; clients pay via UPI QR before expiry.
+ */
 export async function POST(req: Request) {
   try {
     const callerUid = await requestUid(req);
@@ -25,31 +29,39 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const totalAmount = order.totalAmount || 18999;
-    const orderNumber = order.orderNumber || order.code || `ORD-${Date.now()}`;
+    const totalAmount = Number(order.totalAmount || 18999);
+    const orderNumber = String(order.orderNumber || order.code || `ORD-${Date.now()}`);
 
-    // Create Razorpay Order for renewal charge
-    const rzpOrder = await PaymentsService.createRazorpayOrder({
-      amountINR: totalAmount,
-      orderNumber: `${orderNumber}-RNW`,
+    // Create next cycle payment record
+    const cycleIndex = ((order as any).currentCycleIndex || 1) + 1;
+    const payment = await PaymentsStore.getOrCreatePaymentRecord({
       orderId: order.id,
+      orderNumber: `${orderNumber}-RNW`,
+      amountINR: totalAmount,
       clientId: order.clientUid || order.clientId || callerUid || "client",
       clientEmail: order.clientEmail,
-      description: `Monthly Renewal: ${order.title}`,
+      clientName: order.clientName,
+      cycleIndex,
     });
 
     return NextResponse.json({
       success: true,
+      provider: "UPI_DYNAMIC_QR",
       orderId: order.id,
       orderNumber: order.orderNumber,
       totalAmount,
-      razorpay: {
-        orderId: rzpOrder.razorpayOrderId,
-        amountInPaise: rzpOrder.amountInPaise,
-        currency: rzpOrder.currency,
-        keyId: rzpOrder.keyId,
-        isTestMode: rzpOrder.isTestMode,
+      cycleIndex,
+      payment: {
+        id: payment.id,
+        amountINR: payment.amountINR,
+        currency: "INR",
+        status: payment.status,
+        upiUri: payment.upiUri,
+        vpa: payment.vpa,
+        payeeName: payment.payeeName,
+        note: payment.note,
       },
+      message: `Renewal payment QR generated for Order #${order.orderNumber}. Scan or tap to pay via UPI app.`,
     });
   } catch (error: any) {
     console.error("[API/payments/renew] Error:", error);

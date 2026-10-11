@@ -1,17 +1,22 @@
 import { NextResponse } from "next/server";
-import { PaymentsService } from "@/lib/services/payments";
+import { PaymentsStore } from "@/lib/services/paymentsStore";
 import { OrdersStore } from "@/lib/services/ordersStore";
 import { requireAdmin } from "@/lib/auth/session";
 import { requireFreshAdminReauth } from "@/lib/auth/adminAccess";
 import { guarded } from "@/lib/api/response";
-import { AuditLogService } from "@/lib/services/auditLogService";
 
+/**
+ * POST /api/payments/refund
+ * Studio Administrator manual ledger refund recording.
+ *
+ * Rules:
+ *  - Requires active admin session with fresh re-auth (< 5 mins)
+ *  - Refunds are recorded manually by admin (no automated gateway chargeback)
+ *  - Audit-logged
+ */
 export async function POST(req: Request) {
   return guarded(async () => {
-    // Step 1.5: financial actions run behind the admin portal's own cookie,
-    // not a client session carrying an admin claim.
     const user = await requireAdmin();
-    // Step 1.8: a refund needs a sign-in from the last 5 minutes.
     await requireFreshAdminReauth();
 
     const body = await req.json();
@@ -39,68 +44,32 @@ export async function POST(req: Request) {
       );
     }
 
-    const paymentId = order.razorpayPaymentId || `pay_${order.id}`;
+    const adminActor = {
+      uid: user.uid || "admin",
+      email: user.email || "yashjoshi20@zohomail.in",
+      name: user.name || "Studio Administrator",
+    };
 
-    // Issue refund via Razorpay REST API
-    const refundResult = await PaymentsService.refundPayment({
-      paymentId,
-      amountINR: amountINR || order.totalAmount,
-      reason: reason || "Administrative studio commission cancellation and refund.",
+    const refundResult = await PaymentsStore.recordManualRefund({
+      orderId,
+      amountINR,
+      reason: reason || "Administrative studio commission manual refund recorded in ledger.",
+      adminActor,
     });
 
-    const now = new Date().toISOString();
-    const beforeStatus = order.status;
-    const updatedOrder = OrdersStore.update(order.id, {
-      paymentStatus: "refunded",
-      status: "cancelled",
-      statusLabel: "Cancelled & Refunded",
-      updatedAt: now,
-      statusHistory: [
-        ...(order.statusHistory || []),
-        {
-          status: "cancelled",
-          changedAt: now,
-          changedBy: user.name || "admin",
-          note: `Commission refunded (${refundResult.refundId}) by Studio Administrator: ${reason || "Client refund requested"}`,
-        },
-      ],
-    });
-
-    OrdersStore.logPaymentEvent({
-      orderId: order.id,
-      eventType: "payment.refunded",
-      amountINR: amountINR || order.totalAmount,
-      paymentId,
-      source: "refund",
-      payload: { refundId: refundResult.refundId, reason, adminId: user.uid },
-    });
-
-    // Record in immutable Administrative Audit Trail
-    try {
-      AuditLogService.record({
-        who: {
-          uid: user.uid || "admin",
-          email: user.email || "yashjoshi20@zohomail.in",
-          name: user.name || "Studio Administrator",
-          role: "admin",
-        },
-        what: "PAYMENT_REFUNDED",
-        targetType: "order",
-        targetId: order.id,
-        targetTitle: `${order.title} (#${order.orderNumber || order.code})`,
-        before: { status: beforeStatus, paymentStatus: "paid" },
-        after: { status: "cancelled", paymentStatus: "refunded", refundId: refundResult.refundId },
-        note: `Issued refund of ₹${amountINR || order.totalAmount}. Reason: ${reason || "Admin discretion"}`,
-        type: "warning",
-      });
-    } catch {}
+    if (!refundResult.success) {
+      return NextResponse.json(
+        { error: refundResult.error || "Failed to process manual refund." },
+        { status: 400 }
+      );
+    }
 
     return NextResponse.json(
       {
         success: true,
         refundId: refundResult.refundId,
-        order: updatedOrder,
-        message: `Refund of ₹${amountINR || order.totalAmount} processed successfully. Order status updated to refunded/cancelled.`,
+        order: refundResult.order,
+        message: `Manual refund of ₹${amountINR || order.totalAmount} recorded successfully in studio ledger. Order status updated to refunded/cancelled.`,
       },
       { status: 200 }
     );

@@ -287,9 +287,9 @@ export async function POST(req: Request) {
       const isGujarati = /[\u0A80-\u0AFF]/.test(message) || lower.includes("karo") || lower.includes("chhe");
 
       const successReply = isGujarati
-        ? `તમારો કમિશન ઓર્ડર **#${order.orderNumber}** (${order.service}) તૈયાર છે!\n\nકુલ રકમ: **₹${order.totalAmount?.toLocaleString("en-IN")}**\nસ્ટેટસ: \`pending_payment\`\n\nકૃપા કરીને નીચે આપેલા **Pay Now via Razorpay / UPI** કાર્ડ પર ક્લિક કરીને પેમેન્ટ કન્ફર્મ કરો.`
+        ? `તમારો કમિશન ઓર્ડર **#${order.orderNumber}** (${order.service}) તૈયાર છે!\n\nકુલ રકમ: **₹${order.totalAmount?.toLocaleString("en-IN")}**\nસ્ટેટસ: \`pending_payment\`\n\nકૃપા કરીને નીચે આપેલા **Pay by UPI QR** બટન પર ક્લિક કરીને પેમેન્ટ સબમિટ કરો.`
         : summaryMessage ||
-          `I have created your commission **#${order.orderNumber}** (${order.service}) with status \`pending_payment\`.\n\nTotal: **₹${order.totalAmount?.toLocaleString("en-IN")}**\n\nPlease click **Pay Now via Razorpay** below to verify payment and commence studio production.`;
+          `I have created your commission **#${order.orderNumber}** (${order.service}) with status \`pending_payment\`.\n\nTotal: **₹${order.totalAmount?.toLocaleString("en-IN")}**\n\nPlease click **Pay by UPI QR** below to complete payment and commence studio production.`;
 
       return NextResponse.json({
         reply: successReply,

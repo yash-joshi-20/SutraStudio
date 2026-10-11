@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 
 export const metadata = {
   title: "Cancellation & Refund Policy — Sutra Studio",
-  description: "Official studio rules for order cancellations, revisions, and Razorpay refund settlements.",
+  description: "Official studio rules for order cancellations, revisions, and bank refund settlements.",
 };
 
 export default function CancellationRefundPage() {
@@ -45,7 +45,7 @@ export default function CancellationRefundPage() {
                 1. Cancellation Before Production Kickoff (100% Refund)
               </h2>
               <p>
-                Clients may cancel any individual service commission at zero penalty while the order remains in <strong>Order Placed (Pending Payment)</strong>, <strong>Payment Verified</strong>, or <strong>Brief Review</strong> stage before actual 3D, video, architectural, or design production has been initiated. Upon cancellation, 100% of the paid amount is refunded immediately via Razorpay.
+                Clients may cancel any individual service commission at zero penalty while the order remains in <strong>Order Placed (Pending Payment)</strong>, <strong>Payment Verified</strong>, or <strong>Brief Review</strong> stage before actual 3D, video, architectural, or design production has been initiated. Upon cancellation, 100% of the paid amount is refunded via verified bank transfer / UPI settlement.
               </p>
             </section>
 
@@ -78,10 +78,10 @@ export default function CancellationRefundPage() {
 
             <section className="space-y-3">
               <h2 className="font-serif text-xl font-semibold text-[#171717]">
-                5. Razorpay Settlement & Refund Processing Time
+                5. Refund Processing & Bank Settlement
               </h2>
               <p>
-                Approved refunds are initiated through our official <strong>Razorpay Payment Gateway</strong> integration directly back to the original source (UPI, Credit/Debit Card, Net Banking). Settlements typically reflect in your bank account within 3 to 5 business days.
+                Approved refunds are processed by studio administration directly back to your source bank account / UPI VPA. Settlements typically reflect in your bank account within 2 to 3 business days.
               </p>
             </section>
           </div>

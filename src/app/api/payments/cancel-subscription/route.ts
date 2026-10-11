@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { PaymentsService } from "@/lib/services/payments";
 import { OrdersStore } from "@/lib/services/ordersStore";
 import { adminDb } from "@/lib/firebase/admin";
 import { requestRole, requestUid } from "@/lib/auth/requestRole";
@@ -25,14 +24,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Call Razorpay to cancel subscription
-    if (order.subscriptionId) {
-      await PaymentsService.cancelRazorpaySubscription({
-        subscriptionId: order.subscriptionId,
-        cancelImmediately: Boolean(isTrialCancel),
-        reason: reason || (isTrialCancel ? "Client cancelled during 3-day free trial" : "Client requested subscription cancellation"),
-      });
-    }
+    // Subscription cancellation recorded in studio database (no Razorpay call needed)
 
     const now = new Date().toISOString();
     const isTrial = order.subscriptionStatus === "trial" || isTrialCancel;

@@ -147,6 +147,8 @@ export interface ProjectQuote {
   responseStatus: "pending" | "accepted" | "declined" | "counter_offered";
   respondedAt?: string;
   clientNotes?: string;
+  paymentId?: string;
+  utrNumber?: string;
   razorpayOrderId?: string;
 }
 
@@ -168,6 +170,8 @@ export interface ProjectMilestone {
   // Payment
   paymentAmount: number;
   paymentStatus: "not_due" | "pending" | "paid" | "refunded";
+  paymentId?: string;
+  utrNumber?: string;
   razorpayPaymentId?: string;
 
   // Dates

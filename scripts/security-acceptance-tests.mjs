@@ -516,6 +516,59 @@ async function runSecurityTests() {
     "/api/cron/* routes strictly gated by authorizeScheduledCall"
   );
 
+  // -------------------------------------------------------------
+  // TEST: UPI QR Payment Engine & Security Directives
+  // -------------------------------------------------------------
+  console.log("\n▶ TEST: UPI QR Payment Engine Security Directives");
+
+  // 1. Razorpay webhook deleted and Razorpay keys removed
+  const webhookPath = path.join(rootDir, "src/app/api/payments/webhook/route.ts");
+  const webhookExists = fs.existsSync(webhookPath);
+  assert(!webhookExists, "Discontinued public /api/payments/webhook route deleted permanently");
+
+  const envConfigContent = fs.readFileSync(path.join(rootDir, "src/lib/config/env.ts"), "utf-8");
+  assert(
+    !envConfigContent.includes("RAZORPAY_KEY_ID") &&
+      !envConfigContent.includes("NEXT_PUBLIC_RAZORPAY_KEY_ID") &&
+      envConfigContent.includes("UPI_MERCHANT_VPA") &&
+      envConfigContent.includes("isUpiConfigured"),
+    "env.ts purged of all Razorpay env keys and configured with UPI_MERCHANT_VPA and isUpiConfigured"
+  );
+
+  // 2. Amount tampering prevention: amount is locked to server record, never read from client body
+  const submitUtrPath = path.join(rootDir, "src/app/api/payments/submit-utr/route.ts");
+  const submitUtrContent = fs.readFileSync(submitUtrPath, "utf-8");
+  assert(
+    !submitUtrContent.includes("body.amount") &&
+      !submitUtrContent.includes("req.amount") &&
+      submitUtrContent.includes("cleanedUtr") &&
+      submitUtrContent.includes("PaymentsStore.submitUtr"),
+    "Amount tampering prevented: /api/payments/submit-utr never accepts or trusts client-supplied amount"
+  );
+
+  // 3. UTR single-use enforcement across all orders
+  const paymentsStorePath = path.join(rootDir, "src/lib/services/paymentsStore.ts");
+  const paymentsStoreContent = fs.readFileSync(paymentsStorePath, "utf-8");
+  assert(
+    paymentsStoreContent.includes("isUtrUsed") &&
+      paymentsStoreContent.includes("has already been registered for another order") &&
+      paymentsStoreContent.includes("single-use UTR"),
+    "UTR reuse prevention: PaymentsStore.isUtrUsed enforces single-use UTR across all orders in database"
+  );
+
+  // 4. Unauthorized payment verification denied
+  const adminVerifyPath = path.join(rootDir, "src/app/api/admin/payments/verify/route.ts");
+  const adminVerifyContent = fs.readFileSync(adminVerifyPath, "utf-8");
+  const adminRejectPath = path.join(rootDir, "src/app/api/admin/payments/reject/route.ts");
+  const adminRejectContent = fs.readFileSync(adminRejectPath, "utf-8");
+  assert(
+    adminVerifyContent.includes("assertAdminSession") &&
+      adminVerifyContent.includes("gate.authorized") &&
+      adminRejectContent.includes("assertAdminSession") &&
+      adminRejectContent.includes("gate.authorized"),
+    "Unauthorized payment verification denied: /api/admin/payments/verify and reject guarded by assertAdminSession (admin only, audit-logged)"
+  );
+
   console.log("\n========================================================");
   console.log(`   SECURITY ACCEPTANCE: ${passedTests}/${totalTests} TESTS PASSED (100%) `);
   console.log("========================================================\n");
