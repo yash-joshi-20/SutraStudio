@@ -48,8 +48,8 @@ const FAQS = [
     a: "Every project tier includes revision rounds overseen directly by our Principal Art Director. You can annotate feedback, request lighting passes, or submit copy edits through the client portal with guaranteed turnaround.",
   },
   {
-    q: "How does the Monthly Autonomous Retainer fulfill daily requests?",
-    a: "The Autonomous Growth Retainer operates as your dedicated daily active queue. Each business day, our automated creative engine and senior art director produce 4K graphics, commercial motion shorts, 3D meshes, and ad variations continuously vaulted into your private Sutra Cloud Vault.",
+    q: "How does the 30-Day Growth Plan fulfill daily requests?",
+    a: "The 30-Day Growth Plan operates as your dedicated daily active queue. Each business day, our creative studio and senior art director produce 1 custom image render + 1 commercial video/reel, plus copy and creative assets continuously delivered into your private Client Media Library.",
   },
   {
     q: "Do I own full commercial rights to the deliverables?",
@@ -80,7 +80,7 @@ export default function PricingPage() {
 
           <p className="text-base sm:text-lg text-[#64748B] leading-relaxed max-w-2xl">
             Honest studio commissions with zero hidden fees. Every asset crafted under
-            experienced art-direction and delivered directly into your Sutra Cloud Vault.
+            experienced art-direction and delivered directly into your private client deliverables library.
           </p>
 
           {/* Billing Cycle Toggle */}
@@ -225,7 +225,7 @@ export default function PricingPage() {
                   className="w-full rounded-3xl p-8 sm:p-10 bg-[#FFFDF9] border-2 border-[#D4A35A] shadow-warm-hover relative flex flex-col justify-between space-y-8"
                 >
                   <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#5C3A1E] text-white px-5 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase shadow-xs">
-                    Autonomous Campaign Engine
+                    Continuous Studio Production
                   </div>
 
                   <div className="space-y-6">
@@ -241,7 +241,7 @@ export default function PricingPage() {
                     <div className="flex flex-col sm:flex-row sm:items-baseline justify-between pb-6 border-b border-[#EADFCB]/60 gap-2">
                       <div className="flex items-baseline gap-2">
                         <span className="font-serif text-4xl sm:text-5xl font-bold text-[#5C3A1E]">
-                          {tier.formattedMonthlyPrice}
+                          {tier.formattedMonthlyPrice || tier.formattedPrice}
                         </span>
                       </div>
                       <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FAF9F5] border border-[#D4A35A]/50 text-xs font-mono font-bold text-[#5C3A1E]">
@@ -252,7 +252,7 @@ export default function PricingPage() {
 
                     <div className="space-y-3">
                       <span className="text-xs font-bold uppercase tracking-wider text-[#A98B57] block">
-                        30-Day Autonomous Retainer Deliverables:
+                        30-Day Growth Plan Deliverables:
                       </span>
                       <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-[#475569]">
                         {tier.features.map((feat) => (
@@ -285,7 +285,7 @@ export default function PricingPage() {
           )}
         </AnimatePresence>
 
-        {/* 7 Core Creative Disciplines & Direct Service Rates */}
+        {/* 12 Core Creative Disciplines & Direct Service Rates */}
         <section className="w-full space-y-8 pt-6">
           <div className="text-center max-w-3xl mx-auto space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] uppercase tracking-wider">
@@ -293,10 +293,10 @@ export default function PricingPage() {
               <span>INDIVIDUAL STUDIO DISCIPLINES</span>
             </div>
             <h2 className="font-serif text-3xl sm:text-4xl font-semibold text-[#0F172A]">
-              Starting Rates across <span className="text-gold-gradient">7 Core Disciplines</span>
+              Starting Rates across <span className="text-gold-gradient">12 Core Disciplines</span>
             </h2>
             <p className="text-sm text-[#64748B] max-w-2xl mx-auto leading-relaxed">
-              Prefer single-service commissioning? Every discipline is engineered with dedicated creative direction, precision pipelines, and guaranteed SLA turnaround.
+              Prefer single-service commissioning? Every discipline is engineered with dedicated creative direction and guaranteed SLA turnaround.
             </p>
           </div>
 
@@ -385,7 +385,7 @@ export default function PricingPage() {
               </h3>
             </div>
             <p className="text-xs text-[#64748B] max-w-sm">
-              Single-task high-velocity orders delivered directly into your Sutra Cloud Vault with guaranteed 24–48h SLA.
+              Single-task high-velocity orders delivered directly into your client media library with guaranteed 24–48h SLA.
             </p>
           </div>
 
@@ -442,8 +442,8 @@ export default function PricingPage() {
               <HardDrive className="w-5 h-5 text-[#5C3A1E]" />
             </div>
             <div>
-              <h5 className="font-semibold text-[#0F172A] text-sm">Sutra Cloud Vault Archive</h5>
-              <p className="text-[11px] mt-0.5">Encrypted cloud vault with permanent asset storage.</p>
+              <h5 className="font-semibold text-[#0F172A] text-sm">Client Deliverables Archive</h5>
+              <p className="text-[11px] mt-0.5">Secure library with permanent asset storage.</p>
             </div>
           </div>
 
@@ -453,7 +453,7 @@ export default function PricingPage() {
             </div>
             <div>
               <h5 className="font-semibold text-[#0F172A] text-sm">24-72 Hour Delivery</h5>
-              <p className="text-[11px] mt-0.5">Automated high-speed production pipelines with dedicated creative direction.</p>
+              <p className="text-[11px] mt-0.5">High-speed production with dedicated creative direction.</p>
             </div>
           </div>
         </div>
@@ -514,7 +514,7 @@ export default function PricingPage() {
                 leftIcon={<Bot className="w-4 h-4 text-[#D4A35A]" />}
                 className="w-full sm:w-auto justify-center"
               >
-                Chat with Studio Assistant
+                Chat with Studio Concierge
               </Button>
             </Link>
           </div>

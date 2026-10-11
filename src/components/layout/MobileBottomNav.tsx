@@ -41,7 +41,7 @@ export function MobileBottomNav() {
         { name: "Command", href: "/admin", icon: ShieldCheck },
         { name: "Clients", href: "/admin?tab=clients", icon: Users },
         { name: "Approvals", href: "/admin?tab=approvals", icon: CheckCircle },
-        { name: "Pipelines", href: "/admin?tab=workflows", icon: GitBranch },
+        { name: "Workflows", href: "/admin?tab=workflows", icon: GitBranch },
         { name: "Profile", href: "/profile", icon: User },
       ]
     : isClient

@@ -92,15 +92,15 @@ export default function MobileAppLandingPage() {
       badge: "Concierge Desk",
     },
     {
-      title: "Sutra Cloud Vault",
+      title: "Client Deliverables Vault",
       subtitle: "Direct High-Res Sync",
       desc: "Access your encrypted media archive with instant streaming and direct download.",
       badge: "Media Vault",
     },
     {
       title: "GST Billing & Receipts",
-      subtitle: "Signed Invoices & Instant Checkout",
-      desc: "Clear milestone invoices with 1-click Razorpay UPI and automated tax archiving.",
+      subtitle: "Signed Invoices & Instant Settlement",
+      desc: "Clear milestone invoices with direct GPay / UPI settlement and automated tax archiving.",
       badge: "Financials",
     },
   ];
@@ -114,11 +114,11 @@ export default function MobileAppLandingPage() {
     {
       icon: MessageSquare,
       title: "Direct Studio Channel & Executive Chat",
-      description: "Seamless coordination between automated rendering pipelines and lead studio directors in real-time.",
+      description: "Seamless coordination between your team and lead studio directors in real-time.",
     },
     {
       icon: HardDrive,
-      title: "Isolated Sutra Cloud Vaults",
+      title: "Client Deliverables Vault",
       description: "Direct mobile streaming of 4K ProRes videos, interactive 3D scene models, and vector packs saved in your private cloud.",
     },
     {
@@ -147,7 +147,7 @@ export default function MobileAppLandingPage() {
     {
       step: "02",
       title: "Sign In with Client Clearance",
-      desc: "Authenticate via Google or Email to unlock your client-isolated Sutra Cloud Vault.",
+      desc: "Authenticate via Google or Email to unlock your client-isolated deliverables library.",
     },
     {
       step: "03",
@@ -166,7 +166,7 @@ export default function MobileAppLandingPage() {
       a: "Yes. Our mobile viewport includes responsive media players and 3D preview containers optimized for mobile touch gestures and cellular streaming.",
     },
     {
-      q: "Are my Sutra Cloud Vault files safe on mobile?",
+      q: "Are my deliverables library files safe on mobile?",
       a: "Absolutely. All media access tokens are scoped to your authenticated Firebase session with zero hardcoded credentials and strict tenant isolation.",
     },
     {
@@ -192,7 +192,7 @@ export default function MobileAppLandingPage() {
               <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-xs font-semibold uppercase tracking-wider text-[#5C3A1E] shadow-xs">
                   <Smartphone className="w-3.5 h-3.5 text-[#D4A35A]" />
-                  <span>SUTRA STUDIO FOR IOS & ANDROID</span>
+                  <span>SUTRA STUDIO FOR IOS &amp; ANDROID</span>
                 </div>
 
                 <div className="space-y-3">
@@ -200,7 +200,7 @@ export default function MobileAppLandingPage() {
                     Your bespoke creative studio in your pocket.
                   </h1>
                   <p className="text-base sm:text-lg text-[#64748B] max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                    Approve 4K architectural renders, direct studio pipelines, and access your encrypted Sutra Cloud Vault anywhere, anytime.
+                    Approve 4K architectural renders, direct studio workflows, and access your client deliverables library anywhere, anytime.
                   </p>
                 </div>
 

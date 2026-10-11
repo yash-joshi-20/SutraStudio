@@ -22,7 +22,7 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudios.in";
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudios.in";
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Sutra Studios — Enterprise Software & 3D Spatial Engineering",
     description:
-      "High-precision 4K renders, spatial 3D architecture, and cinematic commercial reels delivered directly to your Sutra Cloud Vault.",
+      "High-precision 4K renders, spatial 3D architecture, and cinematic commercial reels delivered directly to your client deliverables library.",
     images: ["/brand/sutra-logo-primary.png"],
   },
   manifest: "/manifest.json",
@@ -148,8 +148,8 @@ const organizationSchema = {
             "@type": "Offer",
             itemOffered: {
               "@type": "Service",
-              name: "Autonomous Growth Retainer",
-              description: "30-day active queue: daily 4K renders and commercial video shorts.",
+              name: "30-Day Growth Plan",
+              description: "30-day active queue: daily custom image render and commercial video short.",
             },
             price: "9999",
             priceCurrency: "INR",

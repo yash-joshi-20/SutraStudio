@@ -22,13 +22,18 @@ export function Footer() {
   };
 
   const serviceLinks = [
-    { label: "Commercial Visuals & Motion", href: "/services" },
-    { label: "Product 3D Modeling & CGI", href: "/services" },
-    { label: "360° Virtual Tours & VR", href: "/services" },
-    { label: "Interior Architecture & Spatial", href: "/services" },
-    { label: "Brand Identity Systems", href: "/services" },
-    { label: "Digital Marketing & Meta Ads", href: "/services" },
-    { label: "Web & Mobile App Development", href: "/services" },
+    { label: "Image Creation", href: "/services#image-creation" },
+    { label: "Video Creation", href: "/services#video-creation" },
+    { label: "3D Modeling", href: "/services#3d-modeling" },
+    { label: "360 View", href: "/services#360-view" },
+    { label: "Interior Design", href: "/services#interior-design" },
+    { label: "Window Design", href: "/services#window-design" },
+    { label: "Digital Marketing", href: "/services#digital-marketing" },
+    { label: "Meta Ads Launcher", href: "/services#meta-ads-launcher" },
+    { label: "Website Development", href: "/services#website-development" },
+    { label: "Web App Development", href: "/services#web-app-development" },
+    { label: "Mobile App Setup", href: "/services#mobile-app-setup" },
+    { label: "Workflow Automation", href: "/services#workflow-automation" },
   ];
 
   const studioLinks = [
@@ -37,15 +42,15 @@ export function Footer() {
     { label: "Curated Projects", href: "/projects" },
     { label: "Investment & Pricing", href: "/pricing" },
     { label: "Mobile App for iOS & Android", href: "/mobile-app" },
-    { label: "Client Inquiry Desk", href: "/contact" },
+    { label: "Client Discovery Desk", href: "/contact" },
   ];
 
   const clientLinks = [
     { label: "Client Sign In", href: "/login" },
     { label: "Project Dashboard", href: "/dashboard" },
-    { label: "Order Wizard", href: "/orders" },
-    { label: "Deliverable Vault", href: "/projects-client" },
-    { label: "Sutra Cloud Vault", href: "/media" },
+    { label: "Start an Order", href: "/orders" },
+    { label: "Project Deliverables", href: "/projects-client" },
+    { label: "Media Library", href: "/media" },
     { label: "Billing & Invoices", href: "/invoices" },
   ];
 
@@ -103,14 +108,14 @@ export function Footer() {
           <div className="lg:col-span-2 space-y-4">
             <SutraLogo variant="horizontal" size="md" href="/" />
             <p className="text-sm text-[#64748B] max-w-sm leading-relaxed mt-4">
-              A high-precision creative technology studio rooted in traditional
-              Indian aesthetics, powered by state-of-the-art computational rendering and
-              digital craftsmanship.
+              A high-precision creative technology and software studio rooted in traditional
+              Indian aesthetics, delivering modern digital design, 3D spatial experiences, and
+              production-grade software engineering.
             </p>
             <div className="pt-2 flex flex-col gap-3">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#5C3A1E] w-fit shadow-xs">
                 <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-pulse" />
-                <span className="font-medium">Studio Online • Real-Time Creative Engine</span>
+                <span className="font-medium">Studio Active • Creative Production Desk</span>
               </div>
               <p className="text-xs text-[#94A3B8] tracking-wide">
                 Ideas ◆ Design ◆ Development ◆ Growth

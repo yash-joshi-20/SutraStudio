@@ -767,7 +767,7 @@ export function FloatingChatModal() {
         <button
           onClick={() => setIsOpen(true)}
           aria-label="Open Sutra Studio Concierge"
-          className="fixed bottom-20 right-4 z-40 md:bottom-6 md:right-6 w-14 h-14 sm:w-auto sm:h-auto rounded-full flex items-center justify-center p-0 sm:px-4 sm:py-2.5 sm:gap-3 bg-[#171717]/95 backdrop-blur-md text-[#FAF9F5] border border-[#A98B57]/60 shadow-2xl hover:bg-[#262626] hover:scale-105 active:scale-95 transition-all cursor-pointer group"
+          className="fixed bottom-[4.5rem] right-4 z-40 md:bottom-6 md:right-6 w-14 h-14 sm:w-auto sm:h-auto rounded-full flex items-center justify-center p-0 sm:px-4 sm:py-2.5 sm:gap-3 bg-[#171717]/95 backdrop-blur-md text-[#FAF9F5] border border-[#A98B57]/60 shadow-2xl hover:bg-[#262626] hover:scale-105 active:scale-95 transition-all cursor-pointer group"
         >
           <div className="relative w-full h-full sm:w-8 sm:h-8 flex items-center justify-center shrink-0 p-2 sm:p-0">
             <img
@@ -796,7 +796,7 @@ export function FloatingChatModal() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.98 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-4 right-4 z-[var(--z-modal)] w-[calc(100vw-2rem)] sm:w-[420px] h-[580px] max-h-[calc(100vh-2rem)] bg-[#FAF9F5] border border-[#E5E1D8] rounded-3xl shadow-2xl flex flex-col overflow-hidden text-[#171717]"
+            className="fixed bottom-[4.5rem] sm:bottom-6 right-2 sm:right-6 z-[var(--z-modal)] w-[calc(100vw-1rem)] sm:w-[420px] h-[560px] max-h-[calc(100dvh-5.5rem)] sm:max-h-[calc(100vh-3rem)] bg-[#FAF9F5] border border-[#E5E1D8] rounded-3xl shadow-2xl flex flex-col overflow-hidden text-[#171717]"
           >
             {/* Header */}
             <div className="px-4 py-3 bg-[#171717] text-[#FAF9F5] flex items-center justify-between border-b border-[#A98B57]/30 shrink-0">

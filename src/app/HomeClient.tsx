@@ -63,18 +63,20 @@ const FILTER_CATEGORIES = [
 ];
 
 const HERO_DISCIPLINES = [
-  { id: "visuals", label: "4K Key Visuals", output: "4K UHD PNG / TIFF", price: "₹3,499" },
-  { id: "video", label: "Cinematic Reels", output: "ProRes 422 60FPS", price: "₹7,999" },
-  { id: "3d", label: "3D Spatial Meshes", output: "GLB / OBJ / USDZ", price: "₹7,999" },
-  { id: "interior", label: "Architectural Living", output: "8K Photorealistic", price: "₹7,999" },
-  { id: "meta", label: "Meta Ads Launcher", output: "Multi-Ratio Ad Bundles", price: "₹3,499" },
-  { id: "web", label: "Full-Stack Web/App", output: "High-Performance Web", price: "Custom" },
+  { id: "image-creation", label: "Image Creation", output: "5x 4K UHD Master Visuals", price: "₹499", href: "/orders?service=image-creation" },
+  { id: "video-creation", label: "Video Creation", output: "2x 4K 60FPS Cinematic Reels", price: "₹1,499", href: "/orders?service=video-creation" },
+  { id: "3d-modeling", label: "3D Modeling", output: "GLB / OBJ / USDZ Spatial Mesh", price: "₹2,499", href: "/orders?service=3d-modeling" },
+  { id: "360-view", label: "360 View", output: "Interactive Spherical Virtual Tour", price: "₹4,999", href: "/orders?service=360-view" },
+  { id: "meta-ads-launcher", label: "Meta Ads Launcher", output: "Multi-Placement Ad Bundle", price: "₹4,999", href: "/orders?service=meta-ads-launcher" },
+  { id: "digital-marketing", label: "Brand Identity", output: "Complete Identity & Guidelines", price: "₹4,999", href: "/orders?service=digital-marketing" },
+  { id: "website-development", label: "Website Dev", output: "High-Performance Next.js Web", price: "Custom", href: "/orders?service=website-development" },
+  { id: "workflow-automation", label: "Automation", output: "Custom Integrations & Flows", price: "Custom", href: "/orders?service=workflow-automation" },
 ];
 
 export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [demoModalOpen, setDemoModalOpen] = useState(false);
-  const [activeHeroDiscipline, setActiveHeroDiscipline] = useState("visuals");
+  const [activeHeroDiscipline, setActiveHeroDiscipline] = useState("image-creation");
   const [heroRightTab, setHeroRightTab] = useState<"video" | "particle">("video");
   const [pricingCycle, setPricingCycle] = useState<"project" | "monthly">("project");
 
@@ -118,20 +120,20 @@ export default function HomePage() {
 
                   {/* Main Display Headline */}
                   <h1 className="hero-heading font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold leading-[1.06] tracking-tight text-[#0F172A]">
-                    <span className="text-gold-gradient font-bold">Tradition</span> Meets Modern Computational Engineering
+                    <span className="text-gold-gradient font-bold">Tradition</span> Meets Modern Creative Technology
                   </h1>
 
                   {/* Subtitle */}
                   <p className="hero-subhead text-base sm:text-lg text-[#64748B] max-w-xl leading-relaxed font-sans">
                     Bespoke Creative Technology, 3D Spatial Design, Full-Stack Engineering &amp;
                     Digital Marketing Solutions. Rooted in traditional Indian
-                    symmetry, executed with high-precision autonomous pipelines.
+                    aesthetics, executed with high-precision studio craftsmanship.
                   </p>
 
                   {/* Quick Discipline Selector Bar */}
                   <div className="space-y-2 pt-1">
                     <span className="text-[11px] font-bold uppercase tracking-wider text-[#A98B57] block">
-                      Production Disciplines &amp; 4K Standards:
+                      Production Disciplines &amp; Standards:
                     </span>
                     <div className="flex flex-wrap gap-2">
                       {HERO_DISCIPLINES.map((disc) => {
@@ -159,7 +161,7 @@ export default function HomePage() {
 
                   {/* Action Buttons */}
                   <div className="hero-cta flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-2">
-                    <Link href="/orders" className="w-full sm:w-auto">
+                    <Link href={activeDisciplineData.href || "/orders"} className="w-full sm:w-auto">
                       <Button variant="primary" size="lg" withArrow className="w-full sm:w-auto shadow-warm justify-center">
                         Start Commission ({activeDisciplineData.price})
                       </Button>
@@ -194,16 +196,16 @@ export default function HomePage() {
                         High-Precision
                       </p>
                       <p className="text-xs text-[#64748B] mt-0.5 font-medium">
-                        Studio Engine
+                        Studio Production
                       </p>
                     </div>
 
                     <div className="hero-stats-item">
                       <p className="font-serif text-lg sm:text-xl font-bold text-[#5C3A1E]">
-                        Autonomous
+                        Dedicated
                       </p>
                       <p className="text-xs text-[#64748B] mt-0.5 font-medium">
-                        Studio Production Pipelines
+                        Human Art Direction
                       </p>
                     </div>
 
@@ -221,7 +223,7 @@ export default function HomePage() {
                         100% IP Rights
                       </p>
                       <p className="text-xs text-[#64748B] mt-0.5 font-medium">
-                        Sutra Cloud Vault
+                        Client Deliverables Vault
                       </p>
                     </div>
                   </div>
@@ -342,18 +344,18 @@ export default function HomePage() {
         </section>
 
         {/* ===================================================
-            2. 7 SERVICES CATALOG
+            2. 12 SERVICES CATALOG
             =================================================== */}
         <section id="services" className="py-20 bg-[#FAF9F5] border-t border-[#EADFCB]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
             <SectionHeader
-              badge="OUR 7 DISCIPLINES"
+              badge="OUR 12 DISCIPLINES"
               title="Complete Creative &amp; Digital Solutions"
-              subtitle="From photorealistic visual generation to enterprise web platforms — everything your business requires, crafted in one unified atelier."
+              subtitle="From 4K image creation and cinematic reels to 3D spatial design, web engineering, and workflow automation — crafted in one unified atelier."
               className="text-center"
             />
 
-            {/* 7-Card Responsive Grid */}
+            {/* 12-Card Responsive Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {SUTRA_SERVICES.map((service) => (
                 <ServiceCard key={service.id} service={service} />
@@ -368,11 +370,11 @@ export default function HomePage() {
               </div>
               <div className="flex items-center gap-2.5">
                 <Clock className="w-4 h-4 text-[#C2761A]" />
-                <span className="font-medium text-[#0F172A]">Rapid 24-72 Hour Delivery Pipelines</span>
+                <span className="font-medium text-[#0F172A]">Rapid 24-72 Hour Delivery SLA</span>
               </div>
               <div className="flex items-center gap-2.5">
                 <ShieldCheck className="w-4 h-4 text-[#5C3A1E]" />
-                <span className="font-medium text-[#0F172A]">Full Commercial License &amp; Sutra Cloud Vault</span>
+                <span className="font-medium text-[#0F172A]">Full Commercial License &amp; Client Deliverables Vault</span>
               </div>
             </div>
           </div>
@@ -386,7 +388,7 @@ export default function HomePage() {
             <SectionHeader
               badge="WHY SUTRA STUDIO"
               title="Why Pay Sutra Studio vs Freelancers &amp; Traditional Agencies?"
-              subtitle="Generic online tools produce distorted drafts. Freelancers are fragmented. Big agencies charge ₹2,00,000/mo. Sutra Studio blends computational rendering speed with Senior Human Art Direction for production-ready perfection in 24–48 hours."
+              subtitle="Generic online tools produce distorted drafts. Freelancers are fragmented. Big agencies charge ₹2,00,000/mo. Sutra Studio blends digital design precision with Senior Human Art Direction for production-ready perfection in 24–48 hours."
               className="text-center"
             />
 
@@ -410,11 +412,11 @@ export default function HomePage() {
                   <Zap className="w-6 h-6 text-[#5C3A1E]" />
                 </div>
                 <h3 className="font-serif text-xl font-semibold text-[#0F172A]">
-                  Autonomous Creative Intelligence
+                  Streamlined Studio Production
                 </h3>
                 <p className="text-sm text-[#64748B] leading-relaxed">
-                  State-of-the-art computational design models, automated render
-                  dispatchers, and continuous progress updates delivered to your portal.
+                  High-efficiency digital production pipelines, dedicated creative
+                  direction, and continuous progress updates delivered to your portal.
                 </p>
               </div>
 
@@ -564,13 +566,13 @@ export default function HomePage() {
                       <span className="text-xs font-semibold uppercase tracking-wider text-[#A98B57]">Sutra Studio</span>
                       <span className="text-xs font-bold text-[#5C3A1E] bg-[#D4A35A]/20 px-2.5 py-0.5 rounded-full">From ₹499</span>
                     </div>
-                    <h4 className="font-serif text-lg font-bold text-[#0F172A] mb-2">Autonomous Atelier</h4>
-                    <p className="text-xs text-[#64748B] mb-5 leading-relaxed">Computational speed + Senior Art Director Polish + Cloud Vault.</p>
+                    <h4 className="font-serif text-lg font-bold text-[#0F172A] mb-2">Sutra Studio Atelier</h4>
+                    <p className="text-xs text-[#64748B] mb-5 leading-relaxed">High-Precision Production + Senior Art Director Polish + Client Vault.</p>
                     
                     <ul className="space-y-3 text-xs text-[#171717]">
                       <li className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
-                        <span className="font-medium"><strong>Guaranteed 4K UHD Master Deliverables</strong> (up to 5 curated renders)</span>
+                        <span className="font-medium"><strong>Guaranteed 4K UHD Master Deliverables</strong> (curated production renders)</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
@@ -582,11 +584,11 @@ export default function HomePage() {
                       </li>
                       <li className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
-                        <span className="font-medium"><strong>All 7 Disciplines in 1 Place</strong> (Visuals, 3D, Web, Ads, Brand)</span>
+                        <span className="font-medium"><strong>All 12 Disciplines in 1 Place</strong> (Visuals, Video, 3D, Web, Ads, Automation)</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
-                        <span className="font-medium"><strong>Private Sutra Cloud Vault</strong> &amp; 100% Commercial IP</span>
+                        <span className="font-medium"><strong>Private Client Media Vault</strong> &amp; 100% Commercial IP</span>
                       </li>
                     </ul>
                   </div>
@@ -622,7 +624,7 @@ export default function HomePage() {
               </h2>
 
               <p className="text-sm sm:text-base text-[#64748B] leading-relaxed">
-                Choose between single high-impact standalone deliverables starting at ₹499, studio commission packs, or our 30-Day Autonomous Retainer with daily queue fulfillment.
+                Choose between single high-impact standalone deliverables starting at ₹499, studio commission packs, or our 30-Day Growth Plan with daily queue fulfillment.
               </p>
 
               {/* Billing Cycle Toggle */}
@@ -781,7 +783,7 @@ export default function HomePage() {
                         {/* Price Display */}
                         <div className="flex items-baseline gap-1.5 pb-6 border-b border-[#EADFCB]/60">
                           <span className="font-serif text-3xl sm:text-4xl font-bold text-[#5C3A1E]">
-                            <AnimatedNumber value={tier.priceMonthly} prefix="₹" />
+                            <AnimatedNumber value={tier.priceMonthly ?? tier.price} prefix="₹" />
                           </span>
                           <span className="text-xs text-[#64748B] font-mono">
                             / 30-day billing
@@ -811,7 +813,7 @@ export default function HomePage() {
                           </Button>
                         </Link>
                         <p className="text-[11px] text-[#94A3B8] text-center">
-                          {tier.monthlyQuotaDescription}
+                          {tier.monthlyQuotaDescription || tier.dailyDeliverables}
                         </p>
                       </div>
                     </div>
@@ -926,7 +928,7 @@ export default function HomePage() {
                   </div>
 
                   <p className="text-sm text-[#475569] leading-relaxed max-w-2xl">
-                    Leading the synthesis of classical Indian aesthetic doctrines (Pramana, Rasa, Yantra) with modern spatial workflows, 4K rendering pipelines, and high-conversion commercial digital experiences.
+                    Leading the synthesis of classical Indian aesthetic doctrines (Pramana, Rasa, Yantra) with modern spatial workflows, 4K digital production, and high-conversion commercial digital experiences.
                   </p>
 
                   <div className="pt-2 flex flex-wrap items-center justify-center md:justify-start gap-3">
@@ -966,48 +968,6 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ===================================================
-            7. WHITE LUXURY EDITORIAL CTA BANNER
-            =================================================== */}
-        <section className="relative overflow-hidden bg-[#FFFDF9] text-[#0F172A] py-20 border-t border-[#EADFCB]">
-          <div className="absolute -bottom-16 -left-16 pointer-events-none opacity-[0.05]">
-            <LotusSymbol className="w-96 h-96" color="gold" />
-          </div>
-
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-semibold uppercase tracking-[0.2em] bg-[#F4EFE6] text-[#5C3A1E] border border-[#EADFCB] mx-auto">
-              <span className="text-[#D4A35A] text-[10px]">◆</span>
-              <span>COMMISSION A PROJECT</span>
-            </div>
-
-            <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-semibold leading-tight text-[#0F172A]">
-              Ready to Transform Your Ideas into Reality?
-            </h2>
-            <p className="text-base sm:text-lg text-[#64748B] max-w-xl mx-auto leading-relaxed">
-              Partner with Sutra Studio to craft unforgettable digital visuals,
-              immersive 3D environments, and modern applications.
-            </p>
-
-            <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
-              <Link href="/orders">
-                <Button variant="primary" size="lg" withArrow className="shadow-warm">
-                  Start Project
-                </Button>
-              </Link>
-
-              <Link href="/chat">
-                <Button
-                  variant="secondary"
-                  size="lg"
-                  leftIcon={<Bot className="w-4 h-4 text-[#D4A35A]" />}
-                >
-                  Consult Studio Concierge
-                </Button>
-              </Link>
             </div>
           </div>
         </section>

@@ -51,6 +51,7 @@ const CATEGORIES = [
   "Design",
   "Marketing",
   "Development",
+  "Automation",
 ];
 
 const ICON_MAP: Record<string, React.ReactNode> = {
@@ -108,12 +109,12 @@ export default function ServicesPage() {
             </div>
 
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold leading-[1.1] text-[#0F172A]">
-              7 Creative & Digital <span className="text-gold-gradient">Service Solutions</span>
+              12 Creative &amp; Digital <span className="text-gold-gradient">Service Solutions</span>
             </h1>
 
             <p className="text-base sm:text-lg text-[#64748B] leading-relaxed font-sans">
               Precision visual creation, architectural rendering, enterprise web
-              architecture, and autonomous marketing pipelines engineered to accelerate
+              architecture, and digital marketing workflows engineered to accelerate
               your brand growth.
             </p>
 
@@ -229,6 +230,7 @@ export default function ServicesPage() {
                   return (
                     <motion.div
                       key={service.id}
+                      id={service.slug}
                       layout
                       initial={{ opacity: 0, scale: 0.96 }}
                       animate={{ opacity: 1, scale: 1 }}
@@ -303,7 +305,7 @@ export default function ServicesPage() {
                           {/* Bottom Banner Strip */}
                           <div className="absolute bottom-2.5 left-3.5 right-3.5 flex items-center justify-between text-[11px] font-mono text-white/90 z-10">
                             <span className="truncate max-w-[170px] drop-shadow-sm text-[10px] text-[#F8F5EF]/90">
-                              {service.pipelineEngine.split("+")[0].trim()}
+                              {(service.pipelineEngine || "Studio Engine").split("+")[0].trim()}
                             </span>
                             <span className="text-[10px] text-[#D4A35A] font-semibold drop-shadow-sm">
                               {service.badge}
@@ -357,26 +359,20 @@ export default function ServicesPage() {
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center gap-1.5 shrink-0">
                           <button
                             type="button"
                             onClick={() => setSelectedService(service)}
                             title="Inspect Scope & Media"
-                            className="inline-flex items-center justify-center whitespace-nowrap min-h-[44px] px-3.5 py-2 rounded-xl bg-[#F8F5EF] text-[#5C3A1E] border border-[#EADFCB] hover:border-[#D4A35A] transition-colors cursor-pointer text-xs font-medium shrink-0"
+                            className="inline-flex items-center justify-center whitespace-nowrap min-h-[38px] px-3 py-1.5 rounded-xl bg-[#F8F5EF] text-[#5C3A1E] border border-[#EADFCB] hover:border-[#D4A35A] transition-colors cursor-pointer text-xs font-medium shrink-0"
                           >
                             Details
                           </button>
-                          <Link href={service.ctaHref || `/orders?service=${service.slug}`} className="shrink-0">
-                            {service.isCustomQuote && service.ctaText ? (
-                              <div className="inline-flex items-center justify-center whitespace-nowrap min-h-[44px] px-4 py-2 rounded-xl bg-[#5C3A1E] text-white hover:bg-[#4A2E17] text-xs font-semibold gap-1.5 transition-all shadow-xs cursor-pointer">
-                                <span>{service.ctaText}</span>
-                                <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
-                              </div>
-                            ) : (
-                              <div className="w-11 h-11 rounded-xl bg-[#5C3A1E] text-white flex items-center justify-center transition-transform hover:scale-105 shadow-xs cursor-pointer shrink-0">
-                                <ArrowUpRight className="w-4 h-4 shrink-0" />
-                              </div>
-                            )}
+                          <Link href={service.ctaHref || `/orders?service=${service.slug}`} className="shrink-0" title="Commission Service">
+                            <div className="inline-flex items-center justify-center whitespace-nowrap min-h-[38px] px-3.5 py-1.5 rounded-xl bg-[#5C3A1E] text-white hover:bg-[#4A2E17] text-xs font-semibold gap-1 transition-all shadow-xs cursor-pointer">
+                              <span>{service.isCustomQuote ? "Inquire" : "Order"}</span>
+                              <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
+                            </div>
                           </Link>
                         </div>
                       </div>
@@ -430,11 +426,11 @@ export default function ServicesPage() {
                 </div>
                 <div>
                   <h4 className="font-serif text-base font-semibold text-[#0F172A]">
-                    Sutra Cloud Vault Storage
+                    Client Deliverables Vault
                   </h4>
                   <p className="text-xs text-[#64748B] mt-1 leading-relaxed">
-                    Raw source files, 4K renders, and 3D assets automatically
-                    archived in your private encrypted Sutra Cloud Vault.
+                    Raw source files, 4K renders, and 3D assets securely
+                    archived in your private client deliverables library.
                   </p>
                 </div>
               </div>
@@ -512,7 +508,7 @@ export default function ServicesPage() {
             ) : selectedService.slug === "meta-ads-launcher" || selectedService.slug === "digital-marketing-ads" ? (
               <MetaAdCreativeMockup
                 headline={selectedService.description}
-                ctaText="Book Pipeline"
+                ctaText="Order Meta Ad Bundle"
                 ctaHref={`/orders?service=${selectedService.slug}`}
               />
             ) : selectedService.mediaType === "video" ? (
@@ -565,7 +561,7 @@ export default function ServicesPage() {
                 </span>
               </div>
               <div>
-                <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">Pipeline Engine</span>
+                <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">Production Studio</span>
                 <span className="font-medium text-[#5C3A1E] truncate block" title={selectedService.pipelineEngine}>
                   {selectedService.pipelineEngine.split("+")[0].trim()}
                 </span>
@@ -598,14 +594,14 @@ export default function ServicesPage() {
               </ul>
             </div>
 
-            {/* Workflow & Sutra Cloud Vault Storage */}
+            {/* Workflow & Client Media Vault Storage */}
             <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] space-y-2">
               <h4 className="text-xs font-bold uppercase tracking-wider text-[#A98B57]">
-                Production & Cloud Vault Routing
+                Production &amp; Media Vault Delivery
               </h4>
               <p className="text-xs text-[#64748B] leading-relaxed">
-                Executed via Sutra Studio isolated <strong className="text-[#0F172A]">{selectedService.pipelineEngine}</strong> pipeline.
-                High-resolution master files and source assets will be synchronized automatically into your private encrypted Sutra Cloud Vault project folder upon art-director review.
+                Crafted via Sutra Studio dedicated <strong className="text-[#0F172A]">{selectedService.pipelineEngine}</strong> production department.
+                High-resolution master files and source assets will be synchronized directly into your private client deliverables library upon art-director review.
               </p>
             </div>
 

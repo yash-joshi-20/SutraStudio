@@ -1,14 +1,19 @@
 /**
- * SUTRA STUDIO — Canonical Services Configuration & Pricing Architecture
+ * SUTRA STUDIO — Canonical Services Configuration & Single Source of Truth
  *
- * Defines the 7 core creative and engineering studio disciplines:
- * 1. Commercial Visuals & Motion (Images & Video Reels) - ₹1,499
- * 2. Product 3D Modeling & CGI - ₹2,499
- * 3. 360° Virtual Tours & VR - ₹4,999
- * 4. Interior Architecture & Spatial Staging - Custom Quote
- * 5. Brand Identity & Design Systems - ₹4,999
- * 6. Digital Marketing & Meta Ads Infrastructure - ₹4,999
- * 7. Website & Mobile App Development - Custom Quote
+ * Defines the 12 core studio disciplines:
+ * 1. Image Creation (4K Visuals & Brand Renders) - Starting from ₹499
+ * 2. Video Creation (Commercial Reels & Motion) - Starting from ₹1,499
+ * 3. 3D Modeling (CAD & Interactive 3D Models) - Starting from ₹2,499
+ * 4. 360 View (Virtual Tours & Walkthroughs) - Starting from ₹4,999
+ * 5. Interior Design (Spaces, Renderings & Elevations) - Custom Quote
+ * 6. Window Design (Frames, Facades & Elevations) - Custom Quote
+ * 7. Digital Marketing (Growth Strategy & Campaigns) - Starting from ₹4,999
+ * 8. Meta Ads Launcher (Paid Acquisition & Creative Packs) - Starting from ₹4,999
+ * 9. Website Development (High-Performance Web Platforms) - Custom Quote
+ * 10. Web App Development (SaaS Dashboards & Portals) - Custom Quote
+ * 11. Mobile App Setup (iOS & Android Applications) - Custom Quote
+ * 12. Workflow Automation (Operational Systems & Integrations) - Custom Quote
  */
 
 export interface ServiceDefinition {
@@ -36,261 +41,474 @@ export interface ServiceDefinition {
 }
 
 export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
-  // 1. Commercial Visuals & Motion
+  // 1. Image Creation
   {
-    id: "visuals-motion",
-    name: "Commercial Visuals & Motion",
-    slug: "visuals-and-motion",
+    id: "img-creation",
+    name: "Image Creation",
+    slug: "image-creation",
     category: "Creative",
-    tagline: "4K Key Visuals & Video Reels",
+    tagline: "Commercial Visuals & Key Brand Imagery",
     description:
-      "High-fidelity commercial product imagery, luxury brand mockups, and cinematic video reels engineered with studio sound, motion typography, and 4K polish.",
-    workflow: "video",
-    startingPrice: "₹1,499",
-    priceDisplay: "Starting from ₹1,499 (Visuals & Motion Pack)",
+      "High-fidelity commercial product imagery, luxury brand mockups, and high-impact visual campaign assets crafted for premium commercial presence.",
+    workflow: "image",
+    startingPrice: "₹499",
+    priceDisplay: "Starting from ₹499 (5x 4K Master Pack)",
     isCustomQuote: false,
-    ctaText: "Order Visuals & Motion - ₹1,499",
-    ctaHref: "/orders?service=visuals-and-motion",
+    ctaText: "Order Image Creation",
+    ctaHref: "/orders?service=image-creation",
     deliverables: [
       "4K Photorealistic Master Renders",
-      "Commercial Motion Reels (15–30s)",
-      "High-Fidelity Studio Voice Narration",
-      "Multi-Ratio Ad Formats (1:1, 9:16)",
-      "24–48h SLA Turnaround",
+      "Studio Lighting & Multi-Angle Passes",
+      "Lifestyle Ambient Staging",
+      "Full Commercial Copyright License",
+      "24–48h SLA Delivery",
     ],
     subBullets: [
-      "4K Master Renders + Motion Reel",
-      "High-fidelity voiceover & music score",
-      "24–48h SLA turnaround",
+      "5x Master 4K Renders",
+      "Multiple lighting and angle studies",
+      "24–48h SLA delivery",
+    ],
+    icon: "Image",
+    thumbnail: "/images/services/image-creation.webp",
+    badge: "4K Visuals",
+    mediaType: "image",
+    mediaFormat: "4K UHD PNG / TIFF (3840×2160)",
+    turnaround: "24–48 Hours",
+    pipelineEngine: "Commercial Visual Production",
+  },
+
+  // 2. Video Creation
+  {
+    id: "vid-creation",
+    name: "Video Creation",
+    slug: "video-creation",
+    category: "Creative",
+    tagline: "Cinematic Ads, Commercial Reels & Shorts",
+    description:
+      "Engaging 10-to-30 second cinematic video ads, social reels, motion sequences, and studio-narrated commercial clips with high production polish.",
+    workflow: "video",
+    startingPrice: "₹1,499",
+    priceDisplay: "Starting from ₹1,499 (2x Viral Reels Pack)",
+    isCustomQuote: false,
+    ctaText: "Order Video Creation",
+    ctaHref: "/orders?service=video-creation",
+    deliverables: [
+      "15–30s Commercial Video Reels",
+      "Studio Voiceover Narration & Sound Design",
+      "Multi-Ratio Ad Formats (9:16 Vertical, 16:9 Landscape)",
+      "Motion Typography & Color Grading",
+      "24–48h SLA Delivery",
+    ],
+    subBullets: [
+      "2x Complete commercial reels",
+      "Studio voiceover & sound score",
+      "24–48h SLA delivery",
     ],
     icon: "Video",
-    thumbnail:
-      "https://image.pollinations.ai/prompt/cinematic%20architectural%20film%20still%2C%20modern%20sandstone%20courtyard%20villa%20at%20sunset%2C%20ambient%20water%20reflection%2C%20anamorphic%20lens%20flare%2C%208k?width=1200&height=800&nologo=true",
-    badge: "Image & Reel",
+    thumbnail: "/images/services/video-creation.webp",
+    badge: "Commercial Reel",
     mediaType: "video",
-    mediaFormat: "ProRes / 4K MP4 / PNG",
+    mediaFormat: "ProRes 422 / 4K MP4 (24fps / 60fps)",
     turnaround: "24–48 Hours",
-    pipelineEngine: "Studio Fidelity 4K Video & Diffusion Suite",
+    pipelineEngine: "Cinematic Motion Production",
   },
 
-  // 2. Product 3D Modeling & CGI
+  // 3. 3D Modeling
   {
     id: "3d-modeling",
-    name: "Product 3D Modeling & CGI",
+    name: "3D Modeling",
     slug: "3d-modeling",
     category: "Design",
-    tagline: "High-Precision CAD & Interactive 3D",
+    tagline: "High-Precision CAD & Interactive 3D Models",
     description:
-      "Precision 3D product CAD modeling, studio product lighting setups, exploded CGI views, and interactive web-ready WebGL assets.",
+      "Precision 3D product CAD modeling, studio product lighting setups, exploded views, and interactive web-ready 3D assets.",
     workflow: "three-d",
     startingPrice: "₹2,499",
-    priceDisplay: "Starting from ₹2,499 (Interactive WebGL Asset)",
+    priceDisplay: "Starting from ₹2,499 (Interactive 3D Asset)",
     isCustomQuote: false,
-    ctaText: "Order 3D Model - ₹2,499",
+    ctaText: "Order 3D Model",
     ctaHref: "/orders?service=3d-modeling",
     deliverables: [
-      "Interactive WebGL Asset",
-      "glTF / USDZ / OBJ Files",
-      "PBR Textured Models",
-      "Turntable 4K Renders",
-      "48h SLA Turnaround",
+      "Interactive Web-Ready 3D Asset",
+      "glTF / USDZ / OBJ Format Exports",
+      "4K PBR Textured Materials",
+      "Turntable Lighting Stills",
+      "48h SLA Delivery",
     ],
     subBullets: [
-      "Interactive WebGL 3D Model",
+      "Interactive 3D web model",
       "glTF, USDZ & OBJ formats",
-      "48h SLA turnaround",
+      "48h SLA delivery",
     ],
     icon: "Box",
-    thumbnail:
-      "https://image.pollinations.ai/prompt/luxury%20modern%20armchair%203d%20render%2C%20emerald%20velvet%20and%20brushed%20brass%2C%20studio%20lighting%2C%20isolated%20on%20warm%20ivory%20plinth%2C%20octane%20render%2C%208k?width=1200&height=800&nologo=true",
-    badge: "3D Asset",
+    thumbnail: "/images/services/3d-modeling.webp",
+    badge: "3D Spatial",
     mediaType: "3d",
-    mediaFormat: "GLTF / USDZ / OBJ (PBR Textures)",
+    mediaFormat: "GLTF / USDZ / OBJ (4K PBR Textures)",
     turnaround: "48 Hours",
-    pipelineEngine: "Three.js WebGL + Commercial Studio Fidelity",
+    pipelineEngine: "Precision 3D Production",
   },
 
-  // 3. 360° Virtual Tours & VR
+  // 4. 360 View
   {
     id: "360-view",
-    name: "360° Virtual Tours & VR",
+    name: "360 View",
     slug: "360-view",
     category: "Design",
-    tagline: "Immersive Panoramic Walkthroughs",
+    tagline: "Immersive Panoramic Virtual Tours",
     description:
-      "Immersive 360-degree interactive panoramic virtual tours for luxury villas, hospitality spaces, and real-estate showrooms.",
+      "Immersive 360-degree interactive panoramic virtual tours for luxury villas, hospitality spaces, and commercial showrooms.",
     workflow: "three-sixty",
     startingPrice: "₹4,999",
-    priceDisplay: "Starting from ₹4,999 (Panoramic VR Space)",
+    priceDisplay: "Starting from ₹4,999 (Panoramic Virtual Space)",
     isCustomQuote: false,
-    ctaText: "Order 360° Tour - ₹4,999",
+    ctaText: "Order 360° Tour",
     ctaHref: "/orders?service=360-view",
     deliverables: [
       "Single Panoramic Virtual Space",
-      "Interactive Panorama Viewer",
-      "Hotspot Annotations & Map",
+      "Interactive Panorama Web Viewer",
+      "Hotspot Annotations & Floor Plan Navigation",
       "Embeddable Web Code",
-      "48–72h SLA Turnaround",
+      "48–72h SLA Delivery",
     ],
     subBullets: [
-      "High-res HDR spherical panorama",
+      "High-resolution panoramic virtual space",
       "Interactive hotspot tour",
-      "48–72h SLA turnaround",
+      "48–72h SLA delivery",
     ],
     icon: "Compass",
-    thumbnail:
-      "https://image.pollinations.ai/prompt/equirectangular%20360%20degree%20panoramic%20luxury%20modern%20villa%20interior%2C%20floor%20to%20ceiling%20glass%2C%20calacatta%20marble%2C%20warm%20golden%20lighting%2C%208k%20seamless%20hdr%20spherical?width=2048&height=1024&nologo=true",
-    badge: "360° VR",
+    thumbnail: "/images/services/360-view.webp",
+    badge: "360° Virtual Tour",
     mediaType: "360",
-    mediaFormat: "Equirectangular HDR / WebXR Panoramas",
+    mediaFormat: "Equirectangular HDR / Web Panoramas",
     turnaround: "48–72 Hours",
-    pipelineEngine: "Three.js Equirectangular Spatial Engine",
+    pipelineEngine: "Virtual Spaces Production",
   },
 
-  // 4. Interior Architecture & Spatial Staging
+  // 5. Interior Design
   {
     id: "interior-design",
-    name: "Interior Architecture & Spatial Staging",
-    slug: "interior-architecture",
+    name: "Interior Design",
+    slug: "interior-design",
     category: "Design",
     tagline: "Spaces, Renderings & Material Studies",
     description:
-      "Photorealistic architectural exterior and interior visualization, luxury room staging, lighting studies, and CAD elevations.",
+      "Photorealistic architectural interior visualization, luxury room staging, natural lighting studies, and material palettes.",
     workflow: "interior",
     startingPrice: "Custom Quote",
-    isCustomQuote: true,
     priceDisplay: "Custom Quote",
+    isCustomQuote: true,
     ctaText: "Request Custom Quote",
-    ctaHref: "/orders?service=interior-architecture",
+    ctaHref: "/orders?service=interior-design",
     deliverables: [
-      "High-Res Architectural Renders",
-      "Material & Lighting Pass",
-      "Furniture Layout Specs & CAD Elevations",
-      "Moodboard & Color Schemes",
+      "High-Resolution Architectural Renders",
+      "Day & Night Lighting Studies",
+      "Material Specification & Moodboard Sheets",
+      "Furniture Layout & Dimension Spec Sheets",
+      "48–72h SLA Delivery",
     ],
     subBullets: [
       "High-resolution 4K render passes",
-      "Full elevation profiles & lighting",
-      "48–72h SLA turnaround",
+      "Material and lighting elevation specs",
+      "48–72h SLA delivery",
     ],
     icon: "Home",
-    thumbnail:
-      "https://image.pollinations.ai/prompt/architectural%20interior%20rendering%2C%20minimalist%20luxury%20living%20space%2C%20intricate%20golden%20jali%20screens%2C%20calacatta%20gold%20marble%20floors%2C%20recessed%203000k%20warm%20led%2C%20hasselblad%20photography%2C%208k?width=1200&height=800&nologo=true",
-    badge: "Custom Quote",
+    thumbnail: "/images/services/interior-design.webp",
+    badge: "Spatial Interior",
     mediaType: "image",
-    mediaFormat: "High-Res Render Suite (4K PNG / DWG)",
+    mediaFormat: "High-Res Render Suite (4K PNG)",
     turnaround: "48–72 Hours",
-    pipelineEngine: "Commercial Studio Fidelity + Depth Maps",
+    pipelineEngine: "Architectural Staging",
   },
 
-  // 5. Brand Identity & Design Systems
+  // 6. Window Design
   {
-    id: "brand-identity",
-    name: "Brand Identity & Design Systems",
-    slug: "brand-identity",
-    category: "Creative",
-    tagline: "Visual Identity, Typography & Guidelines",
+    id: "window-design",
+    name: "Window Design",
+    slug: "window-design",
+    category: "Design",
+    tagline: "Frames, Facades & Architectural Elevations",
     description:
-      "Complete visual identities, luxury typography hierarchy, vector design tokens, brand book, and asset packages.",
-    workflow: "brand",
-    startingPrice: "₹4,999",
-    isCustomQuote: false,
-    priceDisplay: "Starting from ₹4,999 (Complete Brand Book)",
-    ctaText: "Commission Brand System - ₹4,999",
-    ctaHref: "/orders?service=brand-identity",
+      "Architectural window framing, modern facade elevations, custom glass transmittance studies, and structural elevations.",
+    workflow: "design",
+    startingPrice: "Custom Quote",
+    priceDisplay: "Custom Quote",
+    isCustomQuote: true,
+    ctaText: "Request Custom Quote",
+    ctaHref: "/orders?service=window-design",
     deliverables: [
-      "Vector Logo Master Suite (SVG/EPS/PNG)",
-      "Typography & Color Token Guidelines",
-      "Comprehensive Brand Stylebook PDF",
-      "Social Media Identity Kit",
-      "72h SLA Turnaround",
+      "Facade Elevation Profiles (CAD / PDF)",
+      "Glass Material & Tint Studies",
+      "4K Exterior Perspective Renders",
+      "Framing Specification Sheet",
+      "24–48h SLA Delivery",
     ],
     subBullets: [
-      "Full vector logo assets & typography",
-      "Comprehensive digital brand guide",
-      "72h SLA turnaround",
+      "CAD elevation profiles",
+      "Glass reflection & framing pass",
+      "24–48h SLA delivery",
     ],
-    icon: "Palette",
-    thumbnail:
-      "https://image.pollinations.ai/prompt/luxury%20minimalist%20brand%20identity%20guidelines%20book%20mockup%2C%20gold%20foil%20embossed%20lotus%20emblem%2C%20warm%20ivory%20stationery%2C%20business%20cards%2C%20studio%20lighting%2C%208k?width=1200&height=800&nologo=true",
-    badge: "Brand Identity",
+    icon: "Grid",
+    thumbnail: "/images/services/window-design.webp",
+    badge: "Facade Elevation",
     mediaType: "image",
-    mediaFormat: "Vector SVG / PDF / AI / High-Res PNG",
-    turnaround: "72 Hours",
-    pipelineEngine: "Sutra Brand Architecture & Typography Engine",
+    mediaFormat: "CAD Specification / 4K Render Passes",
+    turnaround: "24–48 Hours",
+    pipelineEngine: "Facade & Elevation Studio",
   },
 
-  // 6. Digital Marketing & Meta Ads Infrastructure
+  // 7. Digital Marketing
   {
-    id: "digital-marketing-ads",
-    name: "Digital Marketing & Meta Ads",
-    slug: "digital-marketing-ads",
+    id: "digital-marketing",
+    name: "Digital Marketing",
+    slug: "digital-marketing",
     category: "Marketing",
-    tagline: "Growth Strategy, Meta Ads & Creatives",
+    tagline: "Growth Strategy, Content Blueprints & Campaigns",
     description:
-      "Data-driven creative growth strategies, end-to-end Facebook & Instagram campaign setups, high-converting creative ad variations, copy testing, and optimization.",
+      "Data-driven creative growth strategies, content blueprints, audience profiling, and brand storytelling campaigns.",
+    workflow: "marketing",
+    startingPrice: "₹4,999",
+    priceDisplay: "Starting from ₹4,999 (Monthly Strategy Deck)",
+    isCustomQuote: false,
+    ctaText: "Commission Strategy",
+    ctaHref: "/orders?service=digital-marketing",
+    deliverables: [
+      "30-Day Strategic Content Calendar",
+      "Editorial Copywriting & Headline Decks",
+      "Competitor Trend & Audience Blueprint",
+      "Multi-Channel Publishing Matrix",
+      "48h SLA Delivery",
+    ],
+    subBullets: [
+      "30-Day content calendar",
+      "Direct response copy & hook decks",
+      "48h SLA delivery",
+    ],
+    icon: "TrendingUp",
+    thumbnail: "/images/services/digital-marketing.webp",
+    badge: "Strategic Growth",
+    mediaType: "interactive",
+    mediaFormat: "Strategic Presentation Deck / PDF",
+    turnaround: "48 Hours",
+    pipelineEngine: "Digital Strategy Department",
+  },
+
+  // 8. Meta Ads Launcher
+  {
+    id: "meta-ads-launcher",
+    name: "Meta Ads Launcher",
+    slug: "meta-ads-launcher",
+    category: "Marketing",
+    tagline: "Campaign Architecture, Ad Creatives & Audience Targeting",
+    description:
+      "End-to-end Facebook & Instagram campaign setups, high-converting creative ad variations, copy testing, and audience optimization.",
     workflow: "social",
     startingPrice: "₹4,999",
+    priceDisplay: "Starting from ₹4,999 (Campaign Setup & 5 Ad Variations)",
     isCustomQuote: false,
-    priceDisplay: "Starting from ₹4,999 (Campaign Setup & 5 Ad Packs)",
-    ctaText: "Launch Ad Campaign - ₹4,999",
-    ctaHref: "/orders?service=digital-marketing-ads",
+    ctaText: "Launch Ad Campaign",
+    ctaHref: "/orders?service=meta-ads-launcher",
     deliverables: [
-      "Targeting & Funnel Blueprint",
-      "5 Creative Ad Variations (1:1, 9:16, 16:9)",
-      "Conversion Pixel / CAPI Tracking Setup",
-      "Copywriting & Audience Optimization",
-      "48h SLA Turnaround",
+      "5 Creative Ad Variations (1:1, 9:16)",
+      "Direct-Response Copywriting Packs",
+      "Audience Targeting & Funnel Blueprint",
+      "Conversion Tracking Setup & Verification",
+      "48h SLA Delivery",
     ],
     subBullets: [
       "5 high-converting ad variations",
-      "End-to-end Meta ads campaign setup",
-      "48h SLA turnaround",
+      "Targeting blueprint & copy pack",
+      "48h SLA delivery",
     ],
-    icon: "TrendingUp",
-    thumbnail:
-      "https://image.pollinations.ai/prompt/luxury%20digital%20marketing%20analytics%20growth%20dashboard%2C%20dark%20obsidian%20glass%2C%20golden%20wireframe%20holographic%20charts%2C%20cinematic%20lighting%2C%208k?width=1200&height=800&nologo=true",
-    badge: "Meta & Growth",
+    icon: "Share2",
+    thumbnail: "/images/services/meta-ads-launcher.webp",
+    badge: "Paid Acquisition",
     mediaType: "interactive",
-    mediaFormat: "Multi-Ratio Ad Pack (1:1, 9:16, 16:9) + Strategy Deck",
+    mediaFormat: "Multi-Ratio Ad Pack (1:1, 9:16, 16:9)",
     turnaround: "48 Hours",
-    pipelineEngine: "Commercial Studio Fidelity Pipeline + Growth Engine",
+    pipelineEngine: "Campaign Management",
   },
 
-  // 7. Website & Mobile App Development
+  // 9. Website Development
   {
-    id: "web-mobile-dev",
-    name: "Website & Mobile App Development",
-    slug: "web-mobile-development",
+    id: "website-development",
+    name: "Website Development",
+    slug: "website-development",
     category: "Development",
-    tagline: "Next.js Web Platforms & iOS / Android Apps",
+    tagline: "High-Performance Brand Portals & Websites",
     description:
-      "High-performance bespoke websites, client portals, SaaS dashboards, and cross-platform native iOS & Android applications.",
+      "High-performance bespoke websites engineered with modern web standards, fluid micro-interactions, responsive precision, and fast loading.",
     workflow: "website",
     startingPrice: "Custom Quote",
-    isCustomQuote: true,
     priceDisplay: "Custom Quote",
-    ctaText: "Scope Engineering Build",
-    ctaHref: "/orders?service=web-mobile-development",
+    isCustomQuote: true,
+    ctaText: "Scope Web Project",
+    ctaHref: "/orders?service=website-development",
     deliverables: [
-      "Production-Ready Next.js & React Native Code",
-      "Cross-Platform Mobile Builds (iOS & Android)",
-      "Full Responsive UI & Fluid Micro-interactions",
-      "SEO & Meta Architecture",
-      "5–14 Days Delivery",
+      "Production-Grade Web Codebase",
+      "Fluid Responsive Design (Mobile, Tablet, Desktop)",
+      "Search Engine Optimization (SEO) Architecture",
+      "Analytics & Domain Deployment",
+      "5–7 Days Delivery",
     ],
     subBullets: [
-      "Full responsive web & mobile code",
-      "Next.js, TypeScript & React Native",
-      "Sub-second page speeds guaranteed",
+      "Full responsive web engineering",
+      "Modern clean architecture & SEO",
+      "Sub-second page loading speeds",
     ],
     icon: "Globe",
-    thumbnail:
-      "https://image.pollinations.ai/prompt/macbook%20pro%20titanium%20and%20iphone%2016%20pro%20displaying%20sutra%20studio%20luxury%20app%20interface%2C%20gold%20lotus%20emblem%2C%20architectural%20desk%2C%20soft%20ambient%20lighting%2C%208k?width=1200&height=800&nologo=true",
-    badge: "Custom Quote",
+    thumbnail: "/images/services/website-development.webp",
+    badge: "Web Engineering",
     mediaType: "code",
-    mediaFormat: "Next.js / TypeScript / React Native / Tailwind CSS",
-    turnaround: "5–14 Days",
-    pipelineEngine: "High-Performance Full-Stack & Mobile Architecture",
+    mediaFormat: "Production Web Application",
+    turnaround: "5–7 Days",
+    pipelineEngine: "Web Engineering Studio",
+  },
+
+  // 10. Web App Development
+  {
+    id: "web-app-development",
+    name: "Web App Development",
+    slug: "web-app-development",
+    category: "Development",
+    tagline: "SaaS Dashboards, Client Portals & Business Software",
+    description:
+      "Robust web applications, custom client portals, real-time collaboration dashboards, and secure backend integrations.",
+    workflow: "app",
+    startingPrice: "Custom Quote",
+    priceDisplay: "Custom Quote",
+    isCustomQuote: true,
+    ctaText: "Scope Application Build",
+    ctaHref: "/orders?service=web-app-development",
+    deliverables: [
+      "Full-Stack Application Architecture",
+      "Role-Based Authentication & Permissions",
+      "Real-Time Data Management",
+      "Executive Dashboard & Reporting Views",
+      "7–14 Days Delivery",
+    ],
+    subBullets: [
+      "Complete custom dashboard & portal",
+      "Role security & client workspace",
+      "Scalable cloud architecture",
+    ],
+    icon: "Layout",
+    thumbnail: "/images/services/web-app-development.webp",
+    badge: "Custom Software",
+    mediaType: "code",
+    mediaFormat: "Cloud Application Architecture",
+    turnaround: "7–14 Days",
+    pipelineEngine: "Software Engineering Studio",
+  },
+
+  // 11. Mobile App Setup
+  {
+    id: "mobile-app-setup",
+    name: "Mobile App Setup",
+    slug: "mobile-app-setup",
+    category: "Development",
+    tagline: "iOS & Android Cross-Platform Mobile Applications",
+    description:
+      "Cross-platform bespoke iOS & Android mobile applications sharing unified cloud backends, real-time sync, and notification capabilities.",
+    workflow: "mobile",
+    startingPrice: "Custom Quote",
+    priceDisplay: "Custom Quote",
+    isCustomQuote: true,
+    ctaText: "Scope Mobile App",
+    ctaHref: "/orders?service=mobile-app-setup",
+    deliverables: [
+      "Cross-Platform Mobile Application Build",
+      "Production-Ready App Store & Play Store Packages",
+      "Push Notification & Account Binding",
+      "Offline Caching & Biometric Support",
+      "10–14 Days Delivery",
+    ],
+    subBullets: [
+      "Native iOS & Android builds",
+      "Push notifications & secure auth",
+      "App store readiness",
+    ],
+    icon: "Smartphone",
+    thumbnail: "/images/services/mobile-app-setup.webp",
+    badge: "iOS & Android",
+    mediaType: "code",
+    mediaFormat: "Cross-Platform Mobile Application",
+    turnaround: "10–14 Days",
+    pipelineEngine: "Mobile Engineering Studio",
+  },
+
+  // 12. Workflow Automation
+  {
+    id: "workflow-automation",
+    name: "Workflow Automation",
+    slug: "workflow-automation",
+    category: "Automation",
+    tagline: "Integrated Digital Operations & Custom Integrations",
+    description:
+      "Custom business operational systems, secure cloud webhook integrations, data synchronization, and automated project routing.",
+    workflow: "automation",
+    startingPrice: "Custom Quote",
+    priceDisplay: "Custom Quote",
+    isCustomQuote: true,
+    ctaText: "Scope Automation",
+    ctaHref: "/orders?service=workflow-automation",
+    deliverables: [
+      "Automated Operational Blueprints",
+      "Secure Webhook & Integration Configuration",
+      "Automated Asset Routing & Notification Delivery",
+      "Fail-Safe Monitoring & Execution Logging",
+      "48–72h SLA Delivery",
+    ],
+    subBullets: [
+      "Custom operations blueprints",
+      "Webhook and cloud integrations",
+      "48–72h SLA delivery",
+    ],
+    icon: "Cpu",
+    thumbnail: "/images/services/workflow-automation.webp",
+    badge: "Automation",
+    mediaType: "code",
+    mediaFormat: "Cloud Workflow & Integration Engine",
+    turnaround: "48–72 Hours",
+    pipelineEngine: "Solutions Engineering",
   },
 ];
+
+/**
+ * Universal slug resolution map supporting canonical slugs, IDs, and legacy aliases
+ */
+export const SERVICE_SLUG_ALIASES: Record<string, string> = {
+  // Legacy aliases
+  "visuals-and-motion": "image-creation",
+  "visuals-motion": "image-creation",
+  "img-creation": "image-creation",
+  "vid-creation": "video-creation",
+  "interior-architecture": "interior-design",
+  "brand-identity": "digital-marketing",
+  "digital-marketing-ads": "meta-ads-launcher",
+  "web-mobile-development": "website-development",
+  "web-mobile-dev": "website-development",
+  "web-dev": "website-development",
+  "webapp-dev": "web-app-development",
+  "mobile-setup": "mobile-app-setup",
+  "ai-automation": "workflow-automation",
+};
+
+/**
+ * Resolve any service slug or ID to its canonical definition
+ */
+export function findServiceBySlug(slugOrId: string): ServiceDefinition | undefined {
+  if (!slugOrId) return undefined;
+  const normalized = slugOrId.toLowerCase().trim();
+  const canonicalSlug = SERVICE_SLUG_ALIASES[normalized] || normalized;
+
+  return (
+    SUTRA_SERVICES_CONFIG.find(
+      (s) =>
+        s.slug.toLowerCase() === canonicalSlug ||
+        s.id.toLowerCase() === canonicalSlug ||
+        s.slug.toLowerCase() === normalized ||
+        s.id.toLowerCase() === normalized
+    ) || undefined
+  );
+}

@@ -30,7 +30,7 @@ const PUBLIC_NAV_LINKS: NavLinkItem[] = [
   { name: "Projects", href: "/projects" },
   { name: "Pricing", href: "/pricing" },
   { name: "About", href: "/about" },
-  { name: "Mobile App", href: "/mobile-app", badge: "Coming Soon" },
+  { name: "Mobile App", href: "/mobile-app" },
   { name: "Contact", href: "/contact" },
 ];
 
@@ -46,7 +46,7 @@ const ADMIN_NAV_LINKS: NavLinkItem[] = [
   { name: "Overview", href: "/admin" },
   { name: "Clients", href: "/admin?tab=clients" },
   { name: "Approvals", href: "/admin?tab=approvals" },
-  { name: "Pipelines", href: "/admin?tab=workflows" },
+  { name: "Workflows", href: "/admin?tab=workflows" },
   { name: "Site Control", href: "/admin?tab=site-control" },
 ];
 

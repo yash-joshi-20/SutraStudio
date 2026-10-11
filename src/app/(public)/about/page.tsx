@@ -41,7 +41,7 @@ const PILLARS = [
     icon: Layers,
     sanskrit: "यन्त्र (Yantra)",
     title: "Algorithmic Precision",
-    desc: "Autonomous studio pipelines, distributed rendering clusters, and modern web architectures delivering accelerated commercial turnarounds.",
+    desc: "High-precision studio pipelines, distributed rendering workflows, and modern web architectures delivering accelerated commercial turnarounds.",
   },
 ];
 
@@ -58,8 +58,8 @@ const MILESTONES = [
   },
   {
     year: "2026",
-    title: "Autonomous Delivery Platform",
-    desc: "Integrated Firebase Cloud Firestore and automated delivery pipelines, launching the 24/7 client workspace and real-time Studio Concierge.",
+    title: "Digital Studio Platform",
+    desc: "Integrated Firebase Cloud Firestore and streamlined delivery workflows, launching the 24/7 client workspace and real-time Studio Concierge.",
   },
 ];
 
@@ -174,8 +174,8 @@ export default function AboutPage() {
                   <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center mx-auto mb-2.5">
                     <Users className="w-5 h-5 text-[#5C3A1E]" />
                   </div>
-                  <p className="font-serif text-base sm:text-lg md:text-2xl font-bold text-[#5C3A1E] leading-tight">Autonomous</p>
-                  <p className="text-xs font-semibold text-[#0F172A] mt-1">Creative Pipelines</p>
+                  <p className="font-serif text-base sm:text-lg md:text-2xl font-bold text-[#5C3A1E] leading-tight">Dedicated</p>
+                  <p className="text-xs font-semibold text-[#0F172A] mt-1">Creative Production</p>
                 </div>
                 <p className="text-[10px] sm:text-[11px] text-[#64748B] mt-1">Tailored client sanctum</p>
               </div>
@@ -199,7 +199,7 @@ export default function AboutPage() {
                   <p className="font-serif text-base sm:text-lg md:text-2xl font-bold text-[#5C3A1E] leading-tight">100%</p>
                   <p className="text-xs font-semibold text-[#0F172A] mt-1">Commercial Rights</p>
                 </div>
-                <p className="text-[10px] sm:text-[11px] text-[#64748B] mt-1">Full IP transfer &amp; Sutra Cloud Vault</p>
+                <p className="text-[10px] sm:text-[11px] text-[#64748B] mt-1">Full IP transfer &amp; Client Media Library</p>
               </div>
             </div>
           </div>
@@ -213,7 +213,7 @@ export default function AboutPage() {
             <SectionHeader
               badge="THE SUTRA TRIAD"
               title="Three Pillars of Creative Synthesis"
-              subtitle="Our work stands at the intersection of classical Indian aesthetic doctrines and modern autonomous computing."
+              subtitle="Our work stands at the intersection of classical Indian aesthetic doctrines and modern creative technology."
               className="mb-16"
             />
 
@@ -311,7 +311,7 @@ export default function AboutPage() {
                   </div>
 
                   <p className="text-sm text-[#475569] leading-relaxed max-w-2xl">
-                    Leading the synthesis of classical Indian aesthetic doctrines (Pramana, Rasa, Yantra) with modern spatial workflows, 4K rendering pipelines, and high-conversion commercial digital experiences.
+                    Leading the synthesis of classical Indian aesthetic doctrines (Pramana, Rasa, Yantra) with modern spatial workflows, 4K digital production, and high-conversion commercial digital experiences.
                   </p>
 
                   <div className="pt-2 flex flex-wrap items-center justify-center md:justify-start gap-3">
@@ -351,40 +351,6 @@ export default function AboutPage() {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ===================================================
-            5. PRE-FOOTER INVITATION BANNER
-            =================================================== */}
-        <section className="py-20 bg-[#FFFDF9] border-t border-[#EADFCB]">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-[0.2em] bg-[#F4EFE6] text-[#5C3A1E] border border-[#EADFCB] mx-auto">
-              <span className="text-[#D4A35A] text-[10px]">◆</span>
-              <span>PARTNER WITH US</span>
-            </div>
-
-            <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-semibold text-[#0F172A]">
-              Let&apos;s Build Timeless Digital Experiences
-            </h2>
-            <p className="text-base text-[#64748B] max-w-xl mx-auto leading-relaxed">
-              Whether you are revamping your architectural brand, commissioning
-              photorealistic 3D assets, or scaling an enterprise web platform,
-              we are your dedicated creative partner.
-            </p>
-
-            <div className="pt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 max-w-md mx-auto sm:max-w-none">
-              <Link href="/contact" className="w-full sm:w-auto">
-                <Button variant="primary" size="lg" withArrow className="w-full sm:w-auto justify-center shadow-warm">
-                  Schedule Discovery Call
-                </Button>
-              </Link>
-              <Link href="/pricing" className="w-full sm:w-auto">
-                <Button variant="secondary" size="lg" className="w-full sm:w-auto justify-center">
-                  View Transparent Pricing
-                </Button>
-              </Link>
             </div>
           </div>
         </section>

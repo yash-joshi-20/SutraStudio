@@ -34,7 +34,7 @@ const SERVICE_OPTIONS = [
   { label: "Interior & Spatial Design", value: "Interior Design" },
   { label: "Window & Retail Experience Design", value: "Window Design" },
   { label: "Digital Marketing & Brand Strategy", value: "Digital Marketing" },
-  { label: "Meta & Google Ads Campaign Pipeline", value: "Meta Ads Launcher" },
+  { label: "Meta Ads Campaign Creative & Strategy", value: "Meta Ads Launcher" },
   { label: "Website Architecture & Development", value: "Website Development" },
   { label: "Web Application & SaaS Engineering", value: "Web App Development" },
   { label: "Mobile App Implementation", value: "Mobile App Setup" },
@@ -206,7 +206,7 @@ export default function ContactPage() {
                         Sutra Studio Atelier • Botad, Gujarat, India - 364710
                       </p>
                       <span className="text-[10px] text-[#A98B57] font-semibold block mt-0.5">
-                        Studio Headquarters &amp; Cloud Vault Nexus
+                        Studio Headquarters &amp; Media Archive
                       </span>
                     </div>
                   </div>
@@ -248,7 +248,7 @@ export default function ContactPage() {
                 </div>
 
                 <p className="text-xs text-[#64748B] leading-relaxed">
-                  Our interactive scoping concierge can classify your deliverable specifications,
+                  Our interactive studio concierge can assist with your deliverable specifications,
                   estimate realistic turnaround milestones, and structure an order package ready
                   for review in real-time.
                 </p>

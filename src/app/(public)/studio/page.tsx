@@ -146,7 +146,7 @@ export default function StudioPage() {
           <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 space-y-4 shadow-warm">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[10px] font-semibold text-[#5C3A1E] uppercase">
               <span>◆</span>
-              <span>INTERIOR ARCHITECTURE PIPELINE</span>
+              <span>INTERIOR ARCHITECTURE</span>
             </div>
             <h3 className="font-serif text-2xl font-bold text-[#171717]">
               Indian Symmetry &amp; Jali Screen Aesthetics
@@ -157,12 +157,12 @@ export default function StudioPage() {
 
             <div className="relative aspect-[16/10] w-full rounded-2xl overflow-hidden border border-[#EADFCB] shadow-sm group">
               <img
-                src="https://image.pollinations.ai/prompt/architectural%20interior%20rendering%2C%20minimalist%20luxury%20living%20space%2C%20intricate%20golden%20jali%20screens%2C%20calacatta%20gold%20marble%20floors%2C%20recessed%203000k%20warm%20led%2C%20hasselblad%20photography%2C%208k?width=1200&height=800&nologo=true"
+                src="/images/projects/proj-interior.webp"
                 alt="Architectural Interior Render"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-[#171717]/80 backdrop-blur-md text-[9px] font-mono text-[#D4A35A] font-bold border border-white/10">
-                8K DIFFUSION PASS
+                8K INTERIOR RENDER
               </div>
             </div>
           </div>
@@ -171,18 +171,18 @@ export default function StudioPage() {
           <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 space-y-4 shadow-warm">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[10px] font-semibold text-[#5C3A1E] uppercase">
               <span>◆</span>
-              <span>GROWTH &amp; META ADS PIPELINE</span>
+              <span>GROWTH &amp; META ADS</span>
             </div>
             <h3 className="font-serif text-2xl font-bold text-[#171717]">
-              Autonomous Meta Ads Campaign Creative
+              High-Impact Meta Ads Campaign Creative
             </h3>
             <p className="text-xs text-[#64748B] leading-relaxed">
-              High-CTR multi-ratio creative ads engineered with high-conversion hooks and automated campaign deployment.
+              High-CTR multi-ratio creative ads engineered with high-conversion hooks and multi-placement deployment.
             </p>
 
             <MetaAdCreativeMockup
               headline="Transform your creative presence with Vedic spatial craft."
-              ctaText="Book Pipeline"
+              ctaText="Order Meta Ad Bundle"
               ctaHref="/orders?service=meta-ads-launcher"
             />
           </div>
@@ -208,11 +208,11 @@ export default function StudioPage() {
               <Cpu className="w-6 h-6 text-[#5C3A1E]" />
             </div>
             <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
-              2. Dedicated Production Pipelines
+              2. Dedicated Production Disciplines
             </h3>
             <p className="text-sm text-[#64748B] mt-3 leading-relaxed">
-              Every creative discipline (image, video, 3D, interior) operates inside
-              dedicated high-precision production pipelines, ensuring photorealistic outputs
+              Every creative discipline (image, video, 3D, interior, web) operates inside
+              dedicated high-precision production workflows, ensuring photorealistic outputs
               without generic artifacts.
             </p>
           </div>
@@ -225,7 +225,7 @@ export default function StudioPage() {
               3. Human Art Direction
             </h3>
             <p className="text-sm text-[#64748B] mt-3 leading-relaxed">
-              Computational automation delivers speed and precision; our senior art directors and 3D
+              Modern digital tools deliver speed and precision; our senior art directors and 3D
               supervisors curate, polish, and ensure commercial-grade fidelity.
             </p>
           </div>
@@ -239,7 +239,7 @@ export default function StudioPage() {
             </h3>
             <p className="text-sm text-[#64748B] mt-3 leading-relaxed">
               All master assets, renders, and models are organized directly into
-              your private Sutra Cloud Vault workspace with permanent ownership.
+              your private client deliverables library with permanent ownership.
             </p>
           </div>
         </div>
@@ -256,7 +256,7 @@ export default function StudioPage() {
             <div className="space-y-2">
               <p className="font-serif text-2xl font-bold text-[#5C3A1E]">01</p>
               <h4 className="font-semibold text-sm text-[#0F172A]">Intake &amp; Scope Classification</h4>
-              <p className="text-xs text-[#64748B]">Automated brief analysis and production staging</p>
+              <p className="text-xs text-[#64748B]">Structured brief analysis and production staging</p>
             </div>
             <div className="space-y-2">
               <p className="font-serif text-2xl font-bold text-[#5C3A1E]">02</p>
@@ -270,7 +270,7 @@ export default function StudioPage() {
             </div>
             <div className="space-y-2">
               <p className="font-serif text-2xl font-bold text-[#5C3A1E]">04</p>
-              <h4 className="font-semibold text-sm text-[#0F172A]">Drive Delivery</h4>
+              <h4 className="font-semibold text-sm text-[#0F172A]">Media Library Delivery</h4>
               <p className="text-xs text-[#64748B]">Organized cloud storage and instant access</p>
             </div>
           </div>

@@ -258,7 +258,7 @@ export function SutraStudioIntroLanding({
           <div className="flex items-center justify-between text-[11px] font-mono text-[#64748B]">
             <span className="flex items-center gap-1.5">
               <Sparkles className="w-3 h-3 text-[#D4A35A] animate-spin" />
-              Initializing Creative Engine...
+              Preparing Studio Atelier...
             </span>
             <span>{progress}%</span>
           </div>
@@ -272,7 +272,7 @@ export function SutraStudioIntroLanding({
           </div>
 
           <p className="text-[10px] text-center text-[#94A3B8] font-sans">
-            Curating 7 studio capabilities • Real-Time GPU Workflows • Zero Noise
+            12 Specialized Disciplines • High-Precision Production • Timeless Craft
           </p>
         </div>
       </motion.div>

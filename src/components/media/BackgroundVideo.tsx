@@ -203,7 +203,7 @@ export function BackgroundVideo({
           onClick={togglePlayPause}
           type="button"
           aria-label={isPlaying ? "Pause background video" : "Play background video"}
-          className="absolute bottom-4 right-4 z-20 w-8 h-8 rounded-full bg-[#0F172A]/70 hover:bg-[#0F172A]/90 text-[#FFFDF9] backdrop-blur-md border border-white/20 flex items-center justify-center transition-all duration-200 hover:scale-105 cursor-pointer touch-target shadow-md"
+          className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-[#0F172A]/70 hover:bg-[#0F172A]/90 text-[#FFFDF9] backdrop-blur-md border border-white/20 flex items-center justify-center transition-all duration-200 hover:scale-105 cursor-pointer touch-target shadow-md"
           title={isPlaying ? "Pause ambient video" : "Play ambient video"}
         >
           {isPlaying ? (
