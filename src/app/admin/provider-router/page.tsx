@@ -27,7 +27,7 @@ import {
   Check,
 } from "lucide-react";
 import type { LicenseEntry } from "@/lib/ai/licenseCompliance";
-import type { OpenRouterModel } from "@/lib/ai/openrouterService";
+import type { OpenRouterModel, OpenRouterCapability } from "@/lib/ai/openrouterService";
 
 interface ProviderSummaryItem {
   id: string;
@@ -85,6 +85,7 @@ export default function AdminProviderRouterPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTier, setSelectedTier] = useState<number | "all">("all");
+  const [selectedCapability, setSelectedCapability] = useState<string>("all");
   const [licenseSearch, setLicenseSearch] = useState("");
   const [savingConfig, setSavingConfig] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -140,6 +141,11 @@ export default function AdminProviderRouterPage() {
   const filteredProviders = data?.providers.filter((p) => {
     if (selectedTier === "all") return true;
     return p.tier === selectedTier;
+  });
+
+  const filteredOpenRouterModels = data?.openRouterFreeModels.filter((m) => {
+    if (selectedCapability === "all") return true;
+    return m.capabilities?.includes(selectedCapability as OpenRouterCapability);
   });
 
   const filteredLicenseMatrix = data?.licenseMatrix.filter((l) => {
@@ -491,22 +497,60 @@ export default function AdminProviderRouterPage() {
                   <span>OpenRouter Live Free Models (:free Suffix)</span>
                 </h3>
                 <p className="text-xs text-[#78716C]">
-                  Fetched dynamically at runtime from OpenRouter models API. Restricted strictly to text tasks (Chat, Briefs, Captions, Translation, QA).
+                  Fetched dynamically at runtime from OpenRouter models API. Models selected by capability (text, long context, reasoning, embeddings, rerank).
                 </p>
               </div>
               <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#EADFCB]/30 text-[#5C3A1E] border border-[#D4C3A3]/40">
-                {data?.openRouterFreeModels.length || 0} Models Available
+                {filteredOpenRouterModels?.length || 0} Models Shown
               </span>
             </div>
 
+            {/* Modality Guardrail & ZDR Policy Notice */}
+            <div className="p-3.5 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8] text-[11px] text-[#5C3A1E] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2 font-medium">
+                <Lock className="w-4 h-4 text-[#A98B57] shrink-0" />
+                <span>
+                  <strong>Strict Modality Guardrail:</strong> Free models operate strictly on TEXT, embedding & rerank tasks. Images, video, 3D, and 360 views are routed to local engines (FFmpeg, Blender) and dedicated provider keys.
+                </span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0 text-[10px] text-[#78716C]">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#2E7D4F]" />
+                <span>Zero-data-retention or complete PII scrub enforced on all requests.</span>
+              </div>
+            </div>
+
+            {/* Capability Filter Tabs */}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+              {[
+                { id: "all", label: "All Capabilities" },
+                { id: "text", label: "Text Generation" },
+                { id: "long_context", label: "Long Context (>=128k)" },
+                { id: "reasoning", label: "Reasoning & QA" },
+                { id: "embeddings", label: "Vector Embeddings" },
+                { id: "rerank", label: "Document Rerank" },
+              ].map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => setSelectedCapability(c.id)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 ${
+                    selectedCapability === c.id
+                      ? "bg-[#171717] text-white"
+                      : "bg-[#FAF9F5] text-[#78716C] border border-[#E5E1D8] hover:bg-[#F3EFE6] hover:text-[#171717]"
+                  }`}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {data?.openRouterFreeModels && data.openRouterFreeModels.length > 0 ? (
-                data.openRouterFreeModels.map((m) => (
+              {filteredOpenRouterModels && filteredOpenRouterModels.length > 0 ? (
+                filteredOpenRouterModels.map((m) => (
                   <div
                     key={m.id}
-                    className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-2 flex flex-col justify-between"
+                    className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-3 flex flex-col justify-between"
                   >
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       <div className="flex items-start justify-between gap-2">
                         <span className="font-mono text-xs font-bold text-[#171717] break-all">
                           {m.id}
@@ -523,6 +567,29 @@ export default function AdminProviderRouterPage() {
                           {m.description}
                         </p>
                       )}
+
+                      {/* Capability & ZDR Badges */}
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                        {m.capabilities &&
+                          m.capabilities.map((cap) => (
+                            <span
+                              key={cap}
+                              className="px-2 py-0.5 rounded text-[9px] font-mono font-semibold bg-white border border-[#E5E1D8] text-[#5C3A1E]"
+                            >
+                              {cap}
+                            </span>
+                          ))}
+
+                        {m.isZeroDataRetention ? (
+                          <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-[#E8F5E9] text-[#2E7D4F] border border-[#C8E6C9] flex items-center gap-1">
+                            <ShieldCheck className="w-2.5 h-2.5" /> ZDR
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded text-[9px] font-semibold bg-[#FFF8E1] text-[#B45309] border border-[#FDE68A] flex items-center gap-1">
+                            <AlertTriangle className="w-2.5 h-2.5" /> Scrubbed
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     <div className="pt-2 border-t border-[#E5E1D8] flex items-center justify-between text-[11px] text-[#78716C]">
@@ -533,7 +600,9 @@ export default function AdminProviderRouterPage() {
                 ))
               ) : (
                 <div className="col-span-3 py-8 text-center text-xs text-[#78716C]">
-                  {loading ? "Fetching live models from OpenRouter endpoint..." : "No free models returned or API key unconfigured."}
+                  {loading
+                    ? "Fetching live models from OpenRouter endpoint..."
+                    : `No free models matched capability "${selectedCapability}".`}
                 </div>
               )}
             </div>

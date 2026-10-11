@@ -18,8 +18,12 @@
 import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
 import { isEnvSet } from "@/lib/config/env";
 import { recordMissingKey } from "@/lib/services/missingKeyRegistry";
-import { OpenRouterService, type OpenRouterModel } from "./openrouterService";
-import { PrivacySanitizer } from "./privacySanitizer";
+import {
+  OpenRouterService,
+  type OpenRouterModel,
+  type RerankResult,
+} from "./openrouterService";
+import { PrivacySanitizer, type ClientMetadata } from "./privacySanitizer";
 import { LICENSE_COMPLIANCE_MATRIX, type LicenseEntry } from "./licenseCompliance";
 import { NotificationsStore } from "@/lib/services/notificationsStore";
 
@@ -40,7 +44,9 @@ export type TaskType =
   | "video"
   | "voiceover"
   | "three_d"
-  | "three_sixty";
+  | "three_sixty"
+  | "embeddings"
+  | "rerank";
 
 export interface ProviderDefinition {
   id: string;
@@ -402,6 +408,8 @@ export const DEFAULT_ROUTER_CONFIG: RouterConfig = {
     three_d: ["blender", "tripo3d"],
     three_sixty: ["threejs-viewer", "blender", "tripo3d"],
     research: ["gemini-research", "serpapi"],
+    embeddings: ["openrouter-free"],
+    rerank: ["openrouter-free"],
   },
   noTrainingOnly: false,
   dailyCostCapUSD: 10.0,
@@ -651,6 +659,8 @@ export class ProviderRouter {
     orderNumber?: string;
     promptText?: string;
     sensitiveOrder?: boolean;
+    containsClientData?: boolean;
+    clientMetadata?: ClientMetadata;
     allowPaid?: boolean;
     orderCostSoFarUSD?: number;
     execute: (
@@ -700,13 +710,35 @@ export class ProviderRouter {
 
     for (const provider of chain) {
       try {
-        // Privacy Directive: Sanitize sensitive text before dispatching to free tiers
+        // Zero-Data-Retention & Privacy Directive:
+        // "Whenever a request contains any client data, only use endpoints marked
+        // zero-data-retention; otherwise send no client data."
         let sanitizedText = params.promptText;
         let redactionsCount = 0;
-        if (params.promptText && PrivacySanitizer.shouldSanitize(provider)) {
-          const s = PrivacySanitizer.sanitize(params.promptText);
-          sanitizedText = s.sanitizedText;
-          redactionsCount = s.redactionsCount;
+
+        if (params.promptText) {
+          const hasClientData =
+            Boolean(params.containsClientData) ||
+            PrivacySanitizer.containsClientData(params.promptText, params.clientMetadata);
+
+          if (hasClientData) {
+            if (provider.allowsTraining) {
+              // Non-ZDR endpoint: scrub completely so NO client data is sent
+              const scrubbed = PrivacySanitizer.scrubAllClientData(
+                params.promptText,
+                params.clientMetadata
+              );
+              sanitizedText = scrubbed.scrubbedText;
+              redactionsCount += scrubbed.totalRemoved;
+            } else {
+              // ZDR endpoint: zero data retention guaranteed
+              sanitizedText = params.promptText;
+            }
+          } else if (PrivacySanitizer.shouldSanitize(provider)) {
+            const s = PrivacySanitizer.sanitize(params.promptText);
+            sanitizedText = s.sanitizedText;
+            redactionsCount = s.redactionsCount;
+          }
         }
 
         const { result, units = 1, costUSD = provider.costPerUnitUSD * units } = await params.execute(
@@ -818,6 +850,7 @@ export class ProviderRouter {
 
   /**
    * Dedicated helper for executing text tasks through OpenRouter free models
+   * Enforces modality guardrails, runtime capability selection, and zero-data-retention.
    */
   public static async executeOpenRouterText(options: {
     task:
@@ -830,7 +863,10 @@ export class ProviderRouter {
     prompt: string;
     systemPrompt?: string;
     targetLanguage?: "Gujarati" | "Hindi" | "English";
+    containsClientData?: boolean;
+    clientMetadata?: ClientMetadata;
     orderId?: string;
+    orderNumber?: string;
   }): Promise<{ text: string; modelUsed: string; tokensUsed: number }> {
     const messages = [
       ...(options.systemPrompt ? [{ role: "system" as const, content: options.systemPrompt }] : []),
@@ -840,14 +876,85 @@ export class ProviderRouter {
     const res = await this.executeWithFallback({
       task: options.task,
       orderId: options.orderId,
+      orderNumber: options.orderNumber,
       promptText: options.prompt,
+      containsClientData: options.containsClientData,
+      clientMetadata: options.clientMetadata,
       execute: async () => {
         const out = await OpenRouterService.generateText({
           task: options.task,
           messages,
           targetLanguage: options.targetLanguage,
+          containsClientData: options.containsClientData,
+          clientMetadata: options.clientMetadata,
         });
         return { result: out, units: out.tokensUsed, costUSD: 0 };
+      },
+    });
+
+    return res.data;
+  }
+
+  /**
+   * Dedicated helper for embedding generation through OpenRouter.
+   * Enforces zero-data-retention and client privacy scrubbing.
+   */
+  public static async executeOpenRouterEmbedding(options: {
+    text: string;
+    containsClientData?: boolean;
+    clientMetadata?: ClientMetadata;
+    orderId?: string;
+    orderNumber?: string;
+  }): Promise<{ embedding: number[]; modelUsed: string; isZeroDataRetention: boolean }> {
+    const res = await this.executeWithFallback({
+      task: "embeddings",
+      orderId: options.orderId,
+      orderNumber: options.orderNumber,
+      promptText: options.text,
+      containsClientData: options.containsClientData,
+      clientMetadata: options.clientMetadata,
+      execute: async () => {
+        const out = await OpenRouterService.embedText({
+          text: options.text,
+          containsClientData: options.containsClientData,
+          clientMetadata: options.clientMetadata,
+        });
+        return { result: out, units: 1, costUSD: 0 };
+      },
+    });
+
+    return res.data;
+  }
+
+  /**
+   * Dedicated helper for document reranking through OpenRouter reasoning models.
+   * Enforces zero-data-retention and client privacy scrubbing.
+   */
+  public static async executeOpenRouterRerank(options: {
+    query: string;
+    documents: string[];
+    topN?: number;
+    containsClientData?: boolean;
+    clientMetadata?: ClientMetadata;
+    orderId?: string;
+    orderNumber?: string;
+  }): Promise<RerankResult[]> {
+    const res = await this.executeWithFallback({
+      task: "rerank",
+      orderId: options.orderId,
+      orderNumber: options.orderNumber,
+      promptText: options.query,
+      containsClientData: options.containsClientData,
+      clientMetadata: options.clientMetadata,
+      execute: async () => {
+        const out = await OpenRouterService.rerankDocuments({
+          query: options.query,
+          documents: options.documents,
+          topN: options.topN,
+          containsClientData: options.containsClientData,
+          clientMetadata: options.clientMetadata,
+        });
+        return { result: out, units: options.documents.length, costUSD: 0 };
       },
     });
 

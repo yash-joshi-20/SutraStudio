@@ -2,6 +2,8 @@
  * SUTRA STUDIO — Client Privacy Sanitizer & PII Redactor
  *
  * Implements Rule 9 Privacy Directive:
+ * "Whenever a request contains any client data, only use endpoints marked
+ * zero-data-retention; otherwise send no client data."
  * "Never send client files, personal details or order contents to free-tier
  * providers unless their terms prohibit logging/training; send only the minimum text needed."
  */
@@ -10,6 +12,17 @@ export interface SanitizationResult {
   sanitizedText: string;
   redactionsCount: number;
   redactedTypes: string[];
+}
+
+export interface ClientMetadata {
+  clientName?: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  brandName?: string;
+  orderNumber?: string;
+  orderId?: string;
+  fileUrls?: string[];
+  customSensitiveTerms?: string[];
 }
 
 export class PrivacySanitizer {
@@ -35,8 +48,36 @@ export class PrivacySanitizer {
   // UPI IDs (e.g. user@okaxis, user@okhdfcbank)
   private static readonly UPI_REGEX = /\b[\w.\-_]{2,256}@[a-zA-Z]{2,64}\b/g;
 
+  // Cloud file URLs / Drive links
+  private static readonly DRIVE_URL_REGEX =
+    /https?:\/\/(?:drive\.google\.com|firebasestorage\.googleapis\.com|sutrastudios\.in\/media)[\w\d\-._~:/?#[\]@!$&'()*+,;=]+/g;
+
   /**
-   * Sanitize text by redacting personal details and returning only minimal prompt needed.
+   * Check if a given text contains any recognizable client data or PII.
+   */
+  public static containsClientData(text: string, metadata?: ClientMetadata): boolean {
+    if (!text) return false;
+    if (this.EMAIL_REGEX.test(text)) return true;
+    if (this.PHONE_REGEX.test(text)) return true;
+    if (this.PAN_REGEX.test(text)) return true;
+    if (this.GSTIN_REGEX.test(text)) return true;
+    if (this.CC_REGEX.test(text)) return true;
+    if (this.UPI_REGEX.test(text)) return true;
+    if (this.DRIVE_URL_REGEX.test(text)) return true;
+
+    if (metadata) {
+      if (metadata.clientEmail && text.includes(metadata.clientEmail)) return true;
+      if (metadata.clientPhone && text.includes(metadata.clientPhone)) return true;
+      if (metadata.clientName && text.toLowerCase().includes(metadata.clientName.toLowerCase())) return true;
+      if (metadata.brandName && text.toLowerCase().includes(metadata.brandName.toLowerCase())) return true;
+      if (metadata.orderNumber && text.includes(metadata.orderNumber)) return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Standard PII sanitization: redacts emails, phones, tax IDs, and payment details.
    */
   public static sanitize(text: string): SanitizationResult {
     if (!text) {
@@ -82,11 +123,90 @@ export class PrivacySanitizer {
       return "[CLIENT_PAYMENT_REDACTED]";
     });
 
+    // 6. Redact UPI IDs
+    sanitized = sanitized.replace(this.UPI_REGEX, () => {
+      count++;
+      typesSet.add("upi");
+      return "[CLIENT_UPI_REDACTED]";
+    });
+
     return {
       sanitizedText: sanitized,
       redactionsCount: count,
       redactedTypes: Array.from(typesSet),
     };
+  }
+
+  /**
+   * Complete Client Data Scrubbing:
+   * Enforces the directive: "Whenever a request contains any client data,
+   * only use endpoints marked zero-data-retention; otherwise send no client data."
+   * When an endpoint is NOT marked zero-data-retention, this method completely
+   * scrubs all client names, brands, order IDs, file links, and PII, leaving strictly
+   * the abstract creative instructions so NO client data is sent.
+   */
+  public static scrubAllClientData(
+    text: string,
+    metadata?: ClientMetadata
+  ): { scrubbedText: string; totalRemoved: number } {
+    let scrubbed = text;
+    let removed = 0;
+
+    // Run standard PII sanitization
+    const s = this.sanitize(scrubbed);
+    scrubbed = s.sanitizedText;
+    removed += s.redactionsCount;
+
+    // Remove client file and Drive URLs
+    scrubbed = scrubbed.replace(this.DRIVE_URL_REGEX, () => {
+      removed++;
+      return "[CLIENT_FILE_URL_REMOVED]";
+    });
+
+    // Remove metadata specifics
+    if (metadata) {
+      if (metadata.clientName && metadata.clientName.length > 2) {
+        const nameRegex = new RegExp(this.escapeRegex(metadata.clientName), "gi");
+        scrubbed = scrubbed.replace(nameRegex, () => {
+          removed++;
+          return "[CLIENT_NAME_REMOVED]";
+        });
+      }
+
+      if (metadata.brandName && metadata.brandName.length > 2) {
+        const brandRegex = new RegExp(this.escapeRegex(metadata.brandName), "gi");
+        scrubbed = scrubbed.replace(brandRegex, () => {
+          removed++;
+          return "[CLIENT_BRAND_REMOVED]";
+        });
+      }
+
+      if (metadata.orderNumber) {
+        const orderRegex = new RegExp(this.escapeRegex(metadata.orderNumber), "gi");
+        scrubbed = scrubbed.replace(orderRegex, () => {
+          removed++;
+          return "[ORDER_REF_REMOVED]";
+        });
+      }
+
+      if (metadata.customSensitiveTerms) {
+        for (const term of metadata.customSensitiveTerms) {
+          if (term && term.length > 2) {
+            const termRegex = new RegExp(this.escapeRegex(term), "gi");
+            scrubbed = scrubbed.replace(termRegex, () => {
+              removed++;
+              return "[CONFIDENTIAL_REMOVED]";
+            });
+          }
+        }
+      }
+    }
+
+    return { scrubbedText: scrubbed, totalRemoved: removed };
+  }
+
+  private static escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
   /**
