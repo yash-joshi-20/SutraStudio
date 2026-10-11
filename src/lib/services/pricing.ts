@@ -81,6 +81,25 @@ export async function quoteOrder(input: QuoteInput): Promise<PriceQuote | null> 
   const service = await resolveService(input.serviceId);
   if (!service) return null;
 
+  if (service.isByQuote || service.startingPrice === 0) {
+    return {
+      serviceId: service.id,
+      serviceName: service.name,
+      currency: "INR",
+      baseRupees: 0,
+      lines: [{ label: `${service.name} (Custom Quote)`, qty: 1, unitRupees: 0, totalRupees: 0 }],
+      subtotalRupees: 0,
+      gstPercent: 0,
+      gstRupees: 0,
+      totalRupees: 0,
+      totalPaise: 0,
+      revisionsIncluded: service.revisionsIncluded || 2,
+      extraRevisionRupees: 0,
+      estimatedDeliveryDays: service.estimatedDeliveryDays || 7,
+      breakdown: [`${service.name} — Custom Quote (Scope Consultation & Proposal)`],
+    };
+  }
+
   const quantity = clampInt(input.quantity ?? 1, 1, 500);
   const formatCount = clampInt(input.formatCount ?? 1, 1, 12);
   const revisions = clampInt(input.revisions ?? 0, 0, 50);

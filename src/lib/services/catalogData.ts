@@ -35,6 +35,8 @@ export interface CatalogService {
   tagline: string;
   shortDescription: string;
   startingPrice: number;
+  isByQuote?: boolean;
+  priceDisplay?: string;
   currency: "INR";
   icon: string;
   active: boolean;
@@ -77,13 +79,15 @@ export interface CatalogPlan {
 export const SEED_CATALOG_SERVICES: CatalogService[] = [
   {
     id: "img-creation",
-    name: "Image Creation",
+    name: "Commercial Visual Imagery",
     slug: "image-creation",
     category: "Creative",
     tagline: "Product, Ads, Mockups",
     shortDescription:
-      "High-fidelity AI-generated and human-perfected commercial product imagery, luxury brand mockups, and advertising visual assets.",
-    startingPrice: 3499,
+      "High-fidelity commercial product imagery, luxury brand mockups, and advertising visual assets crafted by our production atelier.",
+    startingPrice: 2499,
+    isByQuote: false,
+    priceDisplay: "Starting from ₹2,499 (3-Pack)",
     currency: "INR",
     icon: "Image",
     active: true,
@@ -182,13 +186,15 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
   },
   {
     id: "vid-creation",
-    name: "Video Creation",
+    name: "Cinematic Motion Reel",
     slug: "video-creation",
     category: "Creative",
-    tagline: "Ads, Reels, Editing",
+    tagline: "Ads, Reels, Motion",
     shortDescription:
-      "Engaging 10-to-30 second cinematic video ads, social reels, motion sequences, and voiceover-synced commercial promotional clips.",
-    startingPrice: 7999,
+      "Engaging 10-to-15 second cinematic video ads, social reels, motion sequences, and studio-narrated commercial clips with high production polish.",
+    startingPrice: 4999,
+    isByQuote: false,
+    priceDisplay: "Starting from ₹4,999 (10–15s Master Reel)",
     currency: "INR",
     icon: "Video",
     active: true,
@@ -282,13 +288,15 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
   },
   {
     id: "3d-modeling",
-    name: "3D Modeling",
+    name: "Spatial 3D Asset Model",
     slug: "3d-modeling",
     category: "Design",
     tagline: "Products, Spaces",
     shortDescription:
-      "Precision 3D product models, architectural exterior structures, and interactive web-ready 3D assets.",
-    startingPrice: 9499,
+      "Precision 3D product CAD modeling, studio product lighting setups, exploded views, and interactive web-ready 3D assets.",
+    startingPrice: 5999,
+    isByQuote: false,
+    priceDisplay: "Starting from ₹5,999 (.GLB Interactive Model)",
     currency: "INR",
     icon: "Box",
     active: true,
@@ -376,13 +384,15 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
   },
   {
     id: "360-view",
-    name: "360 View",
+    name: "360° Spherical Panoramic Tour",
     slug: "360-view",
     category: "Design",
     tagline: "Virtual Tours",
     shortDescription:
-      "Immersive 360-degree interactive panoramic virtual tours for luxury villas, hospitality spaces, and real-estate showrooms.",
-    startingPrice: 11999,
+      "Immersive 360-degree interactive panoramic virtual tours for luxury villas, hospitality spaces, and commercial showrooms.",
+    startingPrice: 7999,
+    isByQuote: false,
+    priceDisplay: "Starting from ₹7,999 (Panoramic VR Master)",
     currency: "INR",
     icon: "Compass",
     active: true,
@@ -463,13 +473,15 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
   },
   {
     id: "interior-design",
-    name: "Interior Design",
+    name: "Interior Architectural Visualization",
     slug: "interior-design",
     category: "Design",
     tagline: "Spaces, Renderings",
     shortDescription:
       "Photorealistic interior architectural visualization, luxury room staging, lighting studies, and material palettes.",
-    startingPrice: 12499,
+    startingPrice: 6499,
+    isByQuote: false,
+    priceDisplay: "Starting from ₹6,499 (Spatial Room Renders)",
     currency: "INR",
     icon: "Home",
     active: true,
@@ -558,13 +570,15 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
   },
   {
     id: "window-design",
-    name: "Window Design",
+    name: "Facade & Window Design",
     slug: "window-design",
     category: "Design",
     tagline: "Frames, Elevations",
     shortDescription:
       "Architectural window framing, modern facade elevations, and custom glass architectural visualization.",
-    startingPrice: 6499,
+    startingPrice: 4499,
+    isByQuote: false,
+    priceDisplay: "Starting from ₹4,499 (Facade & Storefront)",
     currency: "INR",
     icon: "Grid",
     active: true,
@@ -652,13 +666,15 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
   },
   {
     id: "digital-marketing",
-    name: "Digital Marketing",
+    name: "Brand & Editorial Strategy",
     slug: "digital-marketing",
     category: "Marketing",
     tagline: "Strategy, Content",
     shortDescription:
       "Data-driven creative growth strategies, content blueprints, audience profiling, and brand storytelling campaigns.",
-    startingPrice: 14999,
+    startingPrice: 8999,
+    isByQuote: false,
+    priceDisplay: "Starting from ₹8,999 (Campaign Strategy)",
     currency: "INR",
     icon: "TrendingUp",
     active: true,
@@ -739,13 +755,15 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
   },
   {
     id: "meta-ads",
-    name: "Meta Ads Launcher",
+    name: "Campaign Creative Suite",
     slug: "meta-ads-launcher",
     category: "Marketing",
     tagline: "Campaigns, Ad Creatives",
     shortDescription:
       "End-to-end Facebook & Instagram ad campaign setups, high-converting creative ad variations, copy testing, and optimization.",
-    startingPrice: 13499,
+    startingPrice: 7499,
+    isByQuote: false,
+    priceDisplay: "Starting from ₹7,499 (Multi-Ratio Creative Suite)",
     currency: "INR",
     icon: "Share2",
     active: true,
@@ -826,13 +844,15 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
   },
   {
     id: "web-dev",
-    name: "Website Development",
+    name: "Website Engineering",
     slug: "website-development",
     category: "Development",
     tagline: "Landing Pages, Websites",
     shortDescription:
-      "High-performance, bespoke websites engineered with Next.js, fluid GSAP micro-interactions, responsive precision, and fast loading.",
-    startingPrice: 16999,
+      "High-performance, bespoke websites engineered with Next.js, fluid micro-interactions, responsive precision, and fast loading.",
+    startingPrice: 0,
+    isByQuote: true,
+    priceDisplay: "By Quote",
     currency: "INR",
     icon: "Globe",
     active: true,
@@ -930,13 +950,15 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
   },
   {
     id: "webapp-dev",
-    name: "Web App Development",
+    name: "Web Application Engineering",
     slug: "web-app-development",
     category: "Development",
     tagline: "Dashboards, Portals",
     shortDescription:
       "Robust SaaS applications, custom client portals, real-time collaboration dashboards, and secure backend integrations.",
-    startingPrice: 19999,
+    startingPrice: 0,
+    isByQuote: true,
+    priceDisplay: "By Quote",
     currency: "INR",
     icon: "Layout",
     active: true,
@@ -1022,13 +1044,15 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
   },
   {
     id: "mobile-setup",
-    name: "Mobile App Setup",
+    name: "Mobile Application Engineering",
     slug: "mobile-app-setup",
     category: "Development",
     tagline: "Android & iOS Apps",
     shortDescription:
       "Cross-platform bespoke iOS & Android mobile applications sharing unified cloud backends and APIs.",
-    startingPrice: 18499,
+    startingPrice: 0,
+    isByQuote: true,
+    priceDisplay: "By Quote",
     currency: "INR",
     icon: "Smartphone",
     active: true,
@@ -1112,13 +1136,15 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
   },
   {
     id: "ai-automation",
-    name: "AI Automation",
+    name: "Custom Systems & Integrations",
     slug: "ai-automation",
     category: "Automation",
-    tagline: "Autonomous Pipelines & Integrations",
+    tagline: "Endpoints & Integrations",
     shortDescription:
-      "Custom automated operational pipelines, secure cloud webhook integrations, AI content classifiers, and automated Drive synchronization.",
-    startingPrice: 15999,
+      "Custom business operational systems, secure cloud webhook integrations, data synchronization, and automated project routing.",
+    startingPrice: 0,
+    isByQuote: true,
+    priceDisplay: "By Quote",
     currency: "INR",
     icon: "Cpu",
     active: true,
@@ -1202,12 +1228,12 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
 export const SEED_CATALOG_PLANS: CatalogPlan[] = [
   {
     id: "autonomous-growth-retainer",
-    name: "Autonomous Growth Retainer",
-    tier: "Growth",
-    price: 14999,
-    monthlyPrice: 14999,
-    quarterlyPrice: 42747, // 5% discount
-    annualPrice: 152989, // 15% discount
+    name: "Enterprise Brand Atelier",
+    tier: "Enterprise",
+    price: 59999,
+    monthlyPrice: 59999,
+    quarterlyPrice: 170997,
+    annualPrice: 611989, // 15% discount
     features: [
       "Daily 1x 4K Brand Image / Graphic (30 Assets/month) powered by trend research",
       "Daily 1x Commercial Video Reel / Short (30 Assets/month) with voiceover and motion typography",
@@ -1233,12 +1259,12 @@ export const SEED_CATALOG_PLANS: CatalogPlan[] = [
   },
   {
     id: "studio-starter",
-    name: "Starter Creative",
+    name: "Starter Creative Retainer",
     tier: "Starter",
-    price: 3499,
-    monthlyPrice: 3499,
-    quarterlyPrice: 9972,
-    annualPrice: 35689,
+    price: 14999,
+    monthlyPrice: 14999,
+    quarterlyPrice: 42747,
+    annualPrice: 152989,
     features: [
       "Up to 5 Photorealistic 4K Renders per month",
       "1x 10-Second Commercial Video Ad",
@@ -1259,12 +1285,12 @@ export const SEED_CATALOG_PLANS: CatalogPlan[] = [
   },
   {
     id: "studio-growth",
-    name: "Studio Growth",
+    name: "Growth Brand Retainer",
     tier: "Growth",
-    price: 7999,
-    monthlyPrice: 7999,
-    quarterlyPrice: 22797,
-    annualPrice: 81589,
+    price: 29999,
+    monthlyPrice: 29999,
+    quarterlyPrice: 85497,
+    annualPrice: 305989,
     features: [
       "15x High-Resolution 3D & Product Renders",
       "3x 15-Second Video Ads with Voiceover",

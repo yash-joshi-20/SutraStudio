@@ -44,15 +44,15 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
   // 1. Image Creation
   {
     id: "img-creation",
-    name: "Image Creation",
+    name: "Commercial Visual Imagery",
     slug: "image-creation",
     category: "Creative",
     tagline: "Commercial Visuals & Key Brand Imagery",
     description:
       "High-fidelity commercial product imagery, luxury brand mockups, and high-impact visual campaign assets crafted for premium commercial presence.",
     workflow: "image",
-    startingPrice: "₹499",
-    priceDisplay: "Starting from ₹499 (5x 4K Master Pack)",
+    startingPrice: "₹2,499",
+    priceDisplay: "Starting from ₹2,499 (3-Pack)",
     isCustomQuote: false,
     ctaText: "Order Image Creation",
     ctaHref: "/orders?service=image-creation",
@@ -80,15 +80,15 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
   // 2. Video Creation
   {
     id: "vid-creation",
-    name: "Video Creation",
+    name: "Cinematic Motion Reel",
     slug: "video-creation",
     category: "Creative",
     tagline: "Cinematic Ads, Commercial Reels & Shorts",
     description:
-      "Engaging 10-to-30 second cinematic video ads, social reels, motion sequences, and studio-narrated commercial clips with high production polish.",
+      "Engaging 10-to-15 second cinematic video ads, social reels, motion sequences, and studio-narrated commercial clips with high production polish.",
     workflow: "video",
-    startingPrice: "₹1,499",
-    priceDisplay: "Starting from ₹1,499 (2x Viral Reels Pack)",
+    startingPrice: "₹4,999",
+    priceDisplay: "Starting from ₹4,999 (10–15s Master Reel)",
     isCustomQuote: false,
     ctaText: "Order Video Creation",
     ctaHref: "/orders?service=video-creation",
@@ -116,15 +116,15 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
   // 3. 3D Modeling
   {
     id: "3d-modeling",
-    name: "3D Modeling",
+    name: "Spatial 3D Asset Model",
     slug: "3d-modeling",
     category: "Design",
     tagline: "High-Precision CAD & Interactive 3D Models",
     description:
       "Precision 3D product CAD modeling, studio product lighting setups, exploded views, and interactive web-ready 3D assets.",
     workflow: "three-d",
-    startingPrice: "₹2,499",
-    priceDisplay: "Starting from ₹2,499 (Interactive 3D Asset)",
+    startingPrice: "₹5,999",
+    priceDisplay: "Starting from ₹5,999 (.GLB Interactive Model)",
     isCustomQuote: false,
     ctaText: "Order 3D Model",
     ctaHref: "/orders?service=3d-modeling",
@@ -152,15 +152,15 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
   // 4. 360 View
   {
     id: "360-view",
-    name: "360 View",
+    name: "360° Spherical Panoramic Tour",
     slug: "360-view",
     category: "Design",
     tagline: "Immersive Panoramic Virtual Tours",
     description:
       "Immersive 360-degree interactive panoramic virtual tours for luxury villas, hospitality spaces, and commercial showrooms.",
     workflow: "three-sixty",
-    startingPrice: "₹4,999",
-    priceDisplay: "Starting from ₹4,999 (Panoramic Virtual Space)",
+    startingPrice: "₹7,999",
+    priceDisplay: "Starting from ₹7,999 (Panoramic VR Master)",
     isCustomQuote: false,
     ctaText: "Order 360° Tour",
     ctaHref: "/orders?service=360-view",
@@ -188,16 +188,16 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
   // 5. Interior Design
   {
     id: "interior-design",
-    name: "Interior Design",
+    name: "Interior Architectural Visualization",
     slug: "interior-design",
     category: "Design",
     tagline: "Spaces, Renderings & Material Studies",
     description:
       "Photorealistic architectural interior visualization, luxury room staging, natural lighting studies, and material palettes.",
     workflow: "interior",
-    startingPrice: "Custom Quote",
-    priceDisplay: "Custom Quote",
-    isCustomQuote: true,
+    startingPrice: "₹6,499",
+    priceDisplay: "Starting from ₹6,499 (Spatial Room Renders)",
+    isCustomQuote: false,
     ctaText: "Request Custom Quote",
     ctaHref: "/orders?service=interior-design",
     deliverables: [
@@ -224,16 +224,16 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
   // 6. Window Design
   {
     id: "window-design",
-    name: "Window Design",
+    name: "Facade & Window Design",
     slug: "window-design",
     category: "Design",
     tagline: "Frames, Facades & Architectural Elevations",
     description:
       "Architectural window framing, modern facade elevations, custom glass transmittance studies, and structural elevations.",
     workflow: "design",
-    startingPrice: "Custom Quote",
-    priceDisplay: "Custom Quote",
-    isCustomQuote: true,
+    startingPrice: "₹4,499",
+    priceDisplay: "Starting from ₹4,499 (Facade & Storefront)",
+    isCustomQuote: false,
     ctaText: "Request Custom Quote",
     ctaHref: "/orders?service=window-design",
     deliverables: [
@@ -260,15 +260,15 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
   // 7. Digital Marketing
   {
     id: "digital-marketing",
-    name: "Digital Marketing",
+    name: "Brand & Editorial Strategy",
     slug: "digital-marketing",
     category: "Marketing",
     tagline: "Growth Strategy, Content Blueprints & Campaigns",
     description:
       "Data-driven creative growth strategies, content blueprints, audience profiling, and brand storytelling campaigns.",
     workflow: "marketing",
-    startingPrice: "₹4,999",
-    priceDisplay: "Starting from ₹4,999 (Monthly Strategy Deck)",
+    startingPrice: "₹8,999",
+    priceDisplay: "Starting from ₹8,999 (Campaign Strategy)",
     isCustomQuote: false,
     ctaText: "Commission Strategy",
     ctaHref: "/orders?service=digital-marketing",
@@ -296,15 +296,15 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
   // 8. Meta Ads Launcher
   {
     id: "meta-ads-launcher",
-    name: "Meta Ads Launcher",
+    name: "Campaign Creative Suite",
     slug: "meta-ads-launcher",
     category: "Marketing",
     tagline: "Campaign Architecture, Ad Creatives & Audience Targeting",
     description:
       "End-to-end Facebook & Instagram campaign setups, high-converting creative ad variations, copy testing, and audience optimization.",
     workflow: "social",
-    startingPrice: "₹4,999",
-    priceDisplay: "Starting from ₹4,999 (Campaign Setup & 5 Ad Variations)",
+    startingPrice: "₹7,499",
+    priceDisplay: "Starting from ₹7,499 (Multi-Ratio Creative Suite)",
     isCustomQuote: false,
     ctaText: "Launch Ad Campaign",
     ctaHref: "/orders?service=meta-ads-launcher",
