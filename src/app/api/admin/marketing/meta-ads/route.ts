@@ -41,7 +41,7 @@ const IN_MEMORY_CLIENT_CAMPAIGNS: MetaAdCampaignRecord[] = [
     headline: "Bespoke Royal Architectural Sanctuaries",
     caption:
       "Transforming heritage palatial architecture into bespoke residences. Book an architectural consultation with Deshmukh Heritage Living.",
-    creativeUrl: "https://image.pollinations.ai/prompt/architectural%20interior%20rendering%2C%20minimalist%20luxury%20living%20space%2C%20intricate%20golden%20jali%20screens%2C%20calacatta%20gold%20marble%20floors%2C%20recessed%203000k%20warm%20led%2C%20hasselblad%20photography%2C%208k?width=1200&height=800&nologo=true",
+    creativeUrl: "/images/services/interior-design.webp",
     metaTrackingId: "META_ACT_1092549996582729_CAMP_981",
     status: "active",
     launchedAt: new Date(Date.now() - 3600000 * 48).toISOString(),
@@ -63,7 +63,7 @@ const IN_MEMORY_CLIENT_CAMPAIGNS: MetaAdCampaignRecord[] = [
     headline: "Handcrafted 24K Heritage Polki Collection",
     caption:
       "Timeless Indian luxury jewelry crafted with ancestral gemstone precision. Inquire for private atelier viewing.",
-    creativeUrl: "https://image.pollinations.ai/prompt/luxury%20perfume%20bottle%2C%20obsidian%20glass%2C%2024k%20gold%20cap%2C%20caustic%20refractions%2C%20warm%20saffron%20rim%20lighting%2C%20hasselblad%20commercial%20product%20shot%2C%208k?width=1200&height=800&nologo=true",
+    creativeUrl: "/images/services/image-creation.webp",
     metaTrackingId: "META_ACT_1092549996582729_CAMP_982",
     status: "active",
     launchedAt: new Date(Date.now() - 3600000 * 12).toISOString(),
@@ -126,7 +126,7 @@ export async function POST(req: Request) {
       budgetAmount = 3499,
       headline = "High-Converting Commercial Launch",
       caption = "Discover exceptional quality designed for modern connoisseurs. Inquire now.",
-      creativeUrl = "https://image.pollinations.ai/prompt/social%20media%20advertising%20campaign%20creative%2C%20luxury%20aesthetic%2C%20warm%20gold%20and%20obsidian%20palette%2C%20modern%20typography%2C%20commercial%20grade%2C%208k?width=1200&height=800&nologo=true",
+      creativeUrl = "/images/services/meta-ads-launcher.webp",
       targetPlacements = ["Instagram Feed", "Facebook Feed", "Instagram Stories"],
     } = body;
 

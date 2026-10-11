@@ -22,8 +22,7 @@ interface PanoramicTourViewerProps {
   subtitle?: string;
 }
 
-const DEFAULT_PANORAMA =
-  "https://image.pollinations.ai/prompt/equirectangular%20360%20degree%20panoramic%20luxury%20modern%20villa%20interior%2C%20floor%20to%20ceiling%20glass%2C%20calacatta%20marble%2C%20warm%20golden%20lighting%2C%208k%20seamless%20hdr%20spherical?width=2048&height=1024&nologo=true";
+const DEFAULT_PANORAMA = "/images/services/360-view.webp";
 
 export function PanoramicTourViewer({
   textureUrl = DEFAULT_PANORAMA,

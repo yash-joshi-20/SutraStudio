@@ -1,6 +1,6 @@
 /**
  * SUTRA STUDIO — Automated Headless Browser Capture Pipeline
- * Captures authentic production assets from https://sutrastudio-1.onrender.com
+ * Captures authentic production assets from https://sutrastudios.in
  *
  * Deliverables:
  * 1. Desktop Full-Page: public/assets/showcase/live-home-desktop.png (1920x1080 @ 2x)

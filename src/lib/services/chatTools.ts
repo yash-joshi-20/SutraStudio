@@ -203,7 +203,7 @@ export class ChatToolsService {
     // Auto-provision Google Drive folder structure
     let driveFolderId = `drive_fld_chat_${orderId}`;
     let driveFolderPath = `Clients/${clientName}/${orderNumber}`;
-    let driveFolderLink = `https://drive.google.com/drive/folders/${driveFolderId}`;
+    let driveFolderLink = `/api/files/${driveFolderId}`;
     let subfolders: any = undefined;
 
     try {
@@ -361,8 +361,8 @@ export class ChatToolsService {
       orderNumber: order.orderNumber,
       driveFolderId: order.driveFolderId,
       driveFolderLink:
-        order.driveFolderLink || `https://drive.google.com/drive/folders/${order.driveFolderId}`,
-      instructions: "Upload your raw images, CAD models, 3D meshes, or video references directly into this Google Drive folder.",
+        order.driveFolderLink || `/api/files/${order.driveFolderId}`,
+      instructions: "Upload your raw images, CAD models, 3D meshes, or video references securely through your authenticated studio workspace.",
     };
   }
 

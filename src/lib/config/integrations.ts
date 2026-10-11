@@ -224,7 +224,7 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
       { key: "OPENROUTER_API_KEY", label: "OpenRouter API Key", whereToGet: "OpenRouter Console" },
     ],
     manualSteps: [
-      "Create account at https://openrouter.ai.",
+      "Create account at https://openrouter.ai and generate key.",
       "Generate API Key under keys menu.",
       "Configure OPENROUTER_API_KEY in .env.local.",
     ],

@@ -1,6 +1,7 @@
 import { OrdersStore } from "./ordersStore";
 import { FirestoreOrderRecord } from "@/app/api/orders/route";
-import { readEnv, readPublicEnv } from "@/lib/config/env";
+import { readEnv } from "@/lib/config/env";
+import { SITE_BASE_URL, N8N_BASE_URL } from "@/lib/config/site";
 import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
 
 /**
@@ -77,20 +78,11 @@ export class N8nAutomationService {
   }
 
   public static getN8nBaseUrl(): string {
-    return (
-      readEnv("N8N_BASE_URL") ||
-      readEnv("N8N_HOST" as any) ||
-      readPublicEnv("NEXT_PUBLIC_N8N_URL" as any) ||
-      "https://n8n.sutrastudios.in"
-    );
+    return N8N_BASE_URL;
   }
 
   public static getAppBaseUrl(): string {
-    return (
-      readEnv("APP_BASE_URL") ||
-      readPublicEnv("NEXT_PUBLIC_APP_URL") ||
-      "https://sutrastudios.in"
-    );
+    return SITE_BASE_URL;
   }
 
   /**
@@ -319,7 +311,7 @@ export class N8nAutomationService {
     const imagePrompt = encodeURIComponent(
       `luxury commercial advertising showcase for ${brand}, architectural elegance, warm ivory and polished brass accents, Hasselblad 8k studio lighting, photorealistic, bespoke craftsmanship`
     );
-    const imagePreviewUrl = `https://image.pollinations.ai/prompt/${imagePrompt}?width=1200&height=800&nologo=true&seed=${promptSeed}`;
+    const imagePreviewUrl = `${appBase}/images/services/image-creation.webp`;
 
     const imageDeliverable = {
       driveFileId: `drive_n8n_${runId}_img`,
@@ -360,7 +352,7 @@ export class N8nAutomationService {
         checksum: `sha256:${Math.random().toString(36).substring(2, 14)}`,
         fileSize: "24.6 MB",
         mimeType: "model/gltf-binary",
-        previewUrl: "https://image.pollinations.ai/prompt/luxury%20modern%20armchair%203d%20render%2C%20emerald%20velvet%20and%20brushed%20brass%2C%20studio%20lighting%2C%20isolated%20on%20warm%20ivory%20plinth%2C%20octane%20render%2C%208k?width=1200&height=800&nologo=true",
+        previewUrl: `${appBase}/images/services/3d-modeling.webp`,
         downloadUrl: `${appBase}/videos/services/spatial-3d-desktop.mp4`,
         category: "draft",
         version: "v1.0",

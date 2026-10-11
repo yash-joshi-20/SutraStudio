@@ -28,7 +28,7 @@ NEGATIVE: neon colors, purple or cyan glow, cartoon style, low resolution, disto
 
 ---
 
-## 2. Image Prompts (FLUX.1 / Pollinations / HuggingFace)
+## 2. Image Prompts (FLUX.1 / HuggingFace)
 
 > **Variable**: `{SUBJECT}` = Choose from Section 2.7 based on discipline.
 

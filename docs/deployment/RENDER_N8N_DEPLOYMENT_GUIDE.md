@@ -28,7 +28,7 @@ This guide details how to deploy your dedicated, production-ready **n8n Automati
 ## 2. Render 1-Click / Docker Web Service Setup
 
 ### Step A: Create Web Service on Render
-1. Log in to [Render Dashboard](https://dashboard.render.com).
+1. Log in to Render Dashboard.
 2. Click **New +** &rarr; Select **Web Service**.
 3. Choose **Deploy an existing image**.
 4. Enter the official n8n Docker image:
@@ -92,7 +92,7 @@ To ensure your workflows, execution logs, and credentials survive restarts:
 3. In your DNS provider (Cloudflare / Hostinger / GoDaddy):
    - Add a `CNAME` record:
      - **Name**: `n8n`
-     - **Target**: `<your-render-service>.onrender.com`
+     - **Target**: Render service target host (as shown in Render Settings)
      - **Proxy status**: DNS only or Cloudflare Proxied (Full SSL).
 4. Once Render verifies the certificate, `https://n8n.sutrastudios.in` is live!
 

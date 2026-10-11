@@ -126,19 +126,19 @@ export class InteriorDesignPipelineService {
     const generatedRenders = [
       {
         viewAngle: "Primary Wide Angle Perspective",
-        url: `https://image.pollinations.ai/prompt/${basePrompt}%2C%20wide%20angle%20perspective?width=1920&height=1080&nologo=true&seed=${seed}`,
+        url: "/images/services/interior-design.webp",
         resolution: "1920x1080 (FHD)",
         caption: `Spatial Overview of ${roomLabel}`,
       },
       {
         viewAngle: "Vignette & Material Junction Detail",
-        url: `https://image.pollinations.ai/prompt/${basePrompt}%2C%20close%20up%20architectural%20vignette%20detail?width=1080&height=1350&nologo=true&seed=${seed + 1}`,
+        url: "/images/services/window-design.webp",
         resolution: "1080x1350 (4:5 Editorial)",
         caption: `Material Interface Detail (Marble + Brass + Fluted Wood)`,
       },
     ];
 
-    const moodboardUrl = `https://image.pollinations.ai/prompt/${basePrompt}%2C%20architectural%20materials%20moodboard%20grid%20flatlay?width=1200&height=800&nologo=true&seed=${seed + 2}`;
+    const moodboardUrl = "/images/projects/proj-interior.webp";
 
     // 4. Clearly define what requires physical human architect clearance
     const humanTeamActionRequired = {

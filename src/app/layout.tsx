@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import { AppProviders } from "@/components/providers/AppProviders";
+import { SITE_BASE_URL } from "@/lib/config/site";
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -22,7 +23,7 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudios.in";
+const baseUrl = SITE_BASE_URL;
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),

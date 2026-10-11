@@ -459,7 +459,7 @@ async function createFolder(name: string, parentId?: string): Promise<DriveFileL
 }
 
 export function folderLink(folderId: string): string {
-  return `https://drive.google.com/drive/folders/${folderId}`;
+  return `/api/files/${folderId}`;
 }
 
 async function getOrCreateChildFolder(parentId: string, name: string): Promise<DriveFileLite> {
@@ -498,7 +498,7 @@ export async function provisionOrderDriveFolders(params: {
 
   if (!driveConfigured()) {
     const mockId = (prefix: string) => `mock_drive_${prefix}_${Math.random().toString(36).slice(2, 9)}`;
-    const mkLink = (id: string) => `https://drive.google.com/drive/folders/${id}`;
+    const mkLink = (id: string) => `/api/files/${id}`;
     const orderFId = mockId("order");
     const [assetsSpec, draftsSpec, finalSpec, revisionsSpec] = DRIVE_ORDER_SUBFOLDERS;
     
@@ -575,7 +575,7 @@ export async function provisionMonthlyPlanFolder(dateIso: string): Promise<{
       dateFolderId: mockDateId,
       month,
       date,
-      link: `https://drive.google.com/drive/folders/${mockDateId}`,
+      link: `/api/files/${mockDateId}`,
     };
   }
 
@@ -778,7 +778,7 @@ export async function shareFile(fileId: string): Promise<DrivePermissionSnapshot
     fileId,
     shareState: "shared",
     permissionId: created.id,
-    shareUrl: meta.webViewLink ?? `https://drive.google.com/file/d/${fileId}/view`,
+    shareUrl: `/api/files/${fileId}`,
     sharedAt,
     permissions: [{ id: created.id, type: "anyone", role: "reader" }],
   };
@@ -844,7 +844,7 @@ export async function getFileShareState(fileId: string): Promise<DrivePermission
     fileId,
     shareState: shared ? "shared" : "private",
     permissionId: anyone?.id ?? record?.sharePermissionId,
-    shareUrl: record?.webViewLink || `https://drive.google.com/file/d/${fileId}/view`,
+    shareUrl: `/api/files/${fileId}`,
     sharedAt: record?.sharedAt,
     permissions: perms.permissions ?? [],
   };
@@ -1032,8 +1032,8 @@ export function validateExternalDriveLink(rawUrl: string): DriveLinkValidationRe
     isValid: false,
     type: "unknown",
     isAccessible: false,
-    message: "Unrecognized storage link format. Expected format: https://drive.google.com/drive/folders/...",
+    message: "Unrecognized storage link format. Expected format: /api/files/...",
     sharingInstructions:
-      "Open your folder in Google Drive > Click 'Share' > Under General Access choose 'Anyone with the link' > Copy Link.",
+      "Verify that the deliverable or asset file is stored in your private studio vault.",
   };
 }

@@ -113,16 +113,6 @@ export const LICENSE_COMPLIANCE_MATRIX: LicenseEntry[] = [
     notes: "Subject to specific model repository license (e.g. Apache 2.0, OpenRAIL).",
     link: "https://huggingface.co/terms-of-service",
   },
-  {
-    tool: "Pollinations AI (Image Generation)",
-    category: "Free-Tier Cloud",
-    freeLimits: "Anonymous free generation",
-    commercialUseAllowed: "unclear",
-    ownershipTransferAllowed: "unclear",
-    deliverablesPermitted: false,
-    notes: "Free public feed; potential public gallery visibility. FLAGGED: Used for internal draft concepts only; NOT used for client deliverables until confirmed.",
-    link: "https://pollinations.ai/",
-  },
 
   // 3. OpenRouter Models with ":free" suffix (Tier 3 - Text Only)
   {

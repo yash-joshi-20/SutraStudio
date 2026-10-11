@@ -15,7 +15,7 @@
 
 import http from "node:http";
 
-const APP_URL = process.env.TEST_APP_URL || "http://localhost:3000";
+const APP_URL = process.env.TEST_APP_URL || "https://sutrastudios.in";
 
 import Module from "node:module";
 

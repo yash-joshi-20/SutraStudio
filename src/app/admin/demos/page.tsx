@@ -543,16 +543,7 @@ export default function AdminDemosPage() {
                     સ્ટેપ ૨: Render.com પર Free Web Service બનાવો
                   </h3>
                   <p className="text-xs sm:text-sm text-[#57534E] leading-relaxed">
-                    Render ડેશબોર્ડ (
-                    <a
-                      href="https://dashboard.render.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[#A98B57] font-semibold underline"
-                    >
-                      dashboard.render.com
-                    </a>
-                    ) ખોલો અને ફ્રી સર્વિસ હોસ્ટ કરો:
+                    Render ડેશબોર્ડ ખોલો અને ફ્રી સર્વિસ હોસ્ટ કરો:
                   </p>
                   <div className="bg-[#FAF9F5] border border-[#E5E1D8] rounded-xl p-3 text-xs space-y-1.5 text-[#44403C]">
                     <p>
@@ -572,7 +563,7 @@ export default function AdminDemosPage() {
                     </p>
                   </div>
                   <p className="text-[11px] text-[#78716C]">
-                    Render તમને એક ફ્રી URL આપશે (જેમ કે: <code>https://truevibe-property.onrender.com</code>).
+                    વેબ સર્વિસ ડિપ્લોય થયા પછી તમારા ડેમો પાથ સાથે લિંક કરો.
                   </p>
                 </div>
               </div>
@@ -602,7 +593,7 @@ export default function AdminDemosPage() {
                       </div>
                       <div className="bg-white p-2 rounded-lg border border-[#E5E1D8]">
                         <span className="text-[10px] text-[#78716C] block uppercase font-bold">Target (Target Host)</span>
-                        <span className="font-mono font-bold text-[#171717]">truevibe-property.onrender.com</span>
+                        <span className="font-mono font-bold text-[#171717]">sutrastudios.in</span>
                       </div>
                     </div>
                     <p className="text-[11px] text-[#78716C]">
@@ -626,7 +617,7 @@ export default function AdminDemosPage() {
                   </p>
                   <div className="bg-[#FAF9F5] border border-[#E5E1D8] rounded-xl p-3 text-xs space-y-1.5 text-[#44403C]">
                     <p>
-                      <strong>Add Domain:</strong> લખો <code>truevibe.sutrastudios.in</code> અને &quot;Save&quot; કરો.
+                      <strong>Add Domain:</strong> લખો <code>sutrastudios.in</code> અને &quot;Save&quot; કરો.
                     </p>
                     <p>
                       Render આપમેળે Cloudflare સાથે વેરિફાઈ કરશે અને <strong>ફ્રી SSL Certificate (HTTPS)</strong> ઇશ્યુ
@@ -648,7 +639,7 @@ export default function AdminDemosPage() {
                   </p>
                   <div className="inline-flex items-center gap-2 bg-[#FAF9F5] border border-emerald-300 px-3 py-1.5 rounded-xl font-mono text-xs font-bold text-emerald-800 mt-1">
                     <Globe className="w-4 h-4 text-emerald-600" />
-                    https://truevibe.sutrastudios.in
+                    https://sutrastudios.in/demos/truevibe
                   </div>
                 </div>
               </div>
@@ -815,10 +806,10 @@ export default function AdminDemosPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-[#171717] mb-1">Render Free Web Service URL</label>
+                  <label className="block text-xs font-bold text-[#171717] mb-1">Demo Live URL</label>
                   <input
                     type="url"
-                    placeholder="https://truevibe-property.onrender.com"
+                    placeholder="https://sutrastudios.in/demos/truevibe"
                     value={formRenderUrl}
                     onChange={(e) => setFormRenderUrl(e.target.value)}
                     className="w-full px-3 py-2 text-xs bg-[#FAF9F5] border border-[#E5E1D8] rounded-xl focus:outline-hidden focus:border-[#A98B57] font-mono"

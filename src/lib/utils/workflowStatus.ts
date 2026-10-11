@@ -99,7 +99,7 @@ export function sanitizeClientFacingText(text: string): string {
     .replace(/kling(?:\s*ai)?/gi, "Cinematic Motion Engine")
     .replace(/elevenlabs/gi, "Bespoke Acoustic Voiceover")
     .replace(/tripo(?:\s*3d)?/gi, "Spatial 3D Modeler")
-    .replace(/pollinations/gi, "Studio Creative Engine")
+    .replace(/diffusion/gi, "Studio Creative Engine")
     .replace(/webhook/gi, "Studio Pipeline")
     .replace(/serpapi/gi, "Market Trend Intelligence");
 }

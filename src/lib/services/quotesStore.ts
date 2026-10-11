@@ -242,7 +242,7 @@ export class QuotesStore {
       requirements: `${quote.brief}\n\nAgreed Scope:\n${(quote.scopeBreakdown || []).map((s) => `• ${s}`).join("\n")}`,
       driveFolderId: `drive_fld_quote_${orderId}`,
       driveFolderPath: `Clients/${quote.clientName}/${orderNumber}`,
-      driveFolderLink: `https://drive.google.com/drive/folders/drive_fld_quote_${orderId}`,
+      driveFolderLink: `/api/files/drive_fld_quote_${orderId}`,
       revisionRound: 0,
       maxRevisions: quote.revisionRoundsIncluded || 2,
       deliverables: [],

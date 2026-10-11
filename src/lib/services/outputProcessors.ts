@@ -204,11 +204,8 @@ async function callImageProvider(
       return { success: false };
     }
 
-    case "pollinations": {
-      // Pollinations uses URL-based generation
-      const encodedPrompt = encodeURIComponent(params.prompt);
-      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${mainFormat.width}&height=${mainFormat.height}&nologo=true&seed=${Date.now()}`;
-      
+    case "studio_draft": {
+      const imageUrl = "/images/services/image-creation.webp";
       return {
         success: true,
         imageUrl,
@@ -216,8 +213,8 @@ async function callImageProvider(
         width: mainFormat.width,
         height: mainFormat.height,
         format: "png",
-        model: "pollinations-flux",
-        requestId: `poll_${Date.now()}`,
+        model: "studio-draft-engine",
+        requestId: `draft_${Date.now()}`,
       };
     }
 

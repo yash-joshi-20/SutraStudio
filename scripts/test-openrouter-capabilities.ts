@@ -66,13 +66,13 @@ async function runTests() {
   // TEST 2: Client Data Detection & Scrubbing
   console.log("\n--- 2. Testing Client Data Detection & Scrubbing ---");
   const sampleWithClientData =
-    "Client Rajesh Patel (rajesh@patelenterprises.in, +91 9876543210) wants 3D render from drive link https://drive.google.com/open?id=12345.";
+    "Client Rajesh Patel (rajesh@patelenterprises.in, +91 9876543210) wants 3D render from file link https://sutrastudios.in/api/files/12345.";
 
   const hasData = PrivacySanitizer.containsClientData(sampleWithClientData, {
     clientName: "Rajesh Patel",
     clientEmail: "rajesh@patelenterprises.in",
   });
-  assert(hasData, "Correctly detected client PII, email, and drive URL");
+  assert(hasData, "Correctly detected client PII, email, and file delivery URL");
 
   const scrubbed = PrivacySanitizer.scrubAllClientData(sampleWithClientData, {
     clientName: "Rajesh Patel",
@@ -81,7 +81,7 @@ async function runTests() {
   assert(
     !scrubbed.scrubbedText.includes("Rajesh Patel") &&
       !scrubbed.scrubbedText.includes("rajesh@patelenterprises.in") &&
-      !scrubbed.scrubbedText.includes("drive.google.com"),
+      !scrubbed.scrubbedText.includes("/api/files/12345"),
     "Completely scrubbed all client details, leaving strictly zero client data"
   );
   assert(

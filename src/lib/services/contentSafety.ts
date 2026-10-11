@@ -257,7 +257,7 @@ export function getAIDisclosure(provider: string): string {
     "tripo3d": "3D model generated using Tripo3D AI. Refined and exported by Sutra Studio.",
     "elevenlabs": "Voiceover generated using ElevenLabs AI. Mixed by Sutra Studio.",
     "gemini": "Content assisted by Google Gemini AI. Curated by Sutra Studio.",
-    "pollinations": "Image generated using Pollinations AI. Reviewed by Sutra Studio creative team.",
+    "huggingface": "Image generated using open-source models on Hugging Face. Reviewed by Sutra Studio creative team.",
   };
 
   return disclosures[provider] || `AI-generated content. Reviewed by Sutra Studio creative team.`;

@@ -1509,7 +1509,7 @@ function AdminHubContent() {
       const orderId = inspectingAdminOrder.id;
       const orderLabel = inspectingAdminOrder.orderNumber || inspectingAdminOrder.code;
       const folderLink = inspectingAdminOrder.driveFolderId
-        ? `https://drive.google.com/drive/folders/${inspectingAdminOrder.driveFolderId}`
+        ? `/api/files/${inspectingAdminOrder.driveFolderId}`
         : "";
 
       let uploaded: DriveUploadResult | null = null;
@@ -2535,7 +2535,7 @@ const [adminDataError, setAdminDataError] = useState("");
         status: c.status,
         emailVerified: true,
         driveFolderId: c.driveFolderId,
-        driveFolderLink: `https://drive.google.com/drive/folders/${c.driveFolderId}`,
+        driveFolderLink: `/api/files/${c.driveFolderId}`,
         joinedDate: "August 2026",
         lastActive: c.lastActive,
         adminNotes: [],
@@ -2553,7 +2553,7 @@ const [adminDataError, setAdminDataError] = useState("");
         billingCycle: "monthly",
       },
       notificationsCount: 2,
-      driveFolderLink: `https://drive.google.com/drive/folders/${c.driveFolderId}`,
+      driveFolderLink: `/api/files/${c.driveFolderId}`,
     }));
   }, [liveClients, tierFilter, searchQuery]);
 
@@ -2958,7 +2958,7 @@ const [adminDataError, setAdminDataError] = useState("");
 
                           {client.driveFolderId && (
                             <a
-                              href={dossier.driveFolderLink || `https://drive.google.com/drive/folders/${client.driveFolderId}`}
+                              href={dossier.driveFolderLink || `/api/files/${client.driveFolderId}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1.5 font-mono text-[11px] text-[#5C3A1E] hover:underline"
@@ -3043,7 +3043,7 @@ const [adminDataError, setAdminDataError] = useState("");
                         <div className="flex items-center justify-between md:justify-end gap-3 md:w-1/3">
                           {client.driveFolderId && (
                             <a
-                              href={dossier.driveFolderLink || `https://drive.google.com/drive/folders/${client.driveFolderId}`}
+                              href={dossier.driveFolderLink || `/api/files/${client.driveFolderId}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1 font-mono text-[11px] text-[#5C3A1E] hover:underline"
@@ -3763,7 +3763,7 @@ const [adminDataError, setAdminDataError] = useState("");
                               <span>Drive Vault:</span>
                             </span>
                             <a
-                              href={`https://drive.google.com/drive/folders/${currentChatClient.driveFolderId}`}
+                              href={`/api/files/${currentChatClient.driveFolderId}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="font-mono text-[11px] font-bold text-[#5C3A1E] hover:text-[#A98B57] hover:underline flex items-center gap-1"
@@ -3922,7 +3922,7 @@ const [adminDataError, setAdminDataError] = useState("");
                                   {/* Drive Link & Action Buttons */}
                                   <div className="flex items-center justify-between pt-2 border-t border-[#EADFCB]/60 gap-2">
                                     <a
-                                      href={order.driveFolderLink || `https://drive.google.com/drive/folders/${order.driveFolderId || currentChatClient.driveFolderId}`}
+                                      href={order.driveFolderLink || `/api/files/${order.driveFolderId || currentChatClient.driveFolderId}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="inline-flex items-center gap-1 text-[10px] font-medium text-[#A98B57] hover:text-[#5C3A1E] hover:underline"
@@ -6223,7 +6223,7 @@ const [adminDataError, setAdminDataError] = useState("");
                             </div>
                             <div className="flex items-center gap-2">
                               <a
-                                href={inspectingAdminOrder.driveFolderLink || `https://drive.google.com/drive/folders/${inspectingAdminOrder.driveFolderId || "COMMISSIONS"}`}
+                                href={inspectingAdminOrder.driveFolderLink || `/api/files/${inspectingAdminOrder.driveFolderId || "COMMISSIONS"}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#F4EFE6] transition-all"
@@ -6472,7 +6472,7 @@ const [adminDataError, setAdminDataError] = useState("");
                               </label>
                               <input
                                 type="text"
-                                placeholder="e.g. Master_4K_Render.zip or https://drive.google.com/..."
+                                placeholder="e.g. Master_4K_Render.zip or /api/files/..."
                                 value={deliveryPreviewUrl || deliveryFilename}
                                 onChange={(e) => {
                                   const val = e.target.value;
@@ -8375,7 +8375,7 @@ const [adminDataError, setAdminDataError] = useState("");
                       <div className="pt-2 border-t border-[#EADFCB]/60 flex items-center justify-between">
                         <span className="text-[#64748B]">Drive Vault:</span>
                         <a
-                          href={dossier?.driveFolderLink || `https://drive.google.com/drive/folders/${profile.driveFolderId}`}
+                          href={dossier?.driveFolderLink || `/api/files/${profile.driveFolderId}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 font-mono text-[#5C3A1E] font-bold hover:underline"

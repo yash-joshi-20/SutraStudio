@@ -126,8 +126,8 @@ export function getProviderRegistry(): ProviderConfig[] {
       rateLimitPerMinute: 10,
     },
     {
-      id: "pollinations",
-      name: "Pollinations AI",
+      id: "huggingface",
+      name: "Hugging Face Inference",
       type: "image",
       apiKeyEnvVar: "IMAGE_PROVIDER_API_KEY",
       isConfigured: true,
@@ -135,7 +135,7 @@ export function getProviderRegistry(): ProviderConfig[] {
       costUnit: "free tier",
       priority: 2,
       isActive: true,
-      models: ["flux", "turbo"],
+      models: ["sdxl-base", "flux-schnell"],
       rateLimitPerMinute: 5,
     },
     // Video providers

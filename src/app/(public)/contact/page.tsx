@@ -444,16 +444,34 @@ export default function ContactPage() {
               </p>
             </div>
 
-            {/* Stylized Responsive Map Container */}
-            <div className="relative w-full rounded-3xl overflow-hidden border border-[#EADFCB] shadow-inner bg-[#F4EFE6]">
-              <iframe
-                src="https://maps.google.com/maps?q=Botad%20Gujarat%20364710&t=&z=13&ie=UTF8&iwloc=&output=embed"
-                className="w-full h-80 rounded-2xl border border-amber-900/20 shadow-inner grayscale contrast-125 opacity-90 hover:opacity-100 transition-opacity"
-                loading="lazy"
-                allowFullScreen
-              ></iframe>
-              <div className="absolute top-4 left-4 z-10 px-3.5 py-1.5 rounded-full bg-[#171717]/90 text-[#FAF9F5] border border-[#A98B57]/50 shadow-md text-xs font-semibold backdrop-blur-md">
-                ✦ Physical Atelier: Botad, Gujarat | Serving Global Clients
+            {/* Stylized Responsive Atelier Location Container */}
+            <div className="relative w-full rounded-3xl overflow-hidden border border-[#EADFCB] shadow-inner bg-[#F4EFE6] p-8 sm:p-12 flex flex-col items-center justify-center text-center">
+              <div className="max-w-xl space-y-4">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#171717] text-[#FAF9F5] border border-[#A98B57]/50 shadow-md text-xs font-semibold">
+                  ✦ Physical Atelier: Botad, Gujarat • 364710 | Global Delivery
+                </div>
+                <h4 className="font-serif text-2xl font-bold text-[#171717]">
+                  Sutra Studio Design &amp; Technology Atelier
+                </h4>
+                <p className="text-sm text-[#57534E] leading-relaxed">
+                  22.1704° N, 71.6685° E — In-person creative briefings, hardware render reviews, and physical sample evaluations conducted by executive appointment.
+                </p>
+                <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+                  <a
+                    href="https://wa.me/918200192781?text=Hello%20Sutra%20Studio%2C%20I%20would%20like%20to%20schedule%20an%20in-person%20briefing%20at%20the%20atelier."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#2E7D4F] text-white text-xs font-semibold shadow-sm hover:bg-[#256841] transition-colors"
+                  >
+                    Schedule In-Person Appointment
+                  </a>
+                  <a
+                    href="mailto:yashjoshi20@zohomail.in"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#EADFCB] text-xs font-semibold text-[#171717] hover:bg-[#FAF9F5] transition-colors"
+                  >
+                    Email Studio Concierge
+                  </a>
+                </div>
               </div>
             </div>
           </div>

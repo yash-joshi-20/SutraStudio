@@ -221,23 +221,7 @@ export default function AdminOrdersPage() {
         returnedDeliverables = data.deliverables || data.output?.deliverables || [];
         setDispatchStatus("✓ Pipeline executed! 4K Master Render & Commercial Video Reel generated. Vaulting...");
       } else {
-        // Fallback: try direct ngrok webhook
-        const directWebhookUrl =
-          process.env.NEXT_PUBLIC_N8N_URL
-            ? `${process.env.NEXT_PUBLIC_N8N_URL.replace(/\/$/, "")}/webhook/sutra-master-dispatch`
-            : "https://sanitary-engine-pursuable.ngrok-free.dev/webhook/sutra-master-dispatch";
-
-        const n8nRes = await fetch(directWebhookUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(orderPayload),
-        });
-        if (n8nRes.ok) {
-          localN8nAck = true;
-          setDispatchStatus("Direct n8n webhook accepted order!");
-        } else {
-          setDispatchStatus("Updating order status in production...");
-        }
+        setDispatchStatus("Server pipeline in progress. Updating order status...");
       }
     } catch {
       setDispatchStatus("Proceeding with production order status update...");

@@ -888,7 +888,7 @@ export class OrdersStore {
       clientEmail: params.clientEmail,
       driveFolderId: `drive_fld_trial_${orderId}`,
       driveFolderPath: `Clients/${params.clientName}/${orderNumber}`,
-      driveFolderLink: `https://drive.google.com/drive/folders/drive_fld_trial_${orderId}`,
+      driveFolderLink: `/api/files/drive_fld_trial_${orderId}`,
       estimatedDeliveryDays: 3,
       estimatedDueDate: trialDueDate,
       createdAt: now,

@@ -29,7 +29,7 @@ export function MetaAdCreativeMockup({
   className = "",
   adTitle = "Sutra Studio • Meta Growth Pipeline",
   headline = "Transform your brand with 4K CGI visuals & Vedic spatial craft.",
-  creativeImageUrl = "https://image.pollinations.ai/prompt/architectural%20interior%20rendering%2C%20minimalist%20luxury%20living%20space%2C%20intricate%20golden%20jali%20screens%2C%20calacatta%20gold%20marble%20floors%2C%20recessed%203000k%20warm%20led%2C%20hasselblad%20photography%2C%208k?width=1200&height=800&nologo=true",
+  creativeImageUrl = "/images/services/meta-ads-launcher.webp",
   ctaText = "Book Studio Pipeline",
   ctaHref = "/orders?service=meta-ads-launcher",
 }: MetaAdCreativeMockupProps) {

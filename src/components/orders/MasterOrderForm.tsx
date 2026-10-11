@@ -878,7 +878,7 @@ export function MasterOrderForm({
                     <span className="text-xs text-[#94A3B8]">or link:</span>
                     <input
                       type="url"
-                      placeholder="https://drive.google.com/... or Figma asset link"
+                      placeholder="Vault file link or asset reference URL"
                       value={brandAssetUrl}
                       onChange={(e) => setBrandAssetUrl(e.target.value)}
                       className="flex-1 px-3.5 py-2.5 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
@@ -1004,7 +1004,7 @@ export function MasterOrderForm({
                     </label>
                     <input
                       type="url"
-                      placeholder="e.g. https://yourbrand.com/landing or https://wa.me/91..."
+                      placeholder="e.g. https://sutrastudios.in/services or https://wa.me/918200192781"
                       value={metaDestinationUrl}
                       onChange={(e) => setMetaDestinationUrl(e.target.value)}
                       className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
@@ -1219,7 +1219,7 @@ export function MasterOrderForm({
                     </label>
                     <textarea
                       rows={3}
-                      placeholder="e.g.&#10;https://apple.com&#10;https://stripe.com&#10;https://lincoln.com"
+                      placeholder="e.g. Reference website or benchmark links (one per line)"
                       value={webBenchmarkUrls}
                       onChange={(e) => setWebBenchmarkUrls(e.target.value)}
                       className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
@@ -1250,7 +1250,7 @@ export function MasterOrderForm({
                     </label>
                     <input
                       type="url"
-                      placeholder="e.g. https://www.figma.com/design/..."
+                      placeholder="e.g. Design link or prototype reference URL"
                       value={figmaUrl}
                       onChange={(e) => setFigmaUrl(e.target.value)}
                       className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"

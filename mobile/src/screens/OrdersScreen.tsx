@@ -6,8 +6,10 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
+  Linking,
 } from 'react-native';
 import { SutraTheme } from '../theme/tokens';
+import { getFileUrl } from '../config/site';
 import {
   Clock,
   CheckCircle2,
@@ -90,7 +92,14 @@ export function OrdersScreen({ orders: initialOrders = [] }: { orders?: MobileOr
 
               <View style={styles.cardFooter}>
                 <Text style={styles.metaText}>{ord.revision ? `${ord.revision} • ` : ''}{ord.updatedAt}</Text>
-                <TouchableOpacity style={styles.downloadBtn}>
+                <TouchableOpacity
+                  style={styles.downloadBtn}
+                  onPress={() => {
+                    Linking.openURL(getFileUrl(ord.id, true)).catch((err) =>
+                      console.warn("Could not open file URL:", err)
+                    );
+                  }}
+                >
                   <Download size={14} color={SutraTheme.colors.brown} />
                   <Text style={styles.downloadText}>Download</Text>
                 </TouchableOpacity>

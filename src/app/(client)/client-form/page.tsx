@@ -521,7 +521,7 @@ export default function ClientFormPage() {
                       type="url"
                       value={company.websiteUrl}
                       onChange={(e) => setCompany({ ...company, websiteUrl: e.target.value })}
-                      placeholder="https://shriramtech.com"
+                      placeholder="https://sutrastudios.in"
                       className="w-full p-3 rounded-xl border border-[#EADFCB] bg-[#FAF9F5] focus:outline-none focus:border-[#D4A35A] disabled:opacity-60"
                     />
                   </div>
@@ -734,7 +734,7 @@ export default function ClientFormPage() {
                               updated[idx].productUrl = e.target.value;
                               setProducts(updated);
                             }}
-                            placeholder="https://example.com/product"
+                            placeholder="/products/sample"
                             className="w-full p-2.5 rounded-xl border border-[#EADFCB] bg-white"
                           />
                         </div>

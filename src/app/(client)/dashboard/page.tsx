@@ -570,7 +570,7 @@ export default function ClientDashboardPage() {
                       </label>
                       <input
                         type="text"
-                        placeholder="https://drive.google.com/drive/folders/... or cloud link"
+                        placeholder="Vault asset link or cloud reference URL"
                         value={orderDetails.references}
                         onChange={(e) =>
                           setOrderDetails({ ...orderDetails, references: e.target.value })

@@ -11,6 +11,8 @@
  *     (see `CLIENT_SAFE_ENV_KEYS`).
  */
 
+import { SITE_BASE_URL, NEXT_PUBLIC_SITE_URL, N8N_BASE_URL } from "./site";
+
 const CLIENT_SAFE_ENV_KEYS = new Set([
   "NEXT_PUBLIC_FIREBASE_API_KEY",
   "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
@@ -19,6 +21,7 @@ const CLIENT_SAFE_ENV_KEYS = new Set([
   "NEXT_PUBLIC_FIREBASE_APP_ID",
   "NEXT_PUBLIC_FIREBASE_VAPID_KEY",
   "NEXT_PUBLIC_RAZORPAY_KEY_ID",
+  "NEXT_PUBLIC_SITE_URL",
   "NEXT_PUBLIC_APP_URL",
   "NEXT_PUBLIC_GA_MEASUREMENT_ID",
   "NEXT_PUBLIC_INSTAGRAM_URL",
@@ -28,6 +31,8 @@ const CLIENT_SAFE_ENV_KEYS = new Set([
 ]);
 
 export type EnvKey =
+  | "SITE_BASE_URL"
+  | "NEXT_PUBLIC_SITE_URL"
   | "APP_BASE_URL"
   | "NEXT_PUBLIC_APP_URL"
   | "FIREBASE_OWNER_EMAIL"
@@ -74,8 +79,6 @@ export type EnvKey =
   | "ALLOW_TRAINING_PROVIDERS_FOR_CLIENT_DATA"
   | "BFL_API_KEY"
   | "FLUX_API_KEY"
-  | "POLLINATIONS_API_KEY"
-  | "NEXT_PUBLIC_POLLINATIONS_KEY"
   | "PIXAZO_API_KEY"
   | "HF_TOKEN"
   | "HUGGINGFACE_API_KEY"
@@ -202,18 +205,18 @@ export function readEnv(key: EnvKey): string {
   if (primary) return primary;
 
   // Safe fallback aliases
+  if (key === "SITE_BASE_URL" || key === "APP_BASE_URL") return SITE_BASE_URL;
+  if (key === "NEXT_PUBLIC_SITE_URL" || key === "NEXT_PUBLIC_APP_URL") return NEXT_PUBLIC_SITE_URL;
   if (key === "SMTP_USER") return getVal("ZOHO_MAIL_USER");
   if (key === "ZOHO_MAIL_USER") return getVal("SMTP_USER") || getVal("ADMIN_EMAIL");
   if (key === "SMTP_APP_PASSWORD") return getVal("ZOHO_MAIL_PASSWORD");
   if (key === "ZOHO_MAIL_PASSWORD") return getVal("SMTP_APP_PASSWORD");
-  if (key === "N8N_BASE_URL") return getVal("N8N_HOST") || getVal("NEXT_PUBLIC_N8N_URL") || "https://sanitary-engine-pursuable.ngrok-free.dev";
+  if (key === "N8N_BASE_URL") return N8N_BASE_URL;
   if (key === "N8N_MASTER_DISPATCH_WEBHOOK") {
-    const base = getVal("N8N_BASE_URL") || getVal("N8N_HOST") || getVal("NEXT_PUBLIC_N8N_URL") || "https://sanitary-engine-pursuable.ngrok-free.dev";
-    return `${base.replace(/\/$/, "")}/webhook/sutra-master-dispatch`;
+    return `${N8N_BASE_URL}/webhook/sutra-master-dispatch`;
   }
   if (key === "N8N_INBOUND_WEBHOOK") {
-    const base = getVal("N8N_BASE_URL") || getVal("N8N_HOST") || getVal("NEXT_PUBLIC_N8N_URL") || "https://sanitary-engine-pursuable.ngrok-free.dev";
-    return `${base.replace(/\/$/, "")}/webhook/sutra-inbound-inquiry`;
+    return `${N8N_BASE_URL}/webhook/sutra-inbound-inquiry`;
   }
 
   if (key === "WHATSAPP_ACCESS_TOKEN") return getVal("META_GRAPH_ACCESS_TOKEN") || getVal("META_ACCESS_TOKEN");
@@ -252,8 +255,9 @@ export function readPublicEnv(key: EnvKey): string {
       return (process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? "").trim();
     case "NEXT_PUBLIC_RAZORPAY_KEY_ID":
       return (process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? "").trim();
+    case "NEXT_PUBLIC_SITE_URL":
     case "NEXT_PUBLIC_APP_URL":
-      return (process.env.NEXT_PUBLIC_APP_URL ?? "").trim();
+      return NEXT_PUBLIC_SITE_URL;
     case "NEXT_PUBLIC_GA_MEASUREMENT_ID":
       return (process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? "").trim();
     case "NEXT_PUBLIC_INSTAGRAM_URL":

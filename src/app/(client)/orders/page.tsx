@@ -2776,15 +2776,15 @@ export default function OrdersPage() {
                     {driveLink && (
                       <span
                         className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                          driveLink.includes("drive.google.com")
+                          driveLink.includes("sutrastudios.in") || driveLink.includes("/api/files/")
                             ? "bg-[#F0FDF4] text-[#166534] border border-[#BBF7D0]"
                             : driveLink.startsWith("https://")
                             ? "bg-[#FFFBEB] text-[#92400E] border border-[#FDE68A]"
                             : "bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA]"
                         }`}
                       >
-                        {driveLink.includes("drive.google.com")
-                          ? "✓ Verified Cloud Vault Link"
+                        {driveLink.includes("sutrastudios.in") || driveLink.includes("/api/files/")
+                          ? "✓ Verified Studio Vault Link"
                           : driveLink.startsWith("https://")
                           ? "Cloud Storage Link"
                           : "Invalid URL"}
@@ -2793,7 +2793,7 @@ export default function OrdersPage() {
                   </div>
                   <input
                     type="url"
-                    placeholder="https://drive.google.com/drive/folders/... or cloud vault link"
+                    placeholder="Cloud vault folder link or reference URL"
                     value={driveLink}
                     onChange={(e) => setDriveLink(e.target.value)}
                     className="w-full rounded-xl bg-[#FAF9F5] border border-[#EADFCB] px-3.5 py-2 text-xs text-[#0F172A] focus:border-[#D4A35A] focus:outline-none"
@@ -2804,7 +2804,7 @@ export default function OrdersPage() {
                       <span>Cloud Vault Sharing Guide:</span>
                     </div>
                     <p className="leading-relaxed">
-                      1. Open your folder in your cloud vault &rarr; Click <strong>Share</strong> &rarr; Under General Access choose <strong>&quot;Anyone with the link can view&quot;</strong> &rarr; Copy and paste link above.
+                      1. Open your private folder &rarr; Ensure sharing clearance &rarr; Copy and paste link above.
                     </p>
                   </div>
                 </div>

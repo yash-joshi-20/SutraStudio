@@ -89,7 +89,7 @@ export default function AdminMarketingPage() {
     "Bridging centuries of classical Indian aesthetic doctrines with high-velocity generative AI workflows. Inquire for bespoke retainers. #SutraStudio #GenerativeAI #LuxuryDesign"
   );
   const [publishMediaUrl, setPublishMediaUrl] = useState(
-    "https://image.pollinations.ai/prompt/cinematic%20architectural%20film%20still%2C%20modern%20sandstone%20courtyard%20villa%20at%20sunset%2C%20ambient%20water%20reflection%2C%20anamorphic%20lens%20flare%2C%208k?width=1200&height=800&nologo=true"
+    "/images/services/image-creation.webp"
   );
   const [publishPlatform, setPublishPlatform] = useState<"all" | "facebook" | "instagram">("all");
 
@@ -104,7 +104,7 @@ export default function AdminMarketingPage() {
     "Book an unforgettable royal getaway with immersive heritage suites and bespoke royal dining. Reserve today."
   );
   const [clientCreativeUrl, setClientCreativeUrl] = useState(
-    "https://image.pollinations.ai/prompt/architectural%20interior%20rendering%2C%20minimalist%20luxury%20living%20space%2C%20intricate%20golden%20jali%20screens%2C%20calacatta%20gold%20marble%20floors%2C%20recessed%203000k%20warm%20led%2C%20hasselblad%20photography%2C%208k?width=1200&height=800&nologo=true"
+    "/images/services/interior-design.webp"
   );
 
   const loadMarketingData = useCallback(async () => {
@@ -147,9 +147,7 @@ export default function AdminMarketingPage() {
     setPromoPrompt(concept.imagePrompt);
     setPublishTitle(concept.imageTitle);
     setPublishCaption(concept.imageCaption);
-    setPublishMediaUrl(
-      `https://image.pollinations.ai/prompt/${encodeURIComponent(concept.imagePrompt)}?width=1200&height=800&nologo=true&seed=${newSeed}`
-    );
+    setPublishMediaUrl("/images/services/meta-ads-launcher.webp");
     setStatusMessage(`✓ Loaded trending direction: "${concept.disciplineName} — ${concept.theme}"`);
   };
 

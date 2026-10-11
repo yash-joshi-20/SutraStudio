@@ -181,7 +181,7 @@ export class ClientsStore {
         billingAddress: client.billingAddress,
         driveFolderId: client.driveFolderId || `drive_fld_${Date.now()}`,
         driveFolderLink:
-          client.driveFolderLink || `https://drive.google.com/drive/folders/drive_fld_${Date.now()}`,
+          client.driveFolderLink || `/api/files/drive_fld_${Date.now()}`,
         joinedDate: new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" }),
         lastActive: "Just now",
         adminNotes: [],
@@ -260,7 +260,7 @@ export class ClientsStore {
       notificationsCount: notifs.length,
       driveFolderLink:
         profile.driveFolderLink ||
-        (profile.driveFolderId ? `https://drive.google.com/drive/folders/${profile.driveFolderId}` : ""),
+        (profile.driveFolderId ? `/api/files/${profile.driveFolderId}` : ""),
     };
   }
 

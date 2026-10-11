@@ -14,6 +14,7 @@ import { readEnv } from "@/lib/config/env";
 import { AuditLogService } from "@/lib/services/auditLogService";
 import type { MarketingPublicationRecord } from "@/app/api/admin/marketing/publish/route";
 
+import { SITE_BASE_URL } from "@/lib/config/site";
 import {
   PromoConcept,
   AGENCY_PROMO_CONCEPTS,
@@ -53,13 +54,9 @@ export async function runAgencySelfPromotionWorkflow(options?: {
 
   const finalTheme = options?.customTheme || concept.theme;
   const finalImagePrompt = options?.customPrompt || concept.imagePrompt;
-  const encodedImagePrompt = encodeURIComponent(finalImagePrompt);
-  const imageUrl = `https://image.pollinations.ai/prompt/${encodedImagePrompt}?width=1200&height=800&model=flux&nologo=true&seed=${seedImage}`;
-
-  const encodedReelPrompt = encodeURIComponent(concept.reelPrompt);
-  const reelImageUrl = `https://image.pollinations.ai/prompt/${encodedReelPrompt}?width=1080&height=1920&model=flux&nologo=true&seed=${seedReel}`;
-  const videoUrl =
-    "https://assets.mixkit.co/videos/preview/mixkit-modern-apartment-with-panoramic-view-40742-large.mp4";
+  const imageUrl = `${SITE_BASE_URL}/images/services/image-creation.webp`;
+  const reelImageUrl = `${SITE_BASE_URL}/images/services/meta-ads-launcher.webp`;
+  const videoUrl = `${SITE_BASE_URL}/videos/services/ai-video-desktop.mp4`;
 
   const facebookPageId = readEnv("FACEBOOK_PAGE_ID") || "61594200943169";
   const instagramHandle = readEnv("INSTAGRAM_HANDLE") || "yashsutrastudio";

@@ -44,6 +44,13 @@ function looksLikeFirebaseSession(value: string | undefined): boolean {
 }
 
 export function middleware(request: NextRequest) {
+  // Redirect any *.onrender.com host to https://sutrastudios.in
+  const host = request.headers.get("host") || "";
+  if (host.includes(".onrender.com")) {
+    const redirectUrl = new URL(request.nextUrl.pathname + request.nextUrl.search, "https://sutrastudios.in");
+    return NextResponse.redirect(redirectUrl, { status: 301 });
+  }
+
   const { pathname, search } = request.nextUrl;
   const fullPath = pathname + search;
   const isSessionShaped = looksLikeFirebaseSession(request.cookies.get(SESSION_COOKIE)?.value);

@@ -1,7 +1,8 @@
 import { MetadataRoute } from "next";
+import { SITE_BASE_URL } from "@/lib/config/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudios.in";
+  const baseUrl = SITE_BASE_URL;
   const now = new Date();
 
   return [

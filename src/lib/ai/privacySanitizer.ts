@@ -48,9 +48,9 @@ export class PrivacySanitizer {
   // UPI IDs (e.g. user@okaxis, user@okhdfcbank)
   private static readonly UPI_REGEX = /\b[\w.\-_]{2,256}@[a-zA-Z]{2,64}\b/g;
 
-  // Cloud file URLs / Drive links
-  private static readonly DRIVE_URL_REGEX =
-    /https?:\/\/(?:drive\.google\.com|firebasestorage\.googleapis\.com|sutrastudios\.in\/media)[\w\d\-._~:/?#[\]@!$&'()*+,;=]+/g;
+  // Client file delivery URLs & private media links
+  private static readonly FILE_URL_REGEX =
+    /https?:\/\/(?:sutrastudios\.in\/(?:api\/files|media))[\w\d\-._~:/?#[\]@!$&'()*+,;=]+/g;
 
   /**
    * Check if a given text contains any recognizable client data or PII.
@@ -63,7 +63,7 @@ export class PrivacySanitizer {
     if (this.GSTIN_REGEX.test(text)) return true;
     if (this.CC_REGEX.test(text)) return true;
     if (this.UPI_REGEX.test(text)) return true;
-    if (this.DRIVE_URL_REGEX.test(text)) return true;
+    if (this.FILE_URL_REGEX.test(text)) return true;
 
     if (metadata) {
       if (metadata.clientEmail && text.includes(metadata.clientEmail)) return true;
@@ -157,8 +157,8 @@ export class PrivacySanitizer {
     scrubbed = s.sanitizedText;
     removed += s.redactionsCount;
 
-    // Remove client file and Drive URLs
-    scrubbed = scrubbed.replace(this.DRIVE_URL_REGEX, () => {
+    // Remove client file URLs
+    scrubbed = scrubbed.replace(this.FILE_URL_REGEX, () => {
       removed++;
       return "[CLIENT_FILE_URL_REMOVED]";
     });

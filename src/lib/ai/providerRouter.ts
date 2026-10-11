@@ -4,7 +4,7 @@
  * Implements Rule 9 (Free-First Provider Policy):
  * 1. Cheapest option order:
  *    (1) Free open-source local tools (FFmpeg, Blender headless, Three.js/Pannellum)
- *    (2) Free tiers of existing keyed providers (Gemini 2.0 Flash, Cerebras, Groq, Pollinations)
+ *    (2) Free tiers of existing keyed providers (Gemini 2.0 Flash, Cerebras, Groq, Hugging Face)
  *    (3) OpenRouter models with ":free" suffix for TEXT tasks only (live fetched at runtime)
  *    (4) Paid options ONLY where free cannot meet promised quality, listed for approval.
  * 2. Rate-limit and daily quota tracking per provider.
@@ -221,21 +221,7 @@ export const ALL_PROVIDERS: ProviderDefinition[] = [
     defaultPriority: 5,
     description: "Open-source model serverless inference endpoint.",
   },
-  {
-    id: "pollinations",
-    name: "Pollinations AI (Concept Drafts)",
-    task: "image_draft",
-    envKey: "POLLINATIONS_API_KEY",
-    tier: 2,
-    isFree: true,
-    allowsTraining: true,
-    costPerUnitUSD: 0,
-    costUnitDescription: "free draft generation",
-    rateLimitPerMin: 10,
-    dailyLimitCalls: 1000,
-    defaultPriority: 1,
-    description: "Fast draft concept generator. Internal ideation only; not for confidential finals.",
-  },
+
   {
     id: "huggingface-image",
     name: "HuggingFace FLUX.1 Schnell",
@@ -401,7 +387,7 @@ export const DEFAULT_ROUTER_CONFIG: RouterConfig = {
     translation: ["gemini", "openrouter-free", "groq", "openai"],
     agent_reasoning: ["gemini", "cerebras", "groq", "openrouter-free", "openai"],
     text_qa: ["gemini", "cerebras", "groq", "openrouter-free", "openai"],
-    image_draft: ["pollinations", "huggingface-image"],
+    image_draft: ["huggingface-image"],
     image_final: ["bfl-flux"],
     video: ["ffmpeg", "kling", "runway"],
     voiceover: ["elevenlabs"],
@@ -503,10 +489,7 @@ export class ProviderRouter {
       return true;
     }
 
-    // Special case: Pollinations draft doesn't require a key
-    if (providerId === "pollinations") {
-      return true;
-    }
+
 
     return isEnvSet(def.envKey as any);
   }
