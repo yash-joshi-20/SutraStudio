@@ -40,6 +40,7 @@ Total missing services: **9** / **21** configured.
 | **Zoho Mail SMTP (Primary Email)** | Notifications | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_APP_PASSWORD`, `EMAIL_FROM` |
 | **Groq Fast Inference** | AI Providers | `GROQ_API_KEY` |
 | **Cerebras Inference** | AI Providers | `CEREBRAS_API_KEY` |
+| **OpenRouter Free Models** | AI Providers | `OPENROUTER_API_KEY` |
 | **OpenAI Platform** | AI Providers | `OPENAI_API_KEY` |
 
 ---
