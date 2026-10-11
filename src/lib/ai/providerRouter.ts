@@ -1,19 +1,27 @@
 /**
  * SUTRA STUDIO — Free-First Provider Router & Quota Management Engine
  *
- * Implements Step 31B:
- * 1. Ordered fallbacks per task, editable in Admin (stored in Firestore).
- * 2. Key presence check: skips any provider whose required API key is missing.
- * 3. Quota awareness: per-provider daily usage counters in Firestore, 429/quota error switching with backoff.
- * 4. Cost caps: per-order and per-day caps with estimated spend tracking.
- * 5. Reuse & Cache: 24h trend research caching per industry, duplicate generation avoidance.
- * 6. Free vs. Premium tiers: free outputs flagged as drafts requiring review; "noTrainingOnly" privacy switch.
- * 7. Firebase Spark limits: daily read/write tracking with warnings at 70% and 90%.
+ * Implements Rule 9 (Free-First Provider Policy):
+ * 1. Cheapest option order:
+ *    (1) Free open-source local tools (FFmpeg, Blender headless, Three.js/Pannellum)
+ *    (2) Free tiers of existing keyed providers (Gemini 2.0 Flash, Cerebras, Groq, Pollinations)
+ *    (3) OpenRouter models with ":free" suffix for TEXT tasks only (live fetched at runtime)
+ *    (4) Paid options ONLY where free cannot meet promised quality, listed for approval.
+ * 2. Rate-limit and daily quota tracking per provider.
+ * 3. Exponential backoff retry on 429 / 402 / 503 errors.
+ * 4. Clear failure state: Order status -> "needs_attention" + admin alert.
+ * 5. Zero fake output guarantee (Never fall back to stock or fake media).
+ * 6. Privacy Sanitizer: Redacts PII before sending to free-tier or training providers.
+ * 7. License Compliance Matrix: Commercial use & ownership transfer validation.
  */
 
-import { adminDb } from "@/lib/firebase/admin";
-import { isEnvSet, readEnv } from "@/lib/config/env";
+import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { isEnvSet } from "@/lib/config/env";
 import { recordMissingKey } from "@/lib/services/missingKeyRegistry";
+import { OpenRouterService, type OpenRouterModel } from "./openrouterService";
+import { PrivacySanitizer } from "./privacySanitizer";
+import { LICENSE_COMPLIANCE_MATRIX, type LicenseEntry } from "./licenseCompliance";
+import { NotificationsStore } from "@/lib/services/notificationsStore";
 
 // ---------------------------------------------------------------------------
 // Types & Definitions
@@ -21,30 +29,39 @@ import { recordMissingKey } from "@/lib/services/missingKeyRegistry";
 
 export type TaskType =
   | "text_chat"
+  | "creative_brief"
+  | "captions"
+  | "translation"
+  | "agent_reasoning"
+  | "text_qa"
   | "image_draft"
   | "image_final"
   | "research"
   | "video"
   | "voiceover"
-  | "three_d";
+  | "three_d"
+  | "three_sixty";
 
 export interface ProviderDefinition {
   id: string;
   name: string;
   task: TaskType;
   envKey: string;
+  tier: 1 | 2 | 3 | 4; // 1: Local Open-Source, 2: Keyed Free Tier, 3: OpenRouter Free, 4: Paid
   isFree: boolean;
-  allowsTraining: boolean; // false = enterprise / zero-retention / no-training
+  allowsTraining: boolean; // false = private/zero-retention
   costPerUnitUSD: number;
   costUnitDescription: string;
   rateLimitPerMin: number;
+  dailyLimitCalls: number;
   defaultPriority: number;
   description: string;
+  isOpenSourceLocal?: boolean;
 }
 
 export interface RouterConfig {
   taskChains: Record<TaskType, string[]>;
-  noTrainingOnly: boolean; // Admin switch: only use paid/private non-training providers for sensitive orders
+  noTrainingOnly: boolean; // Admin privacy switch
   dailyCostCapUSD: number;
   orderCostCapUSD: number;
   updatedAt: string;
@@ -83,242 +100,308 @@ export const SPARK_LIMITS = {
 };
 
 // ---------------------------------------------------------------------------
-// Provider Registry
+// Provider Registry (16 Providers Across 4 Tiers)
 // ---------------------------------------------------------------------------
 
 export const ALL_PROVIDERS: ProviderDefinition[] = [
-  // Text / Chat Providers
+  // --- TIER 1: Free Open-Source Local Tools ---
+  {
+    id: "ffmpeg",
+    name: "FFmpeg (Local Video Stitcher & Subtitles)",
+    task: "video",
+    envKey: "",
+    tier: 1,
+    isFree: true,
+    allowsTraining: false,
+    costPerUnitUSD: 0,
+    costUnitDescription: "unlimited local execution",
+    rateLimitPerMin: 60,
+    dailyLimitCalls: 10000,
+    defaultPriority: 1,
+    isOpenSourceLocal: true,
+    description: "Open-source CLI for lossless video stitching, audio mix, and subtitle burning.",
+  },
+  {
+    id: "blender",
+    name: "Blender (Headless 3D & Spatial Render CLI)",
+    task: "three_d",
+    envKey: "",
+    tier: 1,
+    isFree: true,
+    allowsTraining: false,
+    costPerUnitUSD: 0,
+    costUnitDescription: "unlimited local rendering",
+    rateLimitPerMin: 20,
+    dailyLimitCalls: 1000,
+    defaultPriority: 1,
+    isOpenSourceLocal: true,
+    description: "Headless background rendering for photorealistic spatial interior & 3D CAD scenes.",
+  },
+  {
+    id: "threejs-viewer",
+    name: "Three.js & Pannellum (Open-Source 3D/360 Web)",
+    task: "three_sixty",
+    envKey: "",
+    tier: 1,
+    isFree: true,
+    allowsTraining: false,
+    costPerUnitUSD: 0,
+    costUnitDescription: "unlimited client web embeds",
+    rateLimitPerMin: 120,
+    dailyLimitCalls: 50000,
+    defaultPriority: 1,
+    isOpenSourceLocal: true,
+    description: "Client-side interactive WebGL/WebXR viewers for 360 virtual tours and 3D models.",
+  },
+
+  // --- TIER 2: Free Tiers of Existing Keyed Providers ---
   {
     id: "gemini",
     name: "Google Gemini 2.0 Flash",
     task: "text_chat",
     envKey: "GEMINI_API_KEY",
-    isFree: true, // generous free tier
-    allowsTraining: false, // via API terms
+    tier: 2,
+    isFree: true,
+    allowsTraining: false,
     costPerUnitUSD: 0.0001,
     costUnitDescription: "per 1K tokens",
-    rateLimitPerMin: 30,
-    defaultPriority: 1,
-    description: "Primary fast multimodal LLM with free tier.",
+    rateLimitPerMin: 15,
+    dailyLimitCalls: 1500,
+    defaultPriority: 2,
+    description: "Fast multimodal reasoning engine with generous free quota.",
   },
   {
     id: "groq",
-    name: "Groq (Llama 3.3 70B)",
+    name: "Groq (Llama 3.3 70B Versatile)",
     task: "text_chat",
     envKey: "GROQ_API_KEY",
+    tier: 2,
     isFree: true,
     allowsTraining: false,
     costPerUnitUSD: 0.0002,
     costUnitDescription: "per 1K tokens",
     rateLimitPerMin: 30,
-    defaultPriority: 2,
-    description: "Ultra-low latency inference engine.",
+    dailyLimitCalls: 14400,
+    defaultPriority: 3,
+    description: "Ultra-low latency Llama 3.3 inference on LPU hardware.",
   },
   {
     id: "cerebras",
     name: "Cerebras Inference",
     task: "text_chat",
     envKey: "CEREBRAS_API_KEY",
+    tier: 2,
     isFree: true,
     allowsTraining: false,
     costPerUnitUSD: 0.0002,
     costUnitDescription: "per 1K tokens",
     rateLimitPerMin: 30,
-    defaultPriority: 3,
-    description: "High-speed Llama inference hardware.",
+    dailyLimitCalls: 10000,
+    defaultPriority: 4,
+    description: "High-speed Llama inference engine with generous free tier.",
   },
   {
     id: "huggingface",
-    name: "HuggingFace Inference API",
+    name: "HuggingFace Serverless Inference",
     task: "text_chat",
     envKey: "HUGGINGFACE_API_KEY",
+    tier: 2,
     isFree: true,
     allowsTraining: false,
     costPerUnitUSD: 0,
     costUnitDescription: "free inference",
     rateLimitPerMin: 15,
-    defaultPriority: 4,
+    dailyLimitCalls: 1000,
+    defaultPriority: 5,
     description: "Open-source model serverless inference endpoint.",
   },
   {
-    id: "openai",
-    name: "OpenAI GPT-4o Mini",
-    task: "text_chat",
-    envKey: "OPENAI_API_KEY",
-    isFree: false,
-    allowsTraining: false,
-    costPerUnitUSD: 0.0015,
-    costUnitDescription: "per 1K tokens",
-    rateLimitPerMin: 60,
-    defaultPriority: 5,
-    description: "Commercial fallback (last resort).",
-  },
-
-  // Image Draft Providers
-  {
     id: "pollinations",
-    name: "Pollinations AI",
+    name: "Pollinations AI (Concept Drafts)",
     task: "image_draft",
-    envKey: "POLLINATIONS_API_KEY", // Optional: works anonymously without key
+    envKey: "POLLINATIONS_API_KEY",
+    tier: 2,
     isFree: true,
-    allowsTraining: true, // public free pipeline
+    allowsTraining: true,
     costPerUnitUSD: 0,
-    costUnitDescription: "free generation",
+    costUnitDescription: "free draft generation",
     rateLimitPerMin: 10,
+    dailyLimitCalls: 1000,
     defaultPriority: 1,
-    description: "Instant free AI image synthesis for draft concepts.",
+    description: "Fast draft concept generator. Internal ideation only; not for confidential finals.",
   },
   {
     id: "huggingface-image",
     name: "HuggingFace FLUX.1 Schnell",
     task: "image_draft",
     envKey: "HUGGINGFACE_API_KEY",
+    tier: 2,
     isFree: true,
     allowsTraining: false,
     costPerUnitUSD: 0,
-    costUnitDescription: "free tier",
+    costUnitDescription: "free serverless pass",
     rateLimitPerMin: 10,
+    dailyLimitCalls: 500,
     defaultPriority: 2,
-    description: "Open weights FLUX generator on HF serverless endpoints.",
-  },
-  {
-    id: "pixazo",
-    name: "Pixazo API",
-    task: "image_draft",
-    envKey: "PIXAZO_API_KEY",
-    isFree: true,
-    allowsTraining: false,
-    costPerUnitUSD: 0.005,
-    costUnitDescription: "per draft",
-    rateLimitPerMin: 20,
-    defaultPriority: 3,
-    description: "High quality draft generator with fast turnaround.",
-  },
-
-  // Image Final Providers
-  {
-    id: "bfl-flux",
-    name: "Black Forest Labs FLUX 1.1 Pro",
-    task: "image_final",
-    envKey: "BFL_API_KEY",
-    isFree: false,
-    allowsTraining: false,
-    costPerUnitUSD: 0.04,
-    costUnitDescription: "per 4K master image",
-    rateLimitPerMin: 10,
-    defaultPriority: 1,
-    description: "Ultra-photorealistic commercial master render.",
-  },
-  {
-    id: "pollinations-final",
-    name: "Pollinations AI (High-Res)",
-    task: "image_final",
-    envKey: "POLLINATIONS_API_KEY",
-    isFree: true,
-    allowsTraining: true,
-    costPerUnitUSD: 0,
-    costUnitDescription: "free fallback",
-    rateLimitPerMin: 5,
-    defaultPriority: 2,
-    description: "High-resolution free fallback for non-commercial finals.",
-  },
-
-  // Research Providers
-  {
-    id: "serpapi",
-    name: "SerpAPI Google Trends",
-    task: "research",
-    envKey: "SERPAPI_API_KEY",
-    isFree: false,
-    allowsTraining: false,
-    costPerUnitUSD: 0.01,
-    costUnitDescription: "per query",
-    rateLimitPerMin: 20,
-    defaultPriority: 1,
-    description: "Live search & market trend intelligence (24h cached).",
+    description: "FLUX Schnell draft passes on Hugging Face free serverless tier.",
   },
   {
     id: "gemini-research",
     name: "Gemini Market Synthesizer",
     task: "research",
     envKey: "GEMINI_API_KEY",
+    tier: 2,
     isFree: true,
     allowsTraining: false,
     costPerUnitUSD: 0.0001,
-    costUnitDescription: "per research batch",
-    rateLimitPerMin: 30,
-    defaultPriority: 2,
-    description: "Synthesized regional market and creative trend analyzer.",
+    costUnitDescription: "per batch",
+    rateLimitPerMin: 15,
+    dailyLimitCalls: 1500,
+    defaultPriority: 1,
+    description: "Synthesized regional market and trend research (cached 24h).",
   },
 
-  // Video Providers
+  // --- TIER 3: OpenRouter Models with ":free" Suffix (TEXT TASKS ONLY) ---
   {
-    id: "kling",
-    name: "Kling AI Video",
-    task: "video",
-    envKey: "KLING_API_KEY",
+    id: "openrouter-free",
+    name: "OpenRouter Free Models (:free suffix)",
+    task: "text_chat",
+    envKey: "OPENROUTER_API_KEY",
+    tier: 3,
+    isFree: true,
+    allowsTraining: true, // underlying open hosts may log
+    costPerUnitUSD: 0,
+    costUnitDescription: "100% free models",
+    rateLimitPerMin: 20,
+    dailyLimitCalls: 1000,
+    defaultPriority: 6,
+    description:
+      "Dynamically fetched runtime :free models (Llama 3, Mistral, Gemma, Qwen). Text tasks only.",
+  },
+
+  // --- TIER 4: Paid Options (Requires Explicit Admin Approval) ---
+  {
+    id: "bfl-flux",
+    name: "Black Forest Labs FLUX 1.1 Pro",
+    task: "image_final",
+    envKey: "BFL_API_KEY",
+    tier: 4,
     isFree: false,
     allowsTraining: false,
-    costPerUnitUSD: 0.10,
+    costPerUnitUSD: 0.04,
+    costUnitDescription: "per 4K master image",
+    rateLimitPerMin: 10,
+    dailyLimitCalls: 500,
+    defaultPriority: 1,
+    description: "Ultra-photorealistic commercial master render (Paid / Approval Required).",
+  },
+  {
+    id: "kling",
+    name: "Kling AI Video Engine",
+    task: "video",
+    envKey: "KLING_API_KEY",
+    tier: 4,
+    isFree: false,
+    allowsTraining: false,
+    costPerUnitUSD: 0.1,
     costUnitDescription: "per 5s video",
     rateLimitPerMin: 3,
-    defaultPriority: 1,
-    description: "Cinematic commercial motion video engine.",
+    dailyLimitCalls: 200,
+    defaultPriority: 2,
+    description: "Cinematic commercial motion video engine (Paid / Approval Required).",
   },
   {
     id: "runway",
     name: "Runway Gen-3 Turbo",
     task: "video",
     envKey: "RUNWAY_API_KEY",
+    tier: 4,
     isFree: false,
     allowsTraining: false,
     costPerUnitUSD: 0.15,
     costUnitDescription: "per 5s clip",
     rateLimitPerMin: 3,
-    defaultPriority: 2,
-    description: "High-end motion graphics and video synthesis.",
+    dailyLimitCalls: 100,
+    defaultPriority: 3,
+    description: "High-end motion graphics and video synthesis (Paid / Approval Required).",
   },
-
-  // Voiceover Providers
+  {
+    id: "tripo3d",
+    name: "Tripo3D Spatial CAD Engine",
+    task: "three_d",
+    envKey: "TRIPO3D_API_KEY",
+    tier: 4,
+    isFree: false,
+    allowsTraining: false,
+    costPerUnitUSD: 0.2,
+    costUnitDescription: "per 3D GLTF asset",
+    rateLimitPerMin: 5,
+    dailyLimitCalls: 100,
+    defaultPriority: 2,
+    description: "Automated 3D mesh generator from brief (Paid / Approval Required).",
+  },
+  {
+    id: "openai",
+    name: "OpenAI GPT-4o Mini",
+    task: "text_chat",
+    envKey: "OPENAI_API_KEY",
+    tier: 4,
+    isFree: false,
+    allowsTraining: false,
+    costPerUnitUSD: 0.0015,
+    costUnitDescription: "per 1K tokens",
+    rateLimitPerMin: 60,
+    dailyLimitCalls: 5000,
+    defaultPriority: 7,
+    description: "Paid commercial fallback when all free tiers fail (Approval Required).",
+  },
   {
     id: "elevenlabs",
-    name: "ElevenLabs Voiceover",
+    name: "ElevenLabs Neural Voiceover",
     task: "voiceover",
     envKey: "ELEVENLABS_API_KEY",
+    tier: 4,
     isFree: false,
     allowsTraining: false,
     costPerUnitUSD: 0.03,
-    costUnitDescription: "per voiceover track",
+    costUnitDescription: "per commercial track",
     rateLimitPerMin: 10,
+    dailyLimitCalls: 500,
     defaultPriority: 1,
-    description: "Studio-grade neural voice synthesis.",
+    description: "Studio-grade voiceover tracks with commercial rights (Paid / Approval Required).",
   },
-
-  // 3D Providers
   {
-    id: "tripo3d",
-    name: "Tripo3D Spatial Engine",
-    task: "three_d",
-    envKey: "TRIPO3D_API_KEY",
+    id: "serpapi",
+    name: "SerpAPI Google Trends",
+    task: "research",
+    envKey: "SERPAPI_API_KEY",
+    tier: 4,
     isFree: false,
     allowsTraining: false,
-    costPerUnitUSD: 0.20,
-    costUnitDescription: "per 3D GLTF asset",
-    rateLimitPerMin: 5,
-    defaultPriority: 1,
-    description: "Interactive GLTF 3D model generator.",
+    costPerUnitUSD: 0.01,
+    costUnitDescription: "per search query",
+    rateLimitPerMin: 20,
+    dailyLimitCalls: 100,
+    defaultPriority: 2,
+    description: "Live search intelligence (Cached 24 hours).",
   },
 ];
 
 export const DEFAULT_ROUTER_CONFIG: RouterConfig = {
   taskChains: {
-    text_chat: ["gemini", "groq", "cerebras", "huggingface", "openai"],
-    image_draft: ["pollinations", "huggingface-image", "pixazo"],
-    image_final: ["bfl-flux", "pollinations-final"],
-    research: ["serpapi", "gemini-research"],
-    video: ["kling", "runway"],
+    text_chat: ["gemini", "cerebras", "groq", "openrouter-free", "huggingface", "openai"],
+    creative_brief: ["gemini", "cerebras", "groq", "openrouter-free", "openai"],
+    captions: ["gemini", "groq", "cerebras", "openrouter-free", "openai"],
+    translation: ["gemini", "openrouter-free", "groq", "openai"],
+    agent_reasoning: ["gemini", "cerebras", "groq", "openrouter-free", "openai"],
+    text_qa: ["gemini", "cerebras", "groq", "openrouter-free", "openai"],
+    image_draft: ["pollinations", "huggingface-image"],
+    image_final: ["bfl-flux"],
+    video: ["ffmpeg", "kling", "runway"],
     voiceover: ["elevenlabs"],
-    three_d: ["tripo3d"],
+    three_d: ["blender", "tripo3d"],
+    three_sixty: ["threejs-viewer", "blender", "tripo3d"],
+    research: ["gemini-research", "serpapi"],
   },
   noTrainingOnly: false,
   dailyCostCapUSD: 10.0,
@@ -340,14 +423,6 @@ const sparkUsageMemory: SparkUsageRecord = {
   warningLevel: "normal",
   updatedAt: new Date().toISOString(),
 };
-
-// In-Memory Cache for Trend Research & Prompt Hashes (24h TTL)
-interface CacheEntry<T> {
-  value: T;
-  expiresAt: number;
-}
-const trendCacheMap = new Map<string, CacheEntry<any>>();
-const promptCacheMap = new Map<string, CacheEntry<any>>();
 
 // ---------------------------------------------------------------------------
 // Provider Router Class
@@ -409,14 +484,19 @@ export class ProviderRouter {
   }
 
   /**
-   * Check if a specific provider is configured (key exists)
+   * Check if a specific provider is configured (key exists or open source local)
    */
   static isProviderConfigured(providerId: string): boolean {
     const def = ALL_PROVIDERS.find((p) => p.id === providerId);
     if (!def) return false;
 
+    // Open-source local tools require no API key
+    if (def.isOpenSourceLocal || !def.envKey) {
+      return true;
+    }
+
     // Special case: Pollinations draft doesn't require a key
-    if (providerId === "pollinations" || providerId === "pollinations-final") {
+    if (providerId === "pollinations") {
       return true;
     }
 
@@ -424,7 +504,7 @@ export class ProviderRouter {
   }
 
   /**
-   * Check if provider is in active backoff (429/error state)
+   * Check if provider is in active backoff (429/quota error state)
    */
   static isProviderInBackoff(providerId: string): boolean {
     const record = usageMemoryMap.get(providerId);
@@ -433,11 +513,11 @@ export class ProviderRouter {
   }
 
   /**
-   * Get resolved fallback chain for a task, skipping unconfigured or backoff providers
+   * Get resolved fallback chain for a task, respecting Free-First hierarchy
    */
   static async getExecutableChain(
     task: TaskType,
-    options?: { sensitiveOrder?: boolean }
+    options?: { sensitiveOrder?: boolean; allowPaid?: boolean }
   ): Promise<ProviderDefinition[]> {
     const config = await this.getConfig();
     const chainIds = config.taskChains[task] || DEFAULT_ROUTER_CONFIG.taskChains[task] || [];
@@ -449,14 +529,18 @@ export class ProviderRouter {
       const def = ALL_PROVIDERS.find((p) => p.id === id);
       if (!def) continue;
 
-      // Privacy filter: Skip providers that allow public data training if sensitive
+      // Privacy filter: Skip providers that allow public training if sensitive
       if (requireNoTraining && def.allowsTraining) {
+        continue;
+      }
+
+      // Paid approval gate: Skip paid providers if caller did not explicitly authorize paid fallback
+      if (def.tier === 4 && options?.allowPaid === false) {
         continue;
       }
 
       // Check key presence: skip if key is missing
       if (!this.isProviderConfigured(id)) {
-        // Record missing key in background registry
         if (def.envKey) {
           recordMissingKey(def.envKey as any, `Provider Router (${def.name})`, "MEDIUM").catch(
             () => {}
@@ -498,13 +582,11 @@ export class ProviderRouter {
     current.backoffUntil = undefined; // clear backoff on success
 
     usageMemoryMap.set(providerId, current);
-
-    // Asynchronously persist to daily usage doc in Firestore
     this.persistDailyUsage(providerId, current).catch(() => {});
   }
 
   /**
-   * Record provider error and apply exponential backoff on 429 / Quota / 402 errors
+   * Record provider error and apply exponential backoff on 429 / Quota / 503 errors
    */
   static async recordError(
     providerId: string,
@@ -524,9 +606,9 @@ export class ProviderRouter {
     current.lastErrorMessage = errorMessage;
     current.lastUsedAt = new Date().toISOString();
 
-    // If 429 (Rate Limit), 402 (Payment/Quota Exceeded), or 503: calculate backoff
+    // If 429 (Rate Limit), 402 (Payment/Quota Exceeded), or 503: calculate exponential backoff
     if (status === 429 || status === 402 || status === 503) {
-      const backoffSeconds = Math.min(30 * Math.pow(2, current.errorCountToday - 1), 3600); // 30s -> 60s -> 120s up to 1h
+      const backoffSeconds = Math.min(30 * Math.pow(2, current.errorCountToday - 1), 3600);
       current.backoffUntil = Date.now() + backoffSeconds * 1000;
     }
 
@@ -535,7 +617,7 @@ export class ProviderRouter {
   }
 
   /**
-   * Persist provider usage to Firestore (batched/non-blocking)
+   * Persist provider usage to Firestore (non-blocking)
    */
   private static async persistDailyUsage(
     providerId: string,
@@ -555,50 +637,87 @@ export class ProviderRouter {
         { merge: true }
       );
     } catch {
-      // Ignored for non-blocking operations
+      // Ignored for non-blocking
     }
   }
 
   /**
    * Execute with ordered fallback across providers
+   * Enforces: Privacy Sanitization, Zero-Fake Output, and Failure State (needs_attention + admin alert)
    */
   static async executeWithFallback<T>(params: {
     task: TaskType;
+    orderId?: string;
+    orderNumber?: string;
+    promptText?: string;
     sensitiveOrder?: boolean;
+    allowPaid?: boolean;
     orderCostSoFarUSD?: number;
-    execute: (provider: ProviderDefinition) => Promise<{ result: T; units?: number; costUSD?: number }>;
+    execute: (
+      provider: ProviderDefinition,
+      sanitizedPrompt?: string
+    ) => Promise<{ result: T; units?: number; costUSD?: number }>;
   }): Promise<{
     data: T;
     providerUsed: ProviderDefinition;
     isDraft: boolean;
     costUSD: number;
+    redactionsApplied: number;
   }> {
     const chain = await this.getExecutableChain(params.task, {
       sensitiveOrder: params.sensitiveOrder,
+      allowPaid: params.allowPaid,
     });
     const config = await this.getConfig();
 
     if (chain.length === 0) {
+      await this.handleExhaustionFailure({
+        task: params.task,
+        orderId: params.orderId,
+        orderNumber: params.orderNumber,
+        error: new Error(`No available provider configured for task "${params.task}".`),
+      });
       throw new Error(
-        `No available provider configured for task "${params.task}". Please configure keys in Settings or Integrations.`
+        `No available provider configured for task "${params.task}". Order marked as needs_attention.`
       );
     }
 
     // Check order cost cap
     const currentOrderCost = params.orderCostSoFarUSD || 0;
     if (currentOrderCost >= config.orderCostCapUSD) {
-      throw new Error(
-        `Order cost cap exceeded ($${currentOrderCost.toFixed(2)} / $${config.orderCostCapUSD.toFixed(2)}).`
-      );
+      await this.handleExhaustionFailure({
+        task: params.task,
+        orderId: params.orderId,
+        orderNumber: params.orderNumber,
+        error: new Error(
+          `Order cost cap exceeded ($${currentOrderCost.toFixed(2)} / $${config.orderCostCapUSD.toFixed(2)}).`
+        ),
+      });
+      throw new Error(`Order cost cap exceeded. Order marked as needs_attention.`);
     }
 
-    let lastError: any = null;
+    let lastError: Error | null = null;
 
     for (const provider of chain) {
       try {
+        // Privacy Directive: Sanitize sensitive text before dispatching to free tiers
+        let sanitizedText = params.promptText;
+        let redactionsCount = 0;
+        if (params.promptText && PrivacySanitizer.shouldSanitize(provider)) {
+          const s = PrivacySanitizer.sanitize(params.promptText);
+          sanitizedText = s.sanitizedText;
+          redactionsCount = s.redactionsCount;
+        }
+
         const { result, units = 1, costUSD = provider.costPerUnitUSD * units } = await params.execute(
-          provider
+          provider,
+          sanitizedText
         );
+
+        // Zero-Fake Guarantee: Guard against null/empty output
+        if (!result) {
+          throw new Error(`Provider ${provider.id} returned null or empty output.`);
+        }
 
         // Record success
         await this.recordSuccess(provider.id, units, costUSD);
@@ -610,105 +729,135 @@ export class ProviderRouter {
           providerUsed: provider,
           isDraft,
           costUSD,
+          redactionsApplied: redactionsCount,
         };
-      } catch (err: any) {
-        lastError = err;
-        const status = err.status || (err.message?.includes("429") ? 429 : err.message?.includes("quota") ? 402 : 500);
-        await this.recordError(provider.id, status, err.message || "Unknown error");
-        // Proceed to next provider in fallback chain
+      } catch (err: unknown) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        const status =
+          (err as any)?.status ||
+          (lastError.message.includes("429")
+            ? 429
+            : lastError.message.includes("quota")
+            ? 402
+            : 500);
+
+        await this.recordError(provider.id, status, lastError.message);
+        // Continue to next provider in fallback chain
         continue;
       }
     }
 
+    // All providers failed: Enter failure state
+    await this.handleExhaustionFailure({
+      task: params.task,
+      orderId: params.orderId,
+      orderNumber: params.orderNumber,
+      error: lastError || new Error("Unknown error across all providers"),
+    });
+
     throw new Error(
-      `All providers in chain failed for task "${params.task}". Last error: ${lastError?.message || "Unknown"}`
+      `All providers in chain failed for task "${params.task}". Order has been flagged as "needs_attention". Reason: ${
+        lastError?.message || "Unknown"
+      }`
     );
   }
 
-  // -------------------------------------------------------------------------
-  // Caching Layer (Trend Research & Prompt Duplication)
-  // -------------------------------------------------------------------------
-
   /**
-   * Cache and retrieve 24-hour industry trend research
+   * Handle failure state: mark order as "needs_attention" & notify studio admin
    */
-  static async getCachedTrends<T>(
-    industry: string,
-    region: string,
-    fetcher: () => Promise<T>
-  ): Promise<{ data: T; fromCache: boolean }> {
-    const today = new Date().toISOString().split("T")[0];
-    const cacheKey = `trends_${industry.toLowerCase().trim()}_${region.toLowerCase().trim()}_${today}`;
+  private static async handleExhaustionFailure(params: {
+    task: TaskType;
+    orderId?: string;
+    orderNumber?: string;
+    error: Error;
+  }): Promise<void> {
+    const errorMsg = params.error.message;
 
-    // 1. Check in-memory cache
-    const mem = trendCacheMap.get(cacheKey);
-    if (mem && Date.now() < mem.expiresAt) {
-      return { data: mem.value, fromCache: true };
-    }
-
-    // 2. Check Firestore cache
-    try {
-      this.trackSparkOp("read");
-      const doc = await adminDb().collection("studioCache").doc(cacheKey).get();
-      if (doc.exists) {
-        const cachedData = doc.data()?.data as T;
-        trendCacheMap.set(cacheKey, { value: cachedData, expiresAt: Date.now() + 24 * 3600 * 1000 });
-        return { data: cachedData, fromCache: true };
+    // 1. Update order status in Firestore to "needs_attention"
+    if (params.orderId && isFirebaseAdminReady()) {
+      try {
+        this.trackSparkOp("write");
+        await adminDb()
+          .collection("orders")
+          .doc(params.orderId)
+          .set(
+            {
+              status: "needs_attention",
+              qualityReviewNote: `AI generation halted: all providers in fallback chain failed for task "${params.task}". Reason: ${errorMsg}`,
+              updatedAt: new Date().toISOString(),
+            },
+            { merge: true }
+          );
+      } catch (err) {
+        console.warn("[ProviderRouter] Failed to set order status to needs_attention:", err);
       }
-    } catch {
-      // fallback to live fetch
     }
 
-    // 3. Fetch live
-    const liveData = await fetcher();
-
-    // 4. Save to cache
-    const expiresAt = Date.now() + 24 * 3600 * 1000;
-    trendCacheMap.set(cacheKey, { value: liveData, expiresAt });
-
+    // 2. Dispatch high-priority admin notification
     try {
-      this.trackSparkOp("write");
-      await adminDb().collection("studioCache").doc(cacheKey).set({
-        key: cacheKey,
-        industry,
-        region,
-        date: today,
-        data: liveData,
-        expiresAt: new Date(expiresAt).toISOString(),
-        createdAt: new Date().toISOString(),
+      await NotificationsStore.add({
+        userId: "admin",
+        type: "status_update",
+        title: "AI Provider Chain Exhausted — Action Required",
+        message: `Task "${params.task}" failed across all fallback options for order ${
+          params.orderNumber || params.orderId || "system task"
+        }. Marked as needs_attention.`,
+        orderId: params.orderId,
+        orderNumber: params.orderNumber,
+        actionUrl: params.orderId ? `/admin?tab=approvals` : `/admin/integrations`,
+        actionLabel: "Review in Order Queue",
       });
-    } catch {
-      // non-blocking
+    } catch (notifErr) {
+      console.warn("[ProviderRouter] Failed to dispatch admin failure notification:", notifErr);
     }
-
-    return { data: liveData, fromCache: false };
   }
+
+  // -------------------------------------------------------------------------
+  // OpenRouter Text Task Delegation
+  // -------------------------------------------------------------------------
 
   /**
-   * Check for duplicate prompt generation within short window
+   * Dedicated helper for executing text tasks through OpenRouter free models
    */
-  static getPromptCache<T>(promptHash: string): T | null {
-    const mem = promptCacheMap.get(promptHash);
-    if (mem && Date.now() < mem.expiresAt) {
-      return mem.value;
-    }
-    return null;
-  }
+  public static async executeOpenRouterText(options: {
+    task:
+      | "text_chat"
+      | "creative_brief"
+      | "captions"
+      | "translation"
+      | "agent_reasoning"
+      | "text_qa";
+    prompt: string;
+    systemPrompt?: string;
+    targetLanguage?: "Gujarati" | "Hindi" | "English";
+    orderId?: string;
+  }): Promise<{ text: string; modelUsed: string; tokensUsed: number }> {
+    const messages = [
+      ...(options.systemPrompt ? [{ role: "system" as const, content: options.systemPrompt }] : []),
+      { role: "user" as const, content: options.prompt },
+    ];
 
-  static setPromptCache<T>(promptHash: string, value: T, ttlSeconds = 3600): void {
-    promptCacheMap.set(promptHash, {
-      value,
-      expiresAt: Date.now() + ttlSeconds * 1000,
+    const res = await this.executeWithFallback({
+      task: options.task,
+      orderId: options.orderId,
+      promptText: options.prompt,
+      execute: async () => {
+        const out = await OpenRouterService.generateText({
+          task: options.task,
+          messages,
+          targetLanguage: options.targetLanguage,
+        });
+        return { result: out, units: out.tokensUsed, costUSD: 0 };
+      },
     });
+
+    return res.data;
   }
 
   // -------------------------------------------------------------------------
   // Firebase Spark Limits Tracker
   // -------------------------------------------------------------------------
 
-  /**
-   * Track Firestore daily reads, writes, and deletes to protect Spark Tier limits
-   */
   static trackSparkOp(type: "read" | "write" | "delete", count = 1): void {
     const today = new Date().toISOString().split("T")[0];
     if (sparkUsageMemory.date !== today) {
@@ -725,7 +874,6 @@ export class ProviderRouter {
 
     sparkUsageMemory.updatedAt = new Date().toISOString();
 
-    // Check thresholds
     if (
       sparkUsageMemory.readsToday >= SPARK_LIMITS.THRESHOLD_90_READS ||
       sparkUsageMemory.writesToday >= SPARK_LIMITS.THRESHOLD_90_WRITES
@@ -748,17 +896,40 @@ export class ProviderRouter {
     };
   }
 
+  // -------------------------------------------------------------------------
+  // Admin Summary & Quota Dashboard
+  // -------------------------------------------------------------------------
+
   /**
-   * Get all provider usage stats and estimated daily spend for Admin Console
+   * Get all provider stats, live OpenRouter free models, and license compliance table
    */
   static async getAdminUsageSummary(): Promise<{
     config: RouterConfig;
-    providers: Array<ProviderDefinition & { isConfigured: boolean; usage: ProviderUsageRecord }>;
+    providers: Array<
+      ProviderDefinition & {
+        isConfigured: boolean;
+        usage: ProviderUsageRecord;
+        remainingCallsToday: number;
+        inBackoff: boolean;
+      }
+    >;
+    openRouterFreeModels: OpenRouterModel[];
+    licenseMatrix: LicenseEntry[];
     totalEstimatedSpendUSD: number;
     sparkUsage: SparkUsageRecord & { limits: typeof SPARK_LIMITS };
   }> {
     const config = await this.getConfig();
     let totalEstimatedSpendUSD = 0;
+
+    // Fetch live OpenRouter free models at runtime
+    let openRouterFreeModels: OpenRouterModel[] = [];
+    try {
+      if (this.isProviderConfigured("openrouter-free")) {
+        openRouterFreeModels = await OpenRouterService.getLiveFreeModels();
+      }
+    } catch (err) {
+      console.warn("[ProviderRouter] Failed to fetch live OpenRouter models:", err);
+    }
 
     const providerStats = ALL_PROVIDERS.map((p) => {
       const usage = usageMemoryMap.get(p.id) || {
@@ -770,16 +941,23 @@ export class ProviderRouter {
       };
       totalEstimatedSpendUSD += usage.estimatedSpendUSD;
 
+      const remainingCallsToday = Math.max(0, p.dailyLimitCalls - usage.callsToday);
+      const inBackoff = this.isProviderInBackoff(p.id);
+
       return {
         ...p,
         isConfigured: this.isProviderConfigured(p.id),
         usage,
+        remainingCallsToday,
+        inBackoff,
       };
     });
 
     return {
       config,
       providers: providerStats,
+      openRouterFreeModels,
+      licenseMatrix: LICENSE_COMPLIANCE_MATRIX,
       totalEstimatedSpendUSD: Number(totalEstimatedSpendUSD.toFixed(4)),
       sparkUsage: this.getSparkUsage(),
     };

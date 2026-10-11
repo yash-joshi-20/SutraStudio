@@ -213,6 +213,23 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
     ],
   },
   {
+    id: "openrouter",
+    name: "OpenRouter Free Models",
+    group: "AI Providers",
+    description: "Free-first provider routing engine dynamically querying :free models for text chat, briefs, captions, and translations.",
+    features: ["Rule 9 Free-First Routing", "Discipline 7 Editorial Copy", "Social Captions", "Translation (Gujarati/Hindi/English)"],
+    priority: "HIGH",
+    whereToGet: "https://openrouter.ai/keys → Create Key",
+    requirements: [
+      { key: "OPENROUTER_API_KEY", label: "OpenRouter API Key", whereToGet: "OpenRouter Console" },
+    ],
+    manualSteps: [
+      "Create account at https://openrouter.ai.",
+      "Generate API Key under keys menu.",
+      "Configure OPENROUTER_API_KEY in .env.local.",
+    ],
+  },
+  {
     id: "flux",
     name: "FLUX / BFL Pro",
     group: "AI Providers",

@@ -28,6 +28,7 @@ import {
   Tag,
   Megaphone,
   BookOpen,
+  Cpu,
   type LucideIcon,
 } from "lucide-react";
 
@@ -76,6 +77,7 @@ export const ADMIN_NAV_ITEMS: PortalNavItem[] = [
   { name: "Workflows (n8n)", href: "/admin?tab=workflows", tabKey: "workflows", icon: FolderGit2 },
   { name: "Studio Settings & GST", href: "/admin?tab=settings", tabKey: "settings", icon: Sliders },
   { name: "Integrations & Keys", href: "/admin/integrations", icon: Sliders },
+  { name: "Provider Router & Quotas", href: "/admin/provider-router", icon: Cpu },
   { name: "Security Audit Log", href: "/admin?tab=audit", tabKey: "audit", icon: ShieldCheck },
 ];
 
