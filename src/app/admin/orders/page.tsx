@@ -326,7 +326,7 @@ export default function AdminOrdersPage() {
 
   return (
     <RouteGuard requiredRole="admin">
-      <div className="min-h-screen bg-[#F8F5EF] text-[#0F172A] p-4 sm:p-6 lg:p-8">
+      <div className="min-h-screen bg-[#F8F5EF] text-[#0F172A] p-4 sm:p-6 lg:p-8 pb-24 sm:pb-8">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Top Bar Navigation */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#EADFCB]">

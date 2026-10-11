@@ -232,8 +232,8 @@ export default function OutreachDeskPage() {
               <LotusSymbol className="w-6 h-6" color="gold" />
               <span className="font-serif font-bold text-sm tracking-wider">SUTRA STUDIO</span>
             </Link>
-            <span className="text-xs text-[#94A3B8]">/</span>
-            <div className="flex items-center gap-1.5 text-xs text-[#64748B]">
+            <span className="hidden md:inline text-xs text-[#94A3B8]">/</span>
+            <div className="hidden md:flex items-center gap-1.5 text-xs text-[#64748B]">
               <Link href="/admin" className="hover:text-[#5C3A1E] font-medium transition-colors">
                 Admin Console
               </Link>
@@ -245,23 +245,25 @@ export default function OutreachDeskPage() {
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
               href="/admin/orders"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] hover:border-[#D4A35A] hover:bg-[#FFFFFF] text-xs font-semibold text-[#5C3A1E] transition-all shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] hover:border-[#D4A35A] hover:bg-[#FFFFFF] text-xs font-semibold text-[#5C3A1E] transition-all shadow-2xs"
             >
               <Layers className="w-3.5 h-3.5" />
-              <span>Orders Pipeline</span>
+              <span className="hidden sm:inline">Orders Pipeline</span>
+              <span className="sm:hidden text-[11px]">Orders</span>
             </Link>
             <Link
               href="/admin/marketing"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] hover:border-[#D4A35A] hover:bg-[#FFFFFF] text-xs font-semibold text-[#8C6D32] transition-all shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] hover:border-[#D4A35A] hover:bg-[#FFFFFF] text-xs font-semibold text-[#8C6D32] transition-all shadow-2xs"
             >
               <Sparkles className="w-3.5 h-3.5 text-[#A98B57]" />
-              <span>Marketing Hub</span>
+              <span className="hidden sm:inline">Marketing Hub</span>
+              <span className="sm:hidden text-[11px]">Marketing</span>
             </Link>
             <NotificationBell align="right" />
           </div>
         </header>
 
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 pb-24 sm:pb-8">
           {/* Main Title & Compliance Shield */}
           <div className="rounded-3xl bg-gradient-to-r from-[#FFFDF9] via-[#FAF6EE] to-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-warm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="space-y-2">
