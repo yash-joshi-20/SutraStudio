@@ -110,9 +110,9 @@ Creative & digital atelier delivering visual production, software engineering & 
 • Long About / Story (768 chars):
 Sutra Studios is a creative technology and digital production atelier. We partner with emerging and established brands to build distinctive visual identities, commercial visual assets, high-impact brand campaigns, and bespoke software solutions.
 
-Our 12 integrated creative disciplines include Commercial Visual Imagery (from ₹2,499), Cinematic Motion Reels (from ₹4,999), Spatial 3D Asset Modeling (from ₹5,999), 360° Spherical Panoramic Tours (from ₹7,999), Interior Architectural Visualization (from ₹6,499), Facade & Window Design (from ₹4,499), Brand & Editorial Strategy (from ₹8,999), Campaign Creative Suites (from ₹7,499), Website Engineering, Web Applications, Mobile Applications, and Custom Systems & Integrations.
+Our 12 integrated creative disciplines include Commercial & Product Image Creation (from ₹99), Promotional Video & Reel Production (from ₹199), 3D Product Modeling & Visualization (from ₹999), 360° Virtual Tours (from ₹2,999), Interior 3D Visualization (from ₹1,499), Exterior 3D Visualization (from ₹1,999), AI-Powered Digital Marketing (from ₹999), Meta Ads Campaign Management (from ₹4,999), Website Design & Development (from ₹4,999), Web Applications, Mobile App Prototypes, and Custom Systems.
 
-We provide transparent standalone commission pricing alongside dedicated monthly retainer partnerships starting from ₹14,999/month. Connect with our studio team to commission your next project.
+We provide transparent standalone commission pricing alongside dedicated monthly retainer partnerships starting from ₹9,999/month (Starter Trend). Connect with our studio team to commission your next project.
 
 • Instant Reply (263 chars):
 Hello and welcome to Sutra Studios. Thank you for contacting our creative atelier. We have received your message and our studio team will review your inquiry within two business hours. You can also explore our full service catalog and pricing at sutrastudios.in.
@@ -481,11 +481,11 @@ ${WHATSAPP_CATALOG_FULL_EXPORT}
                     </div>
                     <div className="p-4 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-3">
                       <p className="text-xs text-[#171717] leading-relaxed whitespace-pre-line">
-                        {`Sutra Studios is a creative technology and digital production atelier. We partner with emerging and established brands to build distinctive visual identities, commercial visual assets, high-impact brand campaigns, and bespoke software solutions.\n\nOur 12 integrated creative disciplines include Commercial Visual Imagery (from ₹2,499), Cinematic Motion Reels (from ₹4,999), Spatial 3D Asset Modeling (from ₹5,999), 360° Spherical Panoramic Tours (from ₹7,999), Interior Architectural Visualization (from ₹6,499), Facade & Window Design (from ₹4,499), Brand & Editorial Strategy (from ₹8,999), Campaign Creative Suites (from ₹7,499), Website Engineering, Web Applications, Mobile Applications, and Custom Systems & Integrations.\n\nWe provide transparent standalone commission pricing alongside dedicated monthly retainer partnerships starting from ₹14,999/month. Connect with our studio team to commission your next project.`}
+                        {`Sutra Studios is a creative technology and digital production atelier. We partner with emerging and established brands to build distinctive visual identities, commercial visual assets, high-impact brand campaigns, and bespoke software solutions.\n\nOur 12 integrated creative disciplines include Commercial & Product Image Creation (from ₹99), Promotional Video & Reel Production (from ₹199), 3D Product Modeling & Visualization (from ₹999), 360° Virtual Tours (from ₹2,999), Interior 3D Visualization (from ₹1,499), Exterior 3D Visualization (from ₹1,999), AI-Powered Digital Marketing (from ₹999), Meta Ads Campaign Management (from ₹4,999), Website Design & Development (from ₹4,999), Web Applications, Mobile App Prototypes, and Custom Systems.\n\nWe provide transparent standalone commission pricing alongside dedicated monthly retainer partnerships starting from ₹9,999/month (Starter Trend). Connect with our studio team to commission your next project.`}
                       </p>
                       <div className="flex justify-end pt-1">
                         <CopyButton
-                          text={`Sutra Studios is a creative technology and digital production atelier. We partner with emerging and established brands to build distinctive visual identities, commercial visual assets, high-impact brand campaigns, and bespoke software solutions.\n\nOur 12 integrated creative disciplines include Commercial Visual Imagery (from ₹2,499), Cinematic Motion Reels (from ₹4,999), Spatial 3D Asset Modeling (from ₹5,999), 360° Spherical Panoramic Tours (from ₹7,999), Interior Architectural Visualization (from ₹6,499), Facade & Window Design (from ₹4,499), Brand & Editorial Strategy (from ₹8,999), Campaign Creative Suites (from ₹7,499), Website Engineering, Web Applications, Mobile Applications, and Custom Systems & Integrations.\n\nWe provide transparent standalone commission pricing alongside dedicated monthly retainer partnerships starting from ₹14,999/month. Connect with our studio team to commission your next project.`}
+                          text={`Sutra Studios is a creative technology and digital production atelier. We partner with emerging and established brands to build distinctive visual identities, commercial visual assets, high-impact brand campaigns, and bespoke software solutions.\n\nOur 12 integrated creative disciplines include Commercial & Product Image Creation (from ₹99), Promotional Video & Reel Production (from ₹199), 3D Product Modeling & Visualization (from ₹999), 360° Virtual Tours (from ₹2,999), Interior 3D Visualization (from ₹1,499), Exterior 3D Visualization (from ₹1,999), AI-Powered Digital Marketing (from ₹999), Meta Ads Campaign Management (from ₹4,999), Website Design & Development (from ₹4,999), Web Applications, Mobile App Prototypes, and Custom Systems.\n\nWe provide transparent standalone commission pricing alongside dedicated monthly retainer partnerships starting from ₹9,999/month (Starter Trend). Connect with our studio team to commission your next project.`}
                           id="fb-long-about"
                           copiedId={copiedId}
                           onCopy={copyToClipboard}
@@ -1645,11 +1645,11 @@ const FACEBOOK_LAUNCH_POSTS = [
 const WHATSAPP_QUICK_REPLIES = [
   {
     shortcut: "/services",
-    text: "We offer 12 core creative and digital disciplines: Commercial Visual Imagery (from ₹2,499), Cinematic Motion Reels (from ₹4,999), Spatial 3D Models (from ₹5,999), 360° Panoramic Tours (from ₹7,999), Interior Architectural Visualization (from ₹6,499), Facade & Window Design (from ₹4,499), Brand & Editorial Strategy (from ₹8,999), Campaign Creative Suite (from ₹7,499), and custom Web, Web App, Mobile & Systems Engineering by quote. View catalog: https://sutrastudios.in/services",
+    text: "We offer 12 core creative and digital disciplines: Commercial & Product Image Creation (from ₹99), Promotional Video & Reel Production (from ₹199), 3D Product Modeling (from ₹999), 360° Virtual Tours (from ₹2,999), Interior 3D Visualization (from ₹1,499), Exterior 3D Visualization (from ₹1,999), AI-Powered Digital Marketing (from ₹999), Meta Ads (from ₹4,999), Website Design & Development (from ₹4,999), and custom Web App, Mobile & Systems Engineering. View catalog: https://sutrastudios.in/services",
   },
   {
     shortcut: "/retainers",
-    text: "Sutra Studios offers 3 dedicated monthly creative retainers: Starter Creative Retainer (₹14,999/mo), Growth Brand Retainer (₹29,999/mo), and Enterprise Brand Atelier (₹59,999/mo). Review package details at: https://sutrastudios.in/pricing",
+    text: "Sutra Studios offers 3 dedicated monthly creative packages: Starter Trend (₹9,999/mo), Growth Trend (₹14,999/mo), and Daily Trend Creator (₹19,999/mo). Review package details at: https://sutrastudios.in/pricing",
   },
   {
     shortcut: "/quote",
@@ -1661,152 +1661,152 @@ const WHATSAPP_QUICK_REPLIES = [
 const WHATSAPP_CATALOG_ITEMS = [
   {
     id: "img-creation",
-    name: "Commercial Visual Imagery",
-    price: "Starting from ₹2,499 (3-Pack)",
+    name: "Commercial & Product Image Creation",
+    price: "Starting from ₹99 (Single) / ₹249 (3-Pack)",
     description: "High-fidelity commercial product imagery, luxury brand mockups, and advertising visual assets.",
     link: "https://sutrastudios.in/services#image-creation",
   },
   {
     id: "vid-creation",
-    name: "Cinematic Motion Reel",
-    price: "Starting from ₹4,999 (10–15s Master Reel)",
-    description: "Engaging 10-to-15 second cinematic video ads, social reels, motion sequences, and commercial clips.",
+    name: "Promotional Video & Reel Production",
+    price: "Starting from ₹199 (10s Edit) / ₹499 (Promo Reel)",
+    description: "Engaging 10-to-30 second cinematic video ads, social reels, motion sequences, and commercial clips.",
     link: "https://sutrastudios.in/services#video-creation",
   },
   {
     id: "3d-modeling",
-    name: "Spatial 3D Asset Model",
-    price: "Starting from ₹5,999 (.GLB Interactive Model)",
+    name: "3D Product Modeling & Visualization",
+    price: "Starting from ₹999 (Render) / ₹2,999 (Model)",
     description: "Precision 3D product CAD modeling, studio product lighting setups, exploded views, and web-ready 3D assets.",
     link: "https://sutrastudios.in/services#3d-modeling",
   },
   {
     id: "360-view",
-    name: "360° Spherical Panoramic Tour",
-    price: "Starting from ₹7,999 (Panoramic VR Master)",
+    name: "360° Virtual Tours",
+    price: "Starting from ₹2,999 (Supplied Panoramas)",
     description: "Immersive 360-degree interactive panoramic virtual tours for luxury villas, hospitality, and showrooms.",
     link: "https://sutrastudios.in/services#360-view",
   },
   {
     id: "interior-design",
-    name: "Interior Architectural Visualization",
-    price: "Starting from ₹6,499 (Spatial Room Renders)",
+    name: "Interior 3D Visualization",
+    price: "Starting from ₹1,499 (Per View) / ₹4,999 (Single Room)",
     description: "Photorealistic interior architectural visualization, luxury room staging, lighting studies, and material palettes.",
     link: "https://sutrastudios.in/services#interior-design",
   },
   {
     id: "window-design",
-    name: "Facade & Window Design",
-    price: "Starting from ₹4,499 (Facade & Storefront)",
+    name: "Exterior 3D Visualization",
+    price: "Starting from ₹1,999 (Per View)",
     description: "Architectural window framing, modern facade elevations, and custom glass architectural visualization.",
     link: "https://sutrastudios.in/services#window-design",
   },
   {
     id: "digital-marketing",
-    name: "Brand & Editorial Strategy",
-    price: "Starting from ₹8,999 (Campaign Strategy)",
+    name: "AI-Powered Digital Marketing",
+    price: "Starting from ₹999 (Content Calendar) / ₹1,499 (Research)",
     description: "Data-driven creative growth strategies, content blueprints, audience profiling, and brand storytelling campaigns.",
     link: "https://sutrastudios.in/services#digital-marketing",
   },
   {
     id: "meta-ads-launcher",
-    name: "Campaign Creative Suite",
-    price: "Starting from ₹7,499 (Multi-Ratio Creative Suite)",
+    name: "Meta Ads Campaign Management",
+    price: "Starting from ₹4,999 / mo (Ad Spend Excluded)",
     description: "End-to-end Facebook & Instagram ad campaign setups, high-converting creative ad variations, copy testing, and optimization.",
     link: "https://sutrastudios.in/services#meta-ads-launcher",
   },
   {
     id: "website-development",
-    name: "Website Engineering",
-    price: "By Quote",
-    description: "High-performance, bespoke websites engineered with Next.js, fluid micro-interactions, and fast loading.",
+    name: "Website Design & Development",
+    price: "Starting from ₹4,999 (Landing) / ₹14,999 (Business Web)",
+    description: "High-performance, bespoke websites engineered with Next.js, fluid micro-interactions, responsive precision, and fast loading.",
     link: "https://sutrastudios.in/services#website-development",
   },
   {
     id: "web-app-development",
-    name: "Web Application Engineering",
-    price: "By Quote",
+    name: "Web Application & Client Portal MVP",
+    price: "Starting from ₹19,999 (Prototype Scope)",
     description: "Robust SaaS applications, custom client portals, real-time collaboration dashboards, and secure backend integrations.",
     link: "https://sutrastudios.in/services#web-app-development",
   },
   {
     id: "mobile-app-setup",
-    name: "Mobile Application Engineering",
-    price: "By Quote",
+    name: "Mobile App UI Prototype",
+    price: "Starting from ₹9,999 (UI Prototype)",
     description: "Cross-platform bespoke iOS & Android mobile applications sharing unified cloud backends and APIs.",
     link: "https://sutrastudios.in/services#mobile-app-setup",
   },
   {
     id: "workflow-automation",
-    name: "Custom Systems & Integrations",
-    price: "By Quote",
+    name: "Workflow Automation & AI Integration",
+    price: "Internal Operational Engine",
     description: "Custom business operational systems, secure cloud webhook integrations, data synchronization, and automated project routing.",
     link: "https://sutrastudios.in/services#workflow-automation",
   },
   {
     id: "monthly-retainers",
-    name: "Monthly Creative Retainers",
-    price: "From ₹14,999 / mo",
-    description: "Dedicated studio retainer partnerships (Starter, Growth, Enterprise) with prioritized queues and continuous production.",
+    name: "Monthly Content Packages",
+    price: "From ₹9,999 / mo (Starter Trend)",
+    description: "Dedicated studio retainer partnerships (Starter Trend ₹9,999, Growth Trend ₹14,999, Daily Trend Creator ₹19,999) with continuous production.",
     link: "https://sutrastudios.in/pricing",
   },
 ];
 
 const FACEBOOK_SERVICES_LIST_TEXT = `SUTRA STUDIOS — OFFICIAL SERVICE CATALOG
 
-1. Commercial Visual Imagery — Starting from ₹2,499 (3-Pack)
+1. Commercial & Product Image Creation — Starting from ₹99 (Single) / ₹249 (3-Pack)
 High-fidelity commercial product imagery, luxury brand mockups, and advertising visual assets.
 Order / Inquire: https://sutrastudios.in/services#image-creation
 
-2. Cinematic Motion Reel — Starting from ₹4,999 (10–15s Master Reel)
-Engaging 10-to-15 second cinematic video ads, social reels, motion sequences, and commercial clips.
+2. Promotional Video & Reel Production — Starting from ₹199 (10s Edit) / ₹499 (Promo Reel)
+Engaging 10-to-30 second cinematic video ads, social reels, motion sequences, and commercial clips.
 Order / Inquire: https://sutrastudios.in/services#video-creation
 
-3. Spatial 3D Asset Model — Starting from ₹5,999 (.GLB Interactive Model)
+3. 3D Product Modeling & Visualization — Starting from ₹999 (Render) / ₹2,999 (Model)
 Precision 3D product CAD modeling, studio product lighting setups, exploded views, and web-ready 3D assets.
 Order / Inquire: https://sutrastudios.in/services#3d-modeling
 
-4. 360° Spherical Panoramic Tour — Starting from ₹7,999 (Panoramic VR Master)
+4. 360° Virtual Tours — Starting from ₹2,999 (Supplied Panoramas)
 Immersive 360-degree interactive panoramic virtual tours for luxury villas, hospitality, and showrooms.
 Order / Inquire: https://sutrastudios.in/services#360-view
 
-5. Interior Architectural Visualization — Starting from ₹6,499 (Spatial Room Renders)
+5. Interior 3D Visualization — Starting from ₹1,499 (Per View) / ₹4,999 (Single Room)
 Photorealistic interior architectural visualization, luxury room staging, lighting studies, and material palettes.
 Order / Inquire: https://sutrastudios.in/services#interior-design
 
-6. Facade & Window Design — Starting from ₹4,499 (Facade & Storefront)
+6. Exterior 3D Visualization — Starting from ₹1,999 (Per View)
 Architectural window framing, modern facade elevations, and custom glass architectural visualization.
 Order / Inquire: https://sutrastudios.in/services#window-design
 
-7. Brand & Editorial Strategy — Starting from ₹8,999 (Campaign Strategy)
+7. AI-Powered Digital Marketing — Starting from ₹999 (Content Calendar) / ₹1,499 (Research)
 Data-driven creative growth strategies, content blueprints, audience profiling, and brand storytelling campaigns.
 Order / Inquire: https://sutrastudios.in/services#digital-marketing
 
-8. Campaign Creative Suite — Starting from ₹7,499 (Multi-Ratio Creative Suite)
+8. Meta Ads Campaign Management — Starting from ₹4,999 / mo (Ad Spend Excluded)
 End-to-end Facebook & Instagram ad campaign setups, creative variations, copy testing, and optimization.
 Order / Inquire: https://sutrastudios.in/services#meta-ads-launcher
 
-9. Website Engineering — By Quote
+9. Website Design & Development — Starting from ₹4,999 (Landing) / ₹14,999 (Business Web)
 High-performance, bespoke websites engineered with Next.js, fluid micro-interactions, responsive precision, and fast loading.
 Order / Inquire: https://sutrastudios.in/services#website-development
 
-10. Web Application Engineering — By Quote
+10. Web Application & Client Portal MVP — Starting from ₹19,999 (Prototype Scope)
 Robust SaaS applications, custom client portals, real-time collaboration dashboards, and secure backend integrations.
 Order / Inquire: https://sutrastudios.in/services#web-app-development
 
-11. Mobile Application Engineering — By Quote
+11. Mobile App UI Prototype — Starting from ₹9,999 (UI Prototype)
 Cross-platform bespoke iOS & Android mobile applications sharing unified cloud backends and APIs.
 Order / Inquire: https://sutrastudios.in/services#mobile-app-setup
 
-12. Custom Systems & Integrations — By Quote
+12. Workflow Automation & AI Integration — Internal Operational Engine
 Custom business operational systems, secure cloud webhook integrations, data synchronization, and automated project routing.
 Order / Inquire: https://sutrastudios.in/services#workflow-automation
 
-✦ MONTHLY CREATIVE RETAINERS
-• Starter Creative Retainer: ₹14,999 / month
-• Growth Brand Retainer: ₹29,999 / month
-• Enterprise Brand Atelier: ₹59,999 / month
-Explore Retainers: https://sutrastudios.in/pricing`;
+✦ MONTHLY CONTENT PACKAGES
+• Starter Trend: ₹9,999 / month (15 images + 15 videos)
+• Growth Trend: ₹14,999 / month (20 images + 20 videos)
+• Daily Trend Creator: ₹19,999 / month (30 images + 30 videos)
+Explore Packages: https://sutrastudios.in/pricing`;
 
 const WHATSAPP_CATALOG_FULL_EXPORT = WHATSAPP_CATALOG_ITEMS.map(
   (item, idx) =>

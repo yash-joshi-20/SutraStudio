@@ -20,9 +20,9 @@ export async function POST(req: Request) {
       "Creative & digital atelier delivering visual production, software engineering & brand growth.";
     const canonicalFacebookDescription = `Sutra Studios is a creative technology and digital production atelier. We partner with emerging and established brands to build distinctive visual identities, commercial visual assets, high-impact brand campaigns, and bespoke software solutions.
 
-Our 12 integrated creative disciplines include Commercial Visual Imagery (from ₹2,499), Cinematic Motion Reels (from ₹4,999), Spatial 3D Asset Modeling (from ₹5,999), 360° Spherical Panoramic Tours (from ₹7,999), Interior Architectural Visualization (from ₹6,499), Facade & Window Design (from ₹4,499), Brand & Editorial Strategy (from ₹8,999), Campaign Creative Suites (from ₹7,499), Website Engineering, Web Applications, Mobile Applications, and Custom Systems & Integrations.
+Our 12 integrated creative disciplines include Commercial & Product Image Creation (from ₹99), Promotional Video & Reel Production (from ₹199), 3D Product Modeling & Visualization (from ₹999), 360° Virtual Tours (from ₹2,999), Interior 3D Visualization (from ₹1,499), Exterior 3D Visualization (from ₹1,999), AI-Powered Digital Marketing (from ₹999), Meta Ads Campaign Management (from ₹4,999), Website Design & Development (from ₹4,999), Web Applications, Mobile App Prototypes, and Custom Systems.
 
-We provide transparent standalone commission pricing alongside dedicated monthly retainer partnerships starting from ₹14,999/month. Connect with our studio team to commission your next project.`;
+We provide transparent standalone commission pricing alongside dedicated monthly retainer partnerships starting from ₹9,999/month (Starter Trend). Connect with our studio team to commission your next project.`;
 
     const canonicalWhatsAppAbout = "Sutra Studios — Creative & Software Atelier";
     const canonicalWhatsAppDescription =

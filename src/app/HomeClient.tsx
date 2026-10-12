@@ -47,14 +47,14 @@ const FILTER_CATEGORIES = [
 ];
 
 const HERO_DISCIPLINES = [
-  { id: "image-creation", label: "Image Creation", output: "4K UHD Master Visuals", price: "From ₹99", href: "/services#image-creation" },
-  { id: "video-creation", label: "Video Reel", output: "Commercial Short Cuts & Reels", price: "From ₹199", href: "/services#video-creation" },
-  { id: "3d-modeling", label: "3D Spatial", output: "4K Render & Precision GLB/OBJ", price: "From ₹999", href: "/services#3d-modeling" },
-  { id: "360-view", label: "360 VR Tour", output: "Digital & On-Site Virtual Tour", price: "From ₹2,999", href: "/services#360-view" },
-  { id: "interior-design", label: "Interior Viz", output: "Photorealistic Room & Floor Plan", price: "From ₹1,499", href: "/services#interior-design" },
-  { id: "meta-ads-launcher", label: "Meta Ads", output: "Campaign Architecture & Tuning", price: "₹4,999/mo", href: "/services#meta-ads-launcher" },
-  { id: "digital-marketing", label: "Digital Marketing", output: "Content Calendar & Trend Intel", price: "From ₹999", href: "/services#digital-marketing" },
-  { id: "website-development", label: "Web Atelier", output: "Landing Page & Web App Prototype", price: "From ₹4,999", href: "/services#website-development" },
+  { id: "image-creation", label: "Product & Brand Imagery", output: "4K UHD Photorealistic Visuals", href: "/services#image-creation" },
+  { id: "video-creation", label: "Promotional Reels & Shorts", output: "Commercial Video Cuts & Voiceover", href: "/services#video-creation" },
+  { id: "3d-modeling", label: "3D Product Modeling", output: "Interactive CAD & WebGL Assets", href: "/services#3d-modeling" },
+  { id: "360-view", label: "360° Virtual Tours", output: "Digital & On-Site Virtual Spaces", href: "/services#360-view" },
+  { id: "interior-design", label: "Interior 3D Visualization", output: "Photorealistic Room & Spatial CGI", href: "/services#interior-design" },
+  { id: "meta-ads-launcher", label: "Meta Ads Campaign", output: "Direct-Response Ad Creative Architecture", href: "/services#meta-ads-launcher" },
+  { id: "digital-marketing", label: "Digital Marketing & Strategy", output: "Editorial Content Calendars & Trends", href: "/services#digital-marketing" },
+  { id: "website-development", label: "Website Design & Development", output: "High-Performance Next.js Web Platforms", href: "/services#website-development" },
 ];
 
 export default function HomePage() {
@@ -127,27 +127,29 @@ export default function HomePage() {
                             key={disc.id}
                             type="button"
                             onClick={() => setActiveHeroDiscipline(disc.id)}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                            className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                               isSelected
                                 ? "bg-[#5C3A1E] text-white shadow-xs font-semibold ring-1 ring-[#D4A35A]"
                                 : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A] hover:text-[#0F172A]"
                             }`}
                           >
                             <span>{disc.label}</span>
-                            <span className={`ml-1.5 text-[10px] font-mono ${isSelected ? "text-[#D4A35A]" : "text-[#A98B57]"}`}>
-                              {disc.price}
-                            </span>
                           </button>
                         );
                       })}
                     </div>
                   </div>
 
-                  {/* Action Button */}
+                  {/* Action Buttons */}
                   <div className="hero-cta flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-2">
                     <Link href={activeDisciplineData.href || "/orders"} className="w-full sm:w-auto">
                       <Button variant="primary" size="lg" withArrow className="w-full sm:w-auto shadow-warm justify-center">
-                        Start Commission ({activeDisciplineData.price})
+                        Start a Project
+                      </Button>
+                    </Link>
+                    <Link href="/services" className="w-full sm:w-auto">
+                      <Button variant="secondary" size="lg" className="w-full sm:w-auto justify-center">
+                        Explore Services
                       </Button>
                     </Link>
                   </div>
@@ -269,8 +271,8 @@ export default function HomePage() {
                                 </p>
                               </div>
                             </div>
-                            <span className="text-xs font-mono font-bold text-[#5C3A1E]">
-                              {activeDisciplineData.price}
+                            <span className="text-[11px] font-semibold text-[#A98B57] bg-[#FAF8F5] px-2.5 py-1 rounded-full border border-[#EADFCB]">
+                              Studio Verified
                             </span>
                           </div>
                         </div>

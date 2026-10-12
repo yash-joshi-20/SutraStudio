@@ -1477,7 +1477,7 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
   {
     id: "img-creation",
     slug: "image-creation",
-    name: "Commercial Visual Imagery",
+    name: "Commercial & Product Image Creation",
     category: "Creative",
     tagline: "Commercial Visuals & Key Brand Imagery",
     description:
@@ -1518,7 +1518,7 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
   {
     id: "vid-creation",
     slug: "video-creation",
-    name: "Cinematic Motion Reel",
+    name: "Promotional Video & Reel Production",
     category: "Creative",
     tagline: "Cinematic Ads, Commercial Reels & Shorts",
     description:
@@ -1559,7 +1559,7 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
   {
     id: "3d-modeling",
     slug: "3d-modeling",
-    name: "Spatial 3D Asset Model",
+    name: "3D Product Modeling & Visualization",
     category: "Design",
     tagline: "High-Precision CAD & Interactive 3D Models",
     description:
@@ -1600,7 +1600,7 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
   {
     id: "360-view",
     slug: "360-view",
-    name: "360° Spherical Panoramic Tour",
+    name: "360° Virtual Tours",
     category: "Design",
     tagline: "Immersive Panoramic Virtual Tours",
     description:
@@ -1641,7 +1641,7 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
   {
     id: "interior-design",
     slug: "interior-design",
-    name: "Interior Architecture & Spatial Staging",
+    name: "Interior 3D Visualization",
     category: "Design",
     tagline: "Photorealistic Spaces, Staging & CAD Elevations",
     description:
@@ -1682,7 +1682,7 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
   {
     id: "window-design",
     slug: "window-design",
-    name: "Window & Facade Architectural Design",
+    name: "Exterior 3D Visualization",
     category: "Design",
     tagline: "Architectural Elevation Profiles & Exterior Facades",
     description:
@@ -1723,7 +1723,7 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
   {
     id: "digital-marketing",
     slug: "digital-marketing",
-    name: "Digital Marketing & Growth Strategy",
+    name: "AI-Powered Digital Marketing",
     category: "Marketing",
     tagline: "Comprehensive Content Matrices & Growth Playbooks",
     description:
@@ -1764,7 +1764,7 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
   {
     id: "meta-ads",
     slug: "meta-ads",
-    name: "Meta Ads Campaign Launcher",
+    name: "Meta Ads Campaign Management",
     category: "Marketing",
     tagline: "High-Converting Facebook & Instagram Ad Creative Packs",
     description:
@@ -1805,7 +1805,7 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
   {
     id: "website-development",
     slug: "website-development",
-    name: "High-Performance Website Development",
+    name: "Website Design & Development",
     category: "Development",
     tagline: "Fast, Bespoke Next.js 16 Web Experiences",
     description:
@@ -1846,7 +1846,7 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
   {
     id: "web-app-development",
     slug: "web-app-development",
-    name: "Web Application & Client Portal",
+    name: "Web Application & Client Portal MVP",
     category: "Development",
     tagline: "Custom SaaS Dashboards, Client Portals & Web Apps",
     description:
@@ -1887,7 +1887,7 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
   {
     id: "mobile-app-setup",
     slug: "mobile-app-setup",
-    name: "Cross-Platform Mobile Application",
+    name: "Mobile App UI Prototype",
     category: "Development",
     tagline: "React Native Expo Mobile Applications for iOS & Android",
     description:

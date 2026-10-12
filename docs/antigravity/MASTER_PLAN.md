@@ -25,10 +25,11 @@
 | **Step 08** | **Checkout & Payment Engine Alignment** | Verify UPI QR payments, draft confirmation `/orders/confirm`, amount display, UTR validation, zero client-trust rules. | **COMPLETED** | `npm run test:payments` (41/41 PASS), zero client amount trust |
 | **Step 09** | **Admin Dashboard & Catalog Controls** | Update `src/app/admin/orders/page.tsx` and `AdminClient.tsx` to support canonical services, plans, and order displays. | **COMPLETED** | `npm run test:admin-catalog` (13/13 PASS), audit logs & ceiling enforcement |
 | **Step 10** | **Comprehensive QA & Delivery** | Full regression run (`test:env`, `test:security`, `test:responsive`, `typecheck`, `lint`), route check, and generate `QA_REPORT.md`. | **COMPLETED** | `docs/antigravity/QA_REPORT.md`, 76/76 route & pricing assertions PASS, 0 errors |
+| **Step 11** | **Global Pricing, Branding & UI Consistency Fix** | Remove pricing from hero sections, standardize professional service names, align chatbot knowledge & local fallback synthesizers, update budget options. | **COMPLETED** | `PRICING_AUDIT.md`, `test:catalog` (125/125 PASS), `test:orders` (48/48 PASS), `typecheck` (0 errors) |
 
 ---
 
-## Step 00 to Step 10 Milestones Summary
+## Step 00 to Step 11 Milestones Summary
 
 - **Step 00 — Audit**: Completed with exhaustive 10-section audit report [AUDIT_REPORT.md](file:///d:/SutraStudio/docs/antigravity/AUDIT_REPORT.md).
 - **Step 01 — Catalog**: Completed with single canonical source in `services.ts`, `packages.ts`, and `pricing.ts`. 125/125 unit tests passed.
@@ -40,3 +41,4 @@
 - **Step 08 — UPI QR Payments**: Authenticated payment modal locked to authoritative order totals. UTR submission recorded as `pending_verification` (never auto-paid).
 - **Step 09 — Admin Controls**: Admin catalog controls enforce strict ₹20,000 ceiling, INR currency, and audit logging.
 - **Step 10 — QA Verification**: All tests passed: `npm run typecheck` (0 errors), `npx eslint --quiet` (0 errors), `test:catalog` (125/125), `test:orders` (48/48), `test:payments` (41/41), `test:responsive` (44/44), `test:services` (28/28), `test:security` (59/59), `test:env` (19/19), `test:admin-catalog` (13/13), `test:client-ownership` (10/10), `test:integrations` (40/40), and comprehensive route QA (76/76).
+- **Step 11 — Global Consistency & Hero Cleanup**: Hero section starting prices removed. Service terminology standardized to professional names (*Commercial & Product Image Creation*, *Promotional Video & Reel Production*, *3D Product Modeling & Visualization*, etc.). AI chatbot knowledge bases & fallback synthesizers synchronized with canonical rates. Tested and verified.

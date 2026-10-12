@@ -158,7 +158,7 @@ async function runTests() {
       what: "SYSTEM_CONFIG_UPDATED",
       targetType: "system",
       targetId: "img-creation",
-      targetTitle: "Service: Commercial Visual Imagery",
+      targetTitle: "Service: Commercial & Product Image Creation",
       before: { startingPrice: 99 },
       after: { startingPrice: 199 },
       note: "Test audit logging of price change",

@@ -176,7 +176,7 @@ export const INTAKE_PACKAGES: IntakePackageOption[] = [
 export const INTAKE_SERVICES: IntakeServiceOption[] = [
   {
     id: "img-creation",
-    title: "Commercial Visual Imagery",
+    title: "Commercial & Product Image Creation",
     category: "Creative & Brand",
     basePrice: 99,
     turnaround: "24–48h SLA",
@@ -185,7 +185,7 @@ export const INTAKE_SERVICES: IntakeServiceOption[] = [
   },
   {
     id: "vid-creation",
-    title: "Cinematic Motion Reel",
+    title: "Promotional Video & Reel Production",
     category: "Video & Motion",
     basePrice: 199,
     turnaround: "24–48h SLA",
@@ -194,7 +194,7 @@ export const INTAKE_SERVICES: IntakeServiceOption[] = [
   },
   {
     id: "des-brand-identity",
-    title: "Brand Identity & Design System",
+    title: "Brand Identity Starter",
     category: "Creative & Brand",
     basePrice: 2999,
     turnaround: "3–5 Days SLA",
@@ -203,7 +203,7 @@ export const INTAKE_SERVICES: IntakeServiceOption[] = [
   },
   {
     id: "3d-spatial",
-    title: "3D Modeling & CGI Renders",
+    title: "3D Product Modeling & Visualization",
     category: "3D & Spatial",
     basePrice: 999,
     turnaround: "48–72h SLA",
@@ -212,7 +212,7 @@ export const INTAKE_SERVICES: IntakeServiceOption[] = [
   },
   {
     id: "tour-360",
-    title: "360° Virtual Tours & VR",
+    title: "360° Virtual Tours",
     category: "3D & Spatial",
     basePrice: 2999,
     turnaround: "3–5 Days SLA",
@@ -221,7 +221,7 @@ export const INTAKE_SERVICES: IntakeServiceOption[] = [
   },
   {
     id: "arch-viz",
-    title: "Architectural & Interior Visualization",
+    title: "Interior & Exterior 3D Visualization",
     category: "3D & Spatial",
     basePrice: 1499,
     turnaround: "48–72h SLA",
@@ -230,7 +230,7 @@ export const INTAKE_SERVICES: IntakeServiceOption[] = [
   },
   {
     id: "mkt-growth",
-    title: "Digital Marketing & Meta Ads",
+    title: "AI-Powered Digital Marketing & Meta Ads",
     category: "Social & Ads",
     basePrice: 4999,
     turnaround: "48h SLA",
@@ -239,7 +239,7 @@ export const INTAKE_SERVICES: IntakeServiceOption[] = [
   },
   {
     id: "web-development",
-    title: "Website & Prototype Development",
+    title: "Website Design & Development",
     category: "Digital",
     basePrice: 4999,
     turnaround: "5–10 Days SLA",

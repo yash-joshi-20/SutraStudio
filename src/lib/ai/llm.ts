@@ -195,16 +195,20 @@ export async function generateChatResponse(o: Opts): Promise<string> {
     lastUserMsg.includes("ભાવ") ||
     lastUserMsg.includes("કિંમત")
   ) {
-    return isGujarati
-      ? "અમારા સૂત્ર સ્ટુડિયોના પ્રાઈસિંગ પ્લાન્સ અને સર્વિસ રેટ્સ:\n\n• **ઇમેજ ક્રિએશન**: ₹3,499 થી શરૂ\n• **વિડિયો ક્રિએશન**: ₹7,999 થી શરૂ\n• **3D મોડેલિંગ & સ્પેસિયલ વિઝ્યુઅલાઇઝેશન**: ₹9,499 થી શરૂ\n• **360° વર્ચ્યુઅલ ટૂર**: ₹11,999 થી શરૂ\n• **વેબસાઇટ ડેવલપમેન્ટ**: ₹19,999 થી શરૂ\n• **AI ઓટોમેશન**: ₹17,999 થી શરૂ\n\nતમે તમારા પ્રોજેક્ટ માટે કઈ સર્વિસ સિલેક્ટ કરવા માંગો છો?"
-      : "Here are Sutra Studio's verified service starting prices:\n\n• **Image Creation**: From ₹3,499\n• **Video Creation**: From ₹7,999\n• **3D Modeling & Spatial Visualization**: From ₹9,499\n• **360° Virtual Tours**: From ₹11,999\n• **Website Development**: From ₹19,999\n• **AI Automation & n8n Workflows**: From ₹17,999\n\nWhich service best matches your project requirements?";
+    if (isGujarati) {
+      return "અમારા સૂત્ર સ્ટુડિયોના સત્તાવાર પ્રાઈસિંગ પ્લાન્સ અને સર્વિસ રેટ્સ:\n\n• **ઇમેજ ક્રિએશન**: ₹99/ઇમેજ થી શરૂ (બ્રાન્ડેડ: ₹199)\n• **વિડિયો રીલ્સ & પ્રોડક્શન**: ₹199 થી શરૂ (પ્રોમોશનલ: ₹499)\n• **3D પ્રોડક્ટ મોડેલિંગ & વિઝ્યુઅલાઇઝેશન**: ₹999/વ્યુ થી શરૂ\n• **360° વર્ચ્યુઅલ ટૂર**: ₹2,999 થી શરૂ\n• **વેબસાઇટ ડિઝાઇન & ડેવલપમેન્ટ**: ₹4,999 થી શરૂ\n• **મંથલી કન્ટેન્ટ પેકેજ**: ₹9,999/મહિનો થી શરૂ\n\nતમે તમારા પ્રોજેક્ટ માટે કઈ સર્વિસ વિશે વધુ માહિતી મેળવવા માંગો છો?";
+    }
+    if (isHindi) {
+      return "सूत्र स्टूडियो के आधिकारिक मूल्य और सेवा दरें:\n\n• **इमेज क्रिएशन**: ₹99/इमेज से शुरू (ब्रांडेड: ₹199)\n• **वीडियो रील्स & प्रोडक्शन**: ₹199 से शुरू (प्रमोशनल: ₹499)\n• **3D प्रोडक्ट मॉडलिंग & विज़ुअलाइज़ेशन**: ₹999/व्यू से शुरू\n• **360° वर्चुअल टूर**: ₹2,999 से शुरू\n• **वेबसाइट डिज़ाइन & डेवलपमेंट**: ₹4,999 से शुरू\n• **मासिक कंटेंट पैकेज**: ₹9,999/माह से शुरू\n\nआप अपने प्रोजेक्ट के लिए किस सेवा की जानकारी चाहते हैं?";
+    }
+    return "Here are Sutra Studio's official canonical starting prices:\n\n• **Image Creation**: From ₹99/image (Branded: ₹199, Packs from ₹249)\n• **Video & Reel Production**: From ₹199 (Promo Reel: ₹499, Packs from ₹499)\n• **3D Modeling & Visualization**: From ₹999/view (Product Model: from ₹2,999)\n• **360° Virtual Tours**: From ₹2,999\n• **Interior & Architectural 3D**: From ₹1,499/view\n• **Website Design & Development**: From ₹4,999 (Business Web: ₹14,999)\n• **Monthly Content Packages**: From ₹9,999/mo (Starter Trend)\n\nWhich service or package best matches your requirements?";
   }
 
   return isGujarati
-    ? "નમસ્તે! 🙏 હું સૂત્ર સ્ટુડિયોનો AI આસિસ્ટન્ટ છું. અમે 3D વિઝ્યુઅલાઇઝેશન, 4K વિડિયો ક્રિએશન, Next.js વેબસાઇટ અને AI ઓટોમેશન પ્રોવાઇડ કરીએ છીએ. હું તમને કઈ રીતે મદદ કરી શકું?"
+    ? "નમસ્તે! 🙏 હું સૂત્ર સ્ટુડિયોનો AI આસિસ્ટન્ટ છું. અમે ક્રિએટિવ ઇમેજ, શોર્ટ વિડિયો, 3D વિઝ્યુઅલાઇઝેશન, 360° ટૂર અને પ્રીમિયમ વેબસાઇટ ડેવલપમેન્ટ પ્રોવાઇડ કરીએ છીએ. હું તમને કઈ રીતે મદદ કરી શકું?"
     : isHindi
-    ? "नमस्ते! 🙏 मैं सूत्र स्टूडियो का AI असिस्टेंट हूँ। हम 3D विज़ुअलाइज़ेशन, 4K वीडियो क्रिएशन, Next.js वेबसाइट और AI ऑटोमेशन की सेवाएं प्रदान करते हैं। आप किस प्रोजेक्ट के बारे में जानना चाहते हैं?"
-    : "Namaste! Welcome to Sutra Studio. We specialize in 3D spatial visualization, 4K video creation, Next.js digital platforms, and autonomous AI workflows. How can I assist you with your project today?";
+    ? "नमस्ते! 🙏 मैं सूत्र स्टूडियो का AI असिस्टेंट हूँ। हम क्रिएटिव इमेज, शॉर्ट वीडियो, 3D विज़ुअलाइज़ेशन, 360° टूर और प्रीमियम वेबसाइट डेवलपमेंट की सेवाएं प्रदान करते हैं। मैं आपकी क्या मदद कर सकता हूँ?"
+    : "Namaste! Welcome to Sutra Studio. We craft commercial imagery, promotional video reels, 3D visualization, 360° virtual tours, and modern web applications. How can I assist you with your project today?";
 }
 
 /**

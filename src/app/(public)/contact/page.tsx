@@ -38,10 +38,10 @@ const SERVICE_OPTIONS = [
 
 const BUDGET_OPTIONS = [
   { label: "Select estimated budget...", value: "" },
-  { label: "₹5,000 – ₹15,000 (Starter / Single Deliverable)", value: "5k-15k" },
-  { label: "₹15,000 – ₹35,000 (Multi-Asset Campaign)", value: "15k-35k" },
-  { label: "₹35,000 – ₹75,000 (Full Studio Retainer / Web)", value: "35k-75k" },
-  { label: "₹75,000+ (Enterprise Architecture / Bespoke)", value: "75k+" },
+  { label: "Under ₹10,000 (Standalone Packs & Creative Visuals)", value: "under-10k" },
+  { label: "₹10,000 – ₹15,000 (Starter / Growth Retainer)", value: "10k-15k" },
+  { label: "₹15,000 – ₹20,000 (Daily Trend Creator Flagship / Full-Stack)", value: "15k-20k" },
+  { label: "Custom Enterprise Quote (Bespoke Systems & Production)", value: "enterprise" },
 ];
 
 export default function ContactPage() {

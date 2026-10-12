@@ -430,6 +430,36 @@
   8. Created `docs/antigravity/QA_REPORT.md` and updated `MASTER_PLAN.md`.
 - **Outcome**: Final Regression Testing COMPLETE. All 30 steps and deliverables verified. Ready for safe merge.
 
+---
+
+## Step 11: Global Pricing, Branding & UI Consistency Fix
+- **Timestamp**: 2026-10-12
+- **Branch**: `feature/canonical-pricing-ui-consistency`
+- **Objective**: Remove pricing clutter from hero sections, standardize service names with professional terminology, synchronize chatbot knowledge and fallback responses with canonical rates, align contact budget options with ≤ ₹20k ceiling, and verify all automated test suites.
+- **Actions Executed**:
+  1. Created and checked out feature branch `feature/canonical-pricing-ui-consistency`.
+  2. Hero Section Cleanup (`src/app/HomeClient.tsx`):
+     - Removed starting price badges and chips (`price: "From ₹..."`) from hero category cards.
+     - Upgraded service category tags to professional names (*Product & Brand Imagery*, *Promotional Reels & Shorts*, *3D Product Modeling*, *360° Virtual Tours*, *Interior 3D Visualization*, etc.).
+     - Replaced cluttered CTA with clean dual CTAs: `Start a Project` and `Explore Services`.
+     - Replaced spotlight category price badge with luxury quality mark: `Studio Verified`.
+  3. Contact Budget Realignment (`src/app/(public)/contact/page.tsx`):
+     - Re-tiered budget options to reflect ≤ ₹20k baseline (*Under ₹10,000*, *₹10,000 – ₹15,000*, *₹15,000 – ₹20,000*, *Custom Enterprise Quote*).
+  4. Service Names Standardized across Config & Catalog:
+     - Replaced legacy/technical labels with canonical names (*Commercial & Product Image Creation*, *Promotional Video & Reel Production*, *3D Product Modeling & Visualization*, *360° Virtual Tours*, *Interior 3D Visualization*, *Exterior 3D Visualization*, *AI-Powered Digital Marketing*, *Meta Ads Campaign Management*, *Website Design & Development*, *Web Application & Client Portal MVP*, *Mobile App UI Prototype*).
+     - Synchronized `SUTRA_SERVICES_CONFIG` in `src/config/services.ts`, `SEED_CATALOG_SERVICES` in `src/lib/services/catalogData.ts`, and `INTAKE_SERVICES` in `src/components/orders/MasterOrderForm.tsx`.
+  5. AI Chatbot Grounding (`src/lib/services/ragLlmService.ts` & `src/lib/ai/llm.ts`):
+     - Updated Master System Prompt, knowledge vectors (`kb_12_studio_services`, `kb_subscription_plans`), and local fallback synthesizers (English, Gujarati, Hindi) to quote canonical rates.
+  6. Inbound Webhook & Brand Guide Alignment:
+     - Aligned concierge prompt in `src/app/api/inbound/webhook/route.ts` and Facebook/WhatsApp profiles in `src/app/admin/brand-guide/page.tsx` and `src/app/api/admin/brand-profiles/sync/route.ts`.
+  7. Verification:
+     - `npm run test:catalog` → 125/125 PASSED (100%)
+     - `npm run test:orders` → 48/48 PASSED (100%)
+     - `npm run test:security` → 59/59 PASSED (100%)
+     - `npm run typecheck` → 0 errors (100% clean)
+- **Outcome**: Canonical Pricing & Branding Consistency Fix COMPLETED.
+
+
 
 
 

@@ -28,26 +28,58 @@ Neutral Identity Directives:
 2. Honesty: If asked whether you are a human or an AI/virtual assistant, state honestly that you are Sutra Studio's virtual assistant dedicated to helping clients review capabilities, scope deliverables, understand investment tiers, and initiate orders. Never pretend to be a human staff member or invent team member names.
 3. Terminology: Address studio work as production-grade solutions crafted by our creative and engineering atelier. Do not disclose internal tool names (Flux, Kling, Runway, ElevenLabs, Gemini, ChatGPT, Claude, n8n).
 
-Official Canonical Investment Rates:
-• Commercial Visual Imagery (3-Pack): Starting from ₹2,499 (24–48h SLA)
-• Cinematic Motion Reel (10–15s): Starting from ₹4,999 (48h SLA)
-• Spatial 3D Asset Model (.glb): Starting from ₹5,999 (48–72h SLA)
-• 360° Spherical Panoramic Tour: Starting from ₹7,999 (48–72h SLA)
-• Interior Architectural Visualization: Starting from ₹6,499 (48–72h SLA)
-• Facade & Window Design: Starting from ₹4,499 (48h SLA)
-• Brand & Editorial Strategy: Starting from ₹8,999 (3–5 Days SLA)
-• Campaign Creative Suite: Starting from ₹7,499 (48h SLA)
-• Website Engineering: By Quote (7–14 Days SLA)
-• Web Application Engineering: By Quote (14–28 Days SLA)
-• Mobile Application Engineering: By Quote (14–21 Days SLA)
-• Custom Systems & Integrations: By Quote (3–7 Days SLA)
+Official Canonical Investment Rates (All rates in INR):
+Image Creation:
+• Basic Template Image: ₹99 each
+• Branded Social Media Image: ₹199 each
+• AI-Assisted Product Creative: ₹299 each
+• Basic Image Pack: 3 for ₹249
+• Branded Image Pack: 3 for ₹499 | 5 for ₹799 | 10 for ₹1,499
+• Banner & Cover Design: ₹299
+• Carousel Design (5 slides): ₹499
+• Caption & Hashtag Set: ₹99 per post
+• Product Image Cleanup: ₹199 each
 
-Monthly Retainers:
-• Starter Creative Retainer: ₹14,999 / month
-• Growth Brand Retainer: ₹29,999 / month
-• Enterprise Brand Atelier: ₹59,999 / month
+Video Production:
+• Basic Video Edit (up to 10s): ₹199
+• Promotional Reel (15–30s): ₹499
+• AI-Assisted Product Reel (15–30s): ₹799
+• Basic Video Edit Pack (3 videos): ₹499
+• Promotional Reel Pack: 3 for ₹1,299 | 5 for ₹1,999 | 10 for ₹3,499
 
-Payment: Google Pay (GPay) direct merchant settlement upon scope review.
+3D & Spatial Visualization:
+• 3D Render from Existing Model: ₹999 per view
+• Simple 3D Product Model: Starting at ₹2,999
+• Simple 3D Product Animation (up to 10s): ₹4,999
+• Digital 360° Tour (supplied panoramas): Starting at ₹2,999
+• Local 360° Capture and Tour: Starting at ₹7,999
+• Interior 3D Visualization: ₹1,499 per view
+• Single-Room Visualization Starter: ₹4,999
+• 3D Floor Plan: ₹1,499
+• Facade / Elevation Render: ₹1,999 per view
+
+Marketing & Digital Services:
+• 30-Day Content Calendar: ₹999
+• Trend Research Only: ₹1,499 / month
+• Brand Identity Starter: ₹2,999
+• Social Media Management: ₹9,999 / month
+• Meta Ads Management: ₹4,999 / month (ad spend excluded)
+• SEO Starter: ₹4,999 / month
+
+Web & Application Development:
+• Landing Page Starter: ₹4,999 (one page, limited scope)
+• Business Website: ₹14,999 (up to 5 pages)
+• Starter E-commerce: ₹19,999 (limited catalog, scoped checkout)
+• Mobile App UI Prototype: ₹9,999 (design/prototype only)
+• Web App Prototype: ₹19,999 (limited MVP scope)
+• Larger websites, production mobile apps, complex 3D, and custom integrations: Request a Quote
+
+Monthly Retainers (30-Day Continuous Creative Pipeline):
+• Starter Trend: ₹9,999 / 30 days (15 branded images + 15 short videos, calendar, hashtags, 1 revision round)
+• Growth Trend: ₹14,999 / 30 days (20 branded images + 20 short videos, daily trend research, prompts, calendar, 1 revision round)
+• Daily Trend Creator: ₹19,999 / 30 days (Flagship: 30 branded images + 30 short videos, daily trend research, brand review, organized delivery, 1 revision round per deliverable)
+
+Payment: Google Pay (GPay) direct merchant settlement / UPI QR upon scope review.
 Format answers in elegant, concise, professional markdown.`;
 
 export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
@@ -57,36 +89,38 @@ export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
     client_id: "client_sutra",
     category: "Services",
     title: "12 Specialized Studio Capabilities & Pricing Matrix",
-    content: `Here are our official Studio Capabilities and investment rates:
+    content: `Here are our official Studio Capabilities and verified investment rates:
 
-1. 🎨 **5x 4K Image Creation Pack** — Starting at **₹499** (~₹100/image)
-   • 2x Studio product shots, 2x Lifestyle ambient context, 1x Ad visual. 24h SLA.
-2. 🎬 **2x Commercial Video Reels Pack** — Starting at **₹1,499**
-   • 2x Complete Commercial Reels / Shorts with high-fidelity studio voiceover, background score & motion typography. 24–48h SLA.
-3. 📦 **3D Modeling (Interactive WebGL Asset)** — Starting at **₹2,499**
-   • Precision 3D product models, glTF / USDZ assets, PBR textures, turntable renders. 48h SLA.
-4. 🧭 **360 View Virtual Tour** — Starting at **₹3,499**
-   • Single panoramic virtual space, interactive hot-spots, embeddable code. 48–72h SLA.
-5. 🚀 **Starter Creative Commission** — **₹1,999**
-   • Up to 5x 4K UHD Master Renders + 1x 10-Second Commercial Video Ad. 48h SLA.
-6. 🎨 **Studio Growth Commission** — **₹4,999**
-   • 15x 3D & Product Renders + 3x 15s Video Ads + 360° Tour + 3x Meta Ad Variations. 24–72h SLA.
-7. ⚡ **Autonomous Growth Retainer** — **₹9,999 / month**
-   • Daily Active Queue fulfilling brand graphics, commercial motion shorts, and spatial visualization.
-8. 🏛️ **Interior Architecture & Spatial Systems** — **Custom Quote**
-   • Photorealistic architectural exteriors, spatial staging, lighting studies, and CAD elevations.
-9. 🎯 **Meta Ads Launcher & Growth Infrastructure** — **Custom Quote**
-   • Multi-ratio creative variation sets (9:16, 1:1, 16:9) and conversion copy blueprints.
-10. 💻 **Website Architecture (Next.js)** — **Custom Quote**
-    • High-performance bespoke websites with fluid micro-interactions and sub-second page loads.
-11. 📱 **Mobile App Development** — **Custom Quote**
-    • Cross-platform bespoke iOS & Android mobile applications.`,
+1. 🎨 **Commercial & Product Image Creation** — Single from ₹99 | 3 for ₹249 | Branded 3 for ₹499 | 5 for ₹799 | 10 for ₹1,499
+   • 4K Photorealistic brand imagery, studio product shots, ambient staging. 24–48h SLA.
+2. 🎬 **Promotional Video & Reel Production** — Basic 10s Edit from ₹199 | Promo Reel from ₹499 | AI Product Reel from ₹799 | 3 Edits for ₹499 | 3 Reels for ₹1,299 | 5 for ₹1,999 | 10 for ₹3,499
+   • 15–30s Commercial Reels with high-fidelity voiceover, sound design, and motion typography. 24–48h SLA.
+3. 📦 **3D Product Modeling & Visualization** — 3D Render from Model at ₹999 | Simple 3D Model starting at ₹2,999 | 3D Animation (10s) at ₹4,999
+   • Precision 3D CAD modeling, glTF / USDZ web-ready assets, 4K PBR textures. 48h SLA.
+4. 🧭 **360° Virtual Tours** — Digital-Only (Supplied Panoramas) starting at ₹2,999 | Local Capture + Tour starting at ₹7,999
+   • Immersive 360 virtual spaces, interactive hot-spots, embeddable HTML5 viewer. 48–72h SLA.
+5. 🏛️ **Interior 3D Visualization** — ₹1,499 per view | Single-Room Starter at ₹4,999 | 3D Floor Plan at ₹1,499
+   • Photorealistic interior architecture, spatial staging, daylight simulations. 48–72h SLA.
+6. 🏢 **Exterior 3D Visualization** — Facade / Elevation Render at ₹1,999 per view
+   • Exterior perspective visualizations, elevation profiles, architectural glazing simulations. 48–72h SLA.
+7. 📈 **AI-Powered Digital Marketing** — 30-Day Content Calendar at ₹999 | Trend Research at ₹1,499 / month | Social Media Management at ₹9,999 / month
+   • Strategic content matrices, copywriting angles, audience blueprints. 48–72h SLA.
+8. 🎯 **Meta Ads Campaign Management** — ₹4,999 / month (Ad spend excluded)
+   • Multi-ratio creative sets (9:16, 1:1), hook copy, and campaign blueprint setup. 48h SLA.
+9. 🌐 **Website Design & Development** — Landing Page Starter at ₹4,999 | Business Website (up to 5 pages) at ₹14,999 | Starter E-Commerce at ₹19,999
+   • High-performance Next.js websites, mobile-first responsive architecture, on-page SEO. 3–7 Days SLA.
+10. 💻 **Web Application & Client Portal MVP** — Starting at ₹19,999 (Prototype / MVP Scope)
+    • Full-stack client portals, Firebase authentication, real-time database, checkout workflows. 10–14 Days SLA.
+11. 📱 **Mobile App UI Prototype** — Starting at ₹9,999 (Design / Prototype Only)
+    • Interactive cross-platform mobile UI prototypes, component tokens, Expo setups. 5–10 Days SLA.
+12. ⚡ **Enterprise & Complex Custom Work** — Request a Quote
+    • Custom multi-system integrations, larger production web/mobile platforms, complex organic 3D modeling.`,
     source: "Sutra Studio Canonical Architecture Specification",
     status: "approved",
     approved_by: "Supervisor Admin",
     approved_at: new Date().toISOString(),
     published: true,
-    version: 3,
+    version: 4,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -97,27 +131,40 @@ export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
     client_id: "client_sutra",
     category: "Pricing",
     title: "Monthly Studio Retainers & Commission Tiers",
-    content: `We offer transparent commissions and retainers:
+    content: `We offer 3 transparent 30-day continuous creative pipeline packages:
 
-1. ⚡ **Autonomous Growth Retainer** — **₹9,999 / month** [Daily Active Queue]
-   • Daily 1x 4K Brand Graphic (30 Assets/month)
-   • Daily 1x Commercial Motion Short/Reel (30 Assets/month)
-   • Dedicated 3D Spatial Renders, 360° Tours, and Meta Ads Creative Packs
-   • Private Sutra Cloud Vault with Auto-Sync & Instant Downloads
+1. 🚀 **Starter Trend** — **₹9,999 / 30 days**
+   • 15 Branded Social & Product Images across 30 days
+   • 15 Commercial Short Videos / Reels (up to 15s)
+   • Trend topic research & brand relevance review
+   • Custom tailored prompts, captions, and hashtag bundles
+   • 1 consolidated revision round per deliverable
+   • Organized private Google Drive Vault staging
 
-2. 🚀 **Starter Creative Commission** — **₹1,999**
-   • Up to 5x 4K UHD Master Renders + 1x 10-Second Video Commercial Ad
-   • 48-Hour Rapid Turnaround & 2 Revision Rounds
+2. 📈 **Growth Trend** — **₹14,999 / 30 days**
+   • 20 Branded Social & Product Images across 30 days
+   • 20 Commercial Short Videos / Reels (15–30s)
+   • Daily trending-topic research & brand alignment
+   • 30-Day strategic editorial content calendar
+   • Tailored creative prompts, captions, and hashtag bundles
+   • 1 consolidated revision round per deliverable
+   • Organized private Google Drive Vault staging
 
-3. 🎨 **Studio Growth Commission** — **₹4,999**
-   • 15x 3D & Product Renders + 3x 15s Video Ads + 360° Tour + 3x Meta Ad Variations
-   • Priority 24-72 Hour Delivery Pipeline`,
+3. ⚡ **Daily Trend Creator (Flagship Package)** — **₹19,999 / 30 days** [Daily Active Creative Queue]
+   • Daily 1x 4K Brand Image / Graphic (30 Assets/month)
+   • Daily 1x Commercial Motion Short / Reel (30 Assets/month)
+   • Daily trending-topic research tailored to your brand
+   • Brand relevance review & custom prompt engineering
+   • Complete captions, hooks, and targeted hashtag sets
+   • 30-Day coordinated content calendar
+   • Rigorous studio QA & 1 consolidated revision round per deliverable
+   • Organized private Google Drive Vault delivery`,
     source: "Sutra Studio Commercial Pricing",
     status: "approved",
     approved_by: "Supervisor Admin",
     approved_at: new Date().toISOString(),
     published: true,
-    version: 2,
+    version: 3,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
