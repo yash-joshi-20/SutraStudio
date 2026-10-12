@@ -327,3 +327,115 @@ export function createNewCreativeJob(params: {
     updatedAt: new Date().toISOString(),
   };
 }
+
+/**
+ * Advance a job step upon successful execution or approval
+ */
+export function advanceJobStep(
+  job: CreativeJob,
+  stepIndex: number,
+  outputPayload?: Record<string, any>,
+  reviewedBy?: string
+): CreativeJob {
+  const updatedSteps = job.steps.map((step) => {
+    if (step.stepIndex === stepIndex) {
+      return {
+        ...step,
+        status: "completed" as StepExecutionStatus,
+        completedAt: new Date().toISOString(),
+        outputPayload: outputPayload || step.outputPayload,
+        reviewedBy: reviewedBy || step.reviewedBy,
+      };
+    }
+    return step;
+  });
+
+  const nextStepIndex = Math.min(job.steps.length, stepIndex + 1);
+  const isFinished = stepIndex >= job.steps.length;
+
+  return {
+    ...job,
+    currentStepIndex: nextStepIndex,
+    steps: updatedSteps,
+    status: isFinished ? "completed" : "in_progress",
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * Handle job step failure with error logging and retry policy check
+ */
+export function failJobStep(
+  job: CreativeJob,
+  stepIndex: number,
+  error: string,
+  reviewedBy?: string
+): CreativeJob {
+  const updatedSteps = job.steps.map((step) => {
+    if (step.stepIndex === stepIndex) {
+      return {
+        ...step,
+        status: "failed" as StepExecutionStatus,
+        error,
+        reviewedBy: reviewedBy || step.reviewedBy,
+        completedAt: new Date().toISOString(),
+      };
+    }
+    return step;
+  });
+
+  return {
+    ...job,
+    status: "paused_for_approval",
+    steps: updatedSteps,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * Reset a step for retry
+ */
+export function retryJobStep(job: CreativeJob, stepIndex: number): CreativeJob {
+  const updatedSteps = job.steps.map((step) => {
+    if (step.stepIndex === stepIndex) {
+      return {
+        ...step,
+        status: "running" as StepExecutionStatus,
+        startedAt: new Date().toISOString(),
+        error: undefined,
+      };
+    }
+    return step;
+  });
+
+  return {
+    ...job,
+    status: "in_progress",
+    currentStepIndex: stepIndex,
+    steps: updatedSteps,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * Check if all required prerequisites for a step are satisfied
+ */
+export function validateStepDependencies(
+  step: WorkflowStepConfig,
+  previousSteps: JobStepRecord[]
+): { canExecute: boolean; missing: string[] } {
+  if (step.stepIndex === 1) return { canExecute: true, missing: [] };
+
+  const requiredIndex = step.stepIndex - 1;
+  const prev = previousSteps.find((s) => s.stepIndex === requiredIndex);
+
+  if (!prev || prev.status !== "completed") {
+    return {
+      canExecute: false,
+      missing: [`Step ${requiredIndex} (${prev?.name || "Previous Step"}) must be completed first.`],
+    };
+  }
+
+  return { canExecute: true, missing: [] };
+}
+
