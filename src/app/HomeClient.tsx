@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -62,7 +63,7 @@ export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [demoModalOpen, setDemoModalOpen] = useState(false);
   const [activeHeroDiscipline, setActiveHeroDiscipline] = useState("image-creation");
-  const [heroRightTab, setHeroRightTab] = useState<"video" | "particle">("video");
+  const [heroRightTab, setHeroRightTab] = useState<"video" | "atelier" | "particle">("video");
   const [pricingCycle, setPricingCycle] = useState<"project" | "monthly">("project");
 
   const filteredProjects =
@@ -216,6 +217,17 @@ export default function HomePage() {
                       </button>
                       <button
                         type="button"
+                        onClick={() => setHeroRightTab("atelier")}
+                        className={`px-3 py-1 rounded-full font-semibold transition-all cursor-pointer ${
+                          heroRightTab === "atelier"
+                            ? "bg-[#5C3A1E] text-white"
+                            : "text-[#64748B] hover:text-[#0F172A]"
+                        }`}
+                      >
+                        Atelier View
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => setHeroRightTab("particle")}
                         className={`px-3 py-1 rounded-full font-semibold transition-all cursor-pointer ${
                           heroRightTab === "particle"
@@ -223,7 +235,7 @@ export default function HomePage() {
                             : "text-[#64748B] hover:text-[#0F172A]"
                         }`}
                       >
-                        3D Sacred Matrix
+                        3D Matrix
                       </button>
                     </div>
                   </div>
@@ -278,6 +290,38 @@ export default function HomePage() {
                           </div>
                         </div>
                       </>
+                    ) : heroRightTab === "atelier" ? (
+                      <div className="w-full h-full relative">
+                        <Image
+                          src="/images/studio/sutra-atelier-hero.jpg"
+                          alt="Sutra Studio Atelier — Editorial Creative Workspace"
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, 450px"
+                          priority
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/85 via-black/20 to-transparent pointer-events-none" />
+                        <div className="absolute bottom-4 inset-x-4 z-10 bg-[#FFFDF9]/95 backdrop-blur-md rounded-2xl p-3.5 border border-[#EADFCB] shadow-warm">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center shrink-0">
+                                <Sparkles className="w-4 h-4 text-[#D4A35A]" />
+                              </div>
+                              <div>
+                                <p className="text-xs font-bold text-[#0F172A]">
+                                  Sutra Studio Atelier
+                                </p>
+                                <p className="text-[10px] text-[#64748B]">
+                                  Warm ivory, walnut &amp; brass creative sanctuary
+                                </p>
+                              </div>
+                            </div>
+                            <span className="text-[10px] font-semibold text-[#A98B57] bg-[#FAF8F5] px-2 py-0.5 rounded-full border border-[#EADFCB] shrink-0">
+                              Physical Studio
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     ) : (
                       <div className="w-full h-full relative">
                         <SutraParticleWings

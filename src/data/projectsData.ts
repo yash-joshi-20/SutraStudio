@@ -187,4 +187,42 @@ export const SUTRA_PROJECTS: ProjectItem[] = [
     ],
     status: "Spatial Prototype",
   },
+  {
+    id: "proj-sutra-watch",
+    title: "Chronos Atelier — 3D Mechanical Chronograph Visualization",
+    category: "3D",
+    client: "Studio 3D Concept",
+    year: "2026",
+    projectType: "Studio Concept",
+    description:
+      "High-precision 3D hard-surface modeling study examining brushed steel bevels, sapphire crystal reflections, and studio lighting passes for luxury timepieces.",
+    badge: "Interactive",
+    thumbnail: "/images/projects/sutra-watch-3d.jpg",
+    deliverables: [
+      "3D Hard-Surface CAD Modeling",
+      "Anisotropic Brushed Steel Shading",
+      "Studio Lighting & Reflection Tuning",
+      "Commercial Product Staging",
+    ],
+    status: "3D Concept",
+  },
+  {
+    id: "proj-sutra-cosmetic",
+    title: "Aura Skincare — Sculptural Commercial Product Staging",
+    category: "Image",
+    client: "Studio Creative Concept",
+    year: "2026",
+    projectType: "Studio Concept",
+    description:
+      "Commercial product key visual study on a raw travertine stone pedestal, featuring frosted amber glass, matte bronze caps, and warm architectural window shadows.",
+    badge: "Case Study",
+    thumbnail: "/images/projects/sutra-cosmetic-render.jpg",
+    deliverables: [
+      "Directional Warm Studio Lighting",
+      "Minimal Travertine Pedestal Staging",
+      "Advertising Campaign Key Visuals",
+      "High-Resolution Master Retouching",
+    ],
+    status: "Visual Concept",
+  },
 ];

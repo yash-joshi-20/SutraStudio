@@ -2089,7 +2089,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         },
         {
           step: 2,
-          title: "Creative Direction & Composition",
+          title: "Prompt Architecture & Creative Direction",
           desc: "Structure tailored visual direction, studio lighting setups, and composition parameters.",
         },
         {
@@ -2166,7 +2166,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
       customQuoteConditions:
         "Multi-location physical shoots, on-camera actor hiring, and full-length documentary/podcast edits are quoted on custom request.",
       sampleDisclaimer:
-        "✦ STUDIO PORTFOLIO SHOWCASE — Demonstration of video pacing, audio grading, and motion graphics; presented for aesthetic reference.",
+        "✦ STUDIO SAMPLE / SPECULATIVE PROTOTYPE — Demonstration of video pacing, audio grading, and motion graphics; presented for aesthetic reference.",
     };
   }
 
@@ -2219,7 +2219,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
       customQuoteConditions:
         "Complex organic character sculpting, mechanical simulations with >100 sub-parts, or rigged character animations require custom quote.",
       sampleDisclaimer:
-        "✦ STUDIO PORTFOLIO SHOWCASE — Interactive WebGL PBR model demonstration; presented for aesthetic reference.",
+        "✦ STUDIO SAMPLE / SPECULATIVE PROTOTYPE — Interactive WebGL PBR model demonstration; presented for aesthetic reference.",
     };
   }
 
@@ -2380,7 +2380,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
       customQuoteConditions:
         "Direct media spend paid to Meta is strictly excluded; enterprise multi-channel ad management (>₹2L monthly spend) quoted on request.",
       sampleDisclaimer:
-        "✦ STUDIO PORTFOLIO SHOWCASE — Meta ad creative showcase; demonstration only.",
+        "✦ STUDIO SAMPLE / SPECULATIVE PROTOTYPE — Meta ad creative showcase; demonstration only.",
     };
   }
 
@@ -2481,7 +2481,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
       customQuoteConditions:
         "Multi-tenant enterprise SaaS with dedicated isolated databases or high-throughput microservices require bespoke quote.",
       sampleDisclaimer:
-        "✦ STUDIO PORTFOLIO SHOWCASE — SaaS client portal prototype sample; demonstration only.",
+        "✦ STUDIO SAMPLE / SPECULATIVE PROTOTYPE — SaaS client portal prototype sample; demonstration only.",
     };
   }
 
@@ -2529,7 +2529,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
       customQuoteConditions:
         "Apple App Store & Google Play Store developer account management and third-party approval warranties excluded.",
       sampleDisclaimer:
-        "✦ STUDIO PORTFOLIO SHOWCASE — Mobile application UI prototype sample; demonstration only.",
+        "✦ STUDIO SAMPLE / SPECULATIVE PROTOTYPE — Mobile application UI prototype sample; demonstration only.",
     };
   }
 
