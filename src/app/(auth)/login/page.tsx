@@ -294,8 +294,8 @@ function ClientLoginForm() {
             </h1>
             <p className="text-xs sm:text-sm text-[#64748B] mt-2 leading-relaxed">
               {mode === "signin"
-                ? "Access live 4K renders, creative proofs, Sutra Cloud Vault deliverables, and commission new studio pipelines."
-                : "Create your dedicated client workspace to commission creative services, track 3D & video assets, and manage invoices."}
+                ? "Access your project files, review updates, and submit new project requests."
+                : "Create your dedicated client workspace to submit project requests, follow deliverable milestones, and manage invoices."}
             </p>
           </div>
 
@@ -520,73 +520,56 @@ function ClientLoginForm() {
               <div className="p-3.5 rounded-2xl bg-white/90 border border-[#EADFCB] shadow-2xs space-y-1">
                 <div className="flex items-center gap-2 text-xs font-bold text-[#5C3A1E]">
                   <FolderArchive className="w-4 h-4 text-[#A98B57] shrink-0" />
-                  <span>Sutra Cloud Vault</span>
+                  <span>Organized Project Files</span>
                 </div>
                 <p className="text-[11px] text-[#64748B] leading-relaxed">
-                  Encrypted storage for 4K master files, source assets, and interactive 3D GLTF packages.
+                  Structured master files, production assets, and documentation organized in your private drive.
                 </p>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-white/90 border border-[#EADFCB] shadow-2xs space-y-1">
                 <div className="flex items-center gap-2 text-xs font-bold text-[#5C3A1E]">
                   <Activity className="w-4 h-4 text-[#A98B57] shrink-0" />
-                  <span>Live Order Tracking</span>
+                  <span>Project Milestones</span>
                 </div>
                 <p className="text-[11px] text-[#64748B] leading-relaxed">
-                  Milestone-by-milestone progress tracking from brief intake to art director approval.
+                  Follow your project progress, review updates, and check delivery status in real time.
                 </p>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-white/90 border border-[#EADFCB] shadow-2xs space-y-1">
                 <div className="flex items-center gap-2 text-xs font-bold text-[#5C3A1E]">
                   <Cpu className="w-4 h-4 text-[#A98B57] shrink-0" />
-                  <span>Autonomous Pipelines</span>
+                  <span>Creative Direction</span>
                 </div>
                 <p className="text-[11px] text-[#64748B] leading-relaxed">
-                  Orchestrated n8n workflows with deterministic quality gates and resolution checks.
+                  Dedicated artistic oversight, disciplined design standards, and thorough quality review.
                 </p>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-white/90 border border-[#EADFCB] shadow-2xs space-y-1">
                 <div className="flex items-center gap-2 text-xs font-bold text-[#5C3A1E]">
                   <Sparkles className="w-4 h-4 text-[#A98B57] shrink-0" />
-                  <span>Zero-Fee Direct UPI</span>
+                  <span>Transparent Settlements</span>
                 </div>
                 <p className="text-[11px] text-[#64748B] leading-relaxed">
-                  Transparent Indian Rupee settlements with dynamic QR codes or company invoicing.
+                  Direct Indian Rupee settlements with dynamic UPI QR codes and instant confirmation.
                 </p>
               </div>
             </div>
 
-            {/* Studio Metrics */}
-            <div className="grid grid-cols-3 gap-2 p-3.5 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] text-center">
-              <div>
-                <div className="font-serif text-lg font-bold text-[#5C3A1E]">500+</div>
-                <div className="text-[10px] uppercase font-mono text-[#94A3B8]">Assets Shipped</div>
-              </div>
-              <div>
-                <div className="font-serif text-lg font-bold text-[#5C3A1E]">24–48h</div>
-                <div className="text-[10px] uppercase font-mono text-[#94A3B8]">Turnaround</div>
-              </div>
-              <div>
-                <div className="font-serif text-lg font-bold text-[#5C3A1E]">100%</div>
-                <div className="text-[10px] uppercase font-mono text-[#94A3B8]">Commercial IP</div>
-              </div>
-            </div>
-
-            {/* Client Testimonial */}
+            {/* What You Can Expect — Professional Editorial Commitment */}
             <div className="p-4 rounded-2xl bg-white/95 border border-[#EADFCB] shadow-2xs space-y-2">
-              <div className="flex items-center gap-1 text-[#D4A35A]">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-3.5 h-3.5 fill-[#D4A35A]" />
-                ))}
+              <div className="flex items-center gap-2 text-xs font-bold text-[#5C3A1E]">
+                <Sparkles className="w-4 h-4 text-[#D4A35A]" />
+                <span className="uppercase tracking-wider text-[10px]">What You Can Expect</span>
               </div>
-              <p className="text-xs text-[#0F172A] italic leading-relaxed">
-                &ldquo;Sutra Studio transformed our architectural brand visuals. Delivery speed and 4K photorealistic fidelity exceeded our highest expectations.&rdquo;
+              <p className="text-xs text-[#475569] leading-relaxed font-sans">
+                Every project is treated as a dedicated creative partnership — combining thoughtful aesthetic direction, clear communication, and structured project delivery.
               </p>
-              <div className="flex items-center justify-between text-[11px] text-[#64748B] pt-1.5 border-t border-[#EADFCB]/60">
-                <span className="font-semibold text-[#0F172A]">Vana Luxury Living</span>
-                <span className="font-mono text-[10px] text-[#94A3B8]">Verified Studio Client</span>
+              <div className="flex items-center justify-between text-[11px] text-[#64748B] pt-2 border-t border-[#EADFCB]/60">
+                <span className="font-semibold text-[#0F172A]">Sutra Studio Standards</span>
+                <span className="font-mono text-[10px] text-[#A98B57]">Botad Atelier</span>
               </div>
             </div>
 

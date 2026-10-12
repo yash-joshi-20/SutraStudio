@@ -37,12 +37,12 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const FILTER_CATEGORIES = [
   "All",
+  "Website",
+  "Design",
+  "3D",
   "Image",
   "Video",
-  "3D",
   "Interior",
-  "Website",
-  "App",
   "Marketing",
 ];
 
@@ -154,41 +154,41 @@ export default function HomePage() {
                     </Link>
                   </div>
 
-                  {/* Studio Capability Highlights Divided by Hairlines */}
+                  {/* Rebuilt Clean Four-Column Trust Strip */}
                   <div className="hero-stats pt-8 border-t border-[#EADFCB] grid grid-cols-2 sm:grid-cols-4 gap-6">
                     <div className="hero-stats-item">
-                      <p className="font-serif text-lg sm:text-xl font-bold text-[#5C3A1E]">
-                        High-Precision
+                      <p className="font-serif text-base sm:text-lg font-bold text-[#5C3A1E] leading-snug">
+                        Thoughtful Creative Direction
                       </p>
-                      <p className="text-xs text-[#64748B] mt-0.5 font-medium">
-                        Studio Production
-                      </p>
-                    </div>
-
-                    <div className="hero-stats-item">
-                      <p className="font-serif text-lg sm:text-xl font-bold text-[#5C3A1E]">
-                        Dedicated
-                      </p>
-                      <p className="text-xs text-[#64748B] mt-0.5 font-medium">
-                        Human Art Direction
+                      <p className="text-xs text-[#64748B] mt-1 font-sans">
+                        Artistic oversight across all commissions
                       </p>
                     </div>
 
                     <div className="hero-stats-item">
-                      <p className="font-serif text-lg sm:text-xl font-bold text-[#5C3A1E]">
-                        24-48h SLA
+                      <p className="font-serif text-base sm:text-lg font-bold text-[#5C3A1E] leading-snug">
+                        Tailored Project Solutions
                       </p>
-                      <p className="text-xs text-[#64748B] mt-0.5 font-medium">
-                        Rapid Turnaround
+                      <p className="text-xs text-[#64748B] mt-1 font-sans">
+                        Scoped to your brand requirements
                       </p>
                     </div>
 
                     <div className="hero-stats-item">
-                      <p className="font-serif text-lg sm:text-xl font-bold text-[#5C3A1E]">
-                        100% IP Rights
+                      <p className="font-serif text-base sm:text-lg font-bold text-[#5C3A1E] leading-snug">
+                        Clear Communication
                       </p>
-                      <p className="text-xs text-[#64748B] mt-0.5 font-medium">
-                        Client Deliverables Vault
+                      <p className="text-xs text-[#64748B] mt-1 font-sans">
+                        Transparent milestones and reviews
+                      </p>
+                    </div>
+
+                    <div className="hero-stats-item">
+                      <p className="font-serif text-base sm:text-lg font-bold text-[#5C3A1E] leading-snug">
+                        Organized Project Delivery
+                      </p>
+                      <p className="text-xs text-[#64748B] mt-1 font-sans">
+                        Structured files in your private drive
                       </p>
                     </div>
                   </div>
@@ -331,15 +331,15 @@ export default function HomePage() {
             <div className="p-6 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] flex flex-wrap items-center justify-around gap-6 text-xs text-[#64748B] shadow-xs">
               <div className="flex items-center gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-[#2E7D4F]" />
-                <span className="font-medium text-[#0F172A]">Dedicated Art Director on Every Order</span>
+                <span className="font-medium text-[#0F172A]">Thoughtful Creative Direction on Every Order</span>
               </div>
               <div className="flex items-center gap-2.5">
                 <Clock className="w-4 h-4 text-[#C2761A]" />
-                <span className="font-medium text-[#0F172A]">Rapid 24-72 Hour Delivery SLA</span>
+                <span className="font-medium text-[#0F172A]">Clear Milestone-Based Project Delivery</span>
               </div>
               <div className="flex items-center gap-2.5">
                 <ShieldCheck className="w-4 h-4 text-[#5C3A1E]" />
-                <span className="font-medium text-[#0F172A]">Full Commercial License &amp; Client Deliverables Vault</span>
+                <span className="font-medium text-[#0F172A]">Organized Project Files in Private Client Drive</span>
               </div>
             </div>
           </div>
@@ -353,7 +353,7 @@ export default function HomePage() {
             <SectionHeader
               badge="WHY SUTRA STUDIO"
               title="Why Pay Sutra Studio vs Freelancers &amp; Traditional Agencies?"
-              subtitle="Generic online tools produce distorted drafts. Freelancers are fragmented. Big agencies charge ₹2,00,000/mo. Sutra Studio blends digital design precision with Senior Human Art Direction for production-ready perfection in 24–48 hours."
+              subtitle="Generic online tools produce distorted drafts. Freelancers are fragmented. Traditional agencies charge bloated retainers. Sutra Studio pairs disciplined design precision with senior art direction for production-ready creative work."
               className="text-center"
             />
 
@@ -545,7 +545,7 @@ export default function HomePage() {
                       </li>
                       <li className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
-                        <span className="font-medium"><strong>24–48h SLA Delivery</strong> straight to your dashboard</span>
+                        <span className="font-medium"><strong>Clear Project Milestones</strong> with regular progress updates</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
@@ -553,7 +553,7 @@ export default function HomePage() {
                       </li>
                       <li className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
-                        <span className="font-medium"><strong>Private Client Media Vault</strong> &amp; 100% Commercial IP</span>
+                        <span className="font-medium"><strong>Organized Project Files</strong> &amp; full commercial usage rights</span>
                       </li>
                     </ul>
                   </div>

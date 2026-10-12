@@ -95,7 +95,7 @@ export const INTAKE_PACKAGES: IntakePackageOption[] = [
     title: "Growth Trend",
     billingCycle: "monthly",
     price: 14999,
-    turnaround: "24–48h Priority SLA",
+    turnaround: "Priority Milestones",
     description: "High-velocity 30-day atelier delivering 20 branded images + 20 commercial short videos with 30-day content calendar.",
     iconName: "layers",
     features: [
@@ -113,7 +113,7 @@ export const INTAKE_PACKAGES: IntakePackageOption[] = [
     title: "Starter Trend",
     billingCycle: "monthly",
     price: 9999,
-    turnaround: "48h Rapid SLA",
+    turnaround: "Scheduled Milestones",
     description: "Essential monthly creative engine: 15 branded images + 15 short videos across 30 days for boutique brands.",
     iconName: "sparkles",
     features: [
@@ -131,7 +131,7 @@ export const INTAKE_PACKAGES: IntakePackageOption[] = [
     title: "Branded Image Pack (5 Images)",
     billingCycle: "one_time",
     price: 799,
-    turnaround: "24–48h SLA",
+    turnaround: "Project Milestone",
     description: "Curated 5-image campaign bundle with brand color grading and commercial licensing.",
     iconName: "sparkles",
     features: [
@@ -146,7 +146,7 @@ export const INTAKE_PACKAGES: IntakePackageOption[] = [
     title: "Promotional Reels Pack (3 Reels)",
     billingCycle: "one_time",
     price: 1299,
-    turnaround: "48–72h SLA",
+    turnaround: "Project Milestone",
     description: "3 commercial promo reels with kinetic motion graphics, sound design, and vertical 9:16 master exports.",
     iconName: "video",
     features: [
@@ -161,7 +161,7 @@ export const INTAKE_PACKAGES: IntakePackageOption[] = [
     title: "Social Carousel Pack (5 Slides)",
     billingCycle: "one_time",
     price: 499,
-    turnaround: "24–48h SLA",
+    turnaround: "Project Milestone",
     description: "Seamless 5-slide educational or product storytelling carousel for Instagram & LinkedIn.",
     iconName: "layers",
     features: [
@@ -179,7 +179,7 @@ export const INTAKE_SERVICES: IntakeServiceOption[] = [
     title: "Commercial & Product Image Creation",
     category: "Creative & Brand",
     basePrice: 99,
-    turnaround: "24–48h SLA",
+    turnaround: "Project-Based Delivery",
     description: "High-fidelity commercial product imagery, luxury brand mockups, and advertising visual assets.",
     iconName: "camera",
   },
@@ -188,7 +188,7 @@ export const INTAKE_SERVICES: IntakeServiceOption[] = [
     title: "Promotional Video & Reel Production",
     category: "Video & Motion",
     basePrice: 199,
-    turnaround: "24–48h SLA",
+    turnaround: "Project-Based Delivery",
     description: "Engaging 10-to-30s cinematic video ads, social reels, and studio-narrated commercial clips.",
     iconName: "video",
   },
@@ -1028,7 +1028,7 @@ export function MasterOrderForm({
                     Meta Ads Launcher & Digital Marketing
                   </span>
                   <span className="text-[10px] font-mono bg-[#EADFCB]/60 text-[#5C3A1E] px-2 py-0.5 rounded-full">
-                    Autonomous Pipeline
+                    Campaign Setup
                   </span>
                 </div>
 

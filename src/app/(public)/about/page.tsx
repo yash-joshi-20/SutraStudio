@@ -153,7 +153,7 @@ export default function AboutPage() {
         </section>
 
         {/* ===================================================
-            2. HERITAGE TRUST METRICS
+            2. STUDIO TRUST & CAPABILITY DIRECTIVES
             =================================================== */}
         <section className="py-12 bg-[#FAF9F5] border-y border-[#EADFCB]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -163,10 +163,10 @@ export default function AboutPage() {
                   <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center mx-auto mb-2.5">
                     <Award className="w-5 h-5 text-[#5C3A1E]" />
                   </div>
-                  <p className="font-serif text-base sm:text-lg md:text-2xl font-bold text-[#5C3A1E] leading-tight">High-Precision</p>
-                  <p className="text-xs font-semibold text-[#0F172A] mt-1">Studio Architecture</p>
+                  <p className="font-serif text-base sm:text-lg font-bold text-[#5C3A1E] leading-snug">Thoughtful</p>
+                  <p className="text-xs font-semibold text-[#0F172A] mt-1">Creative Direction</p>
                 </div>
-                <p className="text-[10px] sm:text-[11px] text-[#64748B] mt-1">Tradition meets computation</p>
+                <p className="text-[10px] sm:text-[11px] text-[#64748B] mt-1">Artistic oversight on every commission</p>
               </div>
 
               <div className="p-4 sm:p-6 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] text-center shadow-xs flex flex-col justify-between">
@@ -174,10 +174,10 @@ export default function AboutPage() {
                   <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center mx-auto mb-2.5">
                     <Users className="w-5 h-5 text-[#5C3A1E]" />
                   </div>
-                  <p className="font-serif text-base sm:text-lg md:text-2xl font-bold text-[#5C3A1E] leading-tight">Dedicated</p>
-                  <p className="text-xs font-semibold text-[#0F172A] mt-1">Creative Production</p>
+                  <p className="font-serif text-base sm:text-lg font-bold text-[#5C3A1E] leading-snug">Tailored</p>
+                  <p className="text-xs font-semibold text-[#0F172A] mt-1">Project Solutions</p>
                 </div>
-                <p className="text-[10px] sm:text-[11px] text-[#64748B] mt-1">Tailored client sanctum</p>
+                <p className="text-[10px] sm:text-[11px] text-[#64748B] mt-1">Scoped to your exact brand standards</p>
               </div>
 
               <div className="p-4 sm:p-6 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] text-center shadow-xs flex flex-col justify-between">
@@ -185,10 +185,10 @@ export default function AboutPage() {
                   <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center mx-auto mb-2.5">
                     <Clock className="w-5 h-5 text-[#5C3A1E]" />
                   </div>
-                  <p className="font-serif text-base sm:text-lg md:text-2xl font-bold text-[#5C3A1E] leading-tight">24-48h SLA</p>
-                  <p className="text-xs font-semibold text-[#0F172A] mt-1">Production Turnaround</p>
+                  <p className="font-serif text-base sm:text-lg font-bold text-[#5C3A1E] leading-snug">Clear</p>
+                  <p className="text-xs font-semibold text-[#0F172A] mt-1">Communication</p>
                 </div>
-                <p className="text-[10px] sm:text-[11px] text-[#64748B] mt-1">Rapid iterative studio cycles</p>
+                <p className="text-[10px] sm:text-[11px] text-[#64748B] mt-1">Transparent milestones and reviews</p>
               </div>
 
               <div className="p-4 sm:p-6 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] text-center shadow-xs flex flex-col justify-between">
@@ -196,10 +196,10 @@ export default function AboutPage() {
                   <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center mx-auto mb-2.5">
                     <Shield className="w-5 h-5 text-[#5C3A1E]" />
                   </div>
-                  <p className="font-serif text-base sm:text-lg md:text-2xl font-bold text-[#5C3A1E] leading-tight">100%</p>
-                  <p className="text-xs font-semibold text-[#0F172A] mt-1">Commercial Rights</p>
+                  <p className="font-serif text-base sm:text-lg font-bold text-[#5C3A1E] leading-snug">Organized</p>
+                  <p className="text-xs font-semibold text-[#0F172A] mt-1">Project Delivery</p>
                 </div>
-                <p className="text-[10px] sm:text-[11px] text-[#64748B] mt-1">Full IP transfer &amp; Client Media Library</p>
+                <p className="text-[10px] sm:text-[11px] text-[#64748B] mt-1">Structured files in your private drive</p>
               </div>
             </div>
           </div>

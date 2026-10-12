@@ -40,7 +40,7 @@ const SERVICE_CATEGORY_TABS = [
 const FAQS = [
   {
     q: "What is your revision policy?",
-    a: "Every deliverable across our retainer plans and standalone packs includes 1 consolidated revision round overseen directly by our Principal Art Director. You can annotate feedback, request lighting/palette passes, or submit copy revisions through your client portal with guaranteed SLA turnaround.",
+    a: "Every deliverable across our retainer plans and standalone packs includes 1 consolidated revision round overseen directly by our Principal Art Director. You can annotate feedback, request lighting/palette passes, or submit copy revisions through your client portal with dedicated milestone turnaround.",
   },
   {
     q: "How does the Daily Trend Creator flagship package work?",
@@ -667,8 +667,8 @@ export default function PricingPage() {
               <Clock className="w-5 h-5 text-[#C2761A]" />
             </div>
             <div>
-              <h5 className="font-semibold text-[#0F172A] text-sm">Guaranteed Turnaround SLA</h5>
-              <p className="text-[11px] mt-0.5">Rapid 24–48h SLA with dedicated Art Director review.</p>
+              <h5 className="font-semibold text-[#0F172A] text-sm">Clear Project Milestones</h5>
+              <p className="text-[11px] mt-0.5">Transparent milestone schedules with dedicated art director review.</p>
             </div>
           </div>
         </div>

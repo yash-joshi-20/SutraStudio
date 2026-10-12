@@ -367,8 +367,8 @@ export default function ServicesPage() {
 
                           {/* Bottom Banner Strip */}
                           <div className="absolute bottom-2.5 left-3.5 right-3.5 flex items-center justify-between text-[11px] font-mono text-white/90 z-10">
-                            <span className="truncate max-w-[170px] drop-shadow-sm text-[10px] text-[#F8F5EF]/90">
-                              {(service.pipelineEngine || "Studio Engine").split("+")[0].trim()}
+                            <span className="truncate max-w-[170px] drop-shadow-sm text-[10px] text-[#F8F5EF]/90 font-sans">
+                              {service.duration || "Creative Commission"}
                             </span>
                             <span className="text-[10px] text-[#D4A35A] font-semibold drop-shadow-sm">
                               {service.badge}
@@ -376,26 +376,23 @@ export default function ServicesPage() {
                           </div>
                         </div>
 
-                        {/* Title, Tagline & Description */}
-                        <div className="p-5 pb-3">
+                        {/* Title, Pricing & Description */}
+                        <div className="p-5 pb-3 space-y-2.5">
                           <h3
                             onClick={() => handleOpenDetail(service)}
                             className="font-serif text-lg font-semibold text-[#0F172A] tracking-tight group-hover:text-[#5C3A1E] transition-colors leading-snug cursor-pointer"
                           >
                             {service.name}
                           </h3>
-                          <p className="text-xs font-semibold text-[#A98B57] mt-0.5 mb-2.5 tracking-wide">
-                            {service.tagline}
-                          </p>
 
                           {/* Standalone Pricing Callout */}
                           {service.priceDisplay && (
-                            <div className="mb-2.5 p-2 rounded-xl bg-[#FAF9F5] border border-[#D4A35A]/30 text-[11px] font-semibold text-[#8C6D32] leading-tight">
+                            <div className="p-2 rounded-xl bg-[#FAF9F5] border border-[#D4A35A]/30 text-[11px] font-semibold text-[#8C6D32] leading-tight">
                               {service.priceDisplay}
                             </div>
                           )}
 
-                          <p className="text-xs text-[#64748B] leading-relaxed line-clamp-2 mb-3.5">
+                          <p className="text-xs text-[#64748B] leading-relaxed line-clamp-2">
                             {service.description}
                           </p>
 

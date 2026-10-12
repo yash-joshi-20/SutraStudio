@@ -211,7 +211,7 @@ export default function ContactPage() {
                     <div>
                       <p className="font-semibold text-[#0F172A]">Operating Cadence</p>
                       <p className="text-xs text-[#64748B]">
-                        Mon – Fri: 09:00 – 20:00 IST (24/7 Studio Concierge Active)
+                        Mon – Fri: 09:00 – 20:00 IST (Online inquiry assistance available)
                       </p>
                     </div>
                   </div>
@@ -222,7 +222,7 @@ export default function ContactPage() {
                     <Shield className="w-4 h-4 text-[#2E7D4F]" />
                     Mutual NDA by default
                   </span>
-                  <span>IP Guarantee</span>
+                  <span>Clear Project Milestones</span>
                 </div>
               </div>
 

@@ -1070,7 +1070,7 @@ export default function ClientDashboardPage() {
                         No active orders found
                       </h3>
                       <p className="text-xs sm:text-sm text-[#64748B] leading-relaxed">
-                        No active orders found. Commission your first creative project below. Track real-time production workflows, inspect draft deliverables, and release 4K masters to your Sutra Cloud Vault.
+                        No active orders found. Submit your first creative project below to follow your project progress, review updates, and access your project files.
                       </p>
                     </div>
                     <div className="pt-2 flex flex-wrap justify-center gap-3">

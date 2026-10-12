@@ -81,8 +81,8 @@ export function ServiceCard({ service }: { service: ServiceItem }) {
 
           {/* Bottom Banner Strip */}
           <div className="absolute bottom-2.5 left-3.5 right-3.5 flex items-center justify-between text-[11px] font-mono text-white/90 z-10">
-            <span className="truncate max-w-[180px] drop-shadow-sm text-[10px] text-[#F8F5EF]/90">
-              {service.pipelineEngine}
+            <span className="truncate max-w-[180px] drop-shadow-sm text-[10px] text-[#F8F5EF]/90 font-sans">
+              {service.duration || "Creative Commission"}
             </span>
             <span className="text-[10px] text-[#D4A35A] font-semibold drop-shadow-sm">
               {service.badge}
@@ -91,16 +91,12 @@ export function ServiceCard({ service }: { service: ServiceItem }) {
         </Link>
 
         {/* Card Body */}
-        <div className="p-5 space-y-2">
+        <div className="p-5 space-y-2.5">
           <Link href={detailHref} className="block group/link">
-            <h3 className="font-serif text-base font-semibold text-[#0F172A] group-hover/link:text-[#5C3A1E] transition-colors leading-snug">
+            <h3 className="font-serif text-lg font-semibold text-[#0F172A] group-hover/link:text-[#5C3A1E] transition-colors leading-snug">
               {service.name}
             </h3>
           </Link>
-
-          <p className="text-xs font-semibold text-[#A98B57] tracking-wide">
-            {service.tagline}
-          </p>
 
           {service.priceDisplay && (
             <div className="p-2 rounded-xl bg-[#FAF9F5] border border-[#D4A35A]/30 text-[11px] font-semibold text-[#8C6D32] leading-tight">

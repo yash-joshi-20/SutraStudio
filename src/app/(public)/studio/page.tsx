@@ -6,6 +6,7 @@ import { VideoCard } from "@/components/media/VideoCard";
 import { SutraParticleWings } from "@/components/canvas/SutraParticleWings";
 import { Interactive3DViewer } from "@/components/spatial/Interactive3DViewer";
 import { PanoramicTourViewer } from "@/components/spatial/PanoramicTourViewer";
+import { Sutra3DLogoShowcase } from "@/components/brand/Sutra3DLogoShowcase";
 import { DeviceMockupShowcase } from "@/components/showcase/DeviceMockupShowcase";
 import { MetaAdCreativeMockup } from "@/components/showcase/MetaAdCreativeMockup";
 import { LotusSymbol } from "@/components/brand/SutraLogo";
@@ -24,18 +25,18 @@ export default function StudioPage() {
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] shadow-xs">
             <span className="text-[#D4A35A] text-xs">◆</span>
             <span className="text-[10px] md:text-xs font-semibold tracking-[0.22em] text-[#5C3A1E] uppercase">
-              STUDIO PHILOSOPHY &amp; SPATIAL ENGINES
+              STUDIO PHILOSOPHY &amp; VISUAL CRAFT
             </span>
           </div>
 
           <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-[#0F172A] leading-tight">
-            Where Vedic Craft Meets <span className="text-gold-gradient">Digital Intelligence</span>
+            Where Cultural Craft Meets <span className="text-gold-gradient">Digital Elegance</span>
           </h1>
 
           <p className="text-sm sm:text-base text-[#64748B] leading-relaxed max-w-2xl mx-auto font-sans">
-            Sutra Studio was founded on a simple conviction: modern computational
-            technology achieves its highest expression when guided by centuries of
-            disciplined design wisdom, sacred geometry, and artisanal human craft.
+            Sutra Studio was founded on a simple conviction: modern digital
+            craft achieves its highest expression when guided by disciplined design principles,
+            harmonious geometry, and dedicated creative direction.
           </p>
         </div>
 
@@ -50,17 +51,39 @@ export default function StudioPage() {
         </div>
 
         {/* ===================================================
-            1. INTERACTIVE 3D SPATIAL MODEL PIPELINE
+            0. OFFICIAL SUTRA STUDIO 3D LOGO PRESENTATION
+            =================================================== */}
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-[#EADFCB] pb-3">
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[#D4A35A] flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                BRAND IDENTITY &amp; THREE-DIMENSIONAL EMBLEM
+              </span>
+              <h2 className="font-serif text-xl sm:text-2xl md:text-3xl font-semibold text-[#0F172A] mt-1">
+                Refined 3D Studio Emblem Presentation
+              </h2>
+            </div>
+            <p className="text-xs text-[#64748B] max-w-xs sm:text-right">
+              Crafted from the authentic Sutra Studio mark with metallic bronze depth, studio lighting, and full 360° orbit control.
+            </p>
+          </div>
+
+          <Sutra3DLogoShowcase height="460px" />
+        </div>
+
+        {/* ===================================================
+            1. 3D PRODUCT MODELING & VISUALIZATION
             =================================================== */}
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-[#EADFCB] pb-3">
             <div>
               <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[#D4A35A] flex items-center gap-1.5">
                 <Box className="w-3.5 h-3.5" />
-                REAL-TIME WEBGL 2.0 PBR ENGINE
+                3D PRODUCT MODELING &amp; VISUALIZATION
               </span>
               <h2 className="font-serif text-xl sm:text-2xl md:text-3xl font-semibold text-[#0F172A] mt-1">
-                3D Spatial Model &amp; Interactive Mesh Viewer
+                Interactive 3D Product &amp; Material Showcase
               </h2>
             </div>
             <p className="text-xs text-[#64748B] max-w-xs sm:text-right">

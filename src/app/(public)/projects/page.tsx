@@ -10,11 +10,12 @@ import { SUTRA_PROJECTS } from "@/data/projectsData";
 
 const PROJECT_CATEGORIES = [
   "All",
+  "Website",
+  "3D",
+  "Design",
   "Image",
   "Video",
-  "3D",
   "Interior",
-  "Website",
   "Marketing",
 ];
 
