@@ -116,35 +116,9 @@ export default function HomePage() {
                     aesthetics, executed with high-precision studio craftsmanship.
                   </p>
 
-                  {/* Quick Discipline Selector Bar */}
-                  <div className="space-y-2 pt-1">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#A98B57] block">
-                      Production Disciplines &amp; Standards:
-                    </span>
-                    <div className="flex flex-wrap gap-2">
-                      {HERO_DISCIPLINES.map((disc) => {
-                        const isSelected = activeHeroDiscipline === disc.id;
-                        return (
-                          <button
-                            key={disc.id}
-                            type="button"
-                            onClick={() => setActiveHeroDiscipline(disc.id)}
-                            className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                              isSelected
-                                ? "bg-[#5C3A1E] text-white shadow-xs font-semibold ring-1 ring-[#D4A35A]"
-                                : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A] hover:text-[#0F172A]"
-                            }`}
-                          >
-                            <span>{disc.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
                   {/* Action Buttons */}
                   <div className="hero-cta flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-2">
-                    <Link href={activeDisciplineData.href || "/orders"} className="w-full sm:w-auto">
+                    <Link href="/orders" className="w-full sm:w-auto">
                       <Button variant="primary" size="lg" withArrow className="w-full sm:w-auto shadow-warm justify-center">
                         Start Your Project Today
                       </Button>
@@ -156,43 +130,16 @@ export default function HomePage() {
                     </Link>
                   </div>
 
-                  {/* Rebuilt Clean Four-Column Trust Strip */}
-                  <div className="hero-stats pt-8 border-t border-[#EADFCB] grid grid-cols-2 sm:grid-cols-4 gap-6">
-                    <div className="hero-stats-item">
-                      <p className="font-serif text-base sm:text-lg font-bold text-[#5C3A1E] leading-snug">
-                        Thoughtful Creative Direction
-                      </p>
-                      <p className="text-xs text-[#64748B] mt-1 font-sans">
-                        Artistic oversight across all commissions
-                      </p>
-                    </div>
-
-                    <div className="hero-stats-item">
-                      <p className="font-serif text-base sm:text-lg font-bold text-[#5C3A1E] leading-snug">
-                        Tailored Project Solutions
-                      </p>
-                      <p className="text-xs text-[#64748B] mt-1 font-sans">
-                        Scoped to your brand requirements
-                      </p>
-                    </div>
-
-                    <div className="hero-stats-item">
-                      <p className="font-serif text-base sm:text-lg font-bold text-[#5C3A1E] leading-snug">
-                        Clear Communication
-                      </p>
-                      <p className="text-xs text-[#64748B] mt-1 font-sans">
-                        Transparent milestones and reviews
-                      </p>
-                    </div>
-
-                    <div className="hero-stats-item">
-                      <p className="font-serif text-base sm:text-lg font-bold text-[#5C3A1E] leading-snug">
-                        Organized Project Delivery
-                      </p>
-                      <p className="text-xs text-[#64748B] mt-1 font-sans">
-                        Structured files in your private drive
-                      </p>
-                    </div>
+                  {/* Reassurance Micro-Strip */}
+                  <div className="pt-2 flex items-center gap-4 text-xs text-[#64748B] flex-wrap">
+                    <span className="flex items-center gap-1.5 font-medium text-[#5C3A1E]">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#2E7D4F]" />
+                      Fixed Scope Directives
+                    </span>
+                    <span className="text-[#EADFCB]">•</span>
+                    <span className="font-medium">Transparent Rates from ₹99</span>
+                    <span className="text-[#EADFCB]">•</span>
+                    <span className="font-medium">Private Drive Delivery</span>
                   </div>
                 </div>
 
@@ -277,10 +224,10 @@ export default function HomePage() {
                               </div>
                               <div>
                                 <p className="text-xs font-bold text-[#0F172A]">
-                                  {activeDisciplineData.label}
+                                  Studio Craftsmanship Reel
                                 </p>
                                 <p className="text-[11px] text-[#64748B]">
-                                  {activeDisciplineData.output}
+                                  Tradition Meets Modern Creative Technology
                                 </p>
                               </div>
                             </div>
@@ -349,27 +296,113 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
+
+              {/* Full-Width Luxury Reassurance Strip (Spacious, Airy, Elegant) */}
+              <div className="pt-10 border-t border-[#EADFCB] grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
+                <div className="space-y-1">
+                  <p className="font-serif text-sm sm:text-base font-bold text-[#5C3A1E] leading-snug">
+                    Thoughtful Creative Direction
+                  </p>
+                  <p className="text-xs text-[#64748B] font-sans">
+                    Artistic oversight across all commissions
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="font-serif text-sm sm:text-base font-bold text-[#5C3A1E] leading-snug">
+                    Tailored Project Solutions
+                  </p>
+                  <p className="text-xs text-[#64748B] font-sans">
+                    Scoped to your brand requirements
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="font-serif text-sm sm:text-base font-bold text-[#5C3A1E] leading-snug">
+                    Clear Communication
+                  </p>
+                  <p className="text-xs text-[#64748B] font-sans">
+                    Transparent milestones and reviews
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="font-serif text-sm sm:text-base font-bold text-[#5C3A1E] leading-snug">
+                    Organized Project Delivery
+                  </p>
+                  <p className="text-xs text-[#64748B] font-sans">
+                    Structured files in your private drive
+                  </p>
+                </div>
+              </div>
             </div>
           </HeroAnimation>
         </section>
 
         {/* ===================================================
-            2. STUDIO SERVICES CATALOG
+            2. STUDIO SERVICES CATALOG (Curated Demo Showcase)
             =================================================== */}
         <section id="services" className="py-20 bg-[#FAF9F5] border-t border-[#EADFCB]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-            <SectionHeader
-              badge="STUDIO DISCIPLINES"
-              title="Solutions Built for Your Goals: Complete Creative Atelier"
-              subtitle="From 4K commercial visual imagery and cinematic motion reels to 3D spatial models, architectural visualization, and high-performance web engineering."
-              className="text-center"
-            />
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
+              <div className="space-y-3 max-w-2xl">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-[11px] font-semibold text-[#A98B57] uppercase tracking-widest shadow-2xs">
+                  <span>◆</span>
+                  <span>FEATURED DISCIPLINES</span>
+                </div>
+                <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#0F172A] tracking-tight">
+                  Curated Studio Solutions
+                </h2>
+                <p className="text-sm sm:text-base text-[#64748B] leading-relaxed">
+                  From 4K commercial visual imagery and cinematic motion reels to 3D spatial models and virtual tours. Explore our primary demo capabilities below.
+                </p>
+              </div>
 
-            {/* Active Core Disciplines Responsive Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {SUTRA_SERVICES.filter((s) => s.active).map((service) => (
+              <div className="flex items-center gap-3 shrink-0">
+                <Link href="/services">
+                  <Button variant="secondary" size="md" withArrow className="shadow-xs text-xs font-semibold">
+                    View All Services (15+)
+                  </Button>
+                </Link>
+                <Link href="/pricing">
+                  <Button variant="outline" size="md" className="shadow-xs text-xs font-semibold bg-[#FFFDF9] hover:bg-[#F8F5EF] text-[#5C3A1E] border-[#EADFCB]">
+                    Pricing Guide
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Curated 3-Column Demo Grid (Spacious 3 Columns, Elegant & Readable) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {SUTRA_SERVICES.filter((s) => ["img-creation", "vid-creation", "3d-modeling"].includes(s.id)).map((service) => (
                 <ServiceCard key={service.id} service={service} />
               ))}
+            </div>
+
+            {/* Read More / Explore Full Catalog Navigation Strip */}
+            <div className="p-8 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-xs flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="space-y-1.5 text-center md:text-left">
+                <div className="flex items-center justify-center md:justify-start gap-2 text-xs font-bold text-[#5C3A1E] uppercase tracking-wider">
+                  <Sparkles className="w-4 h-4 text-[#D4A35A]" />
+                  <span>Looking for specialized packages or monthly retainers?</span>
+                </div>
+                <p className="text-xs text-[#64748B] max-w-xl">
+                  We offer 15+ specialized creative services including WebGL 3D, Interior CGI, 360° Tours, Meta Ads, and full Next.js development with transparent rates from ₹99 to ₹19,999.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 shrink-0">
+                <Link href="/services">
+                  <Button variant="primary" size="md" withArrow className="shadow-warm text-xs font-medium">
+                    Read More: Full Services Catalog
+                  </Button>
+                </Link>
+                <Link href="/pricing">
+                  <Button variant="secondary" size="md" className="text-xs font-medium">
+                    View Retainers &amp; Pricing
+                  </Button>
+                </Link>
+              </div>
             </div>
 
             {/* Bottom Service Assurance Strip */}

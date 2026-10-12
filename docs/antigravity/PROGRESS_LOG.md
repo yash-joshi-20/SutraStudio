@@ -579,4 +579,27 @@
      - `npm run test:responsive`: 44/44 Playwright viewport assertions passed (320px–1440px).
 - **Status**: Verified and ready for merge into `main`.
 
+---
+
+### Step 36: Hero Section Decluttering & 3-Column Services Showcase
+- **Date**: 2026-10-13
+- **Branch**: `feature/clean-hero-and-services-preview`
+- **Actions**:
+  1. Hero Section Decluttering:
+     - Removed the crowded 8-pill "Production Disciplines & Standards" tag list from the hero left column.
+     - Extracted the cramped 4-column reassurance items and elevated them into a spacious, full-width luxury reassurance bar spanning across the bottom of the hero section.
+     - Replaced inline clutter with a clean, concise trust micro-strip: `Fixed Scope Directives • Transparent Rates from ₹99 • Private Drive Delivery`.
+     - Streamlined the right spotlight card's bottom floating badge into a focused, elegant atelier indicator (`Studio Craftsmanship Reel • Tradition Meets Modern Creative Technology`).
+  2. Services Section 3-Column Demo Grid & Read More Navigation:
+     - Upgraded the homepage services grid from a crowded 4-column layout (`xl:grid-cols-4`, displaying all 11+ cards) to a spacious 3-column curated demo grid (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8`).
+     - Displayed the top 3 flagship demo capabilities (`Commercial & Product Image Creation` from ₹99, `Promotional Video & Reel Production` from ₹199, and `3D Product Modeling & Visualization` from ₹999).
+     - Added prominent top-right catalog action buttons: `View All Services (15+)` and `Pricing Guide`.
+     - Integrated a dedicated "Read More" navigation card banner below the 3 demo cards inviting clients to browse the full 15+ service catalog (`/services`) and retainers (`/pricing`).
+  3. Verification:
+     - `npm run typecheck`: 0 errors.
+     - `node scripts/test-responsive-viewports.mjs`: 44/44 assertions passed across 320px–1440px with 0 overflow.
+     - `npm run test:catalog`: 125/125 assertions passed.
+     - `npm run test:automation`: 61/61 assertions passed.
+- **Status**: Complete and verified. Ready for automatic merge to `main`.
+
 
