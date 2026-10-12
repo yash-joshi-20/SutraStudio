@@ -162,10 +162,10 @@ export const CANONICAL_SERVICES: CanonicalServiceItem[] = [
   {
     id: "img-ai-product",
     slug: "ai-product-creative",
-    name: "AI-Assisted Product Creative",
+    name: "Product Creative Design",
     category: "Image",
     tagline: "Photorealistic 4K Product Staging",
-    description: "Photorealistic product staging render generated with studio diffusion prompts and retouching.",
+    description: "Photorealistic product staging imagery crafted with professional studio lighting, depth staging, and precision retouching.",
     numericPrice: 299,
     pricingType: "per_unit",
     startingPrice: "₹299",
@@ -221,7 +221,7 @@ export const CANONICAL_SERVICES: CanonicalServiceItem[] = [
     revisionPolicy: "1 revision round across bundle",
     estimatedTurnaround: "24–48 Hours",
     turnaround: "24–48 Hours",
-    exclusions: ["Bespoke concept prompt generation excluded"],
+    exclusions: ["Bespoke concept ideation & strategy excluded"],
     icon: "Image",
     thumbnail: "/images/services/image-creation.webp",
     badge: "3-Image Bundle",
@@ -2089,13 +2089,13 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         },
         {
           step: 2,
-          title: "Brand-Specific Prompt Architecture",
-          desc: "Engineer tailored creative prompts, lighting setups, and studio composition parameters.",
+          title: "Creative Direction & Composition",
+          desc: "Structure tailored visual direction, studio lighting setups, and composition parameters.",
         },
         {
           step: 3,
-          title: "High-Fidelity 4K Synthesis",
-          desc: "Produce photorealistic multi-angle renders and lifestyle ambient staging in ultra-high resolution.",
+          title: "High-Fidelity 4K Production",
+          desc: "Produce photorealistic multi-angle visuals and lifestyle ambient staging in ultra-high resolution.",
         },
         {
           step: 4,
@@ -2144,8 +2144,8 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         },
         {
           step: 2,
-          title: "Audio & Voiceover Generation",
-          desc: "Studio narration synthesis, background music licensing, and sound effect curation.",
+          title: "Voiceover & Audio Engineering",
+          desc: "Studio narration recording and mastering, background music curation, and sound design.",
         },
         {
           step: 3,
@@ -2166,7 +2166,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
       customQuoteConditions:
         "Multi-location physical shoots, on-camera actor hiring, and full-length documentary/podcast edits are quoted on custom request.",
       sampleDisclaimer:
-        "✦ STUDIO SAMPLE / SPECULATIVE PROTOTYPE — Demonstration of video pacing, audio grading, and motion graphics; not client-contracted work.",
+        "✦ STUDIO PORTFOLIO SHOWCASE — Demonstration of video pacing, audio grading, and motion graphics; presented for aesthetic reference.",
     };
   }
 
@@ -2219,7 +2219,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
       customQuoteConditions:
         "Complex organic character sculpting, mechanical simulations with >100 sub-parts, or rigged character animations require custom quote.",
       sampleDisclaimer:
-        "✦ STUDIO SAMPLE / SPECULATIVE PROTOTYPE — Interactive WebGL PBR model demonstration; not a commercial client endorsement.",
+        "✦ STUDIO PORTFOLIO SHOWCASE — Interactive WebGL PBR model demonstration; presented for aesthetic reference.",
     };
   }
 
@@ -2380,7 +2380,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
       customQuoteConditions:
         "Direct media spend paid to Meta is strictly excluded; enterprise multi-channel ad management (>₹2L monthly spend) quoted on request.",
       sampleDisclaimer:
-        "✦ STUDIO SAMPLE / SPECULATIVE PROTOTYPE — Meta ad creative showcase; demonstration only.",
+        "✦ STUDIO PORTFOLIO SHOWCASE — Meta ad creative showcase; demonstration only.",
     };
   }
 
@@ -2448,14 +2448,14 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
       clientInputs: [
         "Product feature brief, user story document, or wireframe concept",
         "User roles and permission hierarchy requirements (Client, Admin, Member)",
-        "Database collection and data field specifications",
-        "Third-party API credentials (Payment gateways, transactional email, SMS)",
+        "Data structure and field specifications",
+        "Required business service accounts (Payment gateways, transactional email, SMS)",
       ],
       productionSteps: [
         {
           step: 1,
           title: "Architecture & Schema Modeling",
-          desc: "Design relational/NoSQL document models, security access rules, and API endpoints.",
+          desc: "Design data structure models, security access rules, and system integration points.",
         },
         {
           step: 2,
@@ -2481,7 +2481,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
       customQuoteConditions:
         "Multi-tenant enterprise SaaS with dedicated isolated databases or high-throughput microservices require bespoke quote.",
       sampleDisclaimer:
-        "✦ STUDIO SAMPLE / SPECULATIVE PROTOTYPE — SaaS client portal prototype sample; demonstration only.",
+        "✦ STUDIO PORTFOLIO SHOWCASE — SaaS client portal prototype sample; demonstration only.",
     };
   }
 
@@ -2529,7 +2529,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
       customQuoteConditions:
         "Apple App Store & Google Play Store developer account management and third-party approval warranties excluded.",
       sampleDisclaimer:
-        "✦ STUDIO SAMPLE / SPECULATIVE PROTOTYPE — Mobile application UI prototype sample; demonstration only.",
+        "✦ STUDIO PORTFOLIO SHOWCASE — Mobile application UI prototype sample; demonstration only.",
     };
   }
 
@@ -2598,7 +2598,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
     ],
     productionSteps: [
       { step: 1, title: "Brief & Research", desc: "Understand requirements and target brand standards." },
-      { step: 2, title: "Creative Architecture", desc: "Structure initial composition, prompt, or blueprint." },
+      { step: 2, title: "Creative Architecture", desc: "Structure initial composition, concept, or blueprint." },
       { step: 3, title: "Studio Production", desc: "Produce high-fidelity master deliverables." },
       { step: 4, title: "Quality Assurance", desc: "Rigorous art-director verification and polish." },
       { step: 5, title: "Vault Delivery", desc: "Synchronize master files to private client storage." },
@@ -2606,6 +2606,6 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
     customQuoteConditions:
       "Scopes exceeding standard deliverable quotas or multi-team enterprise requirements require a bespoke quote.",
     sampleDisclaimer:
-      "✦ STUDIO SAMPLE / SPECULATIVE PROTOTYPE — Visual demonstration of studio technical capability; not a client-contracted endorsement.",
+      "✦ STUDIO PORTFOLIO SHOWCASE — Visual demonstration of studio creative capability; presented for aesthetic reference.",
   };
 }

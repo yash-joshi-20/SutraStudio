@@ -371,7 +371,7 @@ function OrderConfirmationContent() {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Activating Order in Studio Pipeline...
+                    Activating Order & Commencing Production...
                   </>
                 ) : (
                   <>

@@ -70,7 +70,7 @@ export default function StudioPage() {
 
           <Interactive3DViewer
             height="460px"
-            title="3D Spatial Asset Pipeline • WebGL 2.0"
+            title="3D Spatial Model &amp; Visualization • WebGL 2.0"
             subtitle="PBR Metallic Sheen &amp; Physical Ray-traced Highlights"
             allowPresetSwitch={true}
           />

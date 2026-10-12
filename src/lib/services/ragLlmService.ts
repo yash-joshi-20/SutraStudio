@@ -32,7 +32,7 @@ Official Canonical Investment Rates (All rates in INR):
 Image Creation:
 • Basic Template Image: ₹99 each
 • Branded Social Media Image: ₹199 each
-• AI-Assisted Product Creative: ₹299 each
+• Product Creative Design: ₹299 each
 • Basic Image Pack: 3 for ₹249
 • Branded Image Pack: 3 for ₹499 | 5 for ₹799 | 10 for ₹1,499
 • Banner & Cover Design: ₹299
@@ -43,7 +43,7 @@ Image Creation:
 Video Production:
 • Basic Video Edit (up to 10s): ₹199
 • Promotional Reel (15–30s): ₹499
-• AI-Assisted Product Reel (15–30s): ₹799
+• Product Reel Production (15–30s): ₹799
 • Basic Video Edit Pack (3 videos): ₹499
 • Promotional Reel Pack: 3 for ₹1,299 | 5 for ₹1,999 | 10 for ₹3,499
 
@@ -74,9 +74,9 @@ Web & Application Development:
 • Web App Prototype: ₹19,999 (limited MVP scope)
 • Larger websites, production mobile apps, complex 3D, and custom integrations: Request a Quote
 
-Monthly Retainers (30-Day Continuous Creative Pipeline):
+Monthly Retainers (30-Day Continuous Creative Production):
 • Starter Trend: ₹9,999 / 30 days (15 branded images + 15 short videos, calendar, hashtags, 1 revision round)
-• Growth Trend: ₹14,999 / 30 days (20 branded images + 20 short videos, daily trend research, prompts, calendar, 1 revision round)
+• Growth Trend: ₹14,999 / 30 days (20 branded images + 20 short videos, daily trend research, creative direction, calendar, 1 revision round)
 • Daily Trend Creator: ₹19,999 / 30 days (Flagship: 30 branded images + 30 short videos, daily trend research, brand review, organized delivery, 1 revision round per deliverable)
 
 Payment: Google Pay (GPay) direct merchant settlement / UPI QR upon scope review.
@@ -93,7 +93,7 @@ export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
 
 1. 🎨 **Commercial & Product Image Creation** — Single from ₹99 | 3 for ₹249 | Branded 3 for ₹499 | 5 for ₹799 | 10 for ₹1,499
    • 4K Photorealistic brand imagery, studio product shots, ambient staging. 24–48h SLA.
-2. 🎬 **Promotional Video & Reel Production** — Basic 10s Edit from ₹199 | Promo Reel from ₹499 | AI Product Reel from ₹799 | 3 Edits for ₹499 | 3 Reels for ₹1,299 | 5 for ₹1,999 | 10 for ₹3,499
+2. 🎬 **Promotional Video & Reel Production** — Basic 10s Edit from ₹199 | Promo Reel from ₹499 | Product Reel from ₹799 | 3 Edits for ₹499 | 3 Reels for ₹1,299 | 5 for ₹1,999 | 10 for ₹3,499
    • 15–30s Commercial Reels with high-fidelity voiceover, sound design, and motion typography. 24–48h SLA.
 3. 📦 **3D Product Modeling & Visualization** — 3D Render from Model at ₹999 | Simple 3D Model starting at ₹2,999 | 3D Animation (10s) at ₹4,999
    • Precision 3D CAD modeling, glTF / USDZ web-ready assets, 4K PBR textures. 48h SLA.
@@ -103,7 +103,7 @@ export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
    • Photorealistic interior architecture, spatial staging, daylight simulations. 48–72h SLA.
 6. 🏢 **Exterior 3D Visualization** — Facade / Elevation Render at ₹1,999 per view
    • Exterior perspective visualizations, elevation profiles, architectural glazing simulations. 48–72h SLA.
-7. 📈 **AI-Powered Digital Marketing** — 30-Day Content Calendar at ₹999 | Trend Research at ₹1,499 / month | Social Media Management at ₹9,999 / month
+7. 📈 **Digital Marketing & Strategy** — 30-Day Content Calendar at ₹999 | Trend Research at ₹1,499 / month | Social Media Management at ₹9,999 / month
    • Strategic content matrices, copywriting angles, audience blueprints. 48–72h SLA.
 8. 🎯 **Meta Ads Campaign Management** — ₹4,999 / month (Ad spend excluded)
    • Multi-ratio creative sets (9:16, 1:1), hook copy, and campaign blueprint setup. 48h SLA.
@@ -131,13 +131,13 @@ export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
     client_id: "client_sutra",
     category: "Pricing",
     title: "Monthly Studio Retainers & Commission Tiers",
-    content: `We offer 3 transparent 30-day continuous creative pipeline packages:
+    content: `We offer 3 transparent 30-day continuous creative packages:
 
 1. 🚀 **Starter Trend** — **₹9,999 / 30 days**
    • 15 Branded Social & Product Images across 30 days
    • 15 Commercial Short Videos / Reels (up to 15s)
    • Trend topic research & brand relevance review
-   • Custom tailored prompts, captions, and hashtag bundles
+   • Custom tailored creative direction, captions, and hashtag bundles
    • 1 consolidated revision round per deliverable
    • Organized private Google Drive Vault staging
 
@@ -146,7 +146,7 @@ export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
    • 20 Commercial Short Videos / Reels (15–30s)
    • Daily trending-topic research & brand alignment
    • 30-Day strategic editorial content calendar
-   • Tailored creative prompts, captions, and hashtag bundles
+   • Tailored creative direction, captions, and hashtag bundles
    • 1 consolidated revision round per deliverable
    • Organized private Google Drive Vault staging
 
@@ -154,7 +154,7 @@ export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
    • Daily 1x 4K Brand Image / Graphic (30 Assets/month)
    • Daily 1x Commercial Motion Short / Reel (30 Assets/month)
    • Daily trending-topic research tailored to your brand
-   • Brand relevance review & custom prompt engineering
+   • Brand relevance review & creative direction planning
    • Complete captions, hooks, and targeted hashtag sets
    • 30-Day coordinated content calendar
    • Rigorous studio QA & 1 consolidated revision round per deliverable
@@ -199,7 +199,7 @@ export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
     title: "About Sutra Studio — Creative Technology & Digital Craftsmanship",
     content: `**Sutra Studio** is a premier Indian-inspired creative technology atelier blending ancient aesthetic harmony with cutting-edge digital engineering.
 
-• **Core Focus**: Bespoke 3D Spatial Visualization, Cinematic 4K Video Commercials, High-Performance Next.js Digital Flagships, and Autonomous AI Workflows.
+• **Core Focus**: Bespoke 3D Spatial Visualization, Cinematic 4K Video Commercials, High-Performance Next.js Digital Flagships, and Digital Systems & Workflows.
 • **Design Philosophy**: Sacred geometric proportions, minimalist warm-ivory aesthetics, and zero-compromise precision.
 • **Our Clients**: Luxury brands, architectural firms, D2C leaders, and high-growth technology enterprises worldwide.`,
     source: "SUTRA_STUDIO_UI_MASTER_PROMPT_PACK / Brand Architecture",
@@ -232,32 +232,32 @@ export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
     updated_at: new Date().toISOString(),
   },
 
-  // 6. N8N AUTOMATION PIPELINES
+  // 6. STUDIO PRODUCTION WORKFLOWS
   {
-    id: "kb_n8n_workflows",
+    id: "kb_studio_workflows",
     client_id: "client_sutra",
     category: "Custom Knowledge",
-    title: "Master n8n Automation Workflows & Autonomous Engines",
-    content: `Our studio operates 6 master n8n automated workflow pipelines:
+    title: "Studio Production Process & Dedicated Service Workflows",
+    content: `Our studio operates 6 streamlined production workflows:
 
-1. **01. Master Agency Orchestrator** (\`POST /webhook/synapse-master-orchestrator\`):
-   • Ingests client requirements, creates database ledger, and dispatches specialized child workflows.
-2. **02. Client Intake & CRM Chat LLM Agent** (\`POST /webhook/synapse-client-intake-chat\`):
-   • Collects brand guidelines, logo files, and color palettes with human escalation triggers.
-3. **03. Trend Research & Viral Hook Analyzer** (\`POST /webhook/synapse-trend-research-engine\`):
-   • Analyzes competitor social reels, scrapes viral hooks, and generates high-converting ad angles.
-4. **04. Multi-Format Banner Synthesis Engine** (\`POST /webhook/synapse-brand-banner-generator\`):
-   • Generates 4K banners across 1:1, 9:16, and 16:9 aspect ratios with custom logo overlays.
-5. **05. Cinematic Video Commercials Pipeline** (\`POST /webhook/synapse-video-reels-pipeline\`):
-   • Produces 15-30s cinematic commercial ads with high-fidelity studio voice narration and motion graphics.
-6. **06. Meta Ads Autonomous Campaign Launcher** (\`POST /webhook/synapse-meta-ads-automation\`):
-   • Configures Facebook Page, target audiences, budgets, and launches live ads with UTM tracking.`,
-    source: "N8N_WORKFLOWS_BLUEPRINT_EN.md",
+1. **01. Master Project Management & Client Brief Ingestion**:
+   • Reviews requirements, structures project milestones, and activates specialized studio teams.
+2. **02. Creative Discovery & Brand Alignment**:
+   • Collects brand visual guidelines, logo files, and color palettes with direct creative director consultation.
+3. **03. Trend Research & Campaign Planning**:
+   • Evaluates high-performing industry benchmarks, content hooks, and high-converting creative angles.
+4. **04. Multi-Format Brand Visual Production**:
+   • Produces 4K branded imagery across 1:1, 9:16, and 16:9 aspect ratios with custom brand layouts.
+5. **05. Cinematic Video Commercials & Motion Production**:
+   • Produces 15–30s commercial video reels with high-fidelity studio voiceover and motion typography.
+6. **06. Digital Campaign Strategy & Ad Setup**:
+   • Prepares audience targeting blueprints, campaign structures, and performance tracking.`,
+    source: "Studio Workflow Standards",
     status: "approved",
     approved_by: "Supervisor Admin",
     approved_at: new Date().toISOString(),
     published: true,
-    version: 1,
+    version: 2,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },

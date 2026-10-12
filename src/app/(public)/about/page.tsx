@@ -41,7 +41,7 @@ const PILLARS = [
     icon: Layers,
     sanskrit: "यन्त्र (Yantra)",
     title: "Algorithmic Precision",
-    desc: "High-precision studio pipelines, distributed rendering workflows, and modern web architectures delivering accelerated commercial turnarounds.",
+    desc: "High-precision studio production workflows, distributed rendering, and modern web architectures delivering accelerated commercial turnarounds.",
   },
 ];
 

@@ -79,9 +79,9 @@ export default function PhoneAiAgentPage() {
   ];
 
   const liveTranscript = [
-    { speaker: "Sutra Agent", text: "Namaste Yash! Sutra Studio neural voice bridge active.", time: "00:02" },
+    { speaker: "Sutra Concierge", text: "Namaste Yash! Sutra Studio voice concierge connected.", time: "00:02" },
     { speaker: "Client", text: "Has the teak wood reflection been softened on the living room render?", time: "00:09" },
-    { speaker: "Sutra Agent", text: "Yes, our lead compositor toned down the specular exponent by 25%. The updated 4K file is in your /3D_RENDERS folder.", time: "00:16" },
+    { speaker: "Sutra Concierge", text: "Yes, our lead compositor toned down the specular exponent by 25%. The updated 4K file is in your /3D_RENDERS folder.", time: "00:16" },
   ];
 
   return (
@@ -96,19 +96,19 @@ export default function PhoneAiAgentPage() {
             <div className="p-5 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-xs space-y-4">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#A98B57]">
                 <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
-                <span>Agent Profile</span>
+                <span>Concierge Profile</span>
               </div>
               <div className="space-y-1">
                 <h3 className="font-serif font-bold text-base text-[#0F172A]">
-                  Sutra Studio Audio Agent
+                  Sutra Studio Voice Concierge
                 </h3>
                 <p className="text-xs text-[#64748B]">
-                  Direct neural voice link to creative pipeline execution.
+                  Dedicated voice concierge for project inquiries and studio support.
                 </p>
               </div>
               <div className="pt-2 space-y-2 text-xs text-[#5C3A1E]">
                 <div className="flex items-center justify-between p-2 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]">
-                  <span>Engine Latency</span>
+                  <span>Response Latency</span>
                   <span className="font-mono font-semibold text-[#2E7D4F]">140ms</span>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]">

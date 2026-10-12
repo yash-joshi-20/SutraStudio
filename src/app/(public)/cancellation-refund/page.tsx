@@ -54,7 +54,7 @@ export default function CancellationRefundPage() {
                 2. Cancellation During Draft Production (50% Refund)
               </h2>
               <p>
-                If cancellation is requested while a commission is actively in <strong>In Production</strong> or <strong>Draft Delivered</strong> stage prior to client approval, a 50% partial refund is granted to cover allocated compute, 3D rendering pipeline costs, and studio producer hours.
+                If cancellation is requested while a commission is actively in <strong>In Production</strong> or <strong>Draft Delivered</strong> stage prior to client approval, a 50% partial refund is granted to cover studio creative production costs, rendering resources, and creative direction hours.
               </p>
             </section>
 

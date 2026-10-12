@@ -44,7 +44,7 @@ const FAQS = [
   },
   {
     q: "How does the Daily Trend Creator flagship package work?",
-    a: "Daily Trend Creator (₹19,999 / 30 days) operates as your dedicated daily active creative queue. Every single day for 30 days, we conduct daily trend research, engineer brand-aligned prompts, produce 1 custom 4K image + 1 commercial short video/reel, perform rigorous QA, and deliver directly to your private Google Drive vault.",
+    a: "Daily Trend Creator (₹19,999 / 30 days) operates as your dedicated daily active creative queue. Every single day for 30 days, we conduct daily trend research, develop brand-aligned creative direction, produce 1 custom 4K image + 1 commercial short video/reel, perform rigorous QA, and deliver directly to your private Google Drive vault.",
   },
   {
     q: "Do I own full commercial rights to the deliverables?",
@@ -52,7 +52,7 @@ const FAQS = [
   },
   {
     q: "What is explicitly excluded from your standard pricing?",
-    a: "Our transparent pricing covers digital creative production, prompt engineering, audio sync, color grading, and QA. Paid advertising budget/ad spend, on-location physical videography shoots, on-camera actors or voiceover talent fees, and multi-tenant enterprise server infrastructure are excluded unless explicitly agreed in a custom Statement of Work.",
+    a: "Our transparent pricing covers digital creative production, creative direction & content planning, audio sync, color grading, and QA. Paid advertising budget/ad spend, on-location physical videography shoots, on-camera actors or voiceover talent fees, and multi-tenant enterprise server infrastructure are excluded unless explicitly agreed in a custom Statement of Work.",
   },
   {
     q: "How are payments processed?",
@@ -174,7 +174,7 @@ export default function PricingPage() {
           <section className="w-full space-y-10">
             <div className="text-center max-w-2xl mx-auto space-y-2">
               <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#D4A35A]">
-                CONTINUOUS CREATIVE PIPELINES
+                CONTINUOUS CREATIVE PRODUCTION
               </span>
               <h2 className="font-serif text-3xl sm:text-4xl font-semibold text-[#0F172A]">
                 Approved 30-Day Subscription Retainers
@@ -256,7 +256,7 @@ export default function PricingPage() {
                           </div>
                           <div className="flex items-center gap-1.5 font-medium text-[#0F172A]">
                             <span className="w-4 h-4 rounded-full bg-[#5C3A1E] text-white text-[9px] flex items-center justify-center font-bold">2</span>
-                            <span>Brand-Specific Prompt Engineering</span>
+                            <span>Brand Creative Direction & Content Planning</span>
                           </div>
                           <div className="flex items-center gap-1.5 font-medium text-[#0F172A]">
                             <span className="w-4 h-4 rounded-full bg-[#5C3A1E] text-white text-[9px] flex items-center justify-center font-bold">3</span>
@@ -592,7 +592,7 @@ export default function PricingPage() {
             <span>Studio Production Scope &amp; Exclusion Guardrails</span>
           </div>
           <p className="text-xs sm:text-sm text-[#64748B] leading-relaxed">
-            Sutra Studio delivers senior art-directed digital creative assets, prompt engineering, color grading, sound synchronization, and web architecture. To protect commercial transparency, the following items are <strong>strictly excluded</strong> from all standard catalog rates and retainers:
+            Sutra Studio delivers senior art-directed digital creative assets, creative direction &amp; content planning, color grading, sound synchronization, and web architecture. To protect commercial transparency, the following items are <strong>strictly excluded</strong> from all standard catalog rates and retainers:
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2 text-xs text-[#475569]">
             <div className="p-3 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex items-start gap-2">

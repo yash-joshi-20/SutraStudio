@@ -424,12 +424,12 @@ export default function HomePage() {
                       <span className="text-xs font-bold text-[#64748B] bg-[#E5E1D8]/60 px-2.5 py-0.5 rounded-full">Free / ₹1.5k/mo</span>
                     </div>
                     <h4 className="font-serif text-lg font-bold text-[#0F172A] mb-2">Generic Online Generators</h4>
-                    <p className="text-xs text-[#64748B] mb-5 leading-relaxed">Uncalibrated prompt-and-pray generators.</p>
+                    <p className="text-xs text-[#64748B] mb-5 leading-relaxed">Uncalibrated consumer-grade generators.</p>
                     
                     <ul className="space-y-3 text-xs text-[#64748B]">
                       <li className="flex items-start gap-2">
                         <XIcon className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" />
-                        <span>Prompt guesswork &amp; distorted hands/text</span>
+                        <span>Trial-and-error guesswork &amp; distorted details</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <XIcon className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" />
@@ -780,7 +780,7 @@ export default function HomePage() {
                               </div>
                               <div className="flex items-center gap-1.5 font-medium text-[#0F172A]">
                                 <span className="w-4 h-4 rounded-full bg-[#5C3A1E] text-white text-[9px] flex items-center justify-center font-bold">2</span>
-                                <span>Brand-Specific Prompt Engineering</span>
+                                <span>Brand Creative Direction &amp; Content Planning</span>
                               </div>
                               <div className="flex items-center gap-1.5 font-medium text-[#0F172A]">
                                 <span className="w-4 h-4 rounded-full bg-[#5C3A1E] text-white text-[9px] flex items-center justify-center font-bold">3</span>
