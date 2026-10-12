@@ -219,6 +219,7 @@ export class N8nAutomationService {
       },
       brief: payload.brief || targetOrder?.requirements || targetOrder?.notes || "Curated luxury aesthetic",
       geminiApiKey: readEnv("GEMINI_API_KEY") || readEnv("GOOGLE_AI_API_KEY"),
+      openrouterApiKey: readEnv("OPENROUTER_API_KEY"),
       runId,
       appBaseUrl: this.getAppBaseUrl(),
       callbackUrl: `${this.getAppBaseUrl()}/api/n8n/webhook`,
@@ -315,9 +316,34 @@ export class N8nAutomationService {
 
     // 1. High-Fidelity 4K Master Render (Image)
     const promptSeed = Math.floor(Math.random() * 90000) + 10000;
-    const imagePrompt = encodeURIComponent(
-      `luxury commercial advertising showcase for ${brand}, architectural elegance, warm ivory and polished brass accents, Hasselblad 8k studio lighting, photorealistic, bespoke craftsmanship`
-    );
+    let imagePromptText = `luxury commercial advertising showcase for ${brand}, architectural elegance, warm ivory and polished brass accents, Hasselblad 8k studio lighting, photorealistic, bespoke craftsmanship`;
+    if (readEnv("OPENROUTER_API_KEY")) {
+      try {
+        const { OpenRouterService } = await import("@/lib/ai/openrouterService");
+        const briefRes = await OpenRouterService.generateTextByCapability({
+          capability: "text",
+          taskName: "creative_brief",
+          messages: [
+            {
+              role: "system",
+              content: "You are Creative Art Director for Sutra Studio. Generate a 1-sentence ultra-detailed photorealistic visual prompt with warm ivory and polished brass accents, 8k studio lighting. Return ONLY the prompt sentence."
+            },
+            {
+              role: "user",
+              content: `Service: ${serviceName}. Brand: ${brand}. Brief: ${payload.brief || "luxury architectural showcase"}`
+            }
+          ],
+          temperature: 0.6,
+          maxTokens: 100,
+        });
+        if (briefRes.text && briefRes.text.length > 20) {
+          imagePromptText = briefRes.text.trim().replace(/^["']|["']$/g, "");
+        }
+      } catch {
+        // Fallback to standard luxury template
+      }
+    }
+    const imagePrompt = encodeURIComponent(imagePromptText);
     const imagePreviewUrl = `https://image.pollinations.ai/prompt/${imagePrompt}?width=1200&height=800&nologo=true&seed=${promptSeed}`;
 
     const imageDeliverable = {

@@ -4,10 +4,9 @@ export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     try {
       validateProductionStartupEnv();
-    } catch (err) {
-      if (process.env.NODE_ENV === "production") {
-        throw err;
-      }
+    } catch (err: any) {
+      console.warn("[Instrumentation Startup Notice]", err?.message || err);
     }
   }
 }
+

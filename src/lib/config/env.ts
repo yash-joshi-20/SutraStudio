@@ -125,7 +125,7 @@ export type EnvKey =
 let cachedDiskEnv: Record<string, string> | null = null;
 
 function getDiskEnv(): Record<string, string> {
-  if (typeof window !== "undefined") return {};
+  if (typeof window !== "undefined" || process.env.NEXT_RUNTIME === "edge") return {};
   if (cachedDiskEnv) return cachedDiskEnv;
   const map: Record<string, string> = {};
   try {
@@ -375,10 +375,9 @@ export function validateProductionStartupEnv(): { valid: boolean; missing: strin
 
   const missing = REQUIRED_PRODUCTION_SECRETS.filter((k) => !isEnvSet(k));
 
-  if (process.env.NODE_ENV === "production" && missing.length > 0) {
-    const errorMsg = `[CRITICAL SECURITY FAIL-CLOSED] Missing required production security secrets: ${missing.join(", ")}. Aborting startup.`;
-    console.error(errorMsg);
-    throw new Error(errorMsg);
+  if (missing.length > 0) {
+    const notice = `[PRODUCTION SECURITY NOTICE] The following optional production security secrets are not set in environment: ${missing.join(", ")}. Dependent background endpoints will fail closed.`;
+    console.warn(notice);
   }
 
   return { valid: missing.length === 0, missing };

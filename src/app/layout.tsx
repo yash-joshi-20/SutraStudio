@@ -22,10 +22,21 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudios.in";
+const rawBaseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudios.in";
+const normalizedBaseUrl = rawBaseUrl.startsWith("http://") || rawBaseUrl.startsWith("https://")
+  ? rawBaseUrl
+  : `https://${rawBaseUrl}`;
+const baseUrl = normalizedBaseUrl.replace(/\/+$/, "");
+
+let metadataBase: URL;
+try {
+  metadataBase = new URL(baseUrl);
+} catch {
+  metadataBase = new URL("https://sutrastudios.in");
+}
 
 export const metadata: Metadata = {
-  metadataBase: new URL(baseUrl),
+  metadataBase,
   title: {
     template: "%s | Sutra Studios — Enterprise Software & 3D Spatial Engineering",
     default: "Sutra Studios — Tradition Meets Computational Technology",

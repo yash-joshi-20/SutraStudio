@@ -154,6 +154,27 @@ export async function generateChatResponse(o: Opts): Promise<string> {
     }
   }
 
+  // 5. OpenRouter Free Models Cascade (Llama 3.3 70B, Gemini 2.0 Flash Exp, DeepSeek R1, Qwen 2.5)
+  const openrouterKey = readEnv("OPENROUTER_API_KEY") || process.env.OPENROUTER_API_KEY;
+  if (openrouterKey && !ProviderRouter.isProviderInBackoff("openrouter-free")) {
+    try {
+      const { OpenRouterService } = await import("./openrouterService");
+      const res = await OpenRouterService.generateTextByCapability({
+        capability: "text",
+        taskName: "chat",
+        messages: [{ role: "system", content: o.system }, ...o.messages],
+        temperature: o.temperature,
+        maxTokens: o.maxTokens,
+      });
+      if (res.text) {
+        await ProviderRouter.recordSuccess("openrouter-free", 1, 0);
+        return res.text.trim();
+      }
+    } catch {
+      // Fallback to local grounded synthesizer
+    }
+  }
+
   // Local Grounded Synthesizer Fallback
   const lastUserMsg = o.messages[o.messages.length - 1]?.content || "";
   const isGujarati =
