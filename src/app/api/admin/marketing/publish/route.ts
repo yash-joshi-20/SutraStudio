@@ -23,7 +23,7 @@ export interface MarketingPublicationRecord {
   reachEstimate?: string;
 }
 
-let IN_MEMORY_PUBLICATIONS: MarketingPublicationRecord[] = [];
+const IN_MEMORY_PUBLICATIONS: MarketingPublicationRecord[] = [];
 
 export async function GET(req: Request) {
   const gate = await assertAdminSession(req);

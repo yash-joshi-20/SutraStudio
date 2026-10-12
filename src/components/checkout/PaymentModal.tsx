@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
@@ -15,6 +15,8 @@ import {
   ShieldCheck,
   AlertCircle,
   FileCheck,
+  Loader2,
+  RefreshCw,
 } from "lucide-react";
 
 export interface PaymentModalProps {
@@ -28,6 +30,7 @@ export interface PaymentModalProps {
   serviceTitle: string;
   amount: number;
   isCustomQuote?: boolean;
+  confirmToken?: string;
   onPaymentSuccess?: (verificationData: {
     utr: string;
     receiptUrl?: string;
@@ -46,11 +49,25 @@ export function PaymentModal({
   serviceTitle,
   amount,
   isCustomQuote,
+  confirmToken,
   onPaymentSuccess,
 }: PaymentModalProps) {
-  const displayCode = orderCode || orderId || "SUTRA-ORD";
-  const upiId = STUDIO_PAYMENT_CONFIG.vpa;
-  const payeeName = STUDIO_PAYMENT_CONFIG.payeeName || "Yash Joshi";
+  const [lockedPayment, setLockedPayment] = useState<{
+    amountINR: number;
+    currency: string;
+    vpa: string;
+    payeeName: string;
+    orderNumber: string;
+    upiUri: string;
+    status: string;
+  } | null>(null);
+  const [isLoadingPayment, setIsLoadingPayment] = useState(false);
+  const [initError, setInitError] = useState("");
+
+  const displayCode = lockedPayment?.orderNumber || orderCode || orderId || "SUTRA-ORD";
+  const upiId = lockedPayment?.vpa || STUDIO_PAYMENT_CONFIG.vpa || "yashjoshi7355-1@okicici";
+  const payeeName = lockedPayment?.payeeName || STUDIO_PAYMENT_CONFIG.payeeName || "Yash Joshi";
+  const effectiveAmount = lockedPayment?.amountINR ?? amount;
   const whatsappNumber = STUDIO_PAYMENT_CONFIG.whatsappNumber || "918200192781";
 
   const [copiedUpi, setCopiedUpi] = useState(false);
@@ -61,10 +78,60 @@ export function PaymentModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
-  // UPI Intent Deep Link for Mobile
-  const upiDeepLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(
-    payeeName
-  )}&am=${amount}&cu=INR&tn=${encodeURIComponent(displayCode)}`;
+  // Initialize and synchronize authoritative server payment on open
+  useEffect(() => {
+    if (!isOpen || !orderId) return;
+
+    let isCancelled = false;
+    setIsLoadingPayment(true);
+    setInitError("");
+
+    fetch("/api/payments/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orderId,
+        confirmToken,
+        clientEmail,
+      }),
+    })
+      .then(async (res) => {
+        const data = await res.json();
+        if (isCancelled) return;
+        if (!res.ok) {
+          setInitError(data.error || "Failed to initialize payment session.");
+          setIsLoadingPayment(false);
+          return;
+        }
+        setLockedPayment({
+          amountINR: data.amountINR,
+          currency: data.currency || "INR",
+          vpa: data.vpa,
+          payeeName: data.payeeName,
+          orderNumber: data.orderNumber || orderCode || orderId,
+          upiUri: data.upiUri,
+          status: data.status,
+        });
+        setIsLoadingPayment(false);
+      })
+      .catch((err) => {
+        if (!isCancelled) {
+          setInitError(err instanceof Error ? err.message : "Failed to load payment session.");
+          setIsLoadingPayment(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isOpen, orderId, confirmToken, clientEmail, orderCode]);
+
+  // UPI Intent Deep Link for Mobile (uses server locked values)
+  const upiDeepLink =
+    lockedPayment?.upiUri ||
+    `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(
+      payeeName
+    )}&am=${effectiveAmount}&cu=INR&tn=${encodeURIComponent(displayCode)}`;
 
   const handleCopyUpi = () => {
     if (typeof navigator !== "undefined" && navigator.clipboard) {
@@ -118,6 +185,8 @@ export function PaymentModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           orderId,
+          confirmToken,
+          clientEmail,
           utrNumber: utrNumber.trim().toUpperCase(),
           screenshotUrl: receiptPreview || undefined,
         }),
@@ -177,7 +246,54 @@ Please verify payment receipt and commence studio production.`;
       description={`Order ${displayCode} • ${serviceTitle}`}
       maxWidth="lg"
     >
-      {submissionSuccess ? (
+      {isLoadingPayment ? (
+        <div className="py-12 px-4 text-center space-y-3">
+          <Loader2 className="w-8 h-8 animate-spin text-[#A98B57] mx-auto" />
+          <p className="text-xs font-mono text-[#64748B]">
+            Verifying order ownership and locking studio ledger pricing...
+          </p>
+        </div>
+      ) : initError ? (
+        <div className="py-8 px-4 text-center space-y-4">
+          <div className="w-12 h-12 rounded-full bg-red-50 border border-red-200 flex items-center justify-center mx-auto text-red-600">
+            <AlertCircle className="w-6 h-6" />
+          </div>
+          <div className="space-y-1">
+            <h4 className="font-serif text-lg font-bold text-[#0F172A]">Payment Session Error</h4>
+            <p className="text-xs text-red-600 max-w-md mx-auto">{initError}</p>
+          </div>
+          <div className="pt-2 flex justify-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onClose}
+            >
+              Close
+            </Button>
+          </div>
+        </div>
+      ) : lockedPayment?.status === "paid" ? (
+        <div className="py-8 px-4 text-center space-y-4">
+          <div className="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto text-emerald-600">
+            <Check className="w-7 h-7 stroke-[2.5]" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="font-serif text-xl font-bold text-[#0F172A]">Payment Already Verified</h3>
+            <p className="text-xs text-[#64748B] max-w-md mx-auto">
+              This order ({displayCode}) has already been confirmed and marked as paid in the studio ledger.
+            </p>
+          </div>
+          <div className="pt-2 flex justify-center">
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={onClose}
+            >
+              Done & Return
+            </Button>
+          </div>
+        </div>
+      ) : submissionSuccess ? (
         <div className="py-6 px-2 text-center space-y-4 animate-in fade-in duration-300">
           <div className="w-16 h-16 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] flex items-center justify-center mx-auto text-[#059669]">
             <Check className="w-8 h-8 stroke-[2.5]" />
@@ -205,7 +321,7 @@ Please verify payment receipt and commence studio production.`;
             <div className="flex justify-between text-[#64748B]">
               <span>Amount Due:</span>
               <span className="font-serif font-bold text-[#5C3A1E]">
-                ₹{amount.toLocaleString("en-IN")}
+                ₹{effectiveAmount.toLocaleString("en-IN")}
               </span>
             </div>
             <div className="flex justify-between text-[#64748B]">
@@ -241,10 +357,10 @@ Please verify payment receipt and commence studio production.`;
           <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] flex items-center justify-between">
             <div>
               <span className="text-[10px] font-mono uppercase tracking-wider text-[#94A3B8] block">
-                Total Amount Due
+                Total Amount Due (Authoritative)
               </span>
               <span className="font-serif text-2xl sm:text-3xl font-bold text-[#5C3A1E]">
-                ₹{amount.toLocaleString("en-IN")}
+                ₹{effectiveAmount.toLocaleString("en-IN")}
               </span>
             </div>
             <div className="text-right">
@@ -258,7 +374,7 @@ Please verify payment receipt and commence studio production.`;
             {/* Left Column: QR Code & Verified Credentials */}
             <div className="space-y-3">
               <DynamicUPIQRCode
-                amount={amount}
+                amount={effectiveAmount}
                 orderId={displayCode}
                 payeeVpa={upiId}
                 payeeName={payeeName}
@@ -283,9 +399,9 @@ Please verify payment receipt and commence studio production.`;
                 </div>
                 <ol className="list-decimal list-inside space-y-1 pt-1 text-[11px] text-[#64748B]">
                   <li>Scan the QR code or send payment to UPI ID <strong className="text-[#0F172A] font-mono">{upiId}</strong>.</li>
-                  <li>Pay the exact locked amount: <strong className="text-[#5C3A1E]">₹{amount.toLocaleString("en-IN")}</strong>.</li>
+                  <li>Pay the exact locked amount: <strong className="text-[#5C3A1E]">₹{effectiveAmount.toLocaleString("en-IN")}</strong>.</li>
                   <li>Copy the 12-digit UTR / UPI Reference Number from your payment confirmation.</li>
-                  <li>Enter the UTR below and submit for studio verification.</li>
+                  <li>Submit the UTR below. Studio admin verifies the bank credit before production starts.</li>
                 </ol>
               </div>
 
@@ -361,14 +477,14 @@ Please verify payment receipt and commence studio production.`;
                   }
                 >
                   {isSubmitting
-                    ? "Submitting for Verification..."
+                    ? "Submitting for Studio Verification..."
                     : `Submit UTR for Verification (${utrNumber.length}/12+)`}
                 </Button>
 
                 {/* WhatsApp Alternative */}
                 <div className="text-center pt-1">
                   <span className="text-[11px] text-[#94A3B8] block mb-1.5">
-                    Need instant confirmation?
+                    Questions about verification?
                   </span>
                   <a
                     href={getWhatsAppFallbackUrl()}

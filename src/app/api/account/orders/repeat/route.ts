@@ -19,6 +19,9 @@ import { adminDb, serverTimestamp } from "@/lib/firebase/admin";
 import { toIso } from "@/lib/firebase/db";
 import { quoteOrder } from "@/lib/services/pricing";
 
+import { isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { OrdersStore } from "@/lib/services/ordersStore";
+
 export const dynamic = "force-dynamic";
 
 const DRAFTS = "orderDrafts";
@@ -45,21 +48,43 @@ export async function POST(req: Request) {
     const orderId = typeof body.orderId === "string" ? body.orderId.trim() : "";
     if (!orderId) return badRequest("Which order would you like to repeat?");
 
-    // Ownership is enforced by the query, not by a field in the body.
-    const orderSnap = await adminDb()
-      .collection("orders")
-      .where("clientId", "==", session.uid)
-      .where("__name__", "==", orderId)
-      .limit(1)
-      .get();
+    // Ownership is enforced: client can only repeat their own past order.
+    let order: Record<string, unknown> | null = null;
+    if (isFirebaseAdminReady()) {
+      try {
+        const orderSnap = await adminDb()
+          .collection("orders")
+          .where("clientId", "==", session.uid)
+          .where("__name__", "==", orderId)
+          .limit(1)
+          .get();
+        if (orderSnap.docs[0]) {
+          order = orderSnap.docs[0].data() as Record<string, unknown>;
+        }
+      } catch (err) {
+        console.warn("[Repeat Order] Firestore lookup fallback:", err);
+      }
+    }
 
-    const orderDoc = orderSnap.docs[0];
-    if (!orderDoc) {
+    if (!order) {
+      const stored = (await OrdersStore.findByIdAsync(orderId)) || OrdersStore.findById(orderId);
+      if (
+        stored &&
+        (stored.clientId === session.uid ||
+          stored.clientUid === session.uid ||
+          (session.email && stored.clientEmail && String(stored.clientEmail).toLowerCase() === session.email.toLowerCase()))
+      ) {
+        order = stored as unknown as Record<string, unknown>;
+      }
+    }
+
+    if (!order) {
       return notFound("That order was not found in your account.");
     }
 
-    const order = orderDoc.data() as Record<string, unknown>;
-    const serviceId = String(order.serviceId ?? order.service ?? "");
+    const serviceId = String(
+      order.serviceId ?? order.service ?? order.tierId ?? (order.items && Array.isArray(order.items) && order.items[0]?.serviceId) ?? ""
+    );
     if (!serviceId) {
       return badRequest("That order cannot be repeated automatically. Please start a new order.");
     }
@@ -137,8 +162,9 @@ export async function POST(req: Request) {
     }
 
     /* ---------------- write the draft ------------- */
-    const ref = adminDb().collection(DRAFTS).doc();
+    const draftId = `rpt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const draft = {
+      id: draftId,
       clientId: session.uid,
       sourceOrderId: orderId,
       serviceId,
@@ -169,13 +195,25 @@ export async function POST(req: Request) {
         language: brandKit.language ?? "en",
       },
       charged: false,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
-    await ref.set(draft);
+
+    if (isFirebaseAdminReady()) {
+      try {
+        const ref = adminDb().collection(DRAFTS).doc(draftId);
+        await ref.set({
+          ...draft,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      } catch (err) {
+        console.warn("[Repeat Order] Firestore draft write fallback:", err);
+      }
+    }
 
     const result: RepeatResult = {
-      draftId: ref.id,
+      draftId,
       serviceId,
       brandKitId,
       quote,
@@ -191,22 +229,30 @@ export async function POST(req: Request) {
 export async function GET() {
   return guarded(async () => {
     const session = await requireUser();
-    const snap = await adminDb()
-      .collection(DRAFTS)
-      .where("clientId", "==", session.uid)
-      .where("status", "==", "draft")
-      .orderBy("createdAt", "desc")
-      .limit(25)
-      .get();
+    if (isFirebaseAdminReady()) {
+      try {
+        const snap = await adminDb()
+          .collection(DRAFTS)
+          .where("clientId", "==", session.uid)
+          .where("status", "==", "draft")
+          .orderBy("createdAt", "desc")
+          .limit(25)
+          .get();
 
-    return ok({
-      drafts: snap.docs.map((d) => ({
-        id: d.id,
-        ...d.data(),
-        createdAt: toIso(d.data().createdAt),
-        updatedAt: toIso(d.data().updatedAt),
-      })),
-    });
+        return ok({
+          drafts: snap.docs.map((d) => ({
+            id: d.id,
+            ...d.data(),
+            createdAt: toIso(d.data().createdAt),
+            updatedAt: toIso(d.data().updatedAt),
+          })),
+        });
+      } catch (err) {
+        console.warn("[Repeat Order] Firestore draft list fallback:", err);
+      }
+    }
+
+    return ok({ drafts: [] });
   });
 }
 

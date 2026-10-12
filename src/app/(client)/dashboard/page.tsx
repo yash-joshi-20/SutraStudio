@@ -13,6 +13,7 @@ import { LotusSymbol } from "@/components/brand/SutraLogo";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { useAuth } from "@/lib/auth/authContext";
 import { SUTRA_SERVICES } from "@/data/servicesData";
+import { formatCurrencyINR } from "@/config/services";
 import {
   Plus,
   ArrowRight,
@@ -38,6 +39,9 @@ import {
   Share2,
   TrendingUp,
   Globe,
+  Download,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -46,15 +50,32 @@ interface OrderItem {
   code: string;
   title: string;
   service: string;
-  status: "awaiting_approval" | "in_progress" | "revision_requested" | "completed";
+  package?: string;
+  quantity?: number;
+  totalAmount?: number;
+  amountPaid?: number;
+  paymentStatus?: string;
+  status: "awaiting_approval" | "in_progress" | "revision_requested" | "completed" | "pending_payment" | string;
   statusLabel: string;
   deliverable: string;
+  deliverables?: {
+    driveFileId?: string;
+    filename: string;
+    fileSize?: string;
+    mimeType?: string;
+    previewUrl?: string;
+    version?: string;
+    category?: string;
+  }[];
   driveFolder: string;
   revisionRound: number;
   maxRevisions: number;
+  orderDate: string;
   updatedAt: string;
   progress: number;
+  nextAction: string;
   notes?: string;
+  isDemo?: boolean;
 }
 
 export default function ClientDashboardPage() {
@@ -96,15 +117,33 @@ export default function ClientDashboardPage() {
                 id: o.id,
                 code: o.code || o.orderNumber || `#ORD-${String(o.id).slice(-3)}`,
                 title: o.title || o.service || "Studio Commission",
-                service: o.service || "Creative Direction",
+                service: o.service || (o.items && o.items[0]?.name) || "Creative Direction",
+                package: o.packageName || (o.items && o.items[0]?.planId) || undefined,
+                quantity: o.quantity || (o.items && o.items[0]?.quantity) || 1,
+                totalAmount: o.totalAmount || o.amountPaid || (o.items && o.items[0]?.price) || 0,
+                amountPaid: o.amountPaid || (o.paymentStatus === "paid" ? o.totalAmount : 0),
+                paymentStatus: o.paymentStatus || (o.status === "completed" || o.status === "approved" || o.status === "paid" ? "paid" : "unpaid"),
                 status: o.status || "in_progress",
-                deliverable: o.deliverablePreview || "Production files vaulted in Sutra Cloud Vault",
+                statusLabel: o.statusLabel || "In Production",
+                deliverable: o.deliverablePreview || (o.deliverables && o.deliverables[0]?.filename) || "Production files vaulted in Sutra Cloud Vault",
+                deliverables: o.deliverables || [],
                 driveFolder: o.driveFolderPath || o.driveFolderId || "Vault",
                 revisionRound: o.revisionRound || 0,
                 maxRevisions: o.maxRevisions || 2,
-                updatedAt: o.updatedAt ? new Date(o.updatedAt).toLocaleDateString() : "Recently",
-                progress: o.status === "completed" ? 100 : o.status === "approved" ? 90 : 50,
+                orderDate: o.createdAt ? new Date(o.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "Active",
+                updatedAt: o.updatedAt ? new Date(o.updatedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "Recently",
+                progress: o.status === "completed" ? 100 : o.status === "approved" ? 90 : o.status === "in_production" ? 65 : 45,
+                nextAction: o.status === "awaiting_approval"
+                  ? "Review Deliverable"
+                  : o.paymentStatus === "unpaid" || o.status === "pending_payment"
+                  ? "Complete Payment"
+                  : o.status === "completed"
+                  ? "Download Masters"
+                  : o.status === "revision_requested"
+                  ? "Revisions Queued"
+                  : "Production Underway",
                 notes: o.notes,
+                isDemo: Boolean(o.isDemo || o.id?.startsWith("demo-")),
               }))
             );
           }
@@ -129,6 +168,68 @@ export default function ClientDashboardPage() {
   const [isRevisionMode, setIsRevisionMode] = useState(false);
   const [revisionNotes, setRevisionNotes] = useState("");
   const [feedbackSuccess, setFeedbackSuccess] = useState("");
+  const [downloadState, setDownloadState] = useState<{ msg: string; type: "info" | "error" | "success" } | null>(null);
+  const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
+
+  const handleDownloadDeliverable = async (fileId?: string, filename?: string) => {
+    if (!fileId) {
+      setDownloadState({
+        msg: "Deliverable is currently processing in studio production pipeline.",
+        type: "info",
+      });
+      return;
+    }
+    setDownloadingFileId(fileId);
+    setDownloadState({
+      msg: `Fetching "${filename || "master deliverable"}" from encrypted vault...`,
+      type: "info",
+    });
+    try {
+      const res = await fetch(`/api/drive/file/${encodeURIComponent(fileId)}?download=true`);
+      if (res.status === 401) {
+        throw new Error("Authentication required. Please sign in to download private deliverables.");
+      }
+      if (res.status === 403) {
+        throw new Error("Forbidden: Cross-tenant access blocked. You may only download deliverables from your own orders.");
+      }
+      if (res.status === 404) {
+        throw new Error("File not found or still rendering in cloud pipeline. Please retry shortly.");
+      }
+      if (res.status === 503) {
+        throw new Error("Storage sync in progress. Please retry in a few moments.");
+      }
+      if (!res.ok) {
+        throw new Error(`Download failed (HTTP ${res.status}). Please retry.`);
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename || "deliverable";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      setDownloadState({ msg: `Downloaded ${filename || "deliverable"} successfully!`, type: "success" });
+      setTimeout(() => setDownloadState(null), 3500);
+    } catch (err: any) {
+      setDownloadState({ msg: err.message || "Failed to download deliverable.", type: "error" });
+    } finally {
+      setDownloadingFileId(null);
+    }
+  };
+
+  const isOrderPaidOrActive = (ord: any): boolean =>
+    Boolean(
+      ord &&
+        (ord.paymentStatus === "paid" ||
+          ord.status === "paid" ||
+          ord.status === "in_production" ||
+          ord.status === "delivered" ||
+          ord.status === "completed" ||
+          ord.status === "draft_delivered" ||
+          ord.status === "active")
+    );
 
   // Create Order Wizard State
   const [step, setStep] = useState(1);
@@ -177,7 +278,9 @@ export default function ClientDashboardPage() {
         revisionRound: 0,
         maxRevisions: 2,
         updatedAt: "Just now",
+        orderDate: new Date().toISOString(),
         progress: 15,
+        nextAction: "Creative Production",
       };
       setOrders([newOrder, ...orders]);
       setOrderSubmitted(true);
@@ -232,23 +335,23 @@ export default function ClientDashboardPage() {
       title: "Spatial & 3D Architecture",
       category: "Creative",
       desc: "Photorealistic spatial renders, material moodboards, and interior lighting passes.",
-      price: "₹9,499",
+      price: "From ₹999",
       slug: "3d-modeling",
       icon: Box,
     },
     {
-      title: "Brand Identity & Styleguide",
+      title: "Starter Brand Identity",
       category: "Design",
       desc: "Comprehensive Sanskrit-inspired identity, typography guidelines, and vector suites.",
-      price: "₹6,499",
-      slug: "window-design",
+      price: "From ₹2,999",
+      slug: "digital-marketing",
       icon: Compass,
     },
     {
       title: "Next.js Web Application",
       category: "Development",
       desc: "Bespoke high-performance digital flagship with automated studio review pipelines.",
-      price: "₹19,999",
+      price: "From ₹4,999",
       slug: "website-development",
       icon: Layers,
     },
@@ -991,6 +1094,29 @@ export default function ClientDashboardPage() {
                   </div>
                 ) : (
                   <>
+                    {/* Download Alert Toast */}
+                    {downloadState && (
+                      <div
+                        className={`p-3.5 rounded-2xl border text-xs flex items-center justify-between animate-in fade-in duration-200 ${
+                          downloadState.type === "error"
+                            ? "bg-[#FEF2F2] border-[#FECACA] text-[#991B1B]"
+                            : downloadState.type === "info"
+                            ? "bg-[#FFFDF9] border-[#D4A35A]/60 text-[#5C3A1E]"
+                            : "bg-[#F0FDF4] border-[#BBF7D0] text-[#166534]"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          {downloadState.type === "error" ? (
+                            <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0" />
+                          ) : (
+                            <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
+                          )}
+                          <span className="font-medium">{downloadState.msg}</span>
+                        </div>
+                        <span className="text-[10px] font-mono text-[#5C3A1E]">Sutra Cloud Vault</span>
+                      </div>
+                    )}
+
                     <div className="hidden md:block rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] divide-y divide-[#EADFCB]/60 overflow-hidden shadow-xs">
                       {orders.map((ord) => (
                         <div
@@ -1016,45 +1142,78 @@ export default function ClientDashboardPage() {
                               >
                                 {ord.statusLabel}
                               </Badge>
+                              <span className="text-[10px] font-mono font-semibold uppercase px-2 py-0.5 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[#5C3A1E]">
+                                {ord.paymentStatus === "paid" ? "Paid & Cleared" : "Payment Pending"}
+                              </span>
                               <span className="text-xs text-[#94A3B8]">
-                                • {ord.service}
+                                • {ord.service} {ord.package ? `(${ord.package})` : ""}
                               </span>
                               <span className="text-[11px] font-medium text-[#64748B] bg-[#F8F5EF] px-2 py-0.5 rounded-full border border-[#EADFCB]">
                                 Round {ord.revisionRound} of {ord.maxRevisions} Revisions
                               </span>
                             </div>
 
-                            <h3 className="font-serif text-lg font-semibold text-[#0F172A] truncate">
-                              {ord.title}
-                            </h3>
+                            <div className="flex items-center gap-3">
+                              <h3 className="font-serif text-lg font-semibold text-[#0F172A] truncate">
+                                {ord.title}
+                              </h3>
+                              <span className="text-xs font-mono font-bold text-[#5C3A1E]">
+                                {formatCurrencyINR(ord.totalAmount || 0)}
+                              </span>
+                              <span className="text-[11px] text-[#94A3B8] font-mono">
+                                • {ord.orderDate}
+                              </span>
+                            </div>
 
                             <p className="text-xs text-[#64748B] truncate">
                               {ord.deliverable}
                             </p>
 
-                            {/* Progress Bar */}
-                            <div className="pt-2 max-w-md">
-                              <div className="flex items-center justify-between text-[11px] mb-1">
-                                <span className="text-[#64748B]">Pipeline Completion</span>
-                                <span className="font-semibold text-[#0F172A]">{ord.progress}%</span>
+                            {/* Progress Bar & Next Action */}
+                            <div className="pt-2 max-w-md flex items-center gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between text-[11px] mb-1">
+                                  <span className="text-[#64748B]">Pipeline Completion</span>
+                                  <span className="font-semibold text-[#0F172A]">{ord.progress}%</span>
+                                </div>
+                                <div className="w-full h-1.5 rounded-full bg-[#EADFCB]/50 overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full bg-gradient-to-r from-[#D4A35A] to-[#5C3A1E]"
+                                    style={{ width: `${ord.progress}%` }}
+                                  />
+                                </div>
                               </div>
-                              <div className="w-full h-1.5 rounded-full bg-[#EADFCB]/50 overflow-hidden">
-                                <div
-                                  className="h-full rounded-full bg-gradient-to-r from-[#D4A35A] to-[#5C3A1E]"
-                                  style={{ width: `${ord.progress}%` }}
-                                />
-                              </div>
+                              <span className="text-[10px] font-medium uppercase tracking-wider text-[#A98B57] bg-[#FAF9F5] px-2 py-1 rounded-md border border-[#EADFCB] shrink-0">
+                                {ord.nextAction}
+                              </span>
                             </div>
                           </div>
 
                           <div className="flex items-center gap-3 shrink-0">
+                            {ord.deliverables && ord.deliverables.length > 0 && isOrderPaidOrActive(ord) && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleDownloadDeliverable(
+                                    ord.deliverables![0].driveFileId,
+                                    ord.deliverables![0].filename
+                                  )
+                                }
+                                className="px-3 py-2 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] transition-all cursor-pointer flex items-center gap-1.5 min-h-[44px] touch-target"
+                                title="Download Primary Master"
+                              >
+                                <Download className="w-3.5 h-3.5 text-[#A98B57]" />
+                                <span>Download</span>
+                              </button>
+                            )}
+
                             <button
                               type="button"
                               onClick={() => {
                                 setInspectingOrder(ord);
                                 setIsRevisionMode(false);
                               }}
-                              className="px-4 py-2 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#FFFDF9] transition-all cursor-pointer flex items-center gap-1.5"
+                              className="px-4 py-2 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#FFFDF9] transition-all cursor-pointer flex items-center gap-1.5 min-h-[44px] touch-target"
                             >
                               <Eye className="w-3.5 h-3.5" />
                               <span>Inspect Scope</span>
@@ -1066,6 +1225,7 @@ export default function ClientDashboardPage() {
                                 size="sm"
                                 onClick={() => handleApproveDeliverable(ord.id)}
                                 leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
+                                className="min-h-[44px] touch-target"
                               >
                                 Approve
                               </Button>
@@ -1083,9 +1243,16 @@ export default function ClientDashboardPage() {
                           className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] shadow-xs space-y-3"
                         >
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs font-mono font-bold text-[#5C3A1E] tracking-wider">
-                              {ord.code}
-                            </span>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-xs font-mono font-bold text-[#5C3A1E] tracking-wider">
+                                {ord.code}
+                              </span>
+                              {ord.isDemo && (
+                                <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#F1ECE1] border border-[#D5C7B0] text-[#7A6241] font-semibold">
+                                  Demo Sample
+                                </span>
+                              )}
+                            </div>
                             <Badge
                               variant={
                                 ord.status === "completed"
@@ -1113,8 +1280,32 @@ export default function ClientDashboardPage() {
                               <span className="font-medium text-[#5C3A1E] bg-[#F8F5EF] px-2 py-0.5 rounded-full border border-[#EADFCB]">
                                 {ord.service}
                               </span>
+                              {ord.package && (
+                                <span className="font-medium text-[#7A6241] bg-[#F8F5EF] px-2 py-0.5 rounded-full border border-[#EADFCB]">
+                                  {ord.package}
+                                </span>
+                              )}
                               <span>•</span>
                               <span>Round {ord.revisionRound}/{ord.maxRevisions} Revs</span>
+                            </div>
+                          </div>
+
+                          {/* Commercial Snapshot & Next Action */}
+                          <div className="grid grid-cols-2 gap-2 text-xs p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/60">
+                            <div>
+                              <span className="text-[10px] uppercase tracking-wider text-[#64748B] block">Agreed Price</span>
+                              <span className="font-bold text-[#0F172A] font-mono">
+                                {formatCurrencyINR(ord.totalAmount || 0)}
+                              </span>
+                              <span className={`text-[10px] font-semibold ml-1.5 ${ord.paymentStatus === "paid" ? "text-emerald-700" : "text-amber-700"}`}>
+                                ({ord.paymentStatus ? ord.paymentStatus.toUpperCase() : "PENDING"})
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] uppercase tracking-wider text-[#64748B] block">Next Action</span>
+                              <span className="text-[11px] font-medium text-[#5C3A1E] line-clamp-1" title={ord.nextAction}>
+                                {ord.nextAction}
+                              </span>
                             </div>
                           </div>
 
@@ -1131,6 +1322,40 @@ export default function ClientDashboardPage() {
                               />
                             </div>
                           </div>
+
+                          {/* Deliverables Download Row if available */}
+                          {ord.deliverables && ord.deliverables.length > 0 && isOrderPaidOrActive(ord) && (
+                            <div className="pt-2 border-t border-[#EADFCB]/60 space-y-1.5">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-[#A98B57] block">
+                                Deliverables ({ord.deliverables.length})
+                              </span>
+                              <div className="space-y-1.5">
+                                {ord.deliverables.map((del) => {
+                                  const fileId = del.driveFileId || del.previewUrl || del.filename;
+                                  const isDownloading = downloadingFileId === fileId;
+                                  return (
+                                    <button
+                                      key={fileId}
+                                      type="button"
+                                      onClick={() => handleDownloadDeliverable(fileId, del.filename)}
+                                      disabled={isDownloading}
+                                      className="w-full text-left py-2 px-3 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] hover:border-[#D4A35A] flex items-center justify-between gap-2 text-xs text-[#0F172A] min-h-[44px] cursor-pointer"
+                                    >
+                                      <span className="truncate font-medium">{del.filename}</span>
+                                      <span className="shrink-0 flex items-center gap-1 font-semibold text-[#5C3A1E] text-[11px]">
+                                        {isDownloading ? (
+                                          <Loader2 className="w-3.5 h-3.5 animate-spin text-[#A98B57]" />
+                                        ) : (
+                                          <Download className="w-3.5 h-3.5 text-[#5C3A1E]" />
+                                        )}
+                                        Download
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
 
                           {/* Full-width Action Buttons */}
                           <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#EADFCB]/50">
@@ -1196,6 +1421,16 @@ export default function ClientDashboardPage() {
         >
           {inspectingOrder && (
             <div className="space-y-6">
+              {/* Demo Flag Notice if applicable */}
+              {inspectingOrder.isDemo && (
+                <div className="p-3 rounded-xl bg-[#F8F5EF] border border-[#D5C7B0] text-xs text-[#7A6241] flex items-center gap-2">
+                  <span className="font-bold text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-[#EADFCB]">
+                    Studio Sample Record
+                  </span>
+                  <span>This is a showcase demonstration order for visual and workflow preview.</span>
+                </div>
+              )}
+
               {/* Status Header */}
               <div className="p-4 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-between">
                 <div>
@@ -1208,6 +1443,83 @@ export default function ClientDashboardPage() {
                     {inspectingOrder.revisionRound} of {inspectingOrder.maxRevisions} Used
                   </p>
                 </div>
+              </div>
+
+              {/* Commercial Snapshot Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/80 text-xs">
+                <div>
+                  <span className="text-[10px] uppercase tracking-wider text-[#64748B] block">Agreed Price</span>
+                  <span className="font-bold text-[#0F172A] font-mono">
+                    {formatCurrencyINR(inspectingOrder.totalAmount || 0)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase tracking-wider text-[#64748B] block">Payment State</span>
+                  <span className={`font-semibold uppercase ${inspectingOrder.paymentStatus === "paid" ? "text-emerald-700" : "text-amber-700"}`}>
+                    {inspectingOrder.paymentStatus || "PENDING"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase tracking-wider text-[#64748B] block">Scope / Qty</span>
+                  <span className="font-medium text-[#0F172A]">
+                    {inspectingOrder.package || "Custom"} ({inspectingOrder.quantity || 1}x)
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase tracking-wider text-[#64748B] block">Order Date</span>
+                  <span className="font-mono text-[#64748B]">
+                    {inspectingOrder.orderDate ? new Date(inspectingOrder.orderDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Deliverables / Vault Section */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-[#A98B57]">
+                  Deliverable Files & Vault Assets
+                </h4>
+                {inspectingOrder.deliverables && inspectingOrder.deliverables.length > 0 && isOrderPaidOrActive(inspectingOrder) ? (
+                  <div className="space-y-2">
+                    {inspectingOrder.deliverables.map((del) => {
+                      const fileId = del.driveFileId || del.previewUrl || del.filename;
+                      const isDownloading = downloadingFileId === fileId;
+                      return (
+                        <div
+                          key={fileId}
+                          className="p-3 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] flex items-center justify-between gap-3 text-xs"
+                        >
+                          <div className="truncate">
+                            <p className="font-medium text-[#0F172A] truncate">{del.filename}</p>
+                            <p className="text-[11px] text-[#64748B]">
+                              {del.mimeType || "Asset"} {del.fileSize ? `• ${del.fileSize}` : ""}
+                            </p>
+                          </div>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleDownloadDeliverable(fileId, del.filename)}
+                            disabled={isDownloading}
+                            leftIcon={
+                              isDownloading ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Download className="w-3.5 h-3.5 text-[#5C3A1E]" />
+                              )
+                            }
+                            className="min-h-[44px]"
+                          >
+                            {isDownloading ? "Downloading..." : "Download"}
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/60 text-xs text-[#64748B] flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-[#A98B57] shrink-0" />
+                    <span>Assets will appear here with secure download links once rendered and approved.</span>
+                  </div>
+                )}
               </div>
 
               {/* Deliverable Review Note */}
@@ -1284,6 +1596,17 @@ export default function ClientDashboardPage() {
                         Request Revision
                       </Button>
                     )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const targetId = inspectingOrder.package || inspectingOrder.service || "img-creation";
+                        window.location.href = `/orders?service=${encodeURIComponent(targetId)}&repeatOrderId=${encodeURIComponent(inspectingOrder.id)}`;
+                      }}
+                      leftIcon={<Sparkles className="w-3.5 h-3.5 text-[#A98B57]" />}
+                    >
+                      Repeat Order
+                    </Button>
                   </div>
 
                   {inspectingOrder.status === "awaiting_approval" && (

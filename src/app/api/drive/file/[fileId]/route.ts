@@ -30,6 +30,43 @@ function contentDisposition(name: string, inline: boolean): string {
   return `${inline ? "inline" : "attachment"}; filename="${ascii}"; filename*=UTF-8''${encoded}`;
 }
 
+export async function HEAD(req: Request, { params }: { params: Promise<{ fileId: string }> }) {
+  try {
+    const { fileId } = await params;
+    if (!fileId) return badRequest("Missing file id.");
+
+    const user = await requireUser();
+    const isAdmin = user.role === "admin";
+    const record = await getFileRecord(fileId);
+
+    // Ownership check: an admin may inspect anything; a client only files registered to their uid.
+    if (!isAdmin) {
+      if (!record || record.clientId !== user.uid || record.state === "trashed") {
+        return notFound("This file is not part of your account.");
+      }
+    }
+
+    if (record && isGoogleNative(record.mimeType)) {
+      return badRequest("This is a Google Doc/Sheet and cannot be downloaded as raw bytes.");
+    }
+
+    const url = new URL(req.url);
+    const inline = url.searchParams.get("download") !== "true";
+
+    const headers = new Headers();
+    headers.set("Content-Type", record?.mimeType ?? "application/octet-stream");
+    headers.set("Content-Disposition", contentDisposition(record?.name ?? fileId, inline));
+    headers.set("Cache-Control", "private, no-store, max-age=0");
+    headers.set("X-Content-Type-Options", "nosniff");
+    headers.set("Accept-Ranges", "bytes");
+    if (record?.size) headers.set("Content-Length", String(record.size));
+
+    return new Response(null, { status: 200, headers });
+  } catch (err) {
+    return mapApiError(err);
+  }
+}
+
 export async function GET(req: Request, { params }: { params: Promise<{ fileId: string }> }) {
   try {
     const { fileId } = await params;

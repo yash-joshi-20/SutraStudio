@@ -61,7 +61,7 @@
   },
   {
     "route": "/api/admin/catalog",
-    "methods": "GET, PATCH",
+    "methods": "GET, PATCH, DELETE",
     "caller": "admin",
     "hasAdminCheck": true,
     "hasUserCheck": false,
@@ -85,13 +85,13 @@
     "caller": "admin",
     "hasAdminCheck": false,
     "hasUserCheck": false,
-    "hasSecretCheck": false,
+    "hasSecretCheck": true,
     "status": "MISSING_GUARD",
     "issues": "Missing admin guard; GET/PATCH admin only; POST constant-time n8n secret"
   },
   {
-    "route": "/api/admin/demos",
-    "methods": "GET, POST, DELETE",
+    "route": "/api/admin/health/drive",
+    "methods": "GET",
     "caller": "admin",
     "hasAdminCheck": false,
     "hasUserCheck": false,
@@ -157,7 +157,7 @@
     "hasUserCheck": false,
     "hasSecretCheck": false,
     "status": "MISSING_GUARD",
-    "issues": "Missing admin guard; Needs explicit approval flag"
+    "issues": "Missing admin guard"
   },
   {
     "route": "/api/admin/notification-settings",
@@ -181,6 +181,36 @@
   },
   {
     "route": "/api/admin/outreach/record",
+    "methods": "POST",
+    "caller": "admin",
+    "hasAdminCheck": false,
+    "hasUserCheck": false,
+    "hasSecretCheck": false,
+    "status": "MISSING_GUARD",
+    "issues": "Missing admin guard"
+  },
+  {
+    "route": "/api/admin/payments/pending",
+    "methods": "GET",
+    "caller": "admin",
+    "hasAdminCheck": false,
+    "hasUserCheck": false,
+    "hasSecretCheck": false,
+    "status": "MISSING_GUARD",
+    "issues": "Missing admin guard"
+  },
+  {
+    "route": "/api/admin/payments/reject",
+    "methods": "POST",
+    "caller": "admin",
+    "hasAdminCheck": false,
+    "hasUserCheck": false,
+    "hasSecretCheck": false,
+    "status": "MISSING_GUARD",
+    "issues": "Missing admin guard"
+  },
+  {
+    "route": "/api/admin/payments/verify",
     "methods": "POST",
     "caller": "admin",
     "hasAdminCheck": false,
@@ -403,11 +433,11 @@
     "route": "/api/companies",
     "methods": "GET, POST",
     "caller": "logged-in client who owns the record",
-    "hasAdminCheck": false,
+    "hasAdminCheck": true,
     "hasUserCheck": false,
     "hasSecretCheck": false,
-    "status": "NEEDS_AUTH",
-    "issues": "No session/user ownership check detected"
+    "status": "OK",
+    "issues": ""
   },
   {
     "route": "/api/coupons",
@@ -483,11 +513,11 @@
     "route": "/api/documents",
     "methods": "GET, POST",
     "caller": "logged-in client who owns the record",
-    "hasAdminCheck": false,
+    "hasAdminCheck": true,
     "hasUserCheck": false,
     "hasSecretCheck": false,
-    "status": "NEEDS_AUTH",
-    "issues": "No session/user ownership check detected"
+    "status": "OK",
+    "issues": ""
   },
   {
     "route": "/api/drive/archive",
@@ -501,7 +531,7 @@
   },
   {
     "route": "/api/drive/file/[fileId]",
-    "methods": "GET",
+    "methods": "GET, PATCH, DELETE",
     "caller": "logged-in client who owns the record",
     "hasAdminCheck": true,
     "hasUserCheck": true,
@@ -520,10 +550,20 @@
     "issues": "No session/user ownership check detected"
   },
   {
+    "route": "/api/drive/files",
+    "methods": "GET, POST",
+    "caller": "logged-in client who owns the record",
+    "hasAdminCheck": true,
+    "hasUserCheck": true,
+    "hasSecretCheck": false,
+    "status": "OK",
+    "issues": ""
+  },
+  {
     "route": "/api/drive/folder/[folderId]",
     "methods": "GET",
     "caller": "logged-in client who owns the record",
-    "hasAdminCheck": false,
+    "hasAdminCheck": true,
     "hasUserCheck": true,
     "hasSecretCheck": false,
     "status": "OK",
@@ -531,9 +571,9 @@
   },
   {
     "route": "/api/drive/folders",
-    "methods": "POST",
+    "methods": "GET, POST",
     "caller": "logged-in client who owns the record",
-    "hasAdminCheck": false,
+    "hasAdminCheck": true,
     "hasUserCheck": true,
     "hasSecretCheck": false,
     "status": "OK",
@@ -583,11 +623,11 @@
     "route": "/api/files",
     "methods": "GET, POST",
     "caller": "logged-in client who owns the record",
-    "hasAdminCheck": false,
+    "hasAdminCheck": true,
     "hasUserCheck": false,
     "hasSecretCheck": false,
-    "status": "NEEDS_AUTH",
-    "issues": "In-memory store, lacks auth + ownership; No session/user ownership check detected"
+    "status": "INSECURE",
+    "issues": "In-memory store, lacks auth + ownership"
   },
   {
     "route": "/api/inbound/email",
@@ -615,9 +655,9 @@
     "caller": "Meta-signed (webhook) / inbound",
     "hasAdminCheck": false,
     "hasUserCheck": false,
-    "hasSecretCheck": false,
-    "status": "MISSING_GUARD",
-    "issues": "Missing X-Hub-Signature-256 with META_APP_SECRET"
+    "hasSecretCheck": true,
+    "status": "OK",
+    "issues": ""
   },
   {
     "route": "/api/inbound/whatsapp",
@@ -643,21 +683,21 @@
     "route": "/api/knowledge-base",
     "methods": "GET, POST, PATCH, DELETE",
     "caller": "logged-in client who owns the record",
-    "hasAdminCheck": false,
-    "hasUserCheck": false,
+    "hasAdminCheck": true,
+    "hasUserCheck": true,
     "hasSecretCheck": false,
-    "status": "NEEDS_AUTH",
-    "issues": "No session/user ownership check detected"
+    "status": "OK",
+    "issues": ""
   },
   {
     "route": "/api/knowledge-base/search",
     "methods": "POST",
     "caller": "logged-in client who owns the record",
-    "hasAdminCheck": false,
-    "hasUserCheck": false,
+    "hasAdminCheck": true,
+    "hasUserCheck": true,
     "hasSecretCheck": false,
-    "status": "NEEDS_AUTH",
-    "issues": "No session/user ownership check detected"
+    "status": "OK",
+    "issues": ""
   },
   {
     "route": "/api/leads",
@@ -833,7 +873,7 @@
     "route": "/api/orders",
     "methods": "GET, POST, PATCH",
     "caller": "logged-in client who owns the record",
-    "hasAdminCheck": false,
+    "hasAdminCheck": true,
     "hasUserCheck": true,
     "hasSecretCheck": false,
     "status": "OK",
@@ -910,7 +950,7 @@
     "issues": ""
   },
   {
-    "route": "/api/payments/verify",
+    "route": "/api/payments/submit-utr",
     "methods": "POST",
     "caller": "logged-in client who owns the record",
     "hasAdminCheck": false,
@@ -920,11 +960,11 @@
     "issues": ""
   },
   {
-    "route": "/api/payments/webhook",
+    "route": "/api/payments/verify",
     "methods": "POST",
-    "caller": "public",
+    "caller": "logged-in client who owns the record",
     "hasAdminCheck": false,
-    "hasUserCheck": false,
+    "hasUserCheck": true,
     "hasSecretCheck": false,
     "status": "OK",
     "issues": ""
@@ -1003,8 +1043,8 @@
     "route": "/api/submissions",
     "methods": "GET, POST, PATCH",
     "caller": "logged-in client who owns the record",
-    "hasAdminCheck": false,
-    "hasUserCheck": true,
+    "hasAdminCheck": true,
+    "hasUserCheck": false,
     "hasSecretCheck": false,
     "status": "OK",
     "issues": ""

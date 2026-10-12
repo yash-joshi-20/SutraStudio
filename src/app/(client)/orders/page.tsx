@@ -156,6 +156,9 @@ interface OrderItem {
     changedBy: string;
     note?: string;
   }[];
+  isDemo?: boolean;
+  package?: string;
+  quantity?: number;
 }
 
 import {
@@ -178,6 +181,41 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
   const [ordersError, setOrdersError] = useState<string | null>(null);
+  const [downloadState, setDownloadState] = useState<Record<string, "idle" | "downloading" | "error">>({});
+
+  const handleDownloadDeliverable = async (fileIdOrUrl: string, fileName?: string) => {
+    if (!fileIdOrUrl) return;
+    setDownloadState((prev) => ({ ...prev, [fileIdOrUrl]: "downloading" }));
+    try {
+      const isFullUrl =
+        fileIdOrUrl.startsWith("http://") ||
+        fileIdOrUrl.startsWith("https://") ||
+        fileIdOrUrl.startsWith("/");
+      const targetUrl = isFullUrl
+        ? fileIdOrUrl
+        : `/api/drive/file/${encodeURIComponent(fileIdOrUrl)}?download=true`;
+
+      const res = await fetch(targetUrl, { method: "HEAD" });
+      if (!res.ok) {
+        if (res.status === 401) throw new Error("Authentication expired. Please sign in again.");
+        if (res.status === 403) throw new Error("Unauthorized. This file belongs to another account.");
+        if (res.status === 404) throw new Error("File not found or still processing in Drive vault.");
+        if (res.status === 503) throw new Error("Drive service temporarily unavailable. Please retry in a moment.");
+        throw new Error(`Download failed (${res.status})`);
+      }
+
+      const a = document.createElement("a");
+      a.href = targetUrl;
+      a.download = fileName || "deliverable";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setDownloadState((prev) => ({ ...prev, [fileIdOrUrl]: "idle" }));
+    } catch (err: any) {
+      setDownloadState((prev) => ({ ...prev, [fileIdOrUrl]: "error" }));
+      alert(`Download notice: ${err?.message || "Could not retrieve deliverable."}`);
+    }
+  };
 
   // Inspection & Approval / Revision Modal
   const [inspectingOrder, setInspectingOrder] = useState<OrderItem | null>(null);
@@ -315,6 +353,10 @@ export default function OrdersPage() {
     } else if (packageParam) {
       setIsMasterOrderModalOpen(true);
       setInitialMasterTier(packageParam);
+    } else if (params.get("repeat") || params.get("repeatOrderId")) {
+      setIsMasterOrderModalOpen(true);
+      const repService = params.get("service") || "img-creation";
+      setInitialMasterService(repService);
     }
   }, []);
 
@@ -505,6 +547,9 @@ export default function OrdersPage() {
           subscriptionId: o.subscriptionId,
           subscriptionStatus: o.subscriptionStatus,
           nextBillingDate: o.nextBillingDate,
+          isDemo: Boolean(o.isDemo || o.id?.startsWith("demo-")),
+          package: o.package || o.tier || o.planId || (o.items?.[0]?.name ?? undefined),
+          quantity: o.quantity || o.items?.[0]?.quantity || 1,
           statusHistory: o.statusHistory || [
             {
               status: o.status || "in_progress",
@@ -1513,6 +1558,11 @@ export default function OrdersPage() {
                             <span className="text-xs font-mono font-bold text-[#5C3A1E]">
                               {ord.orderNumber || ord.code}
                             </span>
+                            {ord.isDemo && (
+                              <span className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded bg-[#F1ECE1] border border-[#D5C7B0] text-[#7A6241] font-semibold">
+                                Studio Sample
+                              </span>
+                            )}
                             {renderStatusBadge(ord.status, ord.statusLabel)}
                             {ord.paymentStatus === "paid" && (
                               <Badge variant="completed" size="sm" className="bg-[#EDF7F0] text-[#1B663E] border-[#C8E7D2]">
@@ -3341,17 +3391,39 @@ export default function OrdersPage() {
                               </div>
 
                               {/* Download & Preview Actions */}
-                              {del.previewUrl && (
+                              {(del.driveFileId || del.previewUrl) &&
+                               (inspectingOrder.paymentStatus === "paid" ||
+                                inspectingOrder.status === "paid" ||
+                                inspectingOrder.status === "in_production" ||
+                                inspectingOrder.status === "delivered" ||
+                                inspectingOrder.status === "completed" ||
+                                inspectingOrder.status === "draft_delivered" ||
+                                inspectingOrder.status === "active") && (
                                 <div className="pt-1 border-t border-[#EADFCB]/60">
-                                  <a
-                                    href={del.previewUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-full py-1.5 px-2.5 bg-[#FAF9F5] hover:bg-[#F4EFE6] border border-[#EADFCB] rounded-xl text-xs font-semibold text-[#5C3A1E] transition-all flex items-center justify-center gap-1.5"
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleDownloadDeliverable(
+                                        del.driveFileId || del.previewUrl || "",
+                                        del.filename
+                                      )
+                                    }
+                                    disabled={
+                                      downloadState[del.driveFileId || del.previewUrl || ""] === "downloading"
+                                    }
+                                    className="w-full py-2 px-2.5 bg-[#FAF9F5] hover:bg-[#F4EFE6] border border-[#EADFCB] rounded-xl text-xs font-semibold text-[#5C3A1E] transition-all flex items-center justify-center gap-1.5 min-h-[44px] cursor-pointer"
                                   >
-                                    <Download className="w-3.5 h-3.5" />
-                                    <span>Download Deliverable</span>
-                                  </a>
+                                    {downloadState[del.driveFileId || del.previewUrl || ""] === "downloading" ? (
+                                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#A98B57]" />
+                                    ) : (
+                                      <Download className="w-3.5 h-3.5 text-[#5C3A1E]" />
+                                    )}
+                                    <span>
+                                      {downloadState[del.driveFileId || del.previewUrl || ""] === "downloading"
+                                        ? "Downloading..."
+                                        : "Download Deliverable"}
+                                    </span>
+                                  </button>
                                 </div>
                               )}
                             </div>
@@ -3607,6 +3679,20 @@ export default function OrdersPage() {
                         <span>View Receipt</span>
                       </button>
                     )}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const targetId = inspectingOrder.package || inspectingOrder.service || "img-creation";
+                        setIsMasterOrderModalOpen(true);
+                        setInitialMasterService(targetId);
+                        setInspectingOrder(null);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#F8F5EF] transition-all cursor-pointer flex items-center gap-1.5 min-h-[36px]"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-[#A98B57]" />
+                      <span>Repeat Order</span>
+                    </button>
 
                     {(inspectingOrder.status === "pending_payment" || inspectingOrder.paymentStatus === "unpaid") && (
                       <>

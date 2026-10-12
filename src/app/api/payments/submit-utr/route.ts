@@ -43,24 +43,51 @@ export async function POST(req: Request) {
     }
 
     // Ownership check for clients
-    if (user.isAuthenticated && user.role === "client") {
-      const ownerUid = order.clientUid || order.clientId;
-      if (
-        ownerUid &&
-        ownerUid !== user.uid &&
-        (!user.email || !order.clientEmail || order.clientEmail.toLowerCase() !== user.email.toLowerCase())
-      ) {
+    if (user.isAuthenticated) {
+      if (user.role === "client") {
+        const ownerUid = order.clientUid || order.clientId;
+        const ownerEmail = order.clientEmail?.toLowerCase();
+        const callerEmail = user.email?.toLowerCase();
+        const isOwner =
+          (ownerUid && ownerUid === user.uid) ||
+          (ownerEmail && callerEmail && ownerEmail === callerEmail);
+
+        if (!isOwner) {
+          return NextResponse.json(
+            { error: "Forbidden: Cross-user payment attempt detected. You do not own this order." },
+            { status: 403 }
+          );
+        }
+      }
+    } else {
+      // Unauthenticated caller: must supply matching order confirmToken or verified matching client email
+      const candidateToken = body.confirmToken || body.token;
+      const orderToken = (order as any).confirmToken;
+      const candidateEmail = body.clientEmail?.toLowerCase() || body.customerEmail?.toLowerCase();
+      const orderEmail = order.clientEmail?.toLowerCase();
+
+      const hasValidToken = Boolean(candidateToken && orderToken && candidateToken === orderToken);
+      const hasValidEmail = Boolean(candidateEmail && orderEmail && candidateEmail === orderEmail);
+
+      if (!hasValidToken && !hasValidEmail) {
         return NextResponse.json(
-          { error: "Forbidden: You are not authorized to submit payment for this order." },
-          { status: 403 }
+          { error: "Unauthorized: Active authentication session or valid order token is required to submit payment." },
+          { status: 401 }
         );
       }
     }
 
-    // Prevent re-submission if already paid
-    if (order.paymentStatus === "paid") {
+    // Prevent submission on already paid or cancelled orders
+    if (order.paymentStatus === "paid" || order.status === "paid") {
       return NextResponse.json(
         { error: "This order has already been verified and paid.", paymentStatus: "paid" },
+        { status: 400 }
+      );
+    }
+
+    if (order.status === "cancelled") {
+      return NextResponse.json(
+        { error: "Cannot submit payment for a cancelled order.", status: "cancelled" },
         { status: 400 }
       );
     }

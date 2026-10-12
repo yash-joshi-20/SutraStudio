@@ -42,14 +42,107 @@ export interface PriceQuote {
 /** GST is only applied when the studio has enabled it (admin setting). */
 export const DEFAULT_GST_PERCENT = 18;
 
+import { findServiceBySlug } from "@/config/services";
+import { findPackageById } from "@/config/packages";
+
 export async function resolveService(serviceId: string): Promise<CatalogService | null> {
   const byId = await ServiceCatalogService.getServiceById(serviceId);
   if (byId) return byId;
+
+  // Fallback to canonical services configuration
+  const canonical = findServiceBySlug(serviceId);
+  if (canonical && canonical.active) {
+    return {
+      id: canonical.id,
+      name: canonical.name,
+      slug: canonical.slug,
+      category: (canonical.category as any) || "Creative",
+      tagline: canonical.tagline || canonical.name,
+      shortDescription: canonical.description,
+      startingPrice: canonical.numericPrice,
+      isByQuote: canonical.isCustomQuote || false,
+      priceDisplay: canonical.priceDisplay,
+      currency: "INR",
+      icon: canonical.icon || "Sparkles",
+      active: canonical.active,
+      sortIndex: 99,
+      estimatedDeliveryDays: 3,
+      revisionsIncluded: 2,
+      workflowStages: ["Intake", "Production", "Delivery"],
+      briefSchema: [],
+      requiredAssets: [],
+      deliverables: canonical.deliverables || [],
+      badge: canonical.badge || "",
+      thumbnail: canonical.thumbnail || "",
+      mediaType: (canonical.mediaType as any) || "image",
+      mediaFormat: canonical.mediaFormat || "",
+      turnaround: canonical.turnaround || "48-72h",
+      pipelineEngine: canonical.pipelineEngine || "Studio Pipeline",
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  // Fallback to standalone deliverable package
+  const pkg = findPackageById(serviceId);
+  if (pkg && pkg.active && ("numericPrice" in pkg)) {
+    return {
+      id: pkg.id,
+      name: pkg.name,
+      slug: pkg.slug,
+      category: "Creative",
+      tagline: pkg.name,
+      shortDescription: pkg.description,
+      startingPrice: (pkg as any).numericPrice || 0,
+      isByQuote: false,
+      priceDisplay: (pkg as any).formattedPrice || `₹${(pkg as any).numericPrice}`,
+      currency: "INR",
+      icon: "Layers",
+      active: pkg.active,
+      sortIndex: 99,
+      estimatedDeliveryDays: 3,
+      revisionsIncluded: ("revisionRounds" in pkg ? pkg.revisionRounds : 2),
+      workflowStages: ["Intake", "Production", "Delivery"],
+      briefSchema: [],
+      requiredAssets: [],
+      deliverables: pkg.deliverables || [],
+      badge: "Package",
+      thumbnail: "",
+      mediaType: "image",
+      mediaFormat: "",
+      turnaround: pkg.turnaround || "48-72h",
+      pipelineEngine: "Studio Pipeline",
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
   return null;
 }
 
 export async function resolvePlan(planId: string): Promise<CatalogPlan | null> {
-  return ServiceCatalogService.getPlanById(planId);
+  const plan = await ServiceCatalogService.getPlanById(planId);
+  if (plan) return plan;
+
+  const pkg = findPackageById(planId);
+  if (pkg && pkg.active && "billingCycle" in pkg && pkg.billingCycle === "monthly") {
+    return {
+      id: pkg.id,
+      name: pkg.name,
+      tier: pkg.popular ? "Enterprise" : "Starter",
+      price: pkg.numericPrice,
+      monthlyPrice: pkg.numericPrice,
+      quarterlyPrice: pkg.quarterlyPrice || Math.round(pkg.numericPrice * 3 * 0.9),
+      annualPrice: pkg.annualPrice || Math.round(pkg.numericPrice * 12 * 0.8),
+      features: pkg.features || [],
+      includedServices: pkg.includedServices || {},
+      freeTrialDays: 3,
+      active: pkg.active,
+      sortIndex: 1,
+      razorpayPlanId: `plan_${pkg.id}`,
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  return null;
 }
 
 /**

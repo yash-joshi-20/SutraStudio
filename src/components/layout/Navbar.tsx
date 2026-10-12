@@ -9,11 +9,9 @@ import {
   Menu,
   X,
   User,
-  Sparkles,
   LayoutDashboard,
   ShieldCheck,
   LogOut,
-  Smartphone,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth/authContext";
@@ -32,22 +30,6 @@ const PUBLIC_NAV_LINKS: NavLinkItem[] = [
   { name: "About", href: "/about" },
   { name: "Mobile App", href: "/mobile-app" },
   { name: "Contact", href: "/contact" },
-];
-
-const CLIENT_NAV_LINKS: NavLinkItem[] = [
-  { name: "Workspace", href: "/dashboard" },
-  { name: "My Orders", href: "/orders" },
-  { name: "My Projects", href: "/projects-client" },
-  { name: "Media Vault", href: "/media" },
-  { name: "Invoices", href: "/invoices" },
-];
-
-const ADMIN_NAV_LINKS: NavLinkItem[] = [
-  { name: "Overview", href: "/admin" },
-  { name: "Clients", href: "/admin?tab=clients" },
-  { name: "Approvals", href: "/admin?tab=approvals" },
-  { name: "Workflows", href: "/admin?tab=workflows" },
-  { name: "Site Control", href: "/admin?tab=site-control" },
 ];
 
 export function Navbar() {
@@ -110,7 +92,7 @@ export function Navbar() {
           <SutraLogo
             variant="horizontal"
             size="md"
-            className="h-9 sm:h-11 md:h-12 w-auto max-w-[190px] sm:max-w-none object-contain transition-all duration-300"
+            className="h-8 min-[380px]:h-9 sm:h-11 md:h-12 w-auto max-w-[150px] min-[380px]:max-w-[190px] sm:max-w-none object-contain transition-all duration-300"
             href={isClient ? "/dashboard" : "/"}
           />
         </div>

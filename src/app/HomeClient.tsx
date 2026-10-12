@@ -1,13 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Modal } from "@/components/ui/Modal";
 import { ServiceCard } from "@/components/services/ServiceCard";
@@ -29,24 +27,11 @@ import {
   Layers,
   Zap,
   Target,
-  ArrowRight,
   ShieldCheck,
   CheckCircle2,
   Clock,
-  Compass,
   Check,
   X as XIcon,
-  HardDrive,
-  Gem,
-  Award,
-  UploadCloud,
-  FileCheck2,
-  ExternalLink,
-  Smartphone,
-  Cpu,
-  Palette,
-  TrendingUp,
-  Sliders,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -62,15 +47,14 @@ const FILTER_CATEGORIES = [
 ];
 
 const HERO_DISCIPLINES = [
-  { id: "image-creation", label: "Image Creation", output: "4K UHD Master Visuals", price: "₹2,499", href: "/orders?service=image-creation" },
-  { id: "video-creation", label: "Video Reel", output: "2x 4K 60FPS Cinematic Cuts", price: "₹4,999", href: "/orders?service=video-creation" },
-  { id: "3d-modeling", label: "3D Spatial", output: "GLB / USDZ Precision Asset", price: "₹5,999", href: "/orders?service=3d-modeling" },
-  { id: "360-view", label: "360 VR Tour", output: "Equirectangular Spherical Tour", price: "₹7,999", href: "/orders?service=360-view" },
-  { id: "interior-design", label: "Interior Viz", output: "Photorealistic Room Staging", price: "₹6,499", href: "/orders?service=interior-design" },
-  { id: "meta-ads-launcher", label: "Meta Ads", output: "Multi-Placement Ad Bundle", price: "₹7,499", href: "/orders?service=meta-ads-launcher" },
-  { id: "digital-marketing", label: "Brand Strategy", output: "Complete Identity & Guidelines", price: "₹8,999", href: "/orders?service=digital-marketing" },
-  { id: "website-development", label: "Website Dev", output: "High-Performance Next.js Web", price: "By Quote", href: "/orders?service=website-development" },
-  { id: "workflow-automation", label: "Automation", output: "Custom Integrations & Flows", price: "By Quote", href: "/orders?service=workflow-automation" },
+  { id: "image-creation", label: "Image Creation", output: "4K UHD Master Visuals", price: "From ₹99", href: "/services#image-creation" },
+  { id: "video-creation", label: "Video Reel", output: "Commercial Short Cuts & Reels", price: "From ₹199", href: "/services#video-creation" },
+  { id: "3d-modeling", label: "3D Spatial", output: "4K Render & Precision GLB/OBJ", price: "From ₹999", href: "/services#3d-modeling" },
+  { id: "360-view", label: "360 VR Tour", output: "Digital & On-Site Virtual Tour", price: "From ₹2,999", href: "/services#360-view" },
+  { id: "interior-design", label: "Interior Viz", output: "Photorealistic Room & Floor Plan", price: "From ₹1,499", href: "/services#interior-design" },
+  { id: "meta-ads-launcher", label: "Meta Ads", output: "Campaign Architecture & Tuning", price: "₹4,999/mo", href: "/services#meta-ads-launcher" },
+  { id: "digital-marketing", label: "Digital Marketing", output: "Content Calendar & Trend Intel", price: "From ₹999", href: "/services#digital-marketing" },
+  { id: "website-development", label: "Web Atelier", output: "Landing Page & Web App Prototype", price: "From ₹4,999", href: "/services#website-development" },
 ];
 
 export default function HomePage() {
@@ -323,20 +307,20 @@ export default function HomePage() {
         </section>
 
         {/* ===================================================
-            2. 12 SERVICES CATALOG
+            2. STUDIO SERVICES CATALOG
             =================================================== */}
         <section id="services" className="py-20 bg-[#FAF9F5] border-t border-[#EADFCB]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
             <SectionHeader
-              badge="OUR 12 DISCIPLINES"
-              title="Complete Creative &amp; Digital Solutions"
-              subtitle="From 4K image creation and cinematic reels to 3D spatial design, web engineering, and workflow automation — crafted in one unified atelier."
+              badge="STUDIO DISCIPLINES"
+              title="Complete Creative &amp; Digital Atelier"
+              subtitle="From commercial 4K visual imagery and cinematic reels to 3D spatial design, architectural visualization, performance marketing, and modern web engineering."
               className="text-center"
             />
 
-            {/* 12-Card Responsive Grid */}
+            {/* Active Core Disciplines Responsive Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {SUTRA_SERVICES.map((service) => (
+              {SUTRA_SERVICES.filter((s) => s.active).map((service) => (
                 <ServiceCard key={service.id} service={service} />
               ))}
             </div>
@@ -543,7 +527,7 @@ export default function HomePage() {
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-xs font-semibold uppercase tracking-wider text-[#A98B57]">Sutra Studio</span>
-                      <span className="text-xs font-bold text-[#5C3A1E] bg-[#D4A35A]/20 px-2.5 py-0.5 rounded-full">From ₹499</span>
+                      <span className="text-xs font-bold text-[#5C3A1E] bg-[#D4A35A]/20 px-2.5 py-0.5 rounded-full">From ₹99</span>
                     </div>
                     <h4 className="font-serif text-lg font-bold text-[#0F172A] mb-2">Sutra Studio Atelier</h4>
                     <p className="text-xs text-[#64748B] mb-5 leading-relaxed">High-Precision Production + Senior Art Director Polish + Client Vault.</p>
@@ -563,7 +547,7 @@ export default function HomePage() {
                       </li>
                       <li className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
-                        <span className="font-medium"><strong>All 12 Disciplines in 1 Place</strong> (Visuals, Video, 3D, Web, Ads, Automation)</span>
+                        <span className="font-medium"><strong>All Core Disciplines in 1 Place</strong> (Visuals, Video, 3D, Interior, Web, Ads, Marketing)</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
@@ -603,7 +587,7 @@ export default function HomePage() {
               </h2>
 
               <p className="text-sm sm:text-base text-[#64748B] leading-relaxed">
-                Choose between single high-impact standalone deliverables starting at ₹499, studio commission packs, or our 30-Day Growth Plan with daily queue fulfillment.
+                Choose between single standalone deliverables starting at ₹99, rapid turnaround packs, or our flagship 30-Day Daily Trend Creator at ₹19,999 / 30 days with daily active fulfillment.
               </p>
 
               {/* Billing Cycle Toggle */}
@@ -639,7 +623,7 @@ export default function HomePage() {
                   >
                     <span>30-Day Retainer</span>
                     <span className="text-[10px] bg-[#D4A35A] text-[#0F172A] px-1.5 py-0.2 rounded-full font-bold hidden sm:inline">
-                      Daily
+                      Daily Flagship
                     </span>
                   </button>
                 </div>
@@ -662,8 +646,8 @@ export default function HomePage() {
                       key={tier.id}
                       className={`rounded-3xl p-8 flex flex-col justify-between transition-all duration-300 ${
                         tier.popular
-                          ? "bg-[#FFFDF9] border-2 border-[#D4A35A] shadow-warm relative ring-1 ring-[#D4A35A]/30"
-                          : "bg-[#FFFDF9] border border-[#EADFCB] shadow-sm hover:border-[#D4A35A]/60"
+                           ? "bg-[#FFFDF9] border-2 border-[#D4A35A] shadow-warm relative ring-1 ring-[#D4A35A]/30"
+                           : "bg-[#FFFDF9] border border-[#EADFCB] shadow-sm hover:border-[#D4A35A]/60"
                       }`}
                     >
                       {tier.popular && (
@@ -708,7 +692,7 @@ export default function HomePage() {
                       </div>
 
                       <div className="mt-8 pt-6 border-t border-[#EADFCB]/60 space-y-3">
-                        <Link href={tier.ctaHref || "/orders"}>
+                        <Link href={tier.ctaHref || `/orders?package=${tier.id}`}>
                           <Button
                             variant={tier.popular ? "primary" : "secondary"}
                             size="md"
@@ -732,28 +716,35 @@ export default function HomePage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -12 }}
                   transition={{ duration: 0.3 }}
-                  className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch"
+                  className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto items-stretch"
                 >
                   {MONTHLY_RETAINER_TIERS.map((tier) => (
                     <div
                       key={tier.id}
                       className={`rounded-3xl p-8 flex flex-col justify-between transition-all duration-300 ${
                         tier.popular
-                          ? "bg-[#FFFDF9] border-2 border-[#D4A35A] shadow-warm relative ring-1 ring-[#D4A35A]/30"
+                          ? "bg-[#FFFDF9] border-2 border-[#D4A35A] shadow-warm relative ring-2 ring-[#D4A35A]/30"
                           : "bg-[#FFFDF9] border border-[#EADFCB] shadow-sm hover:border-[#D4A35A]/60"
                       }`}
                     >
                       {tier.popular && (
-                        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#5C3A1E] text-white px-4 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase shadow-xs">
-                          Continuous Active Queue
+                        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#5C3A1E] text-white px-4 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase shadow-xs whitespace-nowrap">
+                          FLAGSHIP: DAILY CREATIVE QUEUE
                         </div>
                       )}
 
                       <div className="space-y-6">
                         <div>
-                          <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
-                            {tier.name}
-                          </h3>
+                          <div className="flex items-center justify-between gap-2">
+                            <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
+                              {tier.name}
+                            </h3>
+                            {tier.popular && (
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A35A] bg-[#5C3A1E] px-2 py-0.5 rounded-full">
+                                1 + 1 Daily
+                              </span>
+                            )}
+                          </div>
                           <p className="text-xs text-[#64748B] mt-1.5 leading-relaxed">
                             {tier.description}
                           </p>
@@ -769,9 +760,45 @@ export default function HomePage() {
                           </span>
                         </div>
 
+                        {/* Quota Highlight */}
+                        <div className="p-3 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E]">
+                          {tier.monthlyQuotaDescription || tier.dailyDeliverables}
+                        </div>
+
+                        {/* 5-Step Production Engine (Featured for Daily Trend Creator) */}
+                        {tier.popular && (
+                          <div className="p-3.5 rounded-2xl bg-[#FFFDF9] border border-[#D4A35A]/40 space-y-2">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#A98B57] block">
+                              5-Step Daily Production Engine:
+                            </span>
+                            <div className="space-y-1.5 text-[11px] text-[#475569]">
+                              <div className="flex items-center gap-1.5 font-medium text-[#0F172A]">
+                                <span className="w-4 h-4 rounded-full bg-[#5C3A1E] text-white text-[9px] flex items-center justify-center font-bold">1</span>
+                                <span>Daily Trend Research &amp; Hook Discovery</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 font-medium text-[#0F172A]">
+                                <span className="w-4 h-4 rounded-full bg-[#5C3A1E] text-white text-[9px] flex items-center justify-center font-bold">2</span>
+                                <span>Brand-Specific Prompt Engineering</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 font-medium text-[#0F172A]">
+                                <span className="w-4 h-4 rounded-full bg-[#5C3A1E] text-white text-[9px] flex items-center justify-center font-bold">3</span>
+                                <span>Dual Asset Production (1 Image + 1 Video)</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 font-medium text-[#0F172A]">
+                                <span className="w-4 h-4 rounded-full bg-[#5C3A1E] text-white text-[9px] flex items-center justify-center font-bold">4</span>
+                                <span>Rigorous Studio QA &amp; Color Calibration</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 font-medium text-[#0F172A]">
+                                <span className="w-4 h-4 rounded-full bg-[#5C3A1E] text-white text-[9px] flex items-center justify-center font-bold">5</span>
+                                <span>Private Google Drive Vault Delivery</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
                         {/* Feature List */}
-                        <ul className="space-y-3 text-xs text-[#475569]">
-                          {tier.features.map((feat) => (
+                        <ul className="space-y-2.5 text-xs text-[#475569]">
+                          {tier.features.slice(0, 5).map((feat) => (
                             <li key={feat} className="flex items-start gap-2.5">
                               <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
                               <span>{feat}</span>
@@ -781,7 +808,7 @@ export default function HomePage() {
                       </div>
 
                       <div className="mt-8 pt-6 border-t border-[#EADFCB]/60 space-y-3">
-                        <Link href={tier.ctaHref || "/orders"}>
+                        <Link href={`/orders?package=${tier.id}&cycle=monthly`}>
                           <Button
                             variant={tier.popular ? "primary" : "secondary"}
                             size="md"
@@ -792,7 +819,7 @@ export default function HomePage() {
                           </Button>
                         </Link>
                         <p className="text-[11px] text-[#94A3B8] text-center">
-                          {tier.monthlyQuotaDescription || tier.dailyDeliverables}
+                          {tier.turnaround} • 1 revision round included
                         </p>
                       </div>
                     </div>

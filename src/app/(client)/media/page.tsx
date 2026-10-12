@@ -96,12 +96,25 @@ export default function MediaLibraryPage() {
       const seenIds = new Set<string>();
 
       // 1. Fetch Orders to extract live project deliverables & AI generated assets
-      const ordersRes = await fetch("/api/orders");
+      const clientUid = user?.uid || (user?.email ? user.email : "");
+      const ordersUrl = clientUid ? `/api/orders?clientUid=${encodeURIComponent(clientUid)}` : "/api/orders";
+      const ordersRes = await fetch(ordersUrl);
       if (ordersRes.ok) {
         const ordersData = await ordersRes.json();
         const ordersList = ordersData.orders || [];
 
         ordersList.forEach((order: any) => {
+          // Guard: Dummy/unpaid orders cannot appear as completed paid deliverables
+          const isEligibleOrder =
+            order.paymentStatus === "paid" ||
+            order.status === "paid" ||
+            order.status === "in_production" ||
+            order.status === "delivered" ||
+            order.status === "completed" ||
+            order.status === "draft_delivered" ||
+            order.status === "active";
+          if (!isEligibleOrder) return;
+
           const orderNum = order.orderNumber || order.code || order.id?.slice(0, 8);
 
           // Deliverables
@@ -304,49 +317,62 @@ export default function MediaLibraryPage() {
     setTimeout(() => setDownloadSuccess(""), 3000);
   };
 
-  const handleDownload = (asset: MediaAsset) => {
+  const handleDownload = async (asset: MediaAsset) => {
     setDownloadingId(asset.id);
-    setDownloadProgress(25);
+    setDownloadProgress(20);
     setErrorMessage("");
+    setDownloadSuccess("");
 
-    const interval = setInterval(() => {
-      setDownloadProgress((prev) => {
-        if (prev >= 90) {
-          clearInterval(interval);
-          setTimeout(() => {
-            setDownloadingId(null);
-            setDownloadProgress(0);
-            setDownloadSuccess(`Downloaded "${asset.name}" from Sutra Cloud Vault.`);
-            setTimeout(() => setDownloadSuccess(""), 3500);
+    try {
+      const fileId = asset.driveFileId || asset.id;
+      const isExplicitExternal =
+        asset.downloadUrl?.startsWith("http://") || asset.downloadUrl?.startsWith("https://");
+      const targetUrl =
+        fileId && !fileId.startsWith("demo-") && !fileId.startsWith("deliv-")
+          ? `/api/drive/file/${encodeURIComponent(fileId)}?download=true`
+          : asset.downloadUrl || asset.thumbnail || `/api/drive/file/${encodeURIComponent(fileId)}?download=true`;
 
-            // Trigger file download if direct url exists
-            if (asset.downloadUrl || asset.thumbnail) {
-              const link = document.createElement("a");
-              link.href = asset.downloadUrl || asset.thumbnail;
-              link.target = "_blank";
-              link.download = asset.name;
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-            }
-          }, 300);
-          return 100;
+      setDownloadProgress(60);
+
+      // Verify file accessibility
+      const res = await fetch(targetUrl, { method: "HEAD" });
+      if (!res.ok) {
+        if (res.status === 401) throw new Error("Authentication session expired. Please sign in to verify vault file permissions.");
+        if (res.status === 403) throw new Error("Access forbidden. This file is restricted to its authorized client.");
+        if (res.status === 404) throw new Error("File not found or still completing Google Drive vault processing.");
+        if (res.status === 503) throw new Error("Google Drive storage proxy temporarily unavailable. Please retry in a few moments.");
+        if (res.status !== 405 && !targetUrl.includes("/api/drive/file/")) {
+          throw new Error(`Vault download failed (HTTP ${res.status}).`);
         }
-        return prev + 35;
-      });
-    }, 180);
+      }
+
+      setDownloadProgress(100);
+
+      const link = document.createElement("a");
+      link.href = targetUrl;
+      link.download = asset.name || "deliverable";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setDownloadSuccess(`Downloaded "${asset.name}" from Sutra Cloud Vault.`);
+      setTimeout(() => setDownloadSuccess(""), 4000);
+    } catch (err: any) {
+      setErrorMessage(err?.message || "Failed to download asset from Sutra Cloud Vault.");
+    } finally {
+      setDownloadingId(null);
+      setDownloadProgress(0);
+    }
   };
 
   const handleShareLink = (asset: MediaAsset) => {
-    const shareUrl =
-      asset.downloadUrl ||
-      asset.thumbnail ||
-      (typeof window !== "undefined"
-        ? `${window.location.origin}/media?asset=${asset.id}`
-        : "");
+    // Only share secure portal links, never expose raw private Google Drive links or service credentials
+    const portalShareUrl = typeof window !== "undefined"
+      ? `${window.location.origin}/media?asset=${encodeURIComponent(asset.id)}`
+      : "";
 
     if (typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(shareUrl);
+      navigator.clipboard.writeText(portalShareUrl);
     }
     setCopiedAssetId(asset.id);
     setDownloadSuccess(`Encrypted vault share link for "${asset.name}" copied to clipboard.`);

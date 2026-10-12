@@ -72,125 +72,164 @@ export interface IntakePackageOption {
 
 export const INTAKE_PACKAGES: IntakePackageOption[] = [
   {
-    id: "starter-creative",
-    title: "Starter Creative Pack",
-    billingCycle: "one_time",
-    price: 1999,
-    turnaround: "48h Rapid SLA",
-    description: "Essential 4K creative launch pack for boutique brands needing immediate high-impact visuals.",
-    iconName: "sparkles",
-    features: [
-      "Up to 5x Photorealistic 4K Renders",
-      "1x 10-Second Commercial Video Ad",
-      "Full Commercial Copyright License",
-      "48-Hour Rapid Turnaround Pipeline",
-      "Sutra Cloud Vault Archive",
-      "2 Revision Rounds Included",
-    ],
-  },
-  {
-    id: "studio-growth",
-    title: "Studio Growth Pack",
-    billingCycle: "one_time",
-    price: 4999,
-    turnaround: "24–72h Priority SLA",
-    popular: true,
-    description: "High-velocity multi-format digital atelier spanning 3D spatial renders, promo video, and Meta campaigns.",
-    iconName: "layers",
-    features: [
-      "15x High-Resolution 3D & Product Renders",
-      "3x 15-Second Video Ads with Studio Voiceover",
-      "Interactive 360° Space Tour or Virtual Showroom",
-      "3x Meta Ads Creative Variations (Feed & Story)",
-      "Priority 24–72 Hour Delivery Pipeline",
-      "Unlimited Minor Revisions (7 Days)",
-    ],
-  },
-  {
-    id: "autonomous-growth-retainer",
-    title: "Autonomous Growth Retainer",
+    id: "daily-trend-creator",
+    title: "Daily Trend Creator (Flagship)",
     billingCycle: "monthly",
-    price: 9999,
-    turnaround: "Daily Active Queue",
+    price: 19999,
+    turnaround: "Daily Active Pipeline",
     popular: true,
-    description: "Your dedicated luxury creative atelier. Continuous daily active queue delivering graphics, reels & 3D.",
+    description: "Flagship 30-day production pipeline: 30 custom visual graphics + 30 commercial short videos (1 delivered daily) with daily trend research, QA, and Google Drive vault delivery.",
     iconName: "zap",
     features: [
-      "Daily 1x 4K Brand Graphic (30 Assets/month)",
-      "Daily 1x Commercial Video Reel / Short (30 Assets/month)",
-      "Dedicated 3D Asset Modeling & Spatial Renders",
-      "Interactive 360° Virtual Panoramic Tour",
-      "Meta Ads Creative Variation Pack (Multi-Ratio)",
-      "Private Dedicated Cloud Vault with Instant Sync",
-      "Executive Creative Lead & Priority Queue",
+      "30 Custom Visual Graphics (1 Delivered Daily)",
+      "30 Commercial Video Reels / Shorts (1 Delivered Daily)",
+      "Daily Trend Research & Brand Alignment",
+      "Brand-Specific Prompt Architecture",
+      "Editorial Captions & Strategic Hashtags",
+      "Organized Google Drive Vault Staging",
+      "1 Consolidated Revision Round per Deliverable",
     ],
   },
   {
-    id: "atelier-enterprise-retainer",
-    title: "Atelier Enterprise Retainer",
+    id: "growth-trend",
+    title: "Growth Trend",
     billingCycle: "monthly",
-    price: 24999,
-    turnaround: "Dedicated Atelier Capacity",
-    description: "Full-scale enterprise creative engineering for high-growth brands, studios, and agencies.",
-    iconName: "building",
+    price: 14999,
+    turnaround: "24–48h Priority SLA",
+    description: "High-velocity 30-day atelier delivering 20 branded images + 20 commercial short videos with 30-day content calendar.",
+    iconName: "layers",
     features: [
-      "40+ Master 4K Key Visuals / Month",
-      "12+ Commercial Motion Reels / Month",
-      "Bespoke Web Platform & Client Portal Development",
-      "Dedicated Senior Art Director & Dedicated Slack Channel",
-      "Direct Priority Production & Dedicated Cloud Vault",
+      "20 Branded Social & Product Images across 30 days",
+      "20 Commercial Short Videos / Reels (15–30s)",
+      "Daily Trending-Topic Research & Alignment",
+      "30-Day Strategic Editorial Content Calendar",
+      "High-Converting Captions, Hooks & Hashtags",
+      "Organized Google Drive Vault Archive",
+      "1 Consolidated Revision Round per Deliverable",
+    ],
+  },
+  {
+    id: "starter-trend",
+    title: "Starter Trend",
+    billingCycle: "monthly",
+    price: 9999,
+    turnaround: "48h Rapid SLA",
+    description: "Essential monthly creative engine: 15 branded images + 15 short videos across 30 days for boutique brands.",
+    iconName: "sparkles",
+    features: [
+      "15 Branded Social & Product Images across 30 days",
+      "15 Commercial Short Videos / Reels (up to 15s)",
+      "Trend Topic Research & Brand Relevance Review",
+      "Tailored Generation Prompts",
+      "Post Captions & Hashtag Sets",
+      "Google Drive Vault Delivery",
+      "1 Consolidated Revision Round per Deliverable",
+    ],
+  },
+  {
+    id: "branded-image-pack-5",
+    title: "Branded Image Pack (5 Images)",
+    billingCycle: "one_time",
+    price: 799,
+    turnaround: "24–48h SLA",
+    description: "Curated 5-image campaign bundle with brand color grading and commercial licensing.",
+    iconName: "sparkles",
+    features: [
+      "5x High-Resolution Branded Images",
+      "Custom Brand Typography & Color Palette",
+      "1 Consolidated Revision Round Across Pack",
+      "Full Commercial Copyright License",
+    ],
+  },
+  {
+    id: "promotional-reels-pack-3",
+    title: "Promotional Reels Pack (3 Reels)",
+    billingCycle: "one_time",
+    price: 1299,
+    turnaround: "48–72h SLA",
+    description: "3 commercial promo reels with kinetic motion graphics, sound design, and vertical 9:16 master exports.",
+    iconName: "video",
+    features: [
+      "3x 15–30s Commercial Promo Reels",
+      "Kinetic Text & Sound Effects",
+      "Multi-Ratio Ad Formats (9:16 Vertical)",
+      "1 Consolidated Revision Round Across Pack",
+    ],
+  },
+  {
+    id: "social-carousel-5-slides",
+    title: "Social Carousel Pack (5 Slides)",
+    billingCycle: "one_time",
+    price: 499,
+    turnaround: "24–48h SLA",
+    description: "Seamless 5-slide educational or product storytelling carousel for Instagram & LinkedIn.",
+    iconName: "layers",
+    features: [
+      "5 Seamless Storytelling Slide Cards",
+      "Educational Framework & Headline Hooks",
+      "1 Consolidated Revision Round",
+      "1080×1350 High-Res Master Exports",
     ],
   },
 ];
 
 export const INTAKE_SERVICES: IntakeServiceOption[] = [
   {
-    id: "visuals-motion",
-    title: "Commercial Visuals & Motion",
-    category: "Video & Motion",
-    basePrice: 1499,
+    id: "img-creation",
+    title: "Commercial Visual Imagery",
+    category: "Creative & Brand",
+    basePrice: 99,
     turnaround: "24–48h SLA",
-    description: "4K studio product imagery, luxury brand mockups, and cinematic video reels with studio voiceover.",
+    description: "High-fidelity commercial product imagery, luxury brand mockups, and advertising visual assets.",
+    iconName: "camera",
+  },
+  {
+    id: "vid-creation",
+    title: "Cinematic Motion Reel",
+    category: "Video & Motion",
+    basePrice: 199,
+    turnaround: "24–48h SLA",
+    description: "Engaging 10-to-30s cinematic video ads, social reels, and studio-narrated commercial clips.",
     iconName: "video",
   },
   {
-    id: "product-3d-cgi",
-    title: "Product 3D Modeling & CGI",
-    category: "3D & Spatial",
-    basePrice: 2499,
-    turnaround: "48h Turnaround",
-    description: "High-precision CAD modeling, studio product lighting setups, and interactive WebGL 3D views.",
-    iconName: "box",
-  },
-  {
-    id: "virtual-tour-360",
-    title: "360° Virtual Tours & VR",
-    category: "3D & Spatial",
-    basePrice: 4999,
-    turnaround: "72h Turnaround",
-    description: "Immersive equirectangular virtual walkthroughs with interactive spatial hotspots.",
-    iconName: "compass",
-  },
-  {
-    id: "arch-3d",
-    title: "Interior Architecture & Spatial Staging",
-    category: "3D & Spatial",
-    basePrice: 4999,
-    turnaround: "48–72h SLA",
-    description: "Photorealistic architectural visualization, luxury staging, and CAD elevations.",
-    iconName: "building",
-  },
-  {
-    id: "brand-identity-system",
-    title: "Brand Identity & Design Systems",
+    id: "des-brand-identity",
+    title: "Brand Identity & Design System",
     category: "Creative & Brand",
-    basePrice: 4999,
-    turnaround: "72h Turnaround",
-    description: "Complete visual identities, luxury typography systems, vector design tokens, and comprehensive brand books.",
+    basePrice: 2999,
+    turnaround: "3–5 Days SLA",
+    description: "Vector logo mark, typography hierarchy, luxury color palette, and foundational brand guidelines.",
     iconName: "palette",
   },
   {
-    id: "meta-ad-bundles",
+    id: "3d-spatial",
+    title: "3D Modeling & CGI Renders",
+    category: "3D & Spatial",
+    basePrice: 999,
+    turnaround: "48–72h SLA",
+    description: "High-precision CAD modeling, studio product lighting setups, and 4K photorealistic spatial renders.",
+    iconName: "box",
+  },
+  {
+    id: "tour-360",
+    title: "360° Virtual Tours & VR",
+    category: "3D & Spatial",
+    basePrice: 2999,
+    turnaround: "3–5 Days SLA",
+    description: "Interactive equirectangular virtual walkthroughs with spatial navigation and custom branding.",
+    iconName: "compass",
+  },
+  {
+    id: "arch-viz",
+    title: "Architectural & Interior Visualization",
+    category: "3D & Spatial",
+    basePrice: 1499,
+    turnaround: "48–72h SLA",
+    description: "Photorealistic interior staging, 3D floor plans, lighting studies, and exterior elevations.",
+    iconName: "building",
+  },
+  {
+    id: "mkt-growth",
     title: "Digital Marketing & Meta Ads",
     category: "Social & Ads",
     basePrice: 4999,
@@ -199,12 +238,12 @@ export const INTAKE_SERVICES: IntakeServiceOption[] = [
     iconName: "share",
   },
   {
-    id: "custom-web-digital",
-    title: "Website & Mobile App Development",
+    id: "web-development",
+    title: "Website & Prototype Development",
     category: "Digital",
-    basePrice: 9999,
-    turnaround: "5–14 Days SLA",
-    description: "High-performance bespoke Next.js websites, client portals, and cross-platform native iOS & Android applications.",
+    basePrice: 4999,
+    turnaround: "5–10 Days SLA",
+    description: "High-performance bespoke Next.js landing pages, boutique e-commerce storefronts, and full-stack web prototypes.",
     iconName: "monitor",
   },
 ];
@@ -218,13 +257,12 @@ export function MasterOrderForm({
   // Navigation Steps: 1: Service & Tier, 2: Client & Brand Info, 3: Service Parameters, 4: Review & Payment
   const [currentStep, setCurrentStep] = useState(1);
 
-  // If user navigated for image creation, video creation, or packages/retainer, default to packages
+  // If user navigated for packages/retainer or package query, default to packages
   const isPackagesPreferred =
     initialServiceId === "monthly-retainer" ||
-    initialServiceId === "image-creation" ||
-    initialServiceId === "video-creation" ||
-    initialServiceId === "ai-concept-art" ||
-    initialServiceId === "commercial-video-ads" ||
+    initialServiceId === "daily-trend-creator" ||
+    initialServiceId === "growth-trend" ||
+    initialServiceId === "starter-trend" ||
     Boolean(initialTierId);
 
   // Step 1: Mode Switcher & Selection
@@ -232,23 +270,31 @@ export function MasterOrderForm({
     isPackagesPreferred ? "packages" : "services"
   );
   const [selectedServiceId, setSelectedServiceId] = useState<string>(() => {
-    if (!initialServiceId) return "visuals-motion";
-    if (initialServiceId === "visuals-and-motion" || initialServiceId === "visuals-motion") return "visuals-motion";
-    if (initialServiceId === "3d-modeling" || initialServiceId === "product-3d-cgi") return "product-3d-cgi";
-    if (initialServiceId === "360-view" || initialServiceId === "virtual-tour-360") return "virtual-tour-360";
-    if (initialServiceId === "interior-design" || initialServiceId === "interior-architecture" || initialServiceId === "arch-3d") return "arch-3d";
-    if (initialServiceId === "brand-identity" || initialServiceId === "brand-identity-system") return "brand-identity-system";
-    if (initialServiceId === "digital-marketing-ads" || initialServiceId === "meta-ads-launcher" || initialServiceId === "meta-ad-bundles") return "meta-ad-bundles";
-    if (initialServiceId === "web-mobile-development" || initialServiceId === "website-development" || initialServiceId === "custom-web-digital") return "custom-web-digital";
-    const found = INTAKE_SERVICES.find((s) => s.id === initialServiceId);
-    return found ? found.id : "visuals-motion";
+    if (!initialServiceId) return "img-creation";
+    const clean = initialServiceId.toLowerCase().trim();
+    if (clean === "image-creation" || clean === "img-creation" || clean.startsWith("img-")) return "img-creation";
+    if (clean === "video-creation" || clean === "vid-creation" || clean.startsWith("vid-")) return "vid-creation";
+    if (clean === "brand-identity" || clean.startsWith("des-")) return "des-brand-identity";
+    if (clean === "3d-modeling" || clean.startsWith("3d-")) return "3d-spatial";
+    if (clean === "360-view" || clean.startsWith("tour-")) return "tour-360";
+    if (clean === "interior-design" || clean.startsWith("arch-")) return "arch-viz";
+    if (clean === "digital-marketing" || clean.startsWith("mkt-")) return "mkt-growth";
+    if (clean === "web-development" || clean.startsWith("dev-")) return "web-development";
+    const found = INTAKE_SERVICES.find((s) => s.id === clean);
+    return found ? found.id : "img-creation";
   });
-  const [selectedPackageId, setSelectedPackageId] = useState<string>(
-    initialTierId || "starter-creative"
-  );
-  const [selectedTierId, setSelectedTierId] = useState<string>(
-    initialTierId || "starter"
-  );
+  const [selectedPackageId, setSelectedPackageId] = useState<string>(() => {
+    if (!initialTierId && !initialServiceId) return "daily-trend-creator";
+    const clean = (initialTierId || initialServiceId || "").toLowerCase().trim();
+    if (clean === "daily-trend-creator" || clean === "scale" || clean === "autonomous-growth-retainer") return "daily-trend-creator";
+    if (clean === "growth-trend" || clean === "growth" || clean === "studio-growth") return "growth-trend";
+    if (clean === "starter-trend" || clean === "starter" || clean === "studio-starter") return "starter-trend";
+    const found = INTAKE_PACKAGES.find((p) => p.id === clean);
+    return found ? found.id : "daily-trend-creator";
+  });
+  const [selectedTierId, setSelectedTierId] = useState<string>(() => {
+    return initialTierId || "daily-trend-creator";
+  });
 
   // Direct UPI UTR Input
   const [utrNumber, setUtrNumber] = useState("");
@@ -322,15 +368,21 @@ export function MasterOrderForm({
       ? activePackage.billingCycle === "monthly"
       : selectedTierId === "retainer";
   const isMetaAds =
+    activeService.id === "mkt-growth" ||
     activeService.id === "meta-ad-bundles" ||
     activeService.id === "social-micro-reels";
   const isSpatialOr3D =
+    activeService.id === "3d-spatial" ||
+    activeService.id === "tour-360" ||
+    activeService.id === "arch-viz" ||
     activeService.id === "arch-3d" ||
     activeService.id === "interior-staging" ||
     activeService.id === "virtual-tour-360" ||
     activeService.id === "product-3d-cgi";
   const isWebDev =
-    activeService.id === "custom-web-digital" || activeService.id === "mobile-app-dev";
+    activeService.id === "web-development" ||
+    activeService.id === "custom-web-digital" ||
+    activeService.id === "mobile-app-dev";
 
   // Standard checkout is active across all services and packages
   const isBespokeService = false;
@@ -341,7 +393,7 @@ export function MasterOrderForm({
       return activePackage.price;
     }
     if (typeof activeService.basePrice === "number") return activeService.basePrice;
-    return 1999;
+    return 99;
   }, [orderMode, activePackage, activeService]);
 
   // Validation before proceeding
@@ -381,9 +433,13 @@ export function MasterOrderForm({
     const paymentStatus = hasUtr ? "pending_verification" : "pending";
     const resolvedTitle = orderMode === "packages" ? activePackage.title : activeService.title;
     const resolvedTierId = orderMode === "packages" ? activePackage.id : (selectedTierId || "starter");
+    const canonicalServiceId = orderMode === "packages" ? activePackage.id : activeService.id;
+
+    const idempotencyKey = `idemp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
     const orderPayload = {
       orderId: `ord_${Date.now()}`,
+      idempotencyKey,
       sourceChannel: "direct_order" as const,
       client: {
         name: fullName.trim(),
@@ -477,11 +533,16 @@ export function MasterOrderForm({
       });
 
       const data = await res.json();
+      if (!res.ok) {
+        setFormError(data.error || "Failed to submit order. Please check inputs.");
+        return;
+      }
+
       const generatedOrder = data.order || {
-        id: `ord_${Date.now()}`,
-        code: `STR-${Math.floor(1000 + Math.random() * 9000)}`,
+        id: data.orderId || `ord_${Date.now()}`,
+        code: data.orderCode || `STR-${Math.floor(1000 + Math.random() * 9000)}`,
         title: resolvedTitle,
-        totalAmount: orderAmount,
+        totalAmount: data.totalAmount || orderAmount,
       };
 
       setCreatedOrder(generatedOrder);

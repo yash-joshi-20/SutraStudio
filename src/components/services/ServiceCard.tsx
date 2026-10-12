@@ -6,7 +6,6 @@ import Image from "next/image";
 import { ServiceItem } from "@/data/servicesData";
 import {
   Image as ImageIcon,
-  Video,
   Box,
   Compass,
   ArrowUpRight,
@@ -15,15 +14,17 @@ import {
 } from "lucide-react";
 
 export function ServiceCard({ service }: { service: ServiceItem }) {
+  const detailHref = `/services#${service.slug}`;
+  const orderHref = `/orders?service=${service.slug}`;
+
   return (
-    <Link
-      href={`/orders?service=${service.slug}`}
+    <div
       id={service.slug}
       className="group interactive-card relative flex flex-col justify-between rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] overflow-hidden transition-all duration-300 hover:border-[#D4A35A] hover:shadow-warm-hover"
     >
       <div>
-        {/* Visual Media Presentation Banner */}
-        <div className="relative aspect-[16/10] w-full overflow-hidden bg-[#F4EFE6]">
+        {/* Visual Media Presentation Banner linking to detail route */}
+        <Link href={detailHref} className="block relative aspect-[16/10] w-full overflow-hidden bg-[#F4EFE6]">
           <Image
             src={service.thumbnail}
             alt={service.name}
@@ -87,15 +88,15 @@ export function ServiceCard({ service }: { service: ServiceItem }) {
               {service.badge}
             </span>
           </div>
-        </div>
+        </Link>
 
         {/* Card Body */}
         <div className="p-5 space-y-2">
-          <div className="flex items-center justify-between">
-            <h3 className="font-serif text-base font-semibold text-[#0F172A] group-hover:text-[#5C3A1E] transition-colors leading-snug">
+          <Link href={detailHref} className="block group/link">
+            <h3 className="font-serif text-base font-semibold text-[#0F172A] group-hover/link:text-[#5C3A1E] transition-colors leading-snug">
               {service.name}
             </h3>
-          </div>
+          </Link>
 
           <p className="text-xs font-semibold text-[#A98B57] tracking-wide">
             {service.tagline}
@@ -113,8 +114,8 @@ export function ServiceCard({ service }: { service: ServiceItem }) {
         </div>
       </div>
 
-      {/* Card Footer */}
-      <div className="px-5 pb-5 pt-4 border-t border-[#EADFCB]/60 flex items-center justify-between min-h-[52px] gap-3">
+      {/* Card Footer with explicit detail and order links */}
+      <div className="px-5 pb-5 pt-4 border-t border-[#EADFCB]/60 flex items-center justify-between min-h-[52px] gap-2">
         <div className="flex flex-col min-w-0">
           <span className="text-[10px] text-[#94A3B8] uppercase block tracking-wider font-mono">
             {service.isCustomQuote ? "Scope" : "Starting from"}
@@ -124,17 +125,24 @@ export function ServiceCard({ service }: { service: ServiceItem }) {
           </span>
         </div>
 
-        {service.isCustomQuote ? (
-          <div className="shrink-0 inline-flex items-center justify-center whitespace-nowrap min-h-[40px] px-3.5 py-1.5 rounded-xl bg-[#5C3A1E] text-white hover:bg-[#4A2E17] text-xs font-semibold gap-1.5 transition-all shadow-xs">
-            <span>Inquire Scope</span>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Link
+            href={detailHref}
+            title={`View ${service.name} Specifications`}
+            className="inline-flex items-center justify-center whitespace-nowrap min-h-[38px] px-2.5 py-1.5 rounded-xl bg-[#F8F5EF] text-[#5C3A1E] border border-[#EADFCB] hover:border-[#D4A35A] text-xs font-medium transition-colors"
+          >
+            Details
+          </Link>
+          <Link
+            href={orderHref}
+            title={`Order ${service.name}`}
+            className="inline-flex items-center justify-center whitespace-nowrap min-h-[38px] px-3.5 py-1.5 rounded-xl bg-[#5C3A1E] text-white hover:bg-[#4A2E17] text-xs font-semibold gap-1 transition-all shadow-xs cursor-pointer"
+          >
+            <span>{service.isCustomQuote ? "Inquire" : "Order"}</span>
             <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
-          </div>
-        ) : (
-          <div className="shrink-0 w-9 h-9 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center transition-all group-hover:bg-[#5C3A1E] group-hover:border-[#5C3A1E] group-hover:text-white shadow-xs">
-            <ArrowUpRight className="w-4 h-4 text-[#5C3A1E] group-hover:text-white transition-colors shrink-0" />
-          </div>
-        )}
+          </Link>
+        </div>
       </div>
-    </Link>
+    </div>
   );
 }

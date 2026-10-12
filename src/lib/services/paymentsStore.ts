@@ -198,7 +198,23 @@ export class PaymentsStore {
 
   public static findByOrderId(orderId: string): PaymentRecordDocument | undefined {
     const list: PaymentRecordDocument[] = globalAny.__SUTRA_STORED_PAYMENTS__;
-    return list.find((p) => p.orderId === orderId);
+    const match = list.find((p) => p.orderId === orderId);
+
+    const diskPayments = loadPaymentsFromDisk();
+    const diskMatch = diskPayments.find((p) => p.orderId === orderId);
+    if (diskMatch) {
+      if (!match) {
+        list.unshift(diskMatch);
+        return diskMatch;
+      }
+      if (
+        (diskMatch.updatedAt && (!match.updatedAt || diskMatch.updatedAt > match.updatedAt)) ||
+        diskMatch.status !== match.status
+      ) {
+        Object.assign(match, diskMatch);
+      }
+    }
+    return match;
   }
 
   public static findByUtr(utr: string): PaymentRecordDocument | undefined {
@@ -293,8 +309,8 @@ export class PaymentsStore {
 
     const now = new Date().toISOString();
     payment.utrNumber = cleanUtr;
-    payment.screenshotUrl = params.screenshotUrl || payment.screenshotUrl;
-    payment.screenshotDriveFileId = params.screenshotDriveFileId || payment.screenshotDriveFileId;
+    if (params.screenshotUrl) payment.screenshotUrl = params.screenshotUrl;
+    if (params.screenshotDriveFileId) payment.screenshotDriveFileId = params.screenshotDriveFileId;
     payment.status = "payment_submitted";
     payment.submittedAt = now;
     payment.updatedAt = now;
@@ -329,17 +345,17 @@ export class PaymentsStore {
         note: `UPI QR payment submitted with UTR ${cleanUtr}. Amount locked to ₹${payment.amountINR.toLocaleString("en-IN")}. Awaiting studio admin ledger verification.`,
       });
 
+      const eventPayload: Record<string, any> = { utrNumber: cleanUtr };
+      if (params.screenshotUrl) eventPayload.screenshotUrl = params.screenshotUrl;
+      if (params.screenshotDriveFileId) eventPayload.screenshotDriveFileId = params.screenshotDriveFileId;
+
       OrdersStore.logPaymentEvent({
         orderId: order.id,
         eventType: "payment.utr_submitted",
         amountINR: payment.amountINR,
         paymentId: payment.id,
         source: "client_portal",
-        payload: {
-          utrNumber: cleanUtr,
-          screenshotUrl: params.screenshotUrl,
-          screenshotDriveFileId: params.screenshotDriveFileId,
-        },
+        payload: eventPayload,
       });
     }
 
@@ -382,6 +398,11 @@ export class PaymentsStore {
 
     if (!payment) {
       return { success: false, error: "Payment record not found." };
+    }
+
+    if (payment.status === "paid") {
+      const order = OrdersStore.findById(payment.orderId);
+      return { success: true, payment, order };
     }
 
     const now = new Date().toISOString();
@@ -538,6 +559,13 @@ export class PaymentsStore {
 
     if (!payment) {
       return { success: false, error: "Payment record not found." };
+    }
+
+    if (payment.status === "paid") {
+      return {
+        success: false,
+        error: "Cannot reject a payment that has already been verified and marked as paid. Please use the refund pipeline.",
+      };
     }
 
     const now = new Date().toISOString();

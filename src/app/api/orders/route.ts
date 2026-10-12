@@ -226,6 +226,28 @@ export interface FirestoreOrderRecord {
     pincode?: string;
     isGstClaimed?: boolean;
   };
+  orderSnapshot?: OrderSnapshotRecord;
+  idempotencyKey?: string;
+}
+
+export interface OrderSnapshotRecord {
+  serviceId: string;
+  packageName?: string;
+  serviceName: string;
+  quantity: number;
+  scopeVersion: string;
+  unitPrice: number;
+  subtotal: number;
+  discount: number;
+  tax: number;
+  total: number;
+  currency: "INR";
+  billingPeriod: "monthly" | "quarterly" | "annual" | "one_time";
+  revisions: number;
+  deliverables?: string[];
+  exclusions?: string[];
+  createdAt: string;
+  confirmedAt?: string;
 }
 
 export interface UniversalOrderPayload {
@@ -302,6 +324,9 @@ import { getAuthenticatedUser } from "@/lib/auth/serverAuth";
 import { AuditLogService } from "@/lib/services/auditLogService";
 import { ClientsStore } from "@/lib/services/clientsStore";
 import { requestRole } from "@/lib/auth/requestRole";
+import { findPackageById } from "@/config/packages";
+import { findServiceBySlug, computeItemTotal } from "@/config/services";
+import { MAX_CATALOG_PRICE_INR } from "@/config/pricing";
 
 export async function GET(req: Request) {
   const user = await getAuthenticatedUser(req);
@@ -345,21 +370,36 @@ export async function GET(req: Request) {
   const allOrders = OrdersStore.getAll();
   let filtered = [...allOrders];
 
-  // If caller is an authenticated client, strictly filter to their orders only
+  // Multi-tenant server-level isolation:
   if (user.isAuthenticated && user.role === "client") {
+    // Authenticated client: strictly limited to their own orders only
     filtered = filtered.filter(
       (o) =>
         o.clientUid === user.uid ||
         o.clientId === user.uid ||
         (user.email && o.clientEmail && o.clientEmail.toLowerCase() === user.email.toLowerCase())
     );
+  } else if (user.isAuthenticated && user.role === "admin") {
+    // Admin: can view all orders or filter by target client
+    if (targetClientUid) {
+      filtered = filtered.filter(
+        (o) =>
+          o.clientUid === targetClientUid ||
+          o.clientId === targetClientUid ||
+          (o.clientEmail && o.clientEmail.toLowerCase() === targetClientUid.toLowerCase())
+      );
+    }
   } else if (targetClientUid) {
+    // Safe lookup by specific client UID
     filtered = filtered.filter(
       (o) =>
         o.clientUid === targetClientUid ||
         o.clientId === targetClientUid ||
         (o.clientEmail && o.clientEmail.toLowerCase() === targetClientUid.toLowerCase())
     );
+  } else {
+    // Unauthenticated without client ID: zero cross-tenant leak
+    filtered = [];
   }
 
   return NextResponse.json({
@@ -389,156 +429,293 @@ export async function POST(req: Request) {
 
     const sourceChannel = body.sourceChannel || body.source || "direct_order";
 
-    const isMonthlyRetainer =
-      packagePayload.billingCycle === "monthly" ||
-      packagePayload.tierId === "autonomous-growth-retainer" ||
-      body.type === "monthly_plan" ||
-      body.billingType === "monthly_retainer" ||
-      body.billingCycle === "monthly";
+    // -------------------------------------------------------------------------
+    // IDEMPOTENCY GUARD: Prevent duplicate orders on network retransmissions
+    // -------------------------------------------------------------------------
+    const idempotencyKey =
+      req.headers.get("x-idempotency-key") ||
+      (typeof body.idempotencyKey === "string" ? body.idempotencyKey.trim() : undefined);
 
-    const orderType: "service" | "monthly_plan" = isMonthlyRetainer ? "monthly_plan" : "service";
+    if (idempotencyKey) {
+      const allOrders = OrdersStore.getAll();
+      const existing = allOrders.find(
+        (o) => (o as any).idempotencyKey === idempotencyKey
+      );
+      if (existing) {
+        return NextResponse.json(
+          {
+            database: isFirebaseAdminReady() ? "Firebase Firestore" : "Local Studio Vault (Synchronized)",
+            collection: "orders",
+            storageBackend: "Sutra Cloud Vault (Encrypted)",
+            orderId: existing.id,
+            orderCode: existing.code,
+            orderNumber: existing.orderNumber,
+            totalAmount: existing.totalAmount,
+            status: existing.status,
+            order: existing,
+            replayed: true,
+          },
+          {
+            status: 200,
+            headers: {
+              "X-Idempotent-Replay": "true",
+            },
+          }
+        );
+      }
+    }
+
+    // Helper to resolve any candidate ID or slug to canonical catalog item
+    function resolveCatalogItem(idOrSlug: string): {
+      id: string;
+      slug: string;
+      name: string;
+      numericPrice: number;
+      isPackage: boolean;
+      isPack: boolean;
+      active: boolean;
+      deliverables: string[];
+      exclusions: string[];
+      revisions: number;
+      estimatedDays: number;
+    } | null {
+      if (!idOrSlug) return null;
+      const clean = idOrSlug.trim();
+
+      // Check Canonical Packages (Monthly Retainers & Standalone Packs)
+      const pkg = findPackageById(clean);
+      if (pkg) {
+        const isMonthly = "billingCycle" in pkg && pkg.billingCycle === "monthly";
+        const isPack = "pricingType" in pkg && pkg.pricingType === "pack";
+        return {
+          id: pkg.id,
+          slug: pkg.slug,
+          name: pkg.name,
+          numericPrice: pkg.numericPrice,
+          isPackage: isMonthly,
+          isPack,
+          active: pkg.active,
+          deliverables: pkg.deliverables || [],
+          exclusions: pkg.exclusions || [],
+          revisions: ("revisionRounds" in pkg ? pkg.revisionRounds : 1),
+          estimatedDays: isMonthly ? 30 : 3,
+        };
+      }
+
+      // Check Canonical Services & Disciplines
+      const srv = findServiceBySlug(clean);
+      if (srv) {
+        return {
+          id: srv.id,
+          slug: srv.slug,
+          name: srv.name,
+          numericPrice: srv.numericPrice,
+          isPackage: false,
+          isPack: srv.pricingType === "pack",
+          active: srv.active,
+          deliverables: srv.deliverables || [],
+          exclusions: srv.exclusions || [],
+          revisions: 2,
+          estimatedDays: srv.estimatedTurnaround?.includes("Day") ? 7 : 3,
+        };
+      }
+
+      // Check Seed Catalog Plans
+      const plan = OFFICIAL_PLANS[clean];
+      if (plan) {
+        return {
+          id: plan.id,
+          slug: plan.id,
+          name: plan.name,
+          numericPrice: plan.monthlyPrice,
+          isPackage: true,
+          isPack: false,
+          active: plan.active,
+          deliverables: plan.features || [],
+          exclusions: [],
+          revisions: 1,
+          estimatedDays: 30,
+        };
+      }
+
+      // Check Seed Catalog Services
+      const seedSrv = OFFICIAL_SERVICES[clean];
+      if (seedSrv) {
+        return {
+          id: seedSrv.id,
+          slug: seedSrv.slug,
+          name: seedSrv.name,
+          numericPrice: seedSrv.startingPrice,
+          isPackage: false,
+          isPack: false,
+          active: seedSrv.active,
+          deliverables: seedSrv.deliverables || [],
+          exclusions: [],
+          revisions: seedSrv.revisionsIncluded || 2,
+          estimatedDays: seedSrv.estimatedDeliveryDays || 3,
+        };
+      }
+
+      return null;
+    }
+
+    // Extract raw candidate items from payload
+    const rawItemsToProcess: Array<{ id: string; quantity?: unknown }> = [];
+
+    if (Array.isArray(body.items) && body.items.length > 0) {
+      for (const it of body.items) {
+        const candidateId = it.serviceId || it.planId || it.id || it.slug;
+        if (candidateId) {
+          rawItemsToProcess.push({ id: String(candidateId), quantity: it.quantity });
+        }
+      }
+    } else {
+      const singleCandidateId =
+        packagePayload.tierId ||
+        body.serviceId ||
+        body.planId ||
+        body.tierId ||
+        body.packageId ||
+        body.service;
+      if (singleCandidateId) {
+        rawItemsToProcess.push({
+          id: String(singleCandidateId),
+          quantity: body.quantity ?? packagePayload.quantity ?? 1,
+        });
+      }
+    }
+
+    if (rawItemsToProcess.length === 0) {
+      return NextResponse.json(
+        { error: "Validation Error: At least one active service or package must be selected." },
+        { status: 400 }
+      );
+    }
 
     let calculatedTotal = 0;
-    let verifiedItems: {
+    const verifiedItems: {
       serviceId?: string;
       planId?: string;
       name: string;
       price: number;
       quantity: number;
+      unitPrice: number;
     }[] = [];
-    let title = "";
-    let primaryServiceName = "";
 
-    // =========================================================================
-    // SECURITY: CRITICAL SERVER-SIDE PRICE RECOMPUTATION
-    // Never trust client-sent prices. Lookup directly in official database catalog.
-    // =========================================================================
-    if (orderType === "service") {
-      const rawItems = Array.isArray(body.items) ? body.items : [];
-      if (rawItems.length === 0 && (body.serviceId || packagePayload.tierId)) {
-        rawItems.push({ serviceId: body.serviceId || packagePayload.tierId, quantity: 1 });
-      }
+    let targetRevisions = 2;
+    let targetDeliverables: string[] = [];
+    let targetExclusions: string[] = [];
+    let targetEstimatedDays = 3;
+    let isRetainerOrder = false;
 
-      for (const item of rawItems) {
-        const srv = OFFICIAL_SERVICES[item.serviceId];
-        if (srv && srv.active) {
-          const qty = Math.max(1, Math.min(50, Math.floor(Number(item.quantity) || 1)));
-          const unitPrice = srv.startingPrice ?? (srv as any).price ?? 3499; // Recomputed from database!
-          calculatedTotal += unitPrice * qty;
-          verifiedItems.push({
-            serviceId: srv.id,
-            name: srv.name,
-            price: unitPrice,
-            quantity: qty,
-          });
-        }
-      }
-
-      if (verifiedItems.length === 0) {
-        if (
-          packagePayload.price ||
-          packagePayload.name ||
-          body.customServiceName ||
-          body.serviceTitle ||
-          body.amountINR ||
-          body.totalAmount ||
-          body.amount ||
-          body.source ||
-          body.isCustomOrder
-        ) {
-          const customAmount = Number(
-            packagePayload.price ||
-            body.amountINR ||
-            body.totalAmount ||
-            body.amount ||
-            body.price ||
-            3499
-          );
-          const customName =
-            packagePayload.name ||
-            body.customServiceName ||
-            body.serviceTitle ||
-            body.service ||
-            body.title ||
-            "Bespoke Creative Commission";
-          calculatedTotal = customAmount;
-          verifiedItems.push({
-            name: customName,
-            price: customAmount,
-            quantity: 1,
-          });
-          primaryServiceName = customName;
-          title = body.title || `${customName} Commission`;
-        } else {
-          return NextResponse.json(
-            { error: "Validation Error: At least one active service must be selected." },
-            { status: 400 }
-          );
-        }
-      } else {
-        primaryServiceName = verifiedItems[0].name;
-        title =
-          body.title ||
-          (verifiedItems.length === 1
-            ? `${verifiedItems[0].name} Commission`
-            : `${verifiedItems[0].name} + ${verifiedItems.length - 1} Creative Services`);
-      }
-    } else {
-      // Monthly Plan Path
-      const planId = packagePayload.tierId || body.planId || "studio-growth";
-      const plan = OFFICIAL_PLANS[planId];
-      if (!plan || !plan.active) {
-        // Fallback to custom monthly package if defined
-        if (packagePayload.price || body.totalAmount || body.amount) {
-          const customMonthlyAmount = Number(packagePayload.price || body.totalAmount || body.amount || 14999);
-          calculatedTotal = customMonthlyAmount;
-          primaryServiceName = packagePayload.name || "Autonomous Growth Retainer";
-          title = body.title || `${primaryServiceName} (Monthly Retainer)`;
-          verifiedItems = [
-            {
-              planId: planId || "autonomous-growth-retainer",
-              name: `${primaryServiceName} (MONTHLY RETAINER)`,
-              price: calculatedTotal,
-              quantity: 1,
-            },
-          ];
-        } else {
-          return NextResponse.json(
-            { error: "Validation Error: Selected monthly plan is not active or valid." },
-            { status: 400 }
-          );
-        }
-      } else {
-        const cycle =
-          packagePayload.billingCycle === "monthly"
-            ? "monthly"
-            : body.billingCycle === "quarterly" || body.billingCycle === "annual"
-            ? body.billingCycle
-            : "monthly";
-
-        let multiplier = 1;
-        let discountMultiplier = 1.0;
-        if (cycle === "quarterly") {
-          multiplier = 3;
-          discountMultiplier = 0.9; // 10% savings
-        } else if (cycle === "annual") {
-          multiplier = 12;
-          discountMultiplier = 0.8; // 20% savings
-        }
-
-        calculatedTotal = Math.round(plan.monthlyPrice * multiplier * discountMultiplier);
-        verifiedItems = [
+    for (const rawItem of rawItemsToProcess) {
+      const resolved = resolveCatalogItem(rawItem.id);
+      if (!resolved) {
+        return NextResponse.json(
           {
-            planId: plan.id,
-            name: `${plan.name} (${cycle.toUpperCase()} RETAINER)`,
-            price: calculatedTotal,
-            quantity: 1,
+            error: `Validation Error: Unknown or unapproved service/package ID '${rawItem.id}'. Please select a valid item from the canonical catalog.`,
+            invalidId: rawItem.id,
           },
-        ];
-        primaryServiceName = plan.name;
-        title = body.title || `${plan.name} Retainer Plan`;
+          { status: 400 }
+        );
+      }
+
+      if (!resolved.active) {
+        return NextResponse.json(
+          {
+            error: `Validation Error: Selected service/package '${resolved.name}' (${resolved.id}) is inactive or not currently available.`,
+            inactiveId: resolved.id,
+          },
+          { status: 400 }
+        );
+      }
+
+      // Quantity validation
+      const rawQty = rawItem.quantity ?? 1;
+      const numQty = Number(rawQty);
+      if (!Number.isInteger(numQty) || numQty < 1 || numQty > 100) {
+        return NextResponse.json(
+          {
+            error: `Validation Error: Quantity for '${resolved.name}' must be an integer between 1 and 100 (received: ${rawQty}).`,
+          },
+          { status: 400 }
+        );
+      }
+
+      const qty = numQty;
+
+      // Price calculation
+      let unitPrice = resolved.numericPrice;
+      if (resolved.isPackage) {
+        isRetainerOrder = true;
+        const requestedCycle =
+          packagePayload.billingCycle || body.billingCycle || "monthly";
+        if (requestedCycle === "quarterly") {
+          unitPrice = Math.round(resolved.numericPrice * 3 * 0.9);
+        } else if (requestedCycle === "annual") {
+          unitPrice = Math.round(resolved.numericPrice * 12 * 0.8);
+        }
+      }
+
+      const itemTotal = unitPrice * qty;
+      calculatedTotal += itemTotal;
+
+      verifiedItems.push({
+        serviceId: resolved.isPackage ? undefined : resolved.id,
+        planId: resolved.isPackage ? resolved.id : undefined,
+        name: resolved.name,
+        price: itemTotal,
+        quantity: qty,
+        unitPrice,
+      });
+
+      targetRevisions = Math.max(targetRevisions, resolved.revisions);
+      targetDeliverables = [...targetDeliverables, ...resolved.deliverables];
+      targetExclusions = [...targetExclusions, ...resolved.exclusions];
+      targetEstimatedDays = Math.max(targetEstimatedDays, resolved.estimatedDays);
+    }
+
+    // -------------------------------------------------------------------------
+    // FORGED PRICE GUARD: Reject client-submitted totals that differ from catalog
+    // -------------------------------------------------------------------------
+    const clientStatedPrice =
+      body.totalAmount ??
+      body.amount ??
+      body.amountINR ??
+      packagePayload.price;
+
+    if (clientStatedPrice !== undefined && clientStatedPrice !== null && clientStatedPrice !== "") {
+      const statedNum = Number(clientStatedPrice);
+      if (Number.isFinite(statedNum) && Math.abs(statedNum - calculatedTotal) > 0.01) {
+        return NextResponse.json(
+          {
+            error: `Security Error: Forged or tampered price detected. Client submitted ₹${statedNum}, but authoritative catalog price is ₹${calculatedTotal}.`,
+            submittedPrice: statedNum,
+            authoritativePrice: calculatedTotal,
+          },
+          { status: 400 }
+        );
       }
     }
+
+    const orderType: "service" | "monthly_plan" = isRetainerOrder ? "monthly_plan" : "service";
+    const primaryServiceName = verifiedItems[0]?.name || "Creative Project";
+    const primaryServiceId = verifiedItems[0]?.serviceId || verifiedItems[0]?.planId || "service";
+    const primaryQuantity = verifiedItems.reduce((acc, it) => acc + it.quantity, 0);
+    const primaryUnitPrice = verifiedItems[0]?.unitPrice || calculatedTotal;
+
+    const billingCycle: "monthly" | "quarterly" | "annual" | undefined =
+      orderType === "monthly_plan"
+        ? (body.billingCycle === "quarterly" || body.billingCycle === "annual" ? body.billingCycle : "monthly")
+        : undefined;
+
+    const title =
+      body.title ||
+      (verifiedItems.length === 1
+        ? (orderType === "monthly_plan"
+            ? `${primaryServiceName} (30-Day Retainer)`
+            : `${primaryServiceName} Commission`)
+        : `${primaryServiceName} + ${verifiedItems.length - 1} Creative Services`);
 
     // SERVER-BOUND IDENTITY: Derive strictly from authenticated session
     const clientUid = user.isAuthenticated
@@ -631,11 +808,11 @@ export async function POST(req: Request) {
       (body.paymentMethod === "upi_qr" || body.paymentMethod === "UPI_GPAY") && (body.utrNumber || utrVal)
     );
 
-    const isDirectPaid =
-      body.paymentStatus === "paid" ||
-      body.isPaid === true ||
-      body.paymentMethod === "bank_transfer" ||
-      body.paymentMethod === "cash";
+    const isDirectPaid = Boolean(
+      user.isAuthenticated &&
+      user.isAdmin &&
+      (body.paymentStatus === "paid" || body.isPaid === true || body.paymentMethod === "cash")
+    );
 
     const initialStatus: FirestoreOrderRecord["status"] = isDirectPaid
       ? "in_progress"
@@ -768,6 +945,29 @@ export async function POST(req: Request) {
       createdAt: now,
       updatedAt: now,
       deliverablePreview: initialDeliverablePreview,
+      orderSnapshot: {
+        serviceId: primaryServiceId,
+        packageName: orderType === "monthly_plan" ? primaryServiceName : undefined,
+        serviceName: primaryServiceName,
+        quantity: primaryQuantity,
+        scopeVersion: "catalog_v2026_10",
+        unitPrice: primaryUnitPrice,
+        subtotal: calculatedTotal,
+        discount: discountAmount,
+        tax: gstAmount,
+        total: finalPayableAmount,
+        currency: "INR",
+        billingPeriod: orderType === "monthly_plan" ? (billingCycle || "monthly") : "one_time",
+        revisions: targetRevisions,
+        deliverables: targetDeliverables,
+        exclusions: targetExclusions,
+        createdAt: now,
+        confirmedAt: isDirectPaid || isDirectInvoice ? now : undefined,
+      },
+      idempotencyKey,
+      autoRenew: false,
+      currentPeriodStart: now,
+      currentPeriodEnd: orderType === "monthly_plan" ? new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString() : undefined,
     };
 
     // Auto-provision 4-tier Google Drive folder hierarchy: Root > Clients > {Client} > {Order}
@@ -886,6 +1086,10 @@ export async function PATCH(req: Request) {
     if (role === "client" || body.clientRole === "client") {
       if (
         body.action === "approve" ||
+        body.action === "mark_paid" ||
+        body.action === "approve_payment" ||
+        body.status === "paid" ||
+        body.paymentStatus === "paid" ||
         body.status === "APPROVED" ||
         body.status === "READY FOR DELIVERY" ||
         body.status === "PROJECT COMPLETED"
@@ -893,8 +1097,8 @@ export async function PATCH(req: Request) {
         return NextResponse.json(
           {
             error:
-              "Forbidden: Official project approvals must originate from an authorized Studio Administrator.",
-            deniedAction: body.action || body.status,
+              "Forbidden: Official project approvals and payment verification must originate from an authorized Studio Administrator.",
+            deniedAction: body.action || body.status || body.paymentStatus,
           },
           { status: 403 }
         );
@@ -902,7 +1106,7 @@ export async function PATCH(req: Request) {
     }
 
     const now = new Date().toISOString();
-    const targetOrderId = body.orderId || body.projectId;
+    const targetOrderId = body.orderId || body.projectId || body.id;
     if (!targetOrderId) {
       return NextResponse.json({ error: "orderId or projectId is required." }, { status: 400 });
     }
@@ -973,7 +1177,13 @@ export async function PATCH(req: Request) {
       }
 
       // Mark Payment Received Action (Manual QR / Bank / Cash / Approved by Admin)
-      if (body.action === "mark_paid" || body.action === "approve_payment" || body.paymentStatus === "paid") {
+      if (body.action === "mark_paid" || body.action === "approve_payment" || body.paymentStatus === "paid" || body.status === "paid") {
+        if (role !== "admin") {
+          return NextResponse.json(
+            { error: "Forbidden: Only an authorized Studio Administrator may verify payment and mark an order as paid." },
+            { status: 403 }
+          );
+        }
         targetOrder.paymentStatus = "paid";
         targetOrder.amountPaid = Number(body.amountPaid || targetOrder.totalAmount || 0);
         targetOrder.paidAt = now;

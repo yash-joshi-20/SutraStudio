@@ -9,7 +9,6 @@ import {
   Shield,
   Heart,
   ChevronDown,
-  Smartphone,
   ExternalLink,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -33,7 +32,7 @@ export function Footer() {
     { label: "Website Development", href: "/services#website-development" },
     { label: "Web App Development", href: "/services#web-app-development" },
     { label: "Mobile App Setup", href: "/services#mobile-app-setup" },
-    { label: "Workflow Automation", href: "/services#workflow-automation" },
+    { label: "Trending Topic Research", href: "/services#trending-topic-research" },
   ];
 
   const studioLinks = [

@@ -19,11 +19,6 @@ import {
   AlertCircle,
   Clock,
   Shield,
-  Sparkles,
-  ArrowRight,
-  Phone,
-  FileCheck,
-  Send,
 } from "lucide-react";
 
 const SERVICE_OPTIONS = [
@@ -38,7 +33,7 @@ const SERVICE_OPTIONS = [
   { label: "Website Architecture & Development", value: "Website Development" },
   { label: "Web Application & SaaS Engineering", value: "Web App Development" },
   { label: "Mobile App Implementation", value: "Mobile App Setup" },
-  { label: "Digital Workflow Automation", value: "Digital Automation" },
+  { label: "Trending Topic Research & Content Strategy", value: "Trending Research" },
 ];
 
 const BUDGET_OPTIONS = [

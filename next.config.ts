@@ -91,6 +91,10 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
+        source: "/services/:slug",
+        destination: "/services?service=:slug",
+      },
+      {
         source: "/admin/site-control",
         destination: "/admin?tab=site-control",
       },

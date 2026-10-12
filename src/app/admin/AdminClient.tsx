@@ -2307,6 +2307,16 @@ const [adminDataError, setAdminDataError] = useState("");
   };
 
   const handleUpdateServicePrice = async (serviceId: string, newPrice: number) => {
+    if (newPrice < 0) {
+      setCatalogSaveToast("Starting price cannot be negative.");
+      setTimeout(() => setCatalogSaveToast(""), 3500);
+      return;
+    }
+    if (newPrice > 20000) {
+      setCatalogSaveToast("Starting price cannot exceed the approved ₹20,000 catalog ceiling.");
+      setTimeout(() => setCatalogSaveToast(""), 3500);
+      return;
+    }
     try {
       const { service: updated } = await patchCatalog<{ service: CatalogService }>("service", serviceId, {
         startingPrice: newPrice,
@@ -7539,13 +7549,16 @@ const [adminDataError, setAdminDataError] = useState("");
                 <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 shadow-xs space-y-6">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#EADFCB]/60 pb-6">
                     <div>
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-2.5 flex-wrap">
                         <h3 className="font-serif text-xl sm:text-2xl font-semibold text-[#0F172A]">
                           12 Studio Services Catalog (Data-Driven)
                         </h3>
                         <Badge variant="gold" size="sm">
                           {catalogServices.length} Active Services
                         </Badge>
+                        <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[#5C3A1E]">
+                          Ceiling: ≤ ₹20,000 INR • Historical Orders Locked
+                        </span>
                       </div>
                       <p className="text-xs text-[#64748B] mt-1">
                         All 12 studio capabilities driven from Firebase Firestore. Edit starting prices, delivery SLAs, workflow stages, and dynamic intake brief schemas in real time without code changes.
@@ -7662,6 +7675,12 @@ const [adminDataError, setAdminDataError] = useState("");
                           </div>
                         </div>
                       ))}
+                    {catalogServices.filter((s) => catalogServiceFilter === "All" || s.category === catalogServiceFilter).length === 0 && (
+                      <div className="col-span-full p-8 text-center bg-[#FAF9F5] rounded-2xl border border-[#EADFCB] text-xs text-[#64748B] space-y-1">
+                        <p className="font-semibold text-[#0F172A]">No services found in category &ldquo;{catalogServiceFilter}&rdquo;.</p>
+                        <p>Select &ldquo;All&rdquo; above to display all canonical studio capabilities.</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 

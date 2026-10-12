@@ -2,373 +2,730 @@
  * SUTRA STUDIO — Canonical Packages & Deliverables Configuration
  *
  * Single Source of Truth for:
- * 1. Standalone Creative Packs (from ₹499)
- * 2. Multi-Format Commission Packages (Starter ₹1,999, Studio Growth ₹4,999, Enterprise Custom Quote)
- * 3. Daily Content Retainer Plans (1 image + 1 video per day):
- *    - 30-Day Growth Plan: ₹9,999 / month
- *    - 6-Month Growth Plan: ₹53,999 (10% savings)
+ * 1. Approved Monthly Retainer Packages:
+ *    - Starter Trend: ₹9,999 / 30 days (15 images + 15 short videos)
+ *    - Growth Trend: ₹14,999 / 30 days (20 images + 20 short videos)
+ *    - Daily Trend Creator: ₹19,999 / 30 days (30 images + 30 short videos, 1 each per day)
+ * 2. Approved Standalone Deliverable Packs:
+ *    - Image packs (3 for ₹249; 3 for ₹499; 5 for ₹799; 10 for ₹1,499)
+ *    - Video packs (3 for ₹499; 3 for ₹1,299; 5 for ₹1,999; 10 for ₹3,499)
+ *    - Social Carousel (5 slides for ₹499)
+ *
+ * All prices strictly <= ₹20,000.
  */
 
-export interface StandaloneDeliverablePackage {
-  id: string;
-  name: string;
-  serviceId: string;
-  serviceSlug: string;
-  price: number;
-  formattedPrice: string;
-  priceDisplay: string;
-  turnaround: string;
-  description: string;
-  subBullets: string[];
-  ctaText: string;
-  ctaHref: string;
-  popular?: boolean;
-}
-
-export interface CommissionPackage {
-  id: string;
-  name: string;
-  price: number | "custom";
-  formattedPrice: string;
-  tagline: string;
-  description: string;
-  turnaround: string;
-  features: string[];
-  popular?: boolean;
-  ctaText: string;
-  ctaHref: string;
-  revisionRounds: number;
-}
+import { formatCurrencyINR } from "@/config/services";
 
 export interface RetainerPackage {
   id: string;
+  slug: string;
   name: string;
-  billingCycle: "monthly" | "biannual";
+  billingCycle: "monthly" | "quarterly" | "annual";
   durationMonths: number;
+  duration: string;
   price: number;
-  priceMonthly?: number;
+  numericPrice: number;
+  priceMonthly: number;
+  quarterlyPrice: number;
+  annualPrice: number;
   formattedPrice: string;
-  formattedMonthlyPrice?: string;
+  formattedMonthlyPrice: string;
   monthlyEquivalent: string;
   tagline: string;
   description: string;
   turnaround: string;
+  estimatedTurnaround: string;
   features: string[];
+  deliverables: string[];
+  quantity: number;
+  revisionPolicy: string;
+  exclusions: string[];
   popular?: boolean;
   ctaText: string;
   ctaHref: string;
+  ctaTarget: string;
   dailyDeliverables: string;
-  monthlyQuotaDescription?: string;
+  monthlyQuotaDescription: string;
+  includedServices: {
+    images: number;
+    videos: number;
+  };
+  active: boolean;
+}
+
+export interface StandaloneDeliverablePackage {
+  id: string;
+  slug: string;
+  name: string;
+  serviceId: string;
+  serviceSlug: string;
+  price: number;
+  numericPrice: number;
+  pricingType: "pack" | "per_unit";
+  formattedPrice: string;
+  priceDisplay: string;
+  turnaround: string;
+  estimatedTurnaround: string;
+  description: string;
+  subBullets: string[];
+  deliverables: string[];
+  quantity: number;
+  duration: string;
+  revisionPolicy: string;
+  exclusions: string[];
+  ctaText: string;
+  ctaHref: string;
+  ctaTarget: string;
+  popular?: boolean;
+  active: boolean;
+}
+
+export interface CommissionPackage {
+  id: string;
+  slug: string;
+  name: string;
+  price: number | "custom";
+  numericPrice: number;
+  pricingType: "fixed" | "per_unit" | "pack" | "starting_at";
+  formattedPrice: string;
+  tagline: string;
+  description: string;
+  turnaround: string;
+  estimatedTurnaround: string;
+  features: string[];
+  deliverables: string[];
+  quantity: number;
+  duration: string;
+  revisionPolicy: string;
+  exclusions: string[];
+  popular?: boolean;
+  ctaText: string;
+  ctaHref: string;
+  ctaTarget: string;
+  revisionRounds: number;
+  active: boolean;
 }
 
 /**
- * 1. Standalone Creative Deliverables (Single Order Packs)
+ * ----------------------------------------------------------------------------
+ * 1. APPROVED MONTHLY RETAINER PACKAGES (30-DAY PIPELINE)
+ * ----------------------------------------------------------------------------
  */
-export const STANDALONE_PACKAGES: StandaloneDeliverablePackage[] = [
+export const APPROVED_MONTHLY_PACKAGES: RetainerPackage[] = [
+  // 1. Starter Trend (₹9,999 / 30 days)
   {
-    id: "standalone-image-5x",
-    name: "3x 4K Master Pack",
-    serviceId: "img-creation",
-    serviceSlug: "image-creation",
-    price: 2499,
-    formattedPrice: "₹2,499",
-    priceDisplay: "Starting from ₹2,499 (3x 4K Master Pack)",
-    turnaround: "24h SLA",
-    description:
-      "5x Ultra-HD 4K Photorealistic Master Renders. Studio product angles, lifestyle ambient context, and advertising visual passes.",
-    subBullets: [
-      "2x Studio product angles",
-      "2x Lifestyle ambient context",
-      "1x Campaign visual pass",
-      "24h SLA delivery",
-    ],
-    ctaText: "Order 3-Image Pack - ₹2,499",
-    ctaHref: "/orders?package=standalone-image-5x",
-    popular: true,
-  },
-  {
-    id: "standalone-video-2x",
-    name: "Cinematic Motion Reel",
-    serviceId: "vid-creation",
-    serviceSlug: "video-creation",
-    price: 4999,
-    formattedPrice: "₹4,999",
-    priceDisplay: "Starting from ₹4,999 (10–15s Master Reel)",
-    turnaround: "24–48h SLA",
-    description:
-      "2x Complete Commercial Video Reels / Shorts (15–30s each) with voiceover narration, motion graphics, and background score.",
-    subBullets: [
-      "15–30s each (Vertical 9:16 & Horizontal 16:9)",
-      "1x Product showcase reel + 1x Feature highlight reel",
-      "Studio voiceover narration & sound score",
-      "24–48h SLA delivery",
-    ],
-    ctaText: "Order 2-Reels Pack - ₹4,999",
-    ctaHref: "/orders?package=standalone-video-2x",
-    popular: true,
-  },
-  {
-    id: "standalone-3d-model",
-    name: "Spatial 3D Asset Model",
-    serviceId: "3d-modeling",
-    serviceSlug: "3d-modeling",
-    price: 5999,
-    formattedPrice: "₹5,999",
-    priceDisplay: "Starting from ₹5,999 (.GLB Interactive Model)",
-    turnaround: "48h SLA",
-    description:
-      "Interactive web-ready 3D asset with PBR textures, turntable lighting, and glTF / USDZ multi-format files.",
-    subBullets: [
-      "Interactive 3D web asset",
-      "glTF & USDZ file formats",
-      "4K PBR material maps",
-      "48h SLA delivery",
-    ],
-    ctaText: "Order 3D Model - ₹5,999",
-    ctaHref: "/orders?package=standalone-3d-model",
-    popular: false,
-  },
-  {
-    id: "standalone-360-view",
-    name: "360° Spherical Panoramic Tour",
-    serviceId: "360-view",
-    serviceSlug: "360-view",
-    price: 7999,
-    formattedPrice: "₹7,999",
-    priceDisplay: "Starting from ₹7,999 (Panoramic VR Master)",
-    turnaround: "48–72h SLA",
-    description:
-      "Single high-resolution panoramic virtual space, interactive hotspot annotations, and web embed code.",
-    subBullets: [
-      "Single Panoramic Virtual Space",
-      "Interactive Panorama Viewer",
-      "Hotspot Annotations & Floor Plan Link",
-      "48–72h SLA delivery",
-    ],
-    ctaText: "Order 360° Tour - ₹7,999",
-    ctaHref: "/orders?package=standalone-360-view",
-    popular: false,
-  },
-  {
-    id: "standalone-brand-identity",
-    name: "Brand Identity Suite",
-    serviceId: "digital-marketing",
-    serviceSlug: "digital-marketing",
-    price: 8999,
-    formattedPrice: "₹8,999",
-    priceDisplay: "Starting from ₹8,999 (Brand Identity Suite)",
-    turnaround: "72h SLA",
-    description:
-      "Complete visual identity, vector logo master suite, brand stylebook PDF, typography tokens, and social identity kit.",
-    subBullets: [
-      "Vector Logo Suite (SVG/EPS/PNG)",
-      "Typography & Color Guidelines",
-      "Brand Stylebook Presentation",
-      "Social Media Identity Assets",
-    ],
-    ctaText: "Order Brand Identity - ₹8,999",
-    ctaHref: "/orders?package=standalone-brand-identity",
-    popular: false,
-  },
-  {
-    id: "standalone-digital-marketing",
-    name: "Meta Ads Launch Pack",
-    serviceId: "meta-ads-launcher",
-    serviceSlug: "meta-ads-launcher",
-    price: 7499,
-    formattedPrice: "₹7,499",
-    priceDisplay: "Starting from ₹7,499 (Campaign Setup & 5 Ad Variations)",
-    turnaround: "48h SLA",
-    description:
-      "Complete advertising launch with conversion tracking setup, targeting blueprint, and 5 creative ad variations.",
-    subBullets: [
-      "5 Creative Ad Variations (1:1, 9:16)",
-      "Campaign & Funnel Blueprint",
-      "Tracking & Pixel Setup Verification",
-      "Direct-Response Headlines & Copy",
-    ],
-    ctaText: "Order Meta Ads Pack - ₹7,499",
-    ctaHref: "/orders?package=standalone-digital-marketing",
-    popular: false,
-  },
-];
-
-/**
- * 2. Multi-Format Commission Packages
- */
-export const COMMISSION_PACKAGES: CommissionPackage[] = [
-  {
-    id: "starter-creative",
-    name: "Starter Creative Retainer",
-    price: 14999,
-    formattedPrice: "₹14,999",
-    tagline: "Essential 4K creative launch pack",
-    description:
-      "Ideal for boutique brands, product launches, and founders needing immediate high-impact visuals.",
-    turnaround: "48 Hours",
-    revisionRounds: 2,
-    popular: false,
-    ctaText: "Commission Starter (₹14,999)",
-    ctaHref: "/orders?package=starter-creative",
-    features: [
-      "Up to 5x Photorealistic 4K Renders",
-      "1x 10-Second Commercial Video Ad",
-      "Full Commercial Copyright License",
-      "48-Hour Rapid Delivery SLA",
-      "Client Workspace Delivery & Archive",
-      "2 Revision Rounds Included",
-    ],
-  },
-  {
-    id: "studio-growth",
-    name: "Growth Brand Retainer",
-    price: 29999,
-    formattedPrice: "₹29,999",
-    tagline: "High-velocity multi-format digital atelier",
-    description:
-      "Comprehensive creative suite spanning 3D spatial renders, promotional video, and multi-channel ad campaigns.",
-    turnaround: "24–72 Hours",
-    revisionRounds: 3,
-    popular: true,
-    ctaText: "Commission Growth (₹29,999)",
-    ctaHref: "/orders?package=studio-growth",
-    features: [
-      "15x High-Resolution 3D & Product Renders",
-      "3x 15-Second Video Ads with Studio Voiceover",
-      "Interactive 360° Space Tour or Virtual Showroom",
-      "3x Meta Ads Creative Variations (Feed & Story Ratios)",
-      "Dedicated Creative Lead & Priority Queue",
-      "Priority 24–72 Hour Delivery SLA",
-      "Unlimited Minor Revisions (7 Days)",
-    ],
-  },
-  {
-    id: "bespoke-enterprise",
-    name: "Bespoke Enterprise",
-    price: "custom",
-    formattedPrice: "Custom Quote",
-    tagline: "Tailored creative engineering & dedicated atelier capacity",
-    description:
-      "Full digital atelier ecosystem: custom web architecture, interactive spatial 3D environments, and executive creative direction.",
-    turnaround: "Milestone-Based",
-    revisionRounds: 99,
-    popular: false,
-    ctaText: "Inquire for Enterprise",
-    ctaHref: "/contact?package=bespoke-enterprise",
-    features: [
-      "Tailored Deliverables & Custom Asset Output",
-      "Bespoke Enterprise Web Platform & Client Portal Architecture",
-      "Native iOS & Android Mobile Systems Setup",
-      "Custom Spatial 3D & 360° Interactive Showrooms",
-      "Dedicated Creative Lead & Custom Milestone SLAs",
-      "Direct Executive Review & Communication Channel",
-      "Full Source Ownership & Enterprise IP Agreements",
-    ],
-  },
-];
-
-/**
- * 3. Daily Content Retainer Plans (1 Image + 1 Video per day)
- */
-export const RETAINER_PACKAGES: RetainerPackage[] = [
-  {
-    id: "growth-plan-30d",
-    name: "30-Day Growth Plan",
+    id: "starter-trend",
+    slug: "starter-trend",
+    name: "Starter Trend",
     billingCycle: "monthly",
     durationMonths: 1,
-    price: 29999,
-    priceMonthly: 29999,
-    formattedPrice: "₹29,999 / month",
-    formattedMonthlyPrice: "₹29,999",
-    monthlyEquivalent: "₹29,999 / mo",
-    tagline: "1 Graphic + 1 Video Per Day (60 Master Assets / Month)",
+    duration: "30 days",
+    price: 9999,
+    numericPrice: 9999,
+    priceMonthly: 9999,
+    quarterlyPrice: 26997, // 10% savings
+    annualPrice: 95990, // 20% savings
+    formattedPrice: "₹9,999",
+    formattedMonthlyPrice: "₹9,999 / mo",
+    monthlyEquivalent: "₹9,999 / month",
+    tagline: "Essential Bi-Daily Creative Pipeline",
     description:
-      "Your dedicated creative department. Continuous daily active queue delivering brand graphics and commercial video reels every single day.",
-    turnaround: "Daily Active Queue",
-    dailyDeliverables: "1 Brand Graphic + 1 Commercial Video Reel / Day",
-    monthlyQuotaDescription: "Daily Content Queue: 1 Image + 1 Video per day",
-    popular: true,
-    ctaText: "Activate 30-Day Plan (₹29,999/mo)",
-    ctaHref: "/orders?package=growth-plan-30d",
+      "Bi-daily active creative pipeline designed for emerging brands. Delivers 15 high-impact visual graphics and 15 commercial short videos across 30 days.",
+    turnaround: "48h SLA per Drop",
+    estimatedTurnaround: "48 Hours per Drop",
     features: [
-      "Daily 1x 4K Brand Graphic / Social Visual (30 Assets/month)",
-      "Daily 1x Commercial Video Reel / Short (30 Assets/month) with voiceover and motion typography",
-      "Interactive 3D Asset & Spatial Staging Updates",
-      "Multi-Ratio Ad Variations (1:1, 9:16)",
-      "Client Dashboard Delivery & High-Res Downloads",
-      "Dedicated Account Manager & Priority Queue",
-      "Pause or Cancel Anytime with Zero Lock-in",
+      "15 Branded Social & Product Images across 30 days",
+      "15 Commercial Short Videos / Reels (up to 15s)",
+      "Trend topic research & brand relevance review",
+      "Custom tailored generation prompts",
+      "Post captions & hashtag recommendations",
+      "Organized private Google Drive Vault delivery",
+      "1 consolidated revision round per deliverable",
+      "48h turnaround SLA per delivery drop",
     ],
-  },
-  {
-    id: "growth-plan-6m",
-    name: "6-Month Growth Retainer",
-    billingCycle: "biannual",
-    durationMonths: 6,
-    price: 161994,
-    priceMonthly: 26999,
-    formattedPrice: "₹1,61,994 / 6 months",
-    formattedMonthlyPrice: "₹26,999/mo (₹1,61,994 total)",
-    monthlyEquivalent: "₹26,999 / mo (10% Savings)",
-    tagline: "6 Months of Continuous Daily Production (360 Master Assets Total)",
-    description:
-      "Long-term creative partnership for established brands and growing companies. Guaranteed daily production with highest studio priority.",
-    turnaround: "Highest Priority Daily Queue",
-    dailyDeliverables: "1 Brand Graphic + 1 Commercial Video Reel / Day (180 + 180 Assets)",
-    monthlyQuotaDescription: "Highest Priority Daily Queue: 180 Images + 180 Videos",
+    deliverables: [
+      "15 Branded Social & Product Images",
+      "15 Commercial Short Videos / Reels (up to 15s)",
+      "Trend topic research & brand relevance review",
+      "Custom tailored generation prompts",
+      "Post captions & hashtag recommendations",
+      "Organized private Google Drive Vault delivery",
+      "1 consolidated revision round per deliverable",
+    ],
+    quantity: 30, // 15 images + 15 videos
+    revisionPolicy: "1 consolidated revision round per deliverable",
+    exclusions: ["Paid ad media spend excluded", "Raw 3D project files excluded"],
     popular: false,
-    ctaText: "Lock In 6-Month Plan (₹1,61,994)",
-    ctaHref: "/orders?package=growth-plan-6m",
+    ctaText: "Start Starter Trend - ₹9,999",
+    ctaHref: "/orders?package=starter-trend",
+    ctaTarget: "/orders?package=starter-trend",
+    dailyDeliverables: "Alternating image and video drops across 30 days",
+    monthlyQuotaDescription: "15 Images + 15 Videos (30 Assets Total)",
+    includedServices: {
+      images: 15,
+      videos: 15,
+    },
+    active: true,
+  },
+
+  // 2. Growth Trend (₹14,999 / 30 days)
+  {
+    id: "growth-trend",
+    slug: "growth-trend",
+    name: "Growth Trend",
+    billingCycle: "monthly",
+    durationMonths: 1,
+    duration: "30 days",
+    price: 14999,
+    numericPrice: 14999,
+    priceMonthly: 14999,
+    quarterlyPrice: 40497,
+    annualPrice: 143990,
+    formattedPrice: "₹14,999",
+    formattedMonthlyPrice: "₹14,999 / mo",
+    monthlyEquivalent: "₹14,999 / month",
+    tagline: "High-Velocity Brand Acceleration",
+    description:
+      "Accelerated creative output for scaling digital brands. Delivers 20 visual assets and 20 commercial short videos with dedicated content calendar.",
+    turnaround: "24–48h SLA per Drop",
+    estimatedTurnaround: "24–48 Hours per Drop",
     features: [
-      "Daily 1x 4K Brand Graphic (180 Total Assets across 6 months)",
-      "Daily 1x Commercial Video Reel (180 Total Assets across 6 months)",
-      "Interactive 3D Modeling & Virtual Spaces Included",
-      "Quarterly Brand & Visual Strategy Audit",
-      "Dedicated Studio Creative Director & Priority SLA",
-      "10% Long-Term Partnership Savings",
-      "Full Commercial IP Ownership on all deliverables",
+      "20 Branded Social & Product Images across 30 days",
+      "20 Commercial Short Videos / Reels (15–30s)",
+      "Daily trending-topic research & brand alignment",
+      "Tailored creative prompts & art direction",
+      "30-Day strategic editorial content calendar",
+      "High-converting captions, hooks & hashtag sets",
+      "Organized private Google Drive Vault staging",
+      "1 consolidated revision round per deliverable",
+      "24–48h turnaround SLA per deliverable batch",
     ],
+    deliverables: [
+      "20 Branded Social & Product Images",
+      "20 Commercial Short Videos / Reels (15–30s)",
+      "Daily trending-topic research & brand alignment",
+      "Tailored creative prompts & art direction",
+      "30-Day strategic editorial content calendar",
+      "High-converting captions, hooks & hashtag sets",
+      "Organized private Google Drive Vault staging",
+      "1 consolidated revision round per deliverable",
+    ],
+    quantity: 40, // 20 images + 20 videos
+    revisionPolicy: "1 consolidated revision round per deliverable",
+    exclusions: ["Paid ad media spend excluded", "Raw video project files excluded"],
+    popular: false,
+    ctaText: "Start Growth Trend - ₹14,999",
+    ctaHref: "/orders?package=growth-trend",
+    ctaTarget: "/orders?package=growth-trend",
+    dailyDeliverables: "5 assets per week delivered continuously across 30 days",
+    monthlyQuotaDescription: "20 Images + 20 Videos (40 Assets Total)",
+    includedServices: {
+      images: 20,
+      videos: 20,
+    },
+    active: true,
+  },
+
+  // 3. Daily Trend Creator (Flagship Main Package: ₹19,999 / 30 days)
+  {
+    id: "daily-trend-creator",
+    slug: "daily-trend-creator",
+    name: "Daily Trend Creator",
+    billingCycle: "monthly",
+    durationMonths: 1,
+    duration: "30 days",
+    price: 19999,
+    numericPrice: 19999,
+    priceMonthly: 19999,
+    quarterlyPrice: 53997,
+    annualPrice: 191990,
+    formattedPrice: "₹19,999",
+    formattedMonthlyPrice: "₹19,999 / mo",
+    monthlyEquivalent: "₹19,999 / month",
+    tagline: "FLAGSHIP: 1 Image + 1 Video Every Single Day",
+    description:
+      "Our flagship daily active creative queue. Delivers 1 custom image and 1 short video every day for 30 days, backed by daily trend research, customized prompts, and full production.",
+    turnaround: "Daily Active Queue (Every 24h)",
+    estimatedTurnaround: "Daily Active Queue",
+    features: [
+      "30 Images (1 Custom Image Delivered Daily)",
+      "30 Short Videos / Reels (1 Short Video Delivered Daily)",
+      "Daily trending-topic research tailored to your brand",
+      "Brand relevance review & custom prompt engineering",
+      "Complete captions, hooks & targeted hashtag bundles",
+      "30-Day coordinated content calendar",
+      "Rigorous studio quality checks & QA on every asset",
+      "Organized private Google Drive Vault delivery",
+      "1 consolidated revision round per deliverable",
+    ],
+    deliverables: [
+      "30 Custom 4K Visual Graphics (1 Delivered Daily)",
+      "30 Commercial Video Reels / Shorts (1 Delivered Daily)",
+      "Daily trending-topic research & brand relevance review",
+      "Custom tailored prompts and generation pipelines",
+      "Production, sound design sync & color grading",
+      "High-converting captions & hashtag bundles",
+      "Content calendar scheduling & coordination",
+      "Rigorous studio quality assurance review",
+      "Organized private Google Drive Vault delivery",
+      "1 consolidated revision round per deliverable",
+    ],
+    quantity: 60, // 30 images + 30 short videos, 1 of each per day
+    revisionPolicy: "1 consolidated revision round per deliverable",
+    exclusions: [
+      "Paid advertising media spend excluded",
+      "Third-party celebrity voiceover licensing fees excluded",
+    ],
+    popular: true,
+    ctaText: "Start Daily Trend Creator - ₹19,999",
+    ctaHref: "/orders?package=daily-trend-creator",
+    ctaTarget: "/orders?package=daily-trend-creator",
+    dailyDeliverables: "1 custom image + 1 commercial video reel delivered every 24 hours",
+    monthlyQuotaDescription: "30 Images + 30 Videos (60 Assets Total, 1 each daily)",
+    includedServices: {
+      images: 30,
+      videos: 30,
+    },
+    active: true,
   },
 ];
 
 /**
- * Universal package resolution helper supporting canonical IDs and legacy aliases
+ * ----------------------------------------------------------------------------
+ * 2. APPROVED STANDALONE DELIVERABLE PACKS (SINGLE ORDERS)
+ * ----------------------------------------------------------------------------
  */
-export const PACKAGE_ALIASES: Record<string, string> = {
-  "autonomous-growth-retainer": "growth-plan-30d",
-  "autonomous-growth": "growth-plan-30d",
-  "30-day-plan": "growth-plan-30d",
-  "6-month-plan": "growth-plan-6m",
-  "starter": "starter-creative",
-  "growth": "studio-growth",
-  "enterprise": "bespoke-enterprise",
+export const APPROVED_STANDALONE_PACKAGES: StandaloneDeliverablePackage[] = [
+  // Basic Image Pack (3 Images)
+  {
+    id: "basic-image-pack-3",
+    slug: "basic-image-pack-3",
+    name: "Basic Image Pack (3 Images)",
+    serviceId: "img-creation",
+    serviceSlug: "image-creation",
+    price: 249,
+    numericPrice: 249,
+    pricingType: "pack",
+    formattedPrice: "₹249",
+    priceDisplay: "3 for ₹249",
+    turnaround: "24–48h SLA",
+    estimatedTurnaround: "24–48 Hours",
+    description: "Bundle of 3 template-based graphics for standard social posting.",
+    subBullets: ["3x Template graphics", "Web-ready PNG", "24–48h SLA"],
+    deliverables: ["3x Template-Based Social Graphics", "Web-optimized PNG & WebP formats"],
+    quantity: 3,
+    duration: "One-time delivery",
+    revisionPolicy: "1 revision round across bundle",
+    exclusions: ["Bespoke concept prompt generation excluded"],
+    ctaText: "Order 3-Image Pack - ₹249",
+    ctaHref: "/orders?package=basic-image-pack-3",
+    ctaTarget: "/orders?package=basic-image-pack-3",
+    popular: false,
+    active: true,
+  },
+
+  // Branded Image Pack (3 Images)
+  {
+    id: "branded-image-pack-3",
+    slug: "branded-image-pack-3",
+    name: "Branded Image Pack (3 Images)",
+    serviceId: "img-creation",
+    serviceSlug: "image-creation",
+    price: 499,
+    numericPrice: 499,
+    pricingType: "pack",
+    formattedPrice: "₹499",
+    priceDisplay: "3 for ₹499",
+    turnaround: "24–48h SLA",
+    estimatedTurnaround: "24–48 Hours",
+    description: "Trio of custom branded social visuals tailored to brand guidelines.",
+    subBullets: ["3x Custom branded graphics", "Cohesive brand styling", "Full commercial rights"],
+    deliverables: ["3x Custom Branded Visual Creatives", "Cohesive brand styling & color grading"],
+    quantity: 3,
+    duration: "One-time delivery",
+    revisionPolicy: "1 revision round",
+    exclusions: ["Motion animations excluded"],
+    ctaText: "Order 3 Branded Images - ₹499",
+    ctaHref: "/orders?package=branded-image-pack-3",
+    ctaTarget: "/orders?package=branded-image-pack-3",
+    popular: true,
+    active: true,
+  },
+
+  // Branded Image Pack (5 Images)
+  {
+    id: "branded-image-pack-5",
+    slug: "branded-image-pack-5",
+    name: "Branded Image Pack (5 Images)",
+    serviceId: "img-creation",
+    serviceSlug: "image-creation",
+    price: 799,
+    numericPrice: 799,
+    pricingType: "pack",
+    formattedPrice: "₹799",
+    priceDisplay: "5 for ₹799",
+    turnaround: "48h SLA",
+    estimatedTurnaround: "48 Hours",
+    description: "Curated suite of 5 branded creatives for weekly campaign schedules.",
+    subBullets: ["5x Branded graphics", "Weekly campaign coverage", "Commercial usage"],
+    deliverables: ["5x Custom Branded Visual Creatives", "Campaign-aligned angles and layout variations"],
+    quantity: 5,
+    duration: "One-time delivery",
+    revisionPolicy: "1 revision round",
+    exclusions: ["Video deliverables excluded"],
+    ctaText: "Order 5 Branded Images - ₹799",
+    ctaHref: "/orders?package=branded-image-pack-5",
+    ctaTarget: "/orders?package=branded-image-pack-5",
+    popular: false,
+    active: true,
+  },
+
+  // Branded Image Pack (10 Images)
+  {
+    id: "branded-image-pack-10",
+    slug: "branded-image-pack-10",
+    name: "Branded Image Pack (10 Images)",
+    serviceId: "img-creation",
+    serviceSlug: "image-creation",
+    price: 1499,
+    numericPrice: 1499,
+    pricingType: "pack",
+    formattedPrice: "₹1,499",
+    priceDisplay: "10 for ₹1,499",
+    turnaround: "48–72h SLA",
+    estimatedTurnaround: "48–72 Hours",
+    description: "Comprehensive 10-asset branded image library for multi-week content coverage.",
+    subBullets: ["10x Branded graphics", "Multi-week content library", "Google Drive Vault delivery"],
+    deliverables: ["10x Custom Branded Visual Creatives", "Diverse hero, detail, and promo staging passes"],
+    quantity: 10,
+    duration: "One-time delivery",
+    revisionPolicy: "1 revision round across library",
+    exclusions: ["Video deliverables excluded"],
+    ctaText: "Order 10 Branded Images - ₹1,499",
+    ctaHref: "/orders?package=branded-image-pack-10",
+    ctaTarget: "/orders?package=branded-image-pack-10",
+    popular: false,
+    active: true,
+  },
+
+  // Social Carousel (5 Slides)
+  {
+    id: "social-carousel-5-slides",
+    slug: "social-carousel-5-slides",
+    name: "Social Carousel (5 Slides)",
+    serviceId: "img-creation",
+    serviceSlug: "image-creation",
+    price: 499,
+    numericPrice: 499,
+    pricingType: "pack",
+    formattedPrice: "₹499",
+    priceDisplay: "5 Slides for ₹499",
+    turnaround: "24–48h SLA",
+    estimatedTurnaround: "24–48 Hours",
+    description: "Engaging 5-slide educational or promotional swipe carousel with seamless flow.",
+    subBullets: ["5x Carousel slides", "Hook & CTA slides", "PDF + PNG exports"],
+    deliverables: ["5x Seamless Storytelling Carousel Slides", "PDF presentation + individual PNGs"],
+    quantity: 5,
+    duration: "One-time delivery",
+    revisionPolicy: "1 revision round",
+    exclusions: ["Video animation excluded"],
+    ctaText: "Order 5-Slide Carousel - ₹499",
+    ctaHref: "/orders?package=social-carousel-5-slides",
+    ctaTarget: "/orders?package=social-carousel-5-slides",
+    popular: false,
+    active: true,
+  },
+
+  // Basic Video Pack (3 Edits)
+  {
+    id: "basic-video-pack-3",
+    slug: "basic-video-pack-3",
+    name: "Basic Video Pack (3 Edits)",
+    serviceId: "vid-creation",
+    serviceSlug: "video-creation",
+    price: 499,
+    numericPrice: 499,
+    pricingType: "pack",
+    formattedPrice: "₹499",
+    priceDisplay: "3 for ₹499",
+    turnaround: "48h SLA",
+    estimatedTurnaround: "48 Hours",
+    description: "Pack of 3 short video edits (up to 10s each) for fast social media posting.",
+    subBullets: ["3x 10-Second videos", "9:16 Vertical format", "Basic sound track"],
+    deliverables: ["3x 10-Second Template Short Videos", "Vertical 9:16 format for Reels/Shorts"],
+    quantity: 3,
+    duration: "One-time delivery",
+    revisionPolicy: "1 revision round across pack",
+    exclusions: ["Custom voiceover excluded"],
+    ctaText: "Order 3 Video Edits - ₹499",
+    ctaHref: "/orders?package=basic-video-pack-3",
+    ctaTarget: "/orders?package=basic-video-pack-3",
+    popular: false,
+    active: true,
+  },
+
+  // Promotional Reels Pack (3 Reels)
+  {
+    id: "promotional-reels-pack-3",
+    slug: "promotional-reels-pack-3",
+    name: "Promotional Reels Pack (3 Reels)",
+    serviceId: "vid-creation",
+    serviceSlug: "video-creation",
+    price: 1299,
+    numericPrice: 1299,
+    pricingType: "pack",
+    formattedPrice: "₹1,299",
+    priceDisplay: "3 for ₹1,299",
+    turnaround: "48–72h SLA",
+    estimatedTurnaround: "48–72 Hours",
+    description: "Bundle of 3 high-converting 15–30s promotional reels with motion typography.",
+    subBullets: ["3x 15–30s Promo reels", "Kinetic text & sound FX", "Commercial rights"],
+    deliverables: ["3x 15–30s High-Energy Commercial Promo Reels", "Custom brand color grading & kinetic titles"],
+    quantity: 3,
+    duration: "One-time delivery",
+    revisionPolicy: "1 revision round across pack",
+    exclusions: ["Celebrity voiceover licensing fees excluded"],
+    ctaText: "Order 3 Promo Reels - ₹1,299",
+    ctaHref: "/orders?package=promotional-reels-pack-3",
+    ctaTarget: "/orders?package=promotional-reels-pack-3",
+    popular: true,
+    active: true,
+  },
+
+  // Promotional Reels Pack (5 Reels)
+  {
+    id: "promotional-reels-pack-5",
+    slug: "promotional-reels-pack-5",
+    name: "Promotional Reels Pack (5 Reels)",
+    serviceId: "vid-creation",
+    serviceSlug: "video-creation",
+    price: 1999,
+    numericPrice: 1999,
+    pricingType: "pack",
+    formattedPrice: "₹1,999",
+    priceDisplay: "5 for ₹1,999",
+    turnaround: "3–4 Days",
+    estimatedTurnaround: "3–4 Days",
+    description: "Suite of 5 promotional reels designed for multi-angle social ad testing.",
+    subBullets: ["5x 15–30s Promo reels", "Multi-hook creative variations", "Ad campaign ready"],
+    deliverables: ["5x 15–30s Commercial Promo Reels", "Multi-hook creative variations for ad testing"],
+    quantity: 5,
+    duration: "One-time delivery",
+    revisionPolicy: "1 revision round across pack",
+    exclusions: ["On-camera actor filming excluded"],
+    ctaText: "Order 5 Promo Reels - ₹1,999",
+    ctaHref: "/orders?package=promotional-reels-pack-5",
+    ctaTarget: "/orders?package=promotional-reels-pack-5",
+    popular: false,
+    active: true,
+  },
+
+  // Promotional Reels Pack (10 Reels)
+  {
+    id: "promotional-reels-pack-10",
+    slug: "promotional-reels-pack-10",
+    name: "Promotional Reels Pack (10 Reels)",
+    serviceId: "vid-creation",
+    serviceSlug: "video-creation",
+    price: 3499,
+    numericPrice: 3499,
+    pricingType: "pack",
+    formattedPrice: "₹3,499",
+    priceDisplay: "10 for ₹3,499",
+    turnaround: "5–7 Days",
+    estimatedTurnaround: "5–7 Days",
+    description: "Comprehensive 10-reel video suite providing a full month of short-form video content.",
+    subBullets: ["10x 15–30s Commercial reels", "Full monthly video coverage", "UHD exports in Vault"],
+    deliverables: ["10x 15–30s Commercial Video Reels", "Kinetic motion graphics, sound design & transitions"],
+    quantity: 10,
+    duration: "One-time delivery",
+    revisionPolicy: "1 revision round across pack",
+    exclusions: ["Custom live videography shoots excluded"],
+    ctaText: "Order 10 Promo Reels - ₹3,499",
+    ctaHref: "/orders?package=promotional-reels-pack-10",
+    ctaTarget: "/orders?package=promotional-reels-pack-10",
+    popular: false,
+    active: true,
+  },
+];
+
+/**
+ * ----------------------------------------------------------------------------
+ * 3. APPROVED MULTI-FORMAT COMMISSION PACKAGES (ONE-TIME PROJECTS)
+ * ----------------------------------------------------------------------------
+ */
+export const APPROVED_COMMISSION_PACKAGES: CommissionPackage[] = [
+  {
+    id: "commission-starter-image-video",
+    slug: "starter-creative-pack",
+    name: "Starter Creative Pack",
+    price: 1999,
+    numericPrice: 1999,
+    pricingType: "fixed",
+    formattedPrice: "₹1,999",
+    tagline: "Essential 4K Creative Launch Pack",
+    description:
+      "Essential launch suite containing 5 branded visuals and 1 cinematic promotional reel for fast social campaigns.",
+    turnaround: "48h Rapid SLA",
+    estimatedTurnaround: "48 Hours",
+    features: [
+      "5x Branded Visual Graphics",
+      "1x 15–30s Commercial Promo Reel",
+      "Full commercial usage rights",
+      "48-Hour rapid turnaround",
+      "Private Google Drive Vault archive",
+      "2 Revision rounds included",
+    ],
+    deliverables: [
+      "5x Branded Visual Graphics",
+      "1x 15–30s Commercial Promo Reel",
+      "Private Google Drive Vault delivery",
+    ],
+    quantity: 6,
+    duration: "One-time delivery",
+    revisionPolicy: "2 revision rounds",
+    exclusions: ["3D CAD modeling excluded"],
+    popular: false,
+    ctaText: "Order Starter Pack - ₹1,999",
+    ctaHref: "/orders?package=commission-starter-image-video",
+    ctaTarget: "/orders?package=commission-starter-image-video",
+    revisionRounds: 2,
+    active: true,
+  },
+  {
+    id: "commission-studio-growth",
+    slug: "studio-growth-pack",
+    name: "Studio Growth Pack",
+    price: 4999,
+    numericPrice: 4999,
+    pricingType: "fixed",
+    formattedPrice: "₹4,999",
+    tagline: "Multi-Format Brand Atelier",
+    description:
+      "Multi-format creative production spanning 10 branded visuals, 3 commercial video reels, and 1 3D product view.",
+    turnaround: "48–72h SLA",
+    estimatedTurnaround: "48–72 Hours",
+    features: [
+      "10x Branded Visual Creatives",
+      "3x 15–30s Promotional Video Reels",
+      "1x 4K 3D Render from Model",
+      "Sound design & kinetic typography",
+      "Priority production queue",
+      "2 Revision rounds included",
+    ],
+    deliverables: [
+      "10x Branded Visual Creatives",
+      "3x 15–30s Promotional Video Reels",
+      "1x 4K 3D Render from Model",
+      "Private Google Drive Vault staging",
+    ],
+    quantity: 14,
+    duration: "One-time delivery",
+    revisionPolicy: "2 revision rounds",
+    exclusions: ["Custom web development excluded"],
+    popular: true,
+    ctaText: "Order Growth Pack - ₹4,999",
+    ctaHref: "/orders?package=commission-studio-growth",
+    ctaTarget: "/orders?package=commission-studio-growth",
+    revisionRounds: 2,
+    active: true,
+  },
+  {
+    id: "commission-bespoke-project",
+    slug: "bespoke-project-quote",
+    name: "Bespoke Project Scope",
+    price: "custom",
+    numericPrice: 0,
+    pricingType: "starting_at",
+    formattedPrice: "Custom Quote",
+    tagline: "Large-Scale Architecture & Custom Engineering",
+    description:
+      "Tailored production for full-scale architectural developments, complex web applications, and enterprise campaigns.",
+    turnaround: "Scoped on Brief",
+    estimatedTurnaround: "Based on Scope",
+    features: [
+      "Full Next.js Platform / Web App Architecture",
+      "Large-Scale Architectural 3D Rendering & VR",
+      "Multi-Channel Campaign Production",
+      "Dedicated Senior Creative Director",
+      "Executive Producer Direct Access",
+      "Custom SLA & Milestone-based delivery",
+    ],
+    deliverables: [
+      "Custom Project Specifications as agreed in Scope Document",
+      "Milestone-based deliverable sign-offs",
+    ],
+    quantity: 1,
+    duration: "Milestone based",
+    revisionPolicy: "Agreed in Project Charter",
+    exclusions: ["Scope bounded by approved project statement of work"],
+    popular: false,
+    ctaText: "Request a Quote",
+    ctaHref: "/contact?scope=bespoke",
+    ctaTarget: "/contact?scope=bespoke",
+    revisionRounds: 3,
+    active: true,
+  },
+];
+
+/**
+ * Backward compatibility exports
+ */
+export const RETAINER_PACKAGES: RetainerPackage[] = APPROVED_MONTHLY_PACKAGES;
+export const STANDALONE_PACKAGES: StandaloneDeliverablePackage[] = APPROVED_STANDALONE_PACKAGES;
+export const COMMISSION_PACKAGES: CommissionPackage[] = APPROVED_COMMISSION_PACKAGES;
+
+/**
+ * Legacy ID Aliases to prevent breaking older references
+ */
+export const PACKAGE_ID_ALIASES: Record<string, string> = {
+  // Retainer aliases
+  "starter": "starter-trend",
+  "growth": "growth-trend",
+  "scale": "daily-trend-creator",
+  "autonomous-growth-retainer": "daily-trend-creator",
+  "monthly-growth-retainer": "growth-trend",
+  "studio-starter": "starter-trend",
+  "studio-growth": "growth-trend",
+  "enterprise-atelier": "daily-trend-creator",
+  "atelier-enterprise-retainer": "daily-trend-creator",
+
+  // Standalone aliases
+  "standalone-image-5x": "branded-image-pack-5",
+  "standalone-image-3x": "branded-image-pack-3",
+  "standalone-video-2x": "promotional-reels-pack-3",
+  "starter-creative": "commission-starter-image-video",
 };
 
+/**
+ * Universal Package Resolver by ID or Slug
+ */
 export function findPackageById(
-  id: string
-):
-  | { type: "standalone"; data: StandaloneDeliverablePackage }
-  | { type: "commission"; data: CommissionPackage }
-  | { type: "retainer"; data: RetainerPackage }
-  | undefined {
-  if (!id) return undefined;
-  const normalized = id.toLowerCase().trim();
-  const canonicalId = PACKAGE_ALIASES[normalized] || normalized;
+  idOrSlug: string
+): RetainerPackage | StandaloneDeliverablePackage | CommissionPackage | undefined {
+  if (!idOrSlug) return undefined;
+  const clean = idOrSlug.toLowerCase().trim();
+  const canonicalId = PACKAGE_ID_ALIASES[clean] || clean;
 
-  const standalone = STANDALONE_PACKAGES.find(
-    (p) => p.id.toLowerCase() === canonicalId || p.id.toLowerCase() === normalized
+  return (
+    APPROVED_MONTHLY_PACKAGES.find(
+      (p) => p.id.toLowerCase() === canonicalId || p.slug.toLowerCase() === canonicalId
+    ) ||
+    APPROVED_STANDALONE_PACKAGES.find(
+      (p) => p.id.toLowerCase() === canonicalId || p.slug.toLowerCase() === canonicalId
+    ) ||
+    APPROVED_COMMISSION_PACKAGES.find(
+      (p) => p.id.toLowerCase() === canonicalId || p.slug.toLowerCase() === canonicalId
+    )
   );
-  if (standalone) return { type: "standalone", data: standalone };
-
-  const commission = COMMISSION_PACKAGES.find(
-    (p) => p.id.toLowerCase() === canonicalId || p.id.toLowerCase() === normalized
-  );
-  if (commission) return { type: "commission", data: commission };
-
-  const retainer = RETAINER_PACKAGES.find(
-    (p) => p.id.toLowerCase() === canonicalId || p.id.toLowerCase() === normalized
-  );
-  if (retainer) return { type: "retainer", data: retainer };
-
-  return undefined;
 }
+
+export const resolvePackageById = findPackageById;
+
+/**
+ * Check if a package uses bundle/pack pricing
+ */
+export function isPackPricing(item: { pricingType?: string }): boolean {
+  return item.pricingType === "pack";
+}
+

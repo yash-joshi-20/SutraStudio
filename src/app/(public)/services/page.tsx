@@ -1,17 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
-import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
 import { VideoCard } from "@/components/media/VideoCard";
 import { SUTRA_SERVICES, ServiceItem } from "@/data/servicesData";
+import {
+  findServiceBySlug,
+  getServiceDetailSpec,
+  type CanonicalServiceItem,
+} from "@/config/services";
 import { LotusSymbol } from "@/components/brand/SutraLogo";
 import { CustomDropdown } from "@/components/ui/CustomDropdown";
 import { Interactive3DViewer } from "@/components/spatial/Interactive3DViewer";
@@ -20,18 +23,8 @@ import { DeviceMockupShowcase } from "@/components/showcase/DeviceMockupShowcase
 import { MetaAdCreativeMockup } from "@/components/showcase/MetaAdCreativeMockup";
 import {
   Image as ImageIcon,
-  Video,
   Box,
   Compass,
-  Home,
-  Grid,
-  TrendingUp,
-  Share2,
-  Globe,
-  Layout,
-  Smartphone,
-  Cpu,
-  ArrowRight,
   ArrowUpRight,
   CheckCircle2,
   Clock,
@@ -39,43 +32,34 @@ import {
   Search,
   Sparkles,
   Bot,
-  Layers,
   Play,
-  Palette,
+  FileText,
+  AlertCircle,
+  HelpCircle,
+  Layers,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+// Public categories - strictly omitting internal "Automation"
 const CATEGORIES = [
   "All",
   "Creative",
   "Design",
   "Marketing",
   "Development",
-  "Automation",
 ];
-
-const ICON_MAP: Record<string, React.ReactNode> = {
-  Image: <ImageIcon className="w-5 h-5 text-[#5C3A1E]" />,
-  Video: <Video className="w-5 h-5 text-[#5C3A1E]" />,
-  Box: <Box className="w-5 h-5 text-[#5C3A1E]" />,
-  Compass: <Compass className="w-5 h-5 text-[#5C3A1E]" />,
-  Home: <Home className="w-5 h-5 text-[#5C3A1E]" />,
-  Grid: <Grid className="w-5 h-5 text-[#5C3A1E]" />,
-  TrendingUp: <TrendingUp className="w-5 h-5 text-[#5C3A1E]" />,
-  Share2: <Share2 className="w-5 h-5 text-[#5C3A1E]" />,
-  Globe: <Globe className="w-5 h-5 text-[#5C3A1E]" />,
-  Layout: <Layout className="w-5 h-5 text-[#5C3A1E]" />,
-  Smartphone: <Smartphone className="w-5 h-5 text-[#5C3A1E]" />,
-  Cpu: <Cpu className="w-5 h-5 text-[#5C3A1E]" />,
-  Palette: <Palette className="w-5 h-5 text-[#5C3A1E]" />,
-};
 
 export default function ServicesPage() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
+  const [selectedService, setSelectedService] = useState<
+    ServiceItem | CanonicalServiceItem | null
+  >(null);
 
-  const filteredServices = SUTRA_SERVICES.filter((service) => {
+  // Filter public services: strictly keep internal workflow automation concealed
+  const publicServices = SUTRA_SERVICES.filter((s) => s.active !== false);
+
+  const filteredServices = publicServices.filter((service) => {
     const matchesCategory =
       activeCategory === "All" || service.category === activeCategory;
     const matchesSearch =
@@ -85,6 +69,76 @@ export default function ServicesPage() {
       service.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+
+  // URL state synchronization: supports direct navigation, reload, back/forward
+  const syncFromUrl = useCallback(() => {
+    if (typeof window === "undefined") return;
+
+    // 1. Query param: ?service=...
+    const urlParams = new URLSearchParams(window.location.search);
+    const serviceParam = urlParams.get("service");
+
+    // 2. Hash: #...
+    const hashParam = window.location.hash.replace(/^#/, "");
+
+    // 3. Pathname segment: /services/:slug
+    const pathSegments = window.location.pathname.split("/services/");
+    const pathSlug = pathSegments.length > 1 ? pathSegments[1].replace(/\/$/, "") : null;
+
+    const targetSlug = serviceParam || hashParam || pathSlug;
+
+    if (targetSlug) {
+      const match =
+        publicServices.find(
+          (s) => s.slug === targetSlug || s.id === targetSlug
+        ) || findServiceBySlug(targetSlug);
+
+      if (match) {
+        setSelectedService(match);
+        const cardElem = document.getElementById(match.slug);
+        if (cardElem) {
+          cardElem.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+    } else {
+      setSelectedService(null);
+    }
+  }, [publicServices]);
+
+  useEffect(() => {
+    syncFromUrl();
+    window.addEventListener("popstate", syncFromUrl);
+    window.addEventListener("hashchange", syncFromUrl);
+    return () => {
+      window.removeEventListener("popstate", syncFromUrl);
+      window.removeEventListener("hashchange", syncFromUrl);
+    };
+  }, [syncFromUrl]);
+
+  const handleOpenDetail = (service: ServiceItem | CanonicalServiceItem) => {
+    setSelectedService(service);
+    if (typeof window !== "undefined") {
+      const newUrl = `/services?service=${encodeURIComponent(service.slug)}`;
+      window.history.pushState({ service: service.slug }, "", newUrl);
+    }
+  };
+
+  const handleCloseDetail = () => {
+    setSelectedService(null);
+    if (typeof window !== "undefined") {
+      const currentParams = new URLSearchParams(window.location.search);
+      if (currentParams.has("service")) {
+        currentParams.delete("service");
+        const remainingQuery = currentParams.toString();
+        const cleanUrl = remainingQuery ? `/services?${remainingQuery}` : "/services";
+        window.history.pushState({}, "", cleanUrl);
+      } else {
+        window.history.pushState({}, "", "/services");
+      }
+    }
+  };
+
+  const selectedSpec = selectedService ? getServiceDetailSpec(selectedService) : null;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
@@ -104,18 +158,17 @@ export default function ServicesPage() {
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] shadow-xs">
               <span className="text-[#D4A35A] text-xs">◆</span>
               <span className="text-[10px] md:text-xs font-semibold tracking-[0.22em] text-[#5C3A1E] uppercase">
-                STUDIO CAPABILITIES & DELIVERABLES
+                STUDIO PRODUCTION DISCIPLINES &amp; DELIVERABLES
               </span>
             </div>
 
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold leading-[1.1] text-[#0F172A]">
-              12 Creative &amp; Digital <span className="text-gold-gradient">Service Solutions</span>
+              Creative &amp; Digital <span className="text-gold-gradient">Production Disciplines</span>
             </h1>
 
             <p className="text-base sm:text-lg text-[#64748B] leading-relaxed font-sans">
-              Precision visual creation, architectural rendering, enterprise web
-              architecture, and digital marketing workflows engineered to accelerate
-              your brand growth.
+              Precision visual creation, spatial rendering, web architecture, and digital
+              growth systems engineered to accelerate your brand.
             </p>
 
             {/* Filter Controls: Search & Responsive Filter System */}
@@ -140,7 +193,7 @@ export default function ServicesPage() {
                 )}
               </div>
 
-              {/* Mobile View: Clean Custom Dropdown Filter (Hidden on Desktop) */}
+              {/* Mobile View: Clean Custom Dropdown Filter */}
               <div className="w-full sm:hidden">
                 <CustomDropdown
                   options={CATEGORIES.map((cat) => ({
@@ -148,8 +201,8 @@ export default function ServicesPage() {
                     value: cat,
                     badge: `${
                       cat === "All"
-                        ? SUTRA_SERVICES.length
-                        : SUTRA_SERVICES.filter((s) => s.category === cat).length
+                        ? publicServices.length
+                        : publicServices.filter((s) => s.category === cat).length
                     }`,
                   }))}
                   value={activeCategory}
@@ -159,14 +212,14 @@ export default function ServicesPage() {
                 />
               </div>
 
-              {/* Desktop / Tablet View: Tab Pills System (Hidden on Mobile) */}
+              {/* Desktop / Tablet View: Tab Pills System */}
               <div className="hidden sm:flex flex-wrap items-center justify-center gap-2 pt-1">
                 {CATEGORIES.map((cat) => {
                   const isActive = activeCategory === cat;
                   const count =
                     cat === "All"
-                      ? SUTRA_SERVICES.length
-                      : SUTRA_SERVICES.filter((s) => s.category === cat).length;
+                      ? publicServices.length
+                      : publicServices.filter((s) => s.category === cat).length;
 
                   return (
                     <button
@@ -240,7 +293,10 @@ export default function ServicesPage() {
                     >
                       <div>
                         {/* Aspect Ratio Media Presentation Banner */}
-                        <div className="relative aspect-[16/10] w-full overflow-hidden bg-[#F4EFE6]">
+                        <div
+                          onClick={() => handleOpenDetail(service)}
+                          className="relative aspect-[16/10] w-full overflow-hidden bg-[#F4EFE6] cursor-pointer"
+                        >
                           <Image
                             src={service.thumbnail}
                             alt={service.name}
@@ -299,6 +355,13 @@ export default function ServicesPage() {
                             </span>
                           </div>
 
+                          {/* Clear Sample Watermark */}
+                          <div className="absolute top-11 left-3.5 z-10">
+                            <span className="rounded-md bg-black/60 backdrop-blur-xs px-2 py-0.5 text-[9px] font-mono font-medium text-white/90 tracking-wider uppercase border border-white/10">
+                              Studio Sample
+                            </span>
+                          </div>
+
                           {/* Scrim Overlay */}
                           <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/75 via-transparent to-transparent opacity-65 group-hover:opacity-40 transition-opacity" />
 
@@ -315,7 +378,10 @@ export default function ServicesPage() {
 
                         {/* Title, Tagline & Description */}
                         <div className="p-5 pb-3">
-                          <h3 className="font-serif text-lg font-semibold text-[#0F172A] tracking-tight group-hover:text-[#5C3A1E] transition-colors leading-snug">
+                          <h3
+                            onClick={() => handleOpenDetail(service)}
+                            className="font-serif text-lg font-semibold text-[#0F172A] tracking-tight group-hover:text-[#5C3A1E] transition-colors leading-snug cursor-pointer"
+                          >
                             {service.name}
                           </h3>
                           <p className="text-xs font-semibold text-[#A98B57] mt-0.5 mb-2.5 tracking-wide">
@@ -362,13 +428,17 @@ export default function ServicesPage() {
                         <div className="flex items-center gap-1.5 shrink-0">
                           <button
                             type="button"
-                            onClick={() => setSelectedService(service)}
-                            title="Inspect Scope & Media"
+                            onClick={() => handleOpenDetail(service)}
+                            title="Inspect Scope & Specifications"
                             className="inline-flex items-center justify-center whitespace-nowrap min-h-[38px] px-3 py-1.5 rounded-xl bg-[#F8F5EF] text-[#5C3A1E] border border-[#EADFCB] hover:border-[#D4A35A] transition-colors cursor-pointer text-xs font-medium shrink-0"
                           >
                             Details
                           </button>
-                          <Link href={service.ctaHref || `/orders?service=${service.slug}`} className="shrink-0" title="Commission Service">
+                          <Link
+                            href={service.ctaHref || `/orders?service=${service.slug}`}
+                            className="shrink-0"
+                            title="Commission Service"
+                          >
                             <div className="inline-flex items-center justify-center whitespace-nowrap min-h-[38px] px-3.5 py-1.5 rounded-xl bg-[#5C3A1E] text-white hover:bg-[#4A2E17] text-xs font-semibold gap-1 transition-all shadow-xs cursor-pointer">
                               <span>{service.isCustomQuote ? "Inquire" : "Order"}</span>
                               <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
@@ -399,8 +469,8 @@ export default function ServicesPage() {
                     Dedicated Art Director
                   </h4>
                   <p className="text-xs text-[#64748B] mt-1 leading-relaxed">
-                    Every deliverable is supervised and refined by an experienced
-                    creative lead ensuring high artistic rigor.
+                    Every deliverable is supervised and refined by an experienced creative
+                    lead ensuring rigorous brand fidelity.
                   </p>
                 </div>
               </div>
@@ -414,8 +484,8 @@ export default function ServicesPage() {
                     24 – 72 Hour Turnarounds
                   </h4>
                   <p className="text-xs text-[#64748B] mt-1 leading-relaxed">
-                    High-speed production pipelines and accelerated review
-                    cycles designed for fast-moving businesses.
+                    Accelerated production workflows and responsive revision cycles
+                    engineered for fast-moving businesses.
                   </p>
                 </div>
               </div>
@@ -429,8 +499,8 @@ export default function ServicesPage() {
                     Client Deliverables Vault
                   </h4>
                   <p className="text-xs text-[#64748B] mt-1 leading-relaxed">
-                    Raw source files, 4K renders, and 3D assets securely
-                    archived in your private client deliverables library.
+                    4K master renders, 3D assets, and web deliverables securely archived in
+                    your private Google Drive deliverables vault.
                   </p>
                 </div>
               </div>
@@ -439,13 +509,13 @@ export default function ServicesPage() {
         </section>
 
         {/* ===================================================
-            4. PRE-FOOTER CUSTOM SCOPE CTA
+            4. PRE-FOOTER BESPOKE SCOPE CTA
             =================================================== */}
         <section className="py-20 bg-[#FFFDF9]">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-[0.2em] bg-[#F4EFE6] text-[#5C3A1E] border border-[#EADFCB] mx-auto">
               <span className="text-[#D4A35A] text-[10px]">◆</span>
-              <span>BESPOKE PACKAGES</span>
+              <span>BESPOKE STUDIO SCOPES</span>
             </div>
 
             <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-semibold text-[#0F172A]">
@@ -478,97 +548,124 @@ export default function ServicesPage() {
       </main>
 
       {/* ===================================================
-          SERVICE DETAIL INSPECTION MODAL
+          5. SERVICE DETAIL SPECIFICATION MODAL / DRAWER
           =================================================== */}
       <Modal
         isOpen={!!selectedService}
-        onClose={() => setSelectedService(null)}
-        title={selectedService?.name || "Service Scope"}
+        onClose={handleCloseDetail}
+        title={selectedService?.name || "Service Specification"}
         description={selectedService?.tagline}
-        maxWidth="lg"
+        maxWidth="2xl"
+        variant="auto"
       >
-        {selectedService && (
-          <div className="space-y-6">
-            {/* Interactive Spatial / Real Device / Media Preview */}
-            {selectedService.mediaType === "3d" ? (
-              <Interactive3DViewer
-                height="340px"
-                title={`${selectedService.name} • 3D Mesh`}
-                subtitle="Interactive WebGL 2.0 PBR Orbit"
-                allowPresetSwitch={true}
-              />
-            ) : selectedService.mediaType === "360" ? (
-              <PanoramicTourViewer
-                height="340px"
-                title={`${selectedService.name} • 360° VR`}
-                subtitle="Interactive Equirectangular Spatial Tour"
-              />
-            ) : selectedService.slug === "website-development" || selectedService.slug === "mobile-app-setup" || selectedService.slug === "web-mobile-development" ? (
-              <DeviceMockupShowcase initialMode="laptop" />
-            ) : selectedService.slug === "meta-ads-launcher" || selectedService.slug === "digital-marketing-ads" ? (
-              <MetaAdCreativeMockup
-                headline={selectedService.description}
-                ctaText="Order Meta Ad Bundle"
-                ctaHref={`/orders?service=${selectedService.slug}`}
-              />
-            ) : selectedService.mediaType === "video" ? (
-              <VideoCard
-                video="service-ai-video"
-                badgeText={`${selectedService.category.toUpperCase()} REEL`}
-                allowExpand
-              />
-            ) : (
-              <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-[#F4EFE6] border border-[#EADFCB]">
-                <Image
-                  src={selectedService.thumbnail}
-                  alt={selectedService.name}
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
-                  <span className="rounded-full bg-[#171717]/85 backdrop-blur-md px-3 py-1 text-xs font-semibold text-white border border-white/10 uppercase tracking-wider">
-                    {selectedService.category}
-                  </span>
-                  <span className="rounded-full bg-[#D4A35A] px-3 py-1 text-xs font-bold text-[#0F172A] shadow-sm">
-                    {selectedService.badge}
-                  </span>
-                </div>
-                <div className="absolute top-4 right-4 z-10">
-                  <span className="rounded-full bg-white/95 backdrop-blur-md px-3 py-1 text-xs font-mono font-medium text-[#5C3A1E] border border-[#EADFCB] shadow-xs flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-[#A98B57]" />
-                    {selectedService.turnaround}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Service Metadata Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] text-xs">
-              <div>
-                <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">
-                  {selectedService.isCustomQuote ? "Investment Scope" : "Starting Price"}
-                </span>
-                <span className="font-serif text-lg font-bold text-[#5C3A1E]">{selectedService.startingPrice}</span>
-              </div>
-              <div>
-                <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">Turnaround</span>
-                <span className="font-medium text-[#0F172A]">{selectedService.turnaround}</span>
-              </div>
-              <div>
-                <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">Master Format</span>
-                <span className="font-medium text-[#0F172A] truncate block" title={selectedService.mediaFormat}>
-                  {selectedService.mediaFormat.split("(")[0].trim()}
-                </span>
-              </div>
-              <div>
-                <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">Production Studio</span>
-                <span className="font-medium text-[#5C3A1E] truncate block" title={selectedService.pipelineEngine}>
-                  {selectedService.pipelineEngine.split("+")[0].trim()}
-                </span>
+        {selectedService && selectedSpec && (
+          <div className="space-y-6 text-[#0F172A]">
+            {/* Studio Sample Disclaimer Watermark */}
+            <div className="p-3 rounded-2xl bg-[#FFFDF9] border border-[#D4A35A]/35 text-xs text-[#5C3A1E] flex items-start gap-2.5 shadow-2xs">
+              <Sparkles className="w-4 h-4 text-[#A98B57] shrink-0 mt-0.5" />
+              <div className="text-[11px] leading-relaxed">
+                <strong className="font-semibold block text-[#0F172A]">
+                  STUDIO TECHNICAL SAMPLE
+                </strong>
+                <span>{selectedSpec.sampleDisclaimer}</span>
               </div>
             </div>
 
-            {/* Standalone Pricing Callout if exists */}
+            {/* Interactive Spatial / Real Device / Media Preview */}
+            <div className="rounded-2xl overflow-hidden border border-[#EADFCB] bg-[#F4EFE6]">
+              {selectedService.mediaType === "3d" ? (
+                <Interactive3DViewer
+                  height="340px"
+                  title={`${selectedService.name} • 3D Mesh`}
+                  subtitle="Interactive WebGL 2.0 PBR Orbit"
+                  allowPresetSwitch={true}
+                />
+              ) : selectedService.mediaType === "360" ? (
+                <PanoramicTourViewer
+                  height="340px"
+                  title={`${selectedService.name} • 360° VR`}
+                  subtitle="Interactive Equirectangular Spatial Tour"
+                />
+              ) : selectedService.slug === "website-development" ||
+                selectedService.slug === "mobile-app-setup" ||
+                selectedService.slug === "web-app-development" ||
+                selectedService.slug === "web-mobile-development" ? (
+                <DeviceMockupShowcase initialMode="laptop" />
+              ) : selectedService.slug === "meta-ads" ||
+                selectedService.slug === "meta-ads-launcher" ||
+                selectedService.slug === "digital-marketing-ads" ? (
+                <MetaAdCreativeMockup
+                  headline={selectedService.description}
+                  ctaText="Order Meta Ad Bundle"
+                  ctaHref={`/orders?service=${selectedService.slug}`}
+                />
+              ) : selectedService.mediaType === "video" ? (
+                <VideoCard
+                  video="service-ai-video"
+                  badgeText={`${selectedService.category.toUpperCase()} REEL SAMPLE`}
+                  allowExpand
+                />
+              ) : (
+                <div className="relative aspect-video w-full">
+                  <Image
+                    src={selectedService.thumbnail}
+                    alt={selectedService.name}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
+                    <span className="rounded-full bg-[#171717]/85 backdrop-blur-md px-3 py-1 text-xs font-semibold text-white border border-white/10 uppercase tracking-wider">
+                      {selectedService.category}
+                    </span>
+                    <span className="rounded-full bg-[#D4A35A] px-3 py-1 text-xs font-bold text-[#0F172A] shadow-sm">
+                      {selectedService.badge}
+                    </span>
+                  </div>
+                  <div className="absolute top-4 right-4 z-10">
+                    <span className="rounded-full bg-white/95 backdrop-blur-md px-3 py-1 text-xs font-mono font-medium text-[#5C3A1E] border border-[#EADFCB] shadow-xs flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-[#A98B57]" />
+                      {selectedService.turnaround}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Core Commercial Scope & Metadata Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] text-xs">
+              <div>
+                <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">
+                  {selectedService.isCustomQuote ? "Scope" : "Starting Price"}
+                </span>
+                <span className="font-serif text-lg font-bold text-[#5C3A1E] block">
+                  {selectedService.startingPrice}
+                </span>
+                <span className="text-[10px] text-[#64748B] block">
+                  {selectedSpec.pricingUnit}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">Turnaround SLA</span>
+                <span className="font-medium text-[#0F172A] block mt-0.5">{selectedService.turnaround}</span>
+                <span className="text-[10px] text-[#64748B] block">Accelerated review</span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">Revision Rounds</span>
+                <span className="font-medium text-[#0F172A] block mt-0.5">
+                  {selectedService.revisionPolicy || "1 to 2 revision rounds"}
+                </span>
+                <span className="text-[10px] text-[#64748B] block">Consolidated feedback</span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">Studio Department</span>
+                <span className="font-medium text-[#5C3A1E] truncate block mt-0.5" title={selectedService.pipelineEngine}>
+                  {selectedService.pipelineEngine.split("+")[0].trim()}
+                </span>
+                <span className="text-[10px] text-[#64748B] block">Art-director led</span>
+              </div>
+            </div>
+
+            {/* Standalone Pricing Callout */}
             {selectedService.priceDisplay && (
               <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#D4A35A]/40 text-xs font-semibold text-[#8C6D32] flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-[#A98B57] shrink-0" />
@@ -576,16 +673,43 @@ export default function ServicesPage() {
               </div>
             )}
 
-            {/* Deliverable Specifications */}
-            <div>
-              <h4 className="text-xs font-bold uppercase tracking-wider text-[#A98B57] mb-2.5">
-                Included Deliverable Specifications
+            {/* Service Purpose & Target Audience */}
+            <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] space-y-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#A98B57] flex items-center gap-1.5">
+                <HelpCircle className="w-3.5 h-3.5 text-[#D4A35A]" />
+                Service Purpose &amp; Intended Clients
               </h4>
-              <ul className="space-y-2">
+              <p className="text-xs text-[#0F172A] leading-relaxed">
+                {selectedService.description}
+              </p>
+              <div className="pt-1.5 border-t border-[#EADFCB]/60 text-xs text-[#64748B]">
+                <strong className="text-[#5C3A1E] font-semibold">Ideal For: </strong>
+                <span>{selectedSpec.intendedAudience}</span>
+              </div>
+            </div>
+
+            {/* Master Technical Specifications & Dimensions */}
+            <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] space-y-1.5">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#A98B57] flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-[#D4A35A]" />
+                Master Deliverable Formats &amp; Dimensions
+              </h4>
+              <p className="text-xs text-[#0F172A] font-mono leading-relaxed">
+                {selectedSpec.dimensionsSpecs}
+              </p>
+            </div>
+
+            {/* Exact Deliverables & Quantities */}
+            <div className="space-y-2.5">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#A98B57] flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#2E7D4F]" />
+                Exact Included Deliverables &amp; Quantities
+              </h4>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {selectedService.deliverables.map((item, idx) => (
                   <li
                     key={idx}
-                    className="flex items-center gap-2.5 text-sm text-[#0F172A] p-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB]/60"
+                    className="flex items-center gap-2.5 text-xs text-[#0F172A] p-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB]/60"
                   >
                     <CheckCircle2 className="w-4 h-4 text-[#2E7D4F] shrink-0" />
                     <span>{item}</span>
@@ -594,34 +718,101 @@ export default function ServicesPage() {
               </ul>
             </div>
 
-            {/* Workflow & Client Media Vault Storage */}
+            {/* Required Client Inputs */}
             <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] space-y-2">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-[#A98B57]">
-                Production &amp; Media Vault Delivery
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#A98B57] flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-[#D4A35A]" />
+                Required Client Inputs &amp; Briefing Assets
               </h4>
-              <p className="text-xs text-[#64748B] leading-relaxed">
-                Crafted via Sutra Studio dedicated <strong className="text-[#0F172A]">{selectedService.pipelineEngine}</strong> production department.
-                High-resolution master files and source assets will be synchronized directly into your private client deliverables library upon art-director review.
+              <ul className="space-y-1.5 text-xs text-[#475569]">
+                {selectedSpec.clientInputs.map((inputItem, idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="text-[#D4A35A] font-bold mt-0.5">•</span>
+                    <span>{inputItem}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* 5-Step Production Pipeline */}
+            <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#5C3A1E] flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
+                5-Step Production Pipeline (Research → Prompt → Production → QA → Delivery)
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
+                {selectedSpec.productionSteps.map((step) => (
+                  <div
+                    key={step.step}
+                    className="p-3 rounded-xl bg-[#FFFDF9] border border-[#EADFCB]/80 flex flex-col justify-between"
+                  >
+                    <div>
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#5C3A1E] text-white text-[10px] font-bold mb-1.5">
+                        {step.step}
+                      </span>
+                      <h5 className="font-semibold text-xs text-[#0F172A] leading-tight mb-1">
+                        {step.title}
+                      </h5>
+                    </div>
+                    <p className="text-[11px] text-[#64748B] leading-snug mt-1">
+                      {step.desc}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Scope Exclusions & Custom Scope Conditions */}
+            <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] space-y-2 text-xs">
+              <h4 className="font-bold uppercase tracking-wider text-[#A98B57] flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 text-[#C2761A]" />
+                Production Scope Exclusions &amp; Custom Conditions
+              </h4>
+              <ul className="space-y-1 text-[#64748B]">
+                {selectedService.exclusions.map((excl, idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="text-[#C2761A] font-bold">•</span>
+                    <span>{excl}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-[11px] text-[#8C6D32] pt-1.5 border-t border-[#EADFCB]/60">
+                <strong>Custom Scope Note: </strong>
+                {selectedSpec.customQuoteConditions}
               </p>
             </div>
 
-            {/* Action Buttons */}
-            <div className="pt-4 border-t border-[#EADFCB] flex items-center justify-between gap-4">
+            {/* Direct Order & Inquiry Action Buttons */}
+            <div className="pt-4 border-t border-[#EADFCB] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setSelectedService(null)}
+                onClick={handleCloseDetail}
+                className="order-3 sm:order-1"
               >
                 Close Preview
               </Button>
-              <Link
-                href={selectedService.ctaHref || `/orders?service=${selectedService.slug}`}
-                className="w-full sm:w-auto"
-              >
-                <Button variant="primary" size="md" withArrow className="w-full">
-                  {selectedService.ctaText || `Commission ${selectedService.name}`}
-                </Button>
-              </Link>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 order-1 sm:order-2">
+                <Link href="/chat">
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    leftIcon={<Bot className="w-4 h-4 text-[#D4A35A]" />}
+                    className="w-full sm:w-auto"
+                  >
+                    Consult Concierge
+                  </Button>
+                </Link>
+                <Link
+                  href={selectedService.ctaHref || `/orders?service=${selectedService.slug}`}
+                >
+                  <Button variant="primary" size="md" withArrow className="w-full sm:w-auto justify-center">
+                    {selectedService.isCustomQuote
+                      ? "Inquire Custom Scope"
+                      : `Order ${selectedService.name} (${selectedService.startingPrice})`}
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         )}

@@ -6,14 +6,12 @@ import { usePathname } from "next/navigation";
 import {
   Home,
   Sparkles,
-  Smartphone,
   Mail,
   User,
   LayoutDashboard,
   ShoppingBag,
   FolderOpen,
   FileText,
-  MessageSquare,
   ShieldCheck,
   Users,
   CheckCircle,
@@ -23,8 +21,7 @@ import { useAuth } from "@/lib/auth/authContext";
 
 export function MobileBottomNav() {
   const pathname = usePathname();
-  const { role, user } = useAuth();
-  const isAuthenticated = !!user;
+  const { role } = useAuth();
   const isAdmin = role === "admin";
   const isClient = role === "client";
 
@@ -55,7 +52,7 @@ export function MobileBottomNav() {
     : [
         { name: "Home", href: "/", icon: Home },
         { name: "Services", href: "/services", icon: Sparkles },
-        { name: "Mobile App", href: "/mobile-app", icon: Smartphone },
+        { name: "Pricing", href: "/pricing", icon: ShoppingBag },
         { name: "Contact", href: "/contact", icon: Mail },
         { name: "Sign In", href: "/login", icon: User },
       ];
@@ -63,7 +60,7 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="Mobile app bottom navigation"
-      className="fixed bottom-0 inset-x-0 z-40 bg-[#FFFDF9]/95 backdrop-blur-md border-t border-[#EADFCB] px-2 pt-1.5 pb-[max(0.35rem,env(safe-area-inset-bottom,0px))] flex items-center justify-around md:hidden shadow-lg"
+      className="fixed bottom-0 inset-x-0 z-40 bg-[#FFFDF9]/95 backdrop-blur-md border-t border-[#EADFCB] px-1 sm:px-2 pt-1.5 pb-[max(0.35rem,env(safe-area-inset-bottom,0px))] flex items-center justify-around md:hidden shadow-lg"
     >
       {tabs.map((tab) => {
         const Icon = tab.icon;
@@ -78,18 +75,20 @@ export function MobileBottomNav() {
           <Link
             key={tab.name}
             href={tab.href}
-            className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all min-h-[48px] min-w-[48px] touch-target ${
+            className={`flex flex-col items-center justify-center py-1 px-1 sm:px-2 rounded-xl transition-all min-h-[44px] min-w-[44px] touch-target ${
               isActive
                 ? "text-[#5C3A1E] font-semibold bg-[#F4EFE6]"
                 : "text-[#64748B] hover:text-[#0F172A]"
             }`}
           >
             <Icon
-              className={`w-5 h-5 ${
+              className={`w-5 h-5 shrink-0 ${
                 isActive ? "text-[#5C3A1E] stroke-[2.2]" : "text-[#64748B]"
               }`}
             />
-            <span className="text-[10px] mt-0.5 font-medium leading-none">{tab.name}</span>
+            <span className="text-[9px] sm:text-[10px] mt-0.5 font-medium leading-none truncate max-w-[58px] text-center">
+              {tab.name}
+            </span>
           </Link>
         );
       })}

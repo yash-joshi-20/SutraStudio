@@ -238,13 +238,39 @@ export class OrdersStore {
   }
 
   public static findById(idOrNumber: string): FirestoreOrderRecord | undefined {
-    return globalAny.__SUTRA_STORED_ORDERS__.find(
+    const memoryMatch = globalAny.__SUTRA_STORED_ORDERS__.find(
       (o: FirestoreOrderRecord) =>
         o.id === idOrNumber ||
         o.orderNumber === idOrNumber ||
         o.code === idOrNumber ||
         o.razorpayOrderId === idOrNumber
     );
+
+    // Cross-process and disk sync: if disk copy exists and is newer or has updated status, refresh
+    const diskOrders = loadOrdersFromDisk();
+    const diskMatch = diskOrders.find(
+      (o: FirestoreOrderRecord) =>
+        o.id === idOrNumber ||
+        o.orderNumber === idOrNumber ||
+        o.code === idOrNumber ||
+        o.razorpayOrderId === idOrNumber
+    );
+
+    if (diskMatch) {
+      if (!memoryMatch) {
+        globalAny.__SUTRA_STORED_ORDERS__.unshift(diskMatch);
+        return diskMatch;
+      }
+      if (
+        (diskMatch.updatedAt && (!memoryMatch.updatedAt || diskMatch.updatedAt > memoryMatch.updatedAt)) ||
+        diskMatch.paymentStatus !== memoryMatch.paymentStatus ||
+        diskMatch.status !== memoryMatch.status
+      ) {
+        Object.assign(memoryMatch, diskMatch);
+      }
+    }
+
+    return memoryMatch;
   }
 
   public static async findByIdAsync(idOrNumber: string): Promise<FirestoreOrderRecord | undefined> {
@@ -822,7 +848,12 @@ export class OrdersStore {
     saveAuditLogsToDisk(globalAny.__SUTRA_PAYMENT_EVENTS__);
 
     if (isFirebaseAdminReady()) {
-      adminDb().collection("payments").doc(auditRecord.id).set(auditRecord).catch(() => {});
+      try {
+        const sanitized = cleanForFirestore(auditRecord);
+        adminDb().collection("payments").doc(auditRecord.id).set(sanitized).catch(() => {});
+      } catch (err) {
+        console.warn("[OrdersStore] Firestore logPaymentEvent notice:", err);
+      }
     }
   }
 

@@ -16,23 +16,13 @@ import {
   ChevronDown,
   Building2,
   Layers,
-  DollarSign,
-  HelpCircle,
-  ArrowRight,
-  ExternalLink,
-  CreditCard,
-  Clock,
   CheckCircle2,
-  Loader2,
   Paperclip,
-  Image as ImageIcon,
   FileText,
   Mic,
   MicOff,
   Volume2,
   VolumeX,
-  Volume1,
-  Languages,
   QrCode,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -681,7 +671,7 @@ export function FloatingChatModal() {
         <button
           onClick={() => setIsOpen(true)}
           aria-label="Open Sutra Studio Concierge"
-          className="fixed bottom-[4.5rem] right-4 z-40 md:bottom-6 md:right-6 w-14 h-14 sm:w-auto sm:h-auto rounded-full flex items-center justify-center p-0 sm:px-4 sm:py-2.5 sm:gap-3 bg-[#171717]/95 backdrop-blur-md text-[#FAF9F5] border border-[#A98B57]/60 shadow-2xl hover:bg-[#262626] hover:scale-105 active:scale-95 transition-all cursor-pointer group"
+          className="fixed bottom-[4.25rem] right-2.5 sm:bottom-6 sm:right-6 z-40 w-12 h-12 min-[380px]:w-14 min-[380px]:h-14 sm:w-auto sm:h-auto rounded-full flex items-center justify-center p-0 sm:px-4 sm:py-2.5 sm:gap-3 bg-[#171717]/95 backdrop-blur-md text-[#FAF9F5] border border-[#A98B57]/60 shadow-2xl hover:bg-[#262626] hover:scale-105 active:scale-95 transition-all cursor-pointer group min-h-[44px] min-w-[44px]"
         >
           <div className="relative w-full h-full sm:w-8 sm:h-8 flex items-center justify-center shrink-0 p-2 sm:p-0">
             <img
