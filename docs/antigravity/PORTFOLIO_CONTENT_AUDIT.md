@@ -62,3 +62,14 @@ Every project entry in the catalog now provides an explicit classification:
 ## 5. Next Steps for Brand Assets
 
 - As new completed client projects are finalized, client screenshots should be placed directly into `public/images/projects/` and registered with the explicit `projectType: "Client Work"` schema.
+
+---
+
+## 6. Homepage Curated Premier Spotlight Implementation
+
+- **Component**: `src/components/portfolio/FeaturedSpotlightDuo.tsx`
+- **Location**: Homepage (`src/app/HomeClient.tsx`) Section 5 (`#projects`)
+- **Featured Works**:
+  1. **Koenigsegg Apex Velocity** (3D Digital Automotive Twin): Dark editorial presentation with cyan and amber wheel lighting, showcasing vehicle reveal sequences, comparative powertrain specs, and aerodynamic telemetry.
+  2. **Vitrine Salon & Spa** (Luxury Beauty Atelier & Booking Portal): Warm ivory architectural presentation featuring arched entrance portals, treatment menus, real-time booking flows, and live CRM portal access.
+- **Interactions**: Interactive modal view detailing full client deliverables, status, and direct external platform links.

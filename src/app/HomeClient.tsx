@@ -10,6 +10,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Modal } from "@/components/ui/Modal";
 import { ServiceCard } from "@/components/services/ServiceCard";
 import { ProjectCard } from "@/components/portfolio/ProjectCard";
+import { FeaturedSpotlightDuo } from "@/components/portfolio/FeaturedSpotlightDuo";
 import { HeroAnimation } from "@/components/motion/HeroAnimation";
 import { BackgroundVideo } from "@/components/media/BackgroundVideo";
 import { VideoCard } from "@/components/media/VideoCard";
@@ -837,56 +838,73 @@ export default function HomePage() {
             =================================================== */}
         <section id="projects" className="py-20 bg-[#F8F5EF] border-t border-[#EADFCB]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-              <div>
-                <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[#A98B57] flex items-center gap-1.5 mb-2">
-                  <span className="text-[#D4A35A] text-[10px]">◆</span>
-                  <span>FEATURED WORK</span>
-                </span>
-                <h2 className="font-serif text-3xl sm:text-4xl font-semibold text-[#0F172A]">
-                  Our Latest Creations
-                </h2>
-              </div>
-
-              {/* Mobile View: Category Dropdown */}
-              <div className="w-full sm:hidden pt-2">
-                <CustomDropdown
-                  options={FILTER_CATEGORIES.map((cat) => ({
-                    label: cat === "All" ? "All Disciplines" : `${cat} Creations`,
-                    value: cat,
-                    badge: `${
-                      cat === "All"
-                        ? SUTRA_PROJECTS.length
-                        : SUTRA_PROJECTS.filter((p) => p.category === cat).length
-                    }`,
-                  }))}
-                  value={selectedCategory}
-                  onChange={(val) => setSelectedCategory(val)}
-                  placeholder="Filter Creations"
-                  buttonClassName="!rounded-full !bg-[#FFFDF9] !border-[#EADFCB] py-2 shadow-xs"
-                />
-              </div>
-
-              {/* Desktop / Tablet View: Tab Pills System */}
-              <div className="hidden sm:flex flex-wrap items-center gap-2">
-                {FILTER_CATEGORIES.map((cat) => {
-                  const isActive = selectedCategory === cat;
-                  return (
-                    <button
-                      key={cat}
-                      onClick={() => setSelectedCategory(cat)}
-                      className={`interactive-pill focus-ring px-4 py-1.5 rounded-full text-xs font-medium cursor-pointer ${
-                        isActive
-                          ? "bg-[#5C3A1E] text-white shadow-xs font-semibold"
-                          : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A] hover:text-[#0F172A]"
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  );
-                })}
-              </div>
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[#A98B57] flex items-center gap-1.5 mb-2">
+                <span className="text-[#D4A35A] text-[10px]">◆</span>
+                <span>FEATURED WORK &amp; CLIENT DELIVERABLES</span>
+              </span>
+              <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-semibold text-[#0F172A]">
+                Recent Studio Showcases
+              </h2>
+              <p className="text-sm sm:text-base text-[#64748B] mt-2 max-w-2xl font-sans">
+                Explore verified client platforms, interactive 3D digital twins, and architectural digital experiences created by Sutra Studio.
+              </p>
             </div>
+
+            {/* Curated Premier Duo Showcase (Koenigsegg Apex Velocity & Vitrine Salon) */}
+            <FeaturedSpotlightDuo />
+
+            {/* Complete Portfolio Archive Grid with Filter System */}
+            <div className="pt-8 border-t border-[#EADFCB] space-y-8">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                  <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
+                    Complete Portfolio Archive
+                  </h3>
+                  <p className="text-xs text-[#64748B] mt-1">
+                    Filter by discipline to explore deliverables across website, 3D, motion, and design.
+                  </p>
+                </div>
+
+                {/* Mobile View: Category Dropdown */}
+                <div className="w-full sm:hidden pt-2">
+                  <CustomDropdown
+                    options={FILTER_CATEGORIES.map((cat) => ({
+                      label: cat === "All" ? "All Disciplines" : `${cat} Creations`,
+                      value: cat,
+                      badge: `${
+                        cat === "All"
+                          ? SUTRA_PROJECTS.length
+                          : SUTRA_PROJECTS.filter((p) => p.category === cat).length
+                      }`,
+                    }))}
+                    value={selectedCategory}
+                    onChange={(val) => setSelectedCategory(val)}
+                    placeholder="Filter Creations"
+                    buttonClassName="!rounded-full !bg-[#FFFDF9] !border-[#EADFCB] py-2 shadow-xs"
+                  />
+                </div>
+
+                {/* Desktop / Tablet View: Tab Pills System */}
+                <div className="hidden sm:flex flex-wrap items-center gap-2">
+                  {FILTER_CATEGORIES.map((cat) => {
+                    const isActive = selectedCategory === cat;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setSelectedCategory(cat)}
+                        className={`interactive-pill focus-ring px-4 py-1.5 rounded-full text-xs font-medium cursor-pointer ${
+                          isActive
+                            ? "bg-[#5C3A1E] text-white shadow-xs font-semibold"
+                            : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A] hover:text-[#0F172A]"
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
             {/* Grid */}
             <motion.div
@@ -909,7 +927,8 @@ export default function HomePage() {
               </AnimatePresence>
             </motion.div>
           </div>
-        </section>
+        </div>
+      </section>
 
         {/* ===================================================
             6. FOUNDER & ATELIER LEADERSHIP SECTION
