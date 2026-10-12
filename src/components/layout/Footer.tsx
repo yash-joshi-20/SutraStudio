@@ -78,7 +78,7 @@ export function Footer() {
               Start Your Journey
             </span>
             <h3 className="font-serif text-2xl sm:text-3xl font-semibold text-[#0F172A]">
-              Ready to elevate your digital presence?
+              Ready to transform your brand&apos;s digital presence?
             </h3>
             <p className="text-sm text-[#64748B] max-w-xl">
               Partner with Sutra Studio for world-class design, 3D spatial, and software engineering solutions.
@@ -87,12 +87,12 @@ export function Footer() {
           <div className="flex flex-wrap items-center justify-center gap-3 w-full md:w-auto">
             <Link href="/contact" className="w-full sm:w-auto">
               <Button variant="secondary" size="md" className="w-full sm:w-auto min-h-[44px]">
-                Discovery Call
+                Discuss Your Project
               </Button>
             </Link>
             <Link href="/orders" className="w-full sm:w-auto">
               <Button variant="primary" size="md" withArrow className="w-full sm:w-auto min-h-[44px]">
-                Start an Order
+                Get Started Today
               </Button>
             </Link>
           </div>

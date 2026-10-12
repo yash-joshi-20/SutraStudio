@@ -98,14 +98,14 @@ export function Navbar() {
         </div>
 
         {/* Desktop Navigation Links */}
-        <nav aria-label="Primary navigation" className="hidden lg:flex items-center gap-1 xl:gap-2">
+        <nav aria-label="Primary navigation" className="hidden lg:flex items-center gap-0.5 xl:gap-2">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
               <Link
                 key={link.name}
                 href={link.href}
-                className={`relative px-3.5 py-2 text-sm font-medium rounded-full transition-colors ${
+                className={`relative px-2 xl:px-3.5 py-2 text-xs xl:text-sm font-medium rounded-full transition-colors ${
                   isActive
                     ? "text-[#5C3A1E] font-semibold bg-[#F4EFE6]"
                     : "text-[#0F172A]/85 hover:text-[#5C3A1E] hover:bg-[#F8F5EF]"
@@ -113,14 +113,14 @@ export function Navbar() {
               >
                 <span>{link.name}</span>
                 {link.badge && (
-                  <span className="ml-1.5 text-[9px] font-mono uppercase px-1.5 py-0.5 rounded-full bg-[#FAF9F5] text-[#A98B57] font-bold border border-[#D4A35A]/30">
+                  <span className="ml-1 text-[9px] font-mono uppercase px-1.5 py-0.5 rounded-full bg-[#FAF9F5] text-[#A98B57] font-bold border border-[#D4A35A]/30">
                     {link.badge}
                   </span>
                 )}
                 {isActive && (
                   <motion.div
                     layoutId="nav-active-pill"
-                    className="absolute bottom-1 left-3 right-3 h-0.5 bg-[#D4A35A] rounded-full"
+                    className="absolute bottom-1 left-2 xl:left-3 right-2 xl:right-3 h-0.5 bg-[#D4A35A] rounded-full"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
@@ -130,7 +130,7 @@ export function Navbar() {
         </nav>
 
         {/* Right Action Controls */}
-        <div className="hidden sm:flex items-center gap-3 shrink-0">
+        <div className="hidden sm:flex items-center gap-2 xl:gap-3 shrink-0">
           {!isAuthenticated ? (
             <>
               <Link href="/login">
@@ -138,7 +138,7 @@ export function Navbar() {
                   variant="ghost"
                   size="sm"
                   leftIcon={<User className="w-4 h-4" />}
-                  className="text-xs uppercase tracking-wider font-semibold touch-target"
+                  className="text-xs uppercase tracking-wider font-semibold touch-target px-2.5 xl:px-3"
                 >
                   Log In
                 </Button>
@@ -148,9 +148,10 @@ export function Navbar() {
                   variant="primary"
                   size="sm"
                   withArrow
-                  className="text-xs uppercase tracking-wider font-semibold touch-target"
+                  className="text-xs uppercase tracking-wider font-semibold touch-target px-2.5 xl:px-4"
                 >
-                  Get Started
+                  <span className="hidden xl:inline">Discuss Your Project</span>
+                  <span className="xl:hidden">Discuss Project</span>
                 </Button>
               </Link>
             </>

@@ -105,7 +105,7 @@ export default function PricingPage() {
           </div>
 
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold text-[#0F172A] leading-[1.1]">
-            Transparent Investment, <span className="text-gold-gradient">Guaranteed Excellence</span>
+            Transparent Investment: <span className="text-gold-gradient">Choose the Plan That Fits Your Goals</span>
           </h1>
 
           <p className="text-base sm:text-lg text-[#64748B] leading-relaxed max-w-2xl">
@@ -147,7 +147,7 @@ export default function PricingPage() {
                     : "text-[#64748B] hover:text-[#0F172A]"
                 }`}
               >
-                Individual Services
+                Individual Solutions
               </button>
 
               <button
@@ -161,7 +161,7 @@ export default function PricingPage() {
                     : "text-[#64748B] hover:text-[#0F172A]"
                 }`}
               >
-                Bulk Deliverable Packs
+                Essential Deliverable Packs
               </button>
             </div>
           </div>
@@ -277,7 +277,7 @@ export default function PricingPage() {
                     {/* Deliverables Checklist */}
                     <div className="space-y-2.5">
                       <span className="text-[11px] font-bold uppercase tracking-wider text-[#A98B57] block">
-                        Included Deliverables:
+                        Benefits Included for Your Brand:
                       </span>
                       <ul className="space-y-2 text-xs text-[#475569]">
                         {tier.deliverables.slice(0, 6).map((item) => (

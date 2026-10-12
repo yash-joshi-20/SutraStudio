@@ -146,12 +146,12 @@ export default function HomePage() {
                   <div className="hero-cta flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-2">
                     <Link href={activeDisciplineData.href || "/orders"} className="w-full sm:w-auto">
                       <Button variant="primary" size="lg" withArrow className="w-full sm:w-auto shadow-warm justify-center">
-                        Start a Project
+                        Start Your Project Today
                       </Button>
                     </Link>
                     <Link href="/services" className="w-full sm:w-auto">
                       <Button variant="secondary" size="lg" className="w-full sm:w-auto justify-center">
-                        Explore Services
+                        Explore Solutions &amp; Work
                       </Button>
                     </Link>
                   </div>
@@ -360,8 +360,8 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
             <SectionHeader
               badge="STUDIO DISCIPLINES"
-              title="Complete Creative &amp; Digital Atelier"
-              subtitle="From commercial 4K visual imagery and cinematic reels to 3D spatial design, architectural visualization, performance marketing, and modern web engineering."
+              title="Solutions Built for Your Goals: Complete Creative Atelier"
+              subtitle="From 4K commercial visual imagery and cinematic motion reels to 3D spatial models, architectural visualization, and high-performance web engineering."
               className="text-center"
             />
 
@@ -457,6 +457,73 @@ export default function HomePage() {
                 <p className="text-sm text-[#64748B]">
                   Why modern founders, brands, and agencies choose our dedicated atelier over guesswork and bloated retainers.
                 </p>
+              </div>
+
+              {/* Reference-Inspired Two-Column Clarity Comparison Card */}
+              <div className="mb-10 rounded-2xl bg-[#FFFFFF] border border-[#E5E1D8] shadow-xs overflow-hidden">
+                <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#E5E1D8]">
+                  {/* Left Column: Traditional / Generic Roadblocks */}
+                  <div className="p-6 sm:p-8 space-y-4 bg-[#FAF9F5]/40">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#DC2626]" />
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-[#DC2626]">
+                        TRADITIONAL AGENCY &amp; FREELANCE ROADBLOCKS
+                      </h4>
+                    </div>
+                    <p className="text-xs text-[#64748B] font-medium">
+                      What usually holds back brand growth and creative momentum:
+                    </p>
+                    <ul className="space-y-3 text-xs text-[#64748B]">
+                      <li className="flex items-start gap-2.5">
+                        <XIcon className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" />
+                        <span><strong>Vague hourly billing</strong> with unpredictable invoice creep &amp; hidden charges</span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <XIcon className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" />
+                        <span><strong>Scattered files &amp; assets</strong> across lost email threads, WhatsApp, and expiring links</span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <XIcon className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" />
+                        <span><strong>Junior execution</strong> with unverified AI artifacts, prompt guesswork, and inconsistent quality</span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <XIcon className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" />
+                        <span><strong>Slow 4–8 week turnarounds</strong> paired with rigid long-term agency lock-in contracts</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  {/* Right Column: The Sutra Studio Standard */}
+                  <div className="p-6 sm:p-8 space-y-4 bg-[#FFFFFF]">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#2E7D4F]" />
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-[#2E7D4F]">
+                        THE SUTRA STUDIO STANDARD (WHAT YOU GET)
+                      </h4>
+                    </div>
+                    <p className="text-xs text-[#0F172A] font-medium">
+                      Clear, customer-focused excellence delivered every time:
+                    </p>
+                    <ul className="space-y-3 text-xs text-[#171717]">
+                      <li className="flex items-start gap-2.5">
+                        <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
+                        <span><strong>Transparent fixed rates</strong> (₹99 to ₹19,999) with zero hidden fees</span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
+                        <span><strong>Dedicated Google Drive vault</strong> with structured, permanent client access</span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
+                        <span><strong>Senior Art Director polish</strong> &amp; 4K UHD master render verification</span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
+                        <span><strong>Agile daily/weekly milestones</strong> with 100% full commercial rights</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
               </div>
 
               {/* Responsive Grid Matrix */}
@@ -606,7 +673,7 @@ export default function HomePage() {
                   <div className="mt-6 pt-4 border-t border-[#E5E1D8]">
                     <Link href="/services">
                       <Button variant="primary" size="sm" className="w-full justify-center text-xs">
-                        Explore Deliverables
+                        Get Started Today
                       </Button>
                     </Link>
                   </div>
@@ -630,7 +697,7 @@ export default function HomePage() {
               </div>
 
               <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-semibold text-[#0F172A]">
-                Clear Value, <span className="text-gold-gradient">Guaranteed Excellence</span>
+                Transparent Investment: <span className="text-gold-gradient">Choose the Right Plan for Your Goals</span>
               </h2>
 
               <p className="text-sm sm:text-base text-[#64748B] leading-relaxed">

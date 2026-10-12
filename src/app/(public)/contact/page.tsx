@@ -129,17 +129,17 @@ export default function ContactPage() {
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] shadow-xs">
               <span className="text-[#D4A35A] text-xs">◆</span>
               <span className="text-[10px] md:text-xs font-semibold tracking-[0.22em] text-[#5C3A1E] uppercase">
-                CLIENT CONCIERGE & INQUIRY
+                DISCUSS YOUR PROJECT
               </span>
             </div>
 
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold leading-[1.1] text-[#0F172A]">
-              Let&apos;s Build <span className="text-gold-gradient">Something Extraordinary</span>
+              Let&apos;s Discuss Your <span className="text-gold-gradient">Project &amp; Goals</span>
             </h1>
 
             <p className="text-base sm:text-lg text-[#64748B] leading-relaxed font-sans">
-              Have a bespoke project brief, luxury visual requirement, or web architecture
-              milestone? Share your vision with our dedicated creative leads.
+              Have a bespoke creative brief, visual requirement, or web architecture
+              milestone? Share your goals with our dedicated creative leads.
             </p>
           </div>
         </section>
@@ -404,11 +404,11 @@ export default function ContactPage() {
                         type="submit"
                         variant="primary"
                         size="lg"
-                        className="w-full justify-center"
+                        className="w-full justify-center shadow-warm"
                         isLoading={status === "loading"}
                         withArrow
                       >
-                        Transmit Inquiry to Studio Lead
+                        Send My Project Inquiry
                       </Button>
                     </div>
 
