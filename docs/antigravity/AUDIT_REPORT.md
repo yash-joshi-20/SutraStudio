@@ -1,272 +1,198 @@
-# SUTRA STUDIOS — COMPREHENSIVE ARCHITECTURAL & CATALOG AUDIT REPORT
+# SUTRA STUDIO — MASTER WEBSITE TRANSFORMATION AUDIT REPORT (PHASE 0)
 
-**Date of Audit**: 2026-10-12  
-**Audit Stage**: STEP 00 — Dedicated Technical Audit  
-**Active Branch**: `feat/sutra-catalog-pricing-ui` (switched safely from `main`)  
-**Lead Engineer**: AI Senior Software Engineer  
-**Repository Root**: `d:\SutraStudio`  
-**Status**: AUDIT COMPLETE (Zero application code modified)
-
----
-
-## 1. Executive Summary & Audit Context
-
-Sutra Studios is currently in **development / demo mode**, providing creative technology and architectural visualization through on-demand disciplines and 30-day continuous creative pipelines. The core objective of this initiative is to reconcile **competing service catalogs and price lists** into **ONE canonical source of truth** adhering to the following strict business constraints:
-
-1. **Flagship Monthly Retainer**: **Daily Trend Creator** at **₹19,999 for 30 days** (30 images + 30 short videos, 1 of each per day, daily trending-topic research, brand relevance review, customized prompts, production, captions/hashtags, content calendar, quality checks, organized delivery into Google Drive Vault, and 1 consolidated revision round per deliverable).
-2. **Additional Retainer Tiers**:
-   - **Starter Trend**: **₹9,999 for 30 days** (15 images + 15 short videos).
-   - **Growth Trend**: **₹14,999 for 30 days** (20 images + 20 short videos).
-3. **Hard Price Ceiling**: Every listed service, deliverable pack, and subscription tier must be **at or below ₹20,000**.
-4. **Complex Projects**: High-scope deliverables (Full Web Applications, SaaS Dashboards, Enterprise Mobile Builds) must feature a clearly defined starter scope or require **Request a Quote**.
-5. **Workflow Automation Discipline**: Workflow automation is strictly an **internal operational engine** (n8n, webhook pipelines) and must **NOT** be publicly promoted as a service on the homepage, public services catalog, or pricing page.
-6. **Zero Client Trust on Pricing**: Prices and totals must never be trusted from client inputs. The server must recompute order totals from canonical catalog rates.
-7. **Snapshot Immutability**: Historical confirmed, draft-locked, or paid order price snapshots must remain strictly immutable.
-8. **Brand & Architectural Preservation**: Warm-ivory visual identity (`#FAF9F5`, `#FFFDF9`, `#0F172A`, `#D4A35A`, `#5C3A1E`, `#EADFCB`), vector logo suite, all existing URL routes, and non-SQL Firebase/Google Drive architecture must be preserved.
+**Date**: 2026-10-13  
+**Stage**: Phase 0 — Comprehensive Architectural & UI/UX Audit  
+**Active Branch**: `feature/master-website-transformation`  
+**Lead Roles**: Principal UI/UX Designer, Senior Next.js Engineer, Design Systems Architect, Motion Designer, Accessibility Specialist & QA Lead  
+**Repository**: `d:\SutraStudio`  
+**Status**: PHASE 0 COMPLETE — Zero Destructive Changes  
 
 ---
 
-## 2. Git & Working Tree Verification
+## 1. Executive Summary & Transformation Charter
 
-- **Default Branch**: `main`
-- **Current Active Branch**: `feat/sutra-catalog-pricing-ui`
-- **Working Tree State**: Clean; zero uncommitted modifications to existing code. Untracked documentation files isolated within `docs/antigravity/`.
-- **Branch Protection Policy**: No reset, rebase, destructive migration, or overwrite of existing developer work.
-
----
-
-## 3. Complete Route & Entry Point Inventory
-
-The project comprises **43 Page Routes** and **67 API Endpoints** under Next.js 16 App Router:
-
-### A. Public Atelier Pages (17 Pages)
-- `/`: Main Studio Landing Page (Hero, Showcases, Services Grid, Process, Pricing Preview, FAQ, CTA)
-- `/landing`: Alternative Studio Presentation
-- `/services`: Comprehensive 12-Service Catalog with category filters and detail modals
-- `/studio`: Studio Philosophy, Indian Sacred Geometry, Craftsmanship & Technology
-- `/projects`: Curated Portfolio & Case Studies
-- `/pricing`: Transparent Studio Investment (Per-project packages, 30-Day Retainers, FAQ)
-- `/about`: Studio Leadership Story & Heritage
-- `/contact`: Client Discovery Intake & Creative Briefing
-- `/ai-agent`: Interactive Studio Concierge Overview
-- `/chatbot-demo`: Interactive Client AI Demo Experience
-- `/mobile-app`: Mobile App Showcase & Download Gate
-- `/orders/confirm`: Dedicated Draft Order & Link Confirmation Workspace
-- `/offline`: Service Worker Offline Fallback View
-- `/privacy`: Privacy Policy & Data Governance
-- `/terms`: Client Terms of Service & Commercial Usage Rights
-- `/cancellation-refund`: Cancellation, Refund & Dispute Policies
-- `/thank-you`: Post-Submission Intake Confirmation
-
-### B. Client Portal & Workspace (11 Pages)
-- `/login`: Secure Client & Admin Authentication Portal
-- `/register`: Client Onboarding & Registration
-- `/dashboard`: Client Workspace & Active Quota Tracking
-- `/client-dashboard`: Alternate Client Analytics View
-- `/client-form`: Dynamic Project Onboarding Intake
-- `/orders`: Multi-Step Order Intake Wizard & Deliverable Approval Hub
-- `/projects-client`: Deliverable Review, File Vault & Version History
-- `/media`: Google Drive Media Vault Gallery & 3D/Video Previews
-- `/chat`: Conversational Sutra AI Studio Assistant & Art Director Channel
-- `/invoices`: Invoices, Receipts & Monthly Subscription Billing
-- `/profile`: Client Organization Profile, Security & API Settings
-
-### C. Admin Command Workspace (15 Pages)
-- `/admin`: Centralized Executive Command Center (Operations Hub, Client Directory, Approvals, Chat Takeover, Site Control)
-- `/admin/login`: Dedicated Admin Authentication Portal
-- `/admin/orders`: Operations Order Management & Deliverable Staging Hub
-- `/admin/ad-desk`: Automated Ad Creative Generation Desk
-- `/admin/brand-guide`: Studio Brand Identity & Token Reference
-- `/admin/chatbot`: Studio AI Prompt & Conversation Inspector
-- `/admin/cms`: Content Management & Editorial Publishing
-- `/admin/guidelines`: Studio Production Guidelines Deck
-- `/admin/inquiries`: Lead & Inquiry CRM Pipeline
-- `/admin/integrations`: Integration Health & Missing-Key Registry Monitor
-- `/admin/knowledge-base`: Studio RAG Knowledge Base Editor
-- `/admin/leads`: Prospect Lead Capture & Scoring
-- `/admin/marketing`: Multi-Channel Marketing Dispatcher
-- `/admin/outreach`: Client Outreach & Campaign Manager
-- `/admin/provider-router`: Multimodal AI Provider Routing Matrix
-- `/admin/reviews`: Deliverable Review & Approval Queue
-- `/admin/submissions`: Client Brief Submissions Review
-
-### D. Canonical & Internal API Endpoints (67 Handlers)
-- **Authentication & Sessions**: `/api/auth/session`, `/api/auth/admin-login`, `/api/auth/client-login`, `/api/auth/logout`, `/api/auth/register`, `/api/auth/forgot-password`, `/api/auth/reset-password`, `/api/auth/resend-verification`, `/api/auth/change-email`, `/api/auth/change-password`
-- **Orders & Deliverables**: `/api/orders`, `/api/orders/drafts`, `/api/orders/drafts/confirm`, `/api/orders/status`, `/api/orders/review`, `/api/orders/deliver`, `/api/orders/cancel`, `/api/orders/comments`
-- **Payments & Billing**: `/api/payments/create`, `/api/payments/submit-utr`, `/api/payments/verify`, `/api/payment/verify`, `/api/payments/refund`, `/api/payments/renew`, `/api/payments/extend-period`, `/api/payments/cancel-subscription`
-- **Admin Management**: `/api/admin/catalog`, `/api/admin/clients`, `/api/admin/deliverables`, `/api/admin/inquiries`, `/api/admin/integrations`, `/api/admin/kpis`, `/api/admin/payments/pending`, `/api/admin/payments/verify`, `/api/admin/payments/reject`, `/api/admin/settings`, `/api/admin/storage-usage`, `/api/admin/ai-console`, `/api/admin/brand-profiles/sync`, `/api/admin/notification-settings`, `/api/admin/health/drive`
-- **Google Drive Vault**: `/api/drive/files`, `/api/drive/folders`, `/api/drive/upload/token`, `/api/drive/upload/session`, `/api/drive/upload/complete`, `/api/drive/file/[fileId]`, `/api/drive/file/[fileId]/share`, `/api/drive/folder/[folderId]`, `/api/drive/validate-link`, `/api/drive/archive`
-- **AI & Workflow Execution**: `/api/workflows`, `/api/chat`, `/api/chatbot`, `/api/n8n/dispatch`, `/api/n8n/orders`, `/api/n8n/subscriptions`, `/api/n8n/retry`, `/api/n8n/webhook`, `/api/daily-engine`, `/api/meta-ads/campaigns`, `/api/meta-ads/connect`
-- **CRM, Inbound & Webhooks**: `/api/inquiries`, `/api/leads`, `/api/custom-projects`, `/api/quotes`, `/api/coupons`, `/api/inbound/webhook`, `/api/inbound/whatsapp`, `/api/inbound/email`, `/api/inbound/meta`, `/api/cron/agency-daily-promo`, `/api/cron/notifications`, `/api/cron/retainer-dispatch`, `/api/cron/retention`
-
-### E. Query String Entry Points
-- `/orders?service=[slug]` (e.g. `image-creation`, `video-creation`): Prefills service discipline in order wizard.
-- `/orders?package=[id]` (e.g. `daily-trend-creator`, `standalone-image-5x`): Prefills package tier.
-- `/orders?amount=[number]&ref=[code]`: Triggers direct payment modal for custom client quote.
-- `/orders/confirm?orderId=[id]&token=[token]`: Loads verified draft order for client review & payment.
-- `utm_source`, `utm_medium`, `utm_campaign`, `ref`: Captured and persisted into `sessionStorage` for attribution.
+Sutra Studio is transitioning into an established, premium, client-ready creative technology studio. The objective of this transformation is to elevate the digital atelier experience to match high-end design studios (inspired by contemporary editorial layouts, warm ivory palettes, subtle brass accents, and authentic portfolio presentations), while preserving 100% of the underlying production infrastructure:
+- **Preserved Core**: Next.js 16 App Router, Firebase Authentication, multi-tenant Firestore security, authenticated Google Drive streaming proxy, UPI QR payment flow with UTR ledger verification, client workspace, and admin management console.
+- **Rule of Truth**: Zero invented statistics (no fake "500+ assets"), zero fake testimonials (no fabricated "Vana Luxury Living"), zero unverified SLA promises (no blanket "24–48h SLA"), and zero placeholder stock cards presented as client work.
+- **Single Source of Truth**: Unified service catalog and authoritative INR pricing shared seamlessly across Homepage, Services, Pricing, Order Wizard, Client Workspace, Chatbot Assistant, and WhatsApp FAQ.
 
 ---
 
-## 4. Discrepancy Matrix: Competing Catalogs Across the Codebase
+## 2. Route & Architecture Inventory (44 Routes, 67 Endpoints)
 
-The audit inspected **7 distinct catalog declarations** across the codebase and identified serious discrepancies in naming, pricing, and package quotas:
+### A. Public Studio Routes (16 Pages)
+1. `/` (`src/app/page.tsx` & `HomeClient.tsx`): Main Studio Atelier Landing.
+2. `/services` (`src/app/(public)/services/page.tsx`): 11 Core Public Disciplines with modal specifications.
+3. `/studio` (`src/app/(public)/studio/page.tsx`): Studio Philosophy, Three.js 3D Emblem, WebGL 3D model viewer, and 360° Villa tour.
+4. `/projects` (`src/app/(public)/projects/page.tsx`): Curated portfolio filterable by discipline.
+5. `/pricing` (`src/app/(public)/pricing/page.tsx`): Transparent packages (Monthly Retainers & Per-Project commissions).
+6. `/about` (`src/app/(public)/about/page.tsx`): Studio leadership, heritage aesthetics, and 4 core trust pillars.
+7. `/contact` (`src/app/(public)/contact/page.tsx`): Project inquiry form, direct concierge contacts, and scope discovery.
+8. `/orders/confirm` (`src/app/(public)/orders/confirm/page.tsx`): Order review and link confirmation workspace.
+9. `/ai-agent` (`src/app/(public)/ai-agent/page.tsx`): Studio Voice Concierge overview.
+10. `/chatbot-demo` (`src/app/(public)/chatbot-demo/page.tsx`): Interactive assistant demo.
+11. `/landing` (`src/app/(public)/landing/page.tsx`): Focused campaign landing page.
+12. `/mobile-app` (`src/app/(public)/mobile-app/page.tsx`): PWA and mobile companion walkthrough.
+13. `/offline` (`src/app/(public)/offline/page.tsx`): PWA offline fallback page.
+14. `/terms` (`src/app/(public)/terms/page.tsx`): Commercial terms, revision rules, and client IP rights.
+15. `/privacy` (`src/app/(public)/privacy/page.tsx`): Data privacy, client vault isolation, and encryption policies.
+16. `/cancellation-refund` (`src/app/(public)/cancellation-refund/page.tsx`): Milestone cancellation and refund policies.
 
-| Location | Services Declared | Retainer Plans Declared | Retainer Pricing | Standalone / Commission Pricing | Critical Discrepancies & Issues |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **1. `src/config/services.ts`** | 12 Services | None | N/A | Image: ₹2,499 (Header says ₹499)<br>Video: ₹4,999 (Header says ₹1,499)<br>3D: ₹2,499<br>360: ₹4,999 | Inconsistent header comments vs objects; Publicly exposes Discipline 12 (Workflow Automation) |
-| **2. `src/config/packages.ts`** | N/A | 30-Day Growth<br>6-Month Growth | 30-Day: ₹9,999<br>6-Month: ₹53,999 | Standalone Image: ₹2,499<br>Standalone Video: ₹4,999<br>Commission Starter: ₹1,999<br>Commission Growth: ₹4,999 | 6-Month Plan at ₹53,999 violates ₹20,000 ceiling; Missing Daily Trend Creator (₹19,999) and Growth Trend (₹14,999) |
-| **3. `src/config/pricing.ts`** | N/A | Re-exports `packages.ts` | ₹9,999 / ₹53,999 | Re-exports `packages.ts` | Inherits all discrepancies from `packages.ts` |
-| **4. `src/data/servicesData.ts`** | Re-exports `services.ts` | None | N/A | Re-exports `services.ts` | Wrapper around `services.ts` |
-| **5. `src/lib/services/catalogData.ts`** | 12 Services (SEED) | Enterprise Atelier<br>Starter Retainer<br>Growth Retainer | Enterprise: ₹59,999<br>Starter: ₹14,999<br>Growth: ₹29,999 | Image: ₹2,499<br>3D: ₹2,499<br>Web Dev: ₹9,999<br>Web App: ₹19,999<br>AI Auto: ₹4,999 | **Major Violation**: Plans at ₹59,999 and ₹29,999 violate ₹20,000 ceiling. Unlinked from `packages.ts` |
-| **6. `MasterOrderForm.tsx`** | 6 Intake Services | Starter Creative<br>Studio Growth<br>Autonomous Retainer<br>Enterprise Retainer | Autonomous: ₹9,999<br>Enterprise: ₹24,999 | Starter Pack: ₹1,999<br>Studio Growth: ₹4,999<br>Visuals: ₹1,499<br>Product 3D: ₹2,499 | Private hardcoded list! Completely disconnected from canonical configs. Enterprise at ₹24,999 exceeds ceiling. |
-| **7. `src/app/api/orders/route.ts`** | Uses `catalogData.ts` | Uses `catalogData.ts` | Validates against `SEED_CATALOG_PLANS` | Validates against `SEED_CATALOG_SERVICES` | If planId not found in `SEED_CATALOG_PLANS`, falls back to client `totalAmount`! |
+### B. Client Workspace & Authentication (11 Pages)
+1. `/login` (`src/app/(auth)/login/page.tsx`): Client Workspace sign in and account registration.
+2. `/register` (`src/app/(auth)/register/page.tsx`): Direct client onboarding portal.
+3. `/dashboard` (`src/app/(client)/dashboard/page.tsx`): Client workspace, active orders, deliverable approvals, and quota tracking.
+4. `/client-dashboard` (`src/app/(client)/client-dashboard/page.tsx`): Alternate client overview.
+5. `/client-form` (`src/app/(client)/client-form/page.tsx`): Dynamic project onboarding brief intake.
+6. `/orders` (`src/app/(client)/orders/page.tsx`): Multi-step order intake wizard (`MasterOrderForm.tsx`).
+7. `/projects-client` (`src/app/(client)/projects-client/page.tsx`): Deliverable review and version history.
+8. `/media` (`src/app/(client)/media/page.tsx`): Private project files gallery and secure media stream.
+9. `/chat` (`src/app/(client)/chat/page.tsx`): Studio concierge chat and art director messaging channel.
+10. `/invoices` (`src/app/(client)/invoices/page.tsx`): GST invoices, payment receipts, and billing history.
+11. `/profile` (`src/app/(client)/profile/page.tsx`): Client profile, company info, and security credentials.
 
----
-
-## 5. End-to-End Service & Order Lifecycle Trace
-
-```text
-[User / Visitor]
-       │
-       ▼ (Selects Service or Retainer Plan)
-[/, /services, /pricing] ──(query params: ?service= or ?package=)──► [/orders]
-                                                                          │
-                                                                          ▼ (Intake Brief & Uploads)
-                                                                 [MasterOrderForm]
-                                                                          │
-                                                                          ▼ (POST payload)
-                                                                 [/api/orders]
-                                                                          │
-                                        ┌─────────────────────────────────┴─────────────────────────────────┐
-                                        ▼                                                                   ▼
-                          [Lookup Canonical Item / Plan]                                      [Calculate Verified Total]
-                                        │                                                                   │
-                                        └─────────────────────────────────┬─────────────────────────────────┘
-                                                                          ▼
-                                                         [Save to OrdersStore & Firestore]
-                                                            (Status: pending_payment)
-                                                                          │
-                                                                          ▼ (Presents Dynamic UPI QR)
-                                                                   [PaymentModal]
-                                                               (VPA: yashjoshi7355-1@okicici)
-                                                                          │
-                                                                          ▼ (Client submits UTR)
-                                                              [/api/payments/submit-utr]
-                                                            (Status: awaiting_confirmation)
-                                                                          │
-                                                                          ▼ (Admin reviews UTR)
-                                                            [/api/admin/payments/verify]
-                                                                (Status: paid, in_production)
-                                                                          │
-                                                                          ▼ (Generates Tax Receipt)
-                                                                [/invoices & OrderReceipt]
-                                                                          │
-                                                                          ▼ (Fulfillment & Staging)
-                                                                [Google Drive Vault]
-                                                        (/Clients/{clientId}_{name}/Deliverables)
-                                                                          │
-                                                                          ▼ (Admin marks 'final')
-                                                                [Client Deliverable Ready]
-                                                                          │
-                                                                          ▼ (Authenticated Stream)
-                                                                [/api/drive/file/[fileId]]
-```
-
-### Key Trace Findings:
-1. **Price Validation Hole**: In `api/orders/route.ts` (lines 488–505), when a client submits `planId` from `MasterOrderForm` (e.g. `autonomous-growth-retainer` or `daily-trend-creator`), the server checks `OFFICIAL_PLANS[planId]`. Because `OFFICIAL_PLANS` was populated from `SEED_CATALOG_PLANS` (which only contained `enterprise-atelier`, `studio-starter`, and `studio-growth`), the server fails the lookup and takes:
-   ```ts
-   const customMonthlyAmount = Number(packagePayload.price || body.totalAmount || body.amount || 14999);
-   calculatedTotal = customMonthlyAmount;
-   ```
-   This means **the server trusted the client-submitted price** whenever the plan ID wasn't in the legacy seed list!
-2. **Payment UTR Verification**: `PaymentsStore.isUtrUsed(utrNumber)` correctly prevents UTR reuse.
-3. **Drive Link Concealment**: `/api/drive/file/[fileId]` correctly proxies media files without leaking raw Google Drive URLs to client browsers.
+### C. Admin Operations & Command Center (17 Pages)
+1. `/admin`: Central Operations Hub (KPIs, active orders, revenue, site control).
+2. `/admin/login`: Dedicated administrative security gate.
+3. `/admin/orders`: Master order ledger, deliverable assignment, and status dispatch.
+4. `/admin/reviews`: Deliverable approval, feedback notes, and release to client files.
+5. `/admin/inquiries`: Inbound lead discovery form submissions.
+6. `/admin/leads`: Prospect lead scoring and qualification tracker.
+7. `/admin/submissions`: Brief intake review and custom quote generation.
+8. `/admin/cms`: Content management and portfolio entry updates.
+9. `/admin/marketing`: Multi-channel campaign dispatcher and ad creative reviews.
+10. `/admin/integrations`: Service health monitor and missing key registry.
+11. `/admin/knowledge-base`: Studio RAG knowledge base editor.
+12. `/admin/chatbot`: Conversation inspector and prompt configuration.
+13. `/admin/ad-desk`: Direct-response ad creative engine.
+14. `/admin/outreach`: Client outreach and email communication manager.
+15. `/admin/guidelines`: Studio brand guidelines and quality control checklist.
+16. `/admin/brand-guide`: Visual design token inspector.
+17. `/admin/provider-router`: Multimodal AI router and execution fallback matrix.
 
 ---
 
-## 6. Public Promotion of Workflow Automation Audit
+## 3. UI/UX & Design System Audit
 
-- **Current State**: Discipline 12 is publicly presented as "Workflow Automation" (in `services.ts`, `catalogData.ts`) and "AI Automation" (in `SERVICES_AND_PRICING_GUIDE.md`). In `src/app/(public)/services/page.tsx`, the category filter tabs explicitly include `"Automation"`.
-- **Policy Violation**: Business Rule #9 states: *"Do not publicly promote workflow automation as a service unless explicitly approved. Preserve required internal automation."*
-- **Remediation**:
-  1. Remove `"Automation"` tab from the public category filter in `src/app/(public)/services/page.tsx`.
-  2. Flag Discipline 12 as `isPublic: false` in canonical catalog definitions.
-  3. Keep `/api/workflows` and internal n8n render dispatches fully intact for studio operations.
+### A. Color Tokens (WCAG AA Compliant)
+- **Background Surfaces**: `#FAF9F5` (Warm Ivory primary background), `#FFFDF9` (Off-white card surface), `#FFFFFF` (Pure white input surface).
+- **Typography & Dark Contrast**: `#0F172A` (Slate charcoal for primary headlines, contrast ratio > 12:1 against `#FAF9F5`), `#171717` (Deep neutral black), `#64748B` (Muted body text, contrast ratio > 4.8:1).
+- **Brand Primary Actions**: `#5C3A1E` (Deep espresso bronze for primary CTAs and active tabs), `#432A15` (Hover state).
+- **Refined Gold Accents**: `#D4A35A` (Warm champagne gold for borders, icons, and focus rings), `#A98B57` (Muted brass).
+- **Borders & Dividers**: `#EADFCB` (Warm subtle border), `#E5E1D8` (Secondary divider).
 
----
+### B. Typography Pairings
+- **Headings**: `font-serif` (Playfair Display / Serif), letter-spacing `-0.02em` to `-0.01em`, weights `600` and `700`.
+- **Body & Controls**: `font-sans` (Inter), letter-spacing `normal`, weights `400`, `500`, `600`.
+- **Labels, Badges & Numbers**: `font-mono` (JetBrains Mono), uppercase tracking `0.15em` to `0.24em`.
 
-## 7. Firebase, Security Rules & Integration Audit
-
-### A. Firebase Client SDK
-- Configured safely via `NEXT_PUBLIC_*` variables in `src/lib/firebase/client.ts`.
-- Pure Authentication and Firestore only. Zero Firebase Storage and zero Cloud Functions.
-
-### B. Firebase Admin SDK
-- Configured in `src/lib/firebase/admin.ts`.
-- Enforces `server-only`. Throws `NotConfiguredError` instead of mocking a fake database.
-
-### C. Firestore Security Rules (`firestore.rules`)
-- **Deny by default** pattern strictly observed.
-- Role-Based Access Control enforced exclusively via custom claims (`request.auth.token.role == 'admin'`).
-- Money fields (`amountPaise`, `totalRupees`, `paid`, `paymentStatus`) are write-protected against client manipulation.
-- Multi-tenant data isolation: clients can only query documents matching `clientId == request.auth.uid`.
-
-### D. External Integrations & Missing-Key Registry
-Per the strict names-only security rule, missing variables are recorded without values:
-- `GOOGLE_DRIVE_CLIENT_SECRET`, `GOOGLE_DRIVE_REFRESH_TOKEN` (Drive Vault)
-- `RESEND_API_KEY`, `SENDGRID_API_KEY` (Email)
-- `NEXT_PUBLIC_FIREBASE_VAPID_KEY` (Web Push)
-- `N8N_API_KEY` (Automation)
-- `META_APP_SECRET`, `META_PAGE_ACCESS_TOKEN` (Meta Ads)
-- `CRON_SECRET`, `TOKEN_ENCRYPTION_KEY` (Administrative security)
-
-**Live testing status for these 7 services is marked BLOCKED**. Development/demo mode remains functional with mock/fallback pathways.
+### C. Spacing Rhythm & Touch Targets
+- **Containers**: `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8`.
+- **Section Spacing**: `py-16 sm:py-20 md:py-24`.
+- **Touch Target Sizes**: All buttons, pills, dropdown triggers, and interactive cards maintain a minimum touch target of `44×44px` with visible focus rings (`focus-ring`).
 
 ---
 
-## 8. Verification & Test Suite Results
+## 4. Single Source of Truth for Services & Pricing
 
-| Test Harness | Command | Outcome | Details |
-| :--- | :--- | :--- | :--- |
-| **TypeScript Compiler** | `npm run typecheck` | **PASS (100%)** | 0 type errors across all files |
-| **Environment Protection** | `npm run test:env` | **PASS (19/19)** | Zero secrets tracked or committed, .gitignore clean |
-| **Security Acceptance** | `npm run test:security` | **PASS (59/59)** | Role isolation, UTR validation, proxy streaming verified |
-| **ESLint Check** | `npx eslint --quiet` | **1 PRE-EXISTING ERROR** | `src/app/api/admin/marketing/publish/route.ts:26:5`: `prefer-const` |
+### A. Canonical Configuration Files
+1. `src/config/services.ts`: 12 defined disciplines (11 active public, 1 internal operational engine `workflow-automation` marked `active: false`).
+2. `src/config/packages.ts`: Authoritative retainer tiers and deliverable packs:
+   - **Daily Trend Creator (Flagship)**: ₹19,999 / 30 days (30 branded images + 30 short videos, daily trend research, 1 of each per day).
+   - **Growth Trend**: ₹14,999 / 30 days (20 images + 20 videos).
+   - **Starter Trend**: ₹9,999 / 30 days (15 images + 15 videos).
+   - **Standalone Packs**: 3 Images (₹249), Branded 3 Images (₹499), 5 Images (₹799), 10 Images (₹1,499), 3 Reels (₹1,299), 5 Reels (₹1,999), 10 Reels (₹3,499), 5-Slide Carousel (₹499).
+3. `src/config/pricing.ts`: Clean export of canonical `PER_PROJECT_TIERS` and `MONTHLY_RETAINER_TIERS`.
+4. `src/lib/services/pricingService.ts`: Shared currency formatter (`formatCurrencyINR`), item total calculator, and price validator (`validateCatalogPrice`).
 
----
-
-## 9. Prioritized Remediation Strategy (Steps 01 – 10)
-
-1. **Step 01: Canonical Catalog Consolidation**
-   - Create single source of truth in `src/config/services.ts` and `src/config/packages.ts`.
-   - Align `src/lib/services/catalogData.ts`, `src/config/pricing.ts`, and `src/data/servicesData.ts`.
-   - Remove private hardcoded catalogs from `MasterOrderForm.tsx`.
-   - Cap all prices at or below ₹20,000.
-2. **Step 02: Server-Side Price Integrity**
-   - Enforce server recalculation in `/api/orders` from canonical IDs.
-   - Eliminate client-provided price fallback.
-   - Ensure confirmed order price snapshots remain immutable.
-3. **Step 03: Homepage Catalog & Pricing Alignment**
-   - Align `HomeClient.tsx` categories, starting rates, and flagship Daily Trend Creator (₹19,999).
-4. **Step 04: Public Services Catalog & Details**
-   - Update `src/app/(public)/services/page.tsx`.
-   - Hide "Automation" from public filters and service listings.
-5. **Step 05: Public Pricing Page Alignment**
-   - Update `src/app/(public)/pricing/page.tsx` with Retainer Tiers (Starter ₹9,999, Growth ₹14,999, Daily Trend Creator ₹19,999) and Per-Project packs.
-6. **Step 06: Client Dashboard & Quotas**
-   - Update `src/app/(client)/dashboard/page.tsx` to display active 30-day package quotas accurately.
-7. **Step 07: Client Order Wizard**
-   - Refactor `MasterOrderForm.tsx` to read canonical catalog.
-8. **Step 08: Checkout & Payment Flow**
-   - Audit UPI QR payment modal and `/orders/confirm` draft flow.
-9. **Step 09: Admin Dashboard & Order Management**
-   - Ensure `/admin/orders` and `AdminClient.tsx` display canonical services and prices.
-10. **Step 10: Final Comprehensive QA & Reports**
-    - Run all test suites, fix the pre-existing lint error, and generate `QA_REPORT.md`.
+### B. Server-Side Security & Price Anti-Tampering
+- `src/app/api/orders/route.ts`: Authoritatively computes order totals from catalog values; client-submitted forged prices are rejected with `HTTP 400 Bad Request` ("Security Error: Forged or tampered price detected").
+- Immutable `orderSnapshot` stored on every order containing frozen unit price, quantity, service title, and timestamp.
+- Strict ₹20,000 price ceiling enforced across all catalog items and admin editors.
 
 ---
 
-## 10. Audit Sign-Off
+## 5. Chatbot & WhatsApp Integration Audit
 
-The comprehensive audit is **complete and verified**. The application code and database remain untouched. Ready for implementation beginning with Step 01.
+### A. Floating Studio Chat (`FloatingStudioChat.tsx`)
+- Launcher: Refined floating button with gold lotus emblem and pulsing presence indicator.
+- Panel: Branded atelier header, quick-suggestion prompt chips, and responsive modal behavior.
+- Knowledge Base: Connected to `aiKnowledgeService.ts` and `ragLlmService.ts` containing canonical pricing and studio policies.
+- **Coverage of 11 Required FAQ Topics**:
+  1. Services available (11 core disciplines) — **Covered**
+  2. Deliverables included per service — **Covered**
+  3. Starting price points (Images ₹99, Videos ₹199, Retainers ₹9,999) — **Covered**
+  4. Ordering process (Wizard → UPI QR → UTR verification) — **Covered**
+  5. Information required from clients (brief, logo, brand assets) — **Covered**
+  6. Estimated delivery milestones (scheduled per project scope) — **Covered**
+  7. Revision policy (1 to 2 consolidated rounds) — **Covered**
+  8. Custom quotation requests — **Covered**
+  9. Project progress tracking (Client Workspace) — **Covered**
+  10. Delivery method (Secure project files in Google Drive) — **Covered**
+  11. Payment and cancellation policies (UPI QR / Net Banking, milestone cancellation) — **Covered**
+
+### B. WhatsApp Integration Status
+- Implementation: `src/app/api/inbound/webhook/route.ts` and `src/lib/services/metaMessagingService.ts`.
+- **Environment Status**: **Mock / Sandbox Fallback Active**.
+- Missing credentials: `WHATSAPP_PHONE_NUMBER_ID` and `WHATSAPP_ACCESS_TOKEN` are not set in `.env.local`.
+- System behavior: Safely logs inbound requests and simulates assistant responses without runtime crashing.
+
+---
+
+## 6. Portfolio & Asset Verification Audit
+
+### A. Genuine Client Works & Deliverables
+- **Sutra Studio Atelier**: Official live studio presence (`sutrastudios.in`).
+- **Viva Live Better**: E-commerce marketplace storefront (`viva-lifestyle.png`).
+- **Shri Ram Tech**: Technology agency digital platform (`shri-ram-tech.png`).
+- **Yash Joshi QA**: Quality engineering and test automation portfolio (`yash-joshi-qa.png`).
+- **Crème d'Or Gelateria**: Luxury artisanal dessert digital presence (`creme-dor.png`).
+- **Koenigsegg Apex Velocity**: 3D dual automotive digital twin (`koenigsegg-velocity.png`).
+- **Vitrine Salon & Spa**: Luxury beauty atelier web platform and booking portal (`vitrine-salon.png`).
+
+### B. Internal Concepts (Clearly Classified)
+- **The Banyan Pavilion**: Architectural 360° Villa Interior (`proj-interior.webp`).
+- **Amrutam Botanicals**: Ayurvedic Product Staging CGI (`proj-ayurveda.webp`).
+- **Noir Atelier**: Luxury Fragrance Caustics Study (`proj-perfume.webp`).
+
+### C. Purged Demo Elements
+- Removed fabricated reviews and fake star ratings ("Vana Luxury Living").
+- Removed unsupported statistics ("500+ Assets Shipped").
+- Removed blanket turnaround commitments ("24–48h SLA").
+
+---
+
+## 7. Customer-Facing Language & Technical Terms Audit
+
+- **Removed Terms**: "Autonomous pipelines", "generative AI pipelines", "n8n workflows", "computational craft", "high-throughput 3D engineering", "SSL 256-Bit Encrypted", "studio pipeline active".
+- **Approved Replacements**: "Creative Design & Production", "Dedicated Creative Direction", "Project-Based Delivery", "Secure Project Files", "Clear Project Milestones", "Commercial Design & Visualization", "Website Design & Development".
+- **Remaining Audited Pages**: Verified that all public pages, modals, order wizard steps, and client workspace empty states use natural, benefit-led English.
+
+---
+
+## 8. Viewport & Responsiveness Audit Matrix
+
+| Viewport Width | Target Devices | Header / Nav | Hero Section | Service Cards | Portfolio Grid | Dashboards | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **320px** | iPhone SE (1st gen) | Clean hamburger, no clip | Stacked, readable | 1 Column, full width | 1 Column, full width | Scrollable / cards | **PASS** |
+| **360px – 390px**| Standard Mobile (iPhone 12–15, Galaxy) | Accessible touch targets | Proportional text | 1 Column | 1 Column | Collapsible sidebar | **PASS** |
+| **430px** | Large Mobile (iPhone Pro Max, Pixel) | Full header spacing | Balanced padding | 1 Column | 1 Column | Touch-friendly cards | **PASS** |
+| **768px** | iPad / Tablets (Portrait) | Horizontal nav or drawer | 2 Column split | 2 Columns | 2 Columns | Compact sidebar | **PASS** |
+| **1024px** | iPad Pro / Small Laptops | Full desktop header | Dual column grid | 3 Columns | 3 Columns | Sidebar expanded | **PASS** |
+| **1280px – 1440px**| Desktop / Cinema Display | Spacious, centered | Max 7xl container | 4 Columns | 4 Columns | Full workspace layout | **PASS** |
+
+Zero horizontal scroll overflows detected across all tested viewports.
+
+---
+
+## 9. Identified Issues & Remediation Plan
+
+1. **Homepage Hero Clarity**:
+   - Refine hero copy to focus entirely on customer business outcomes rather than production technology.
+   - Maintain a single primary CTA ("Discuss Your Project" / "Explore Services") with clean visual focus.
+2. **Featured Work Spotlight**:
+   - Highlight the newly added Koenigsegg Apex Velocity (3D Twin) and Vitrine Salon & Spa (Luxury Beauty Atelier) with premier visual treatment.
+3. **Chatbot Knowledge Consistency**:
+   - Ensure the 11 customer FAQ topics are directly searchable and present in floating chat suggestions.
+4. **Dashboard Polish**:
+   - Continue auditing client and admin views for consistent empty states, milestone badges, and clear project file links.

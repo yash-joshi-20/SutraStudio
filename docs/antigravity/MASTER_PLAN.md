@@ -1,48 +1,38 @@
-# SUTRA STUDIOS — MASTER IMPLEMENTATION PLAN
+# SUTRA STUDIO — MASTER WEBSITE TRANSFORMATION PLAN
 
-## Active Branch & Environment
-- **Branch**: `feat/sutra-catalog-pricing-ui`
-- **Default Branch**: `main`
-- **Environment**: Development / Demo Mode (Mock fallbacks active for unconfigured external services)
-- **Baseline Document**: [README.md](file:///d:/SutraStudio/docs/antigravity/README.md)
-- **Audit Findings**: [AUDIT_REPORT.md](file:///d:/SutraStudio/docs/antigravity/AUDIT_REPORT.md)
-- **QA Verification Report**: [QA_REPORT.md](file:///d:/SutraStudio/docs/antigravity/QA_REPORT.md)
+**Date**: 2026-10-13  
+**Active Branch**: `feature/master-website-transformation`  
+**Default Branch**: `main`  
+**Baseline Documents**:
+- Audit Report: [AUDIT_REPORT.md](file:///d:/SutraStudio/docs/antigravity/AUDIT_REPORT.md)
+- Asset Inventory: [ASSET_INVENTORY.md](file:///d:/SutraStudio/docs/antigravity/ASSET_INVENTORY.md)
+- Progress Log: [PROGRESS_LOG.md](file:///d:/SutraStudio/docs/antigravity/PROGRESS_LOG.md)
+- Portfolio Content Audit: [PORTFOLIO_CONTENT_AUDIT.md](file:///d:/SutraStudio/docs/antigravity/PORTFOLIO_CONTENT_AUDIT.md)
 
 ---
 
-## Execution Framework & Sequential Step Matrix
+## 1. Master Phase Execution Roadmap
 
-| Step | Title | Target Scope | Status | Verification Gate |
+| Phase | Phase Title | Core Objectives | Status | Verification Gate |
 | :--- | :--- | :--- | :--- | :--- |
-| **Step 00** | **Architecture & Catalog Audit** | Full inspection of all services, pricing lists, discrepancies, routes, and security posture. Generate `AUDIT_REPORT.md`. | **COMPLETED** | `docs/antigravity/AUDIT_REPORT.md` generated, 0 code regressions, clean git status |
-| **Step 01** | **Canonical Catalog Consolidation** | Reconcile `src/config/services.ts`, `packages.ts`, `pricing.ts`, `servicesData.ts`, `catalogData.ts`. Establish single source of truth for services & plans. Remove competing price lists. | **COMPLETED** | `npm run test:catalog` (125/125 PASS), `npm run typecheck` (0 errors) |
-| **Step 02** | **Server-Side Pricing Integrity** | `/api/orders` & `/api/plans` server recalculation, block client tampering, immutable confirmed order snapshots. | **COMPLETED** | `npm run test:orders` (48/48 PASS), price spoofing & tamper rejection verified |
-| **Step 03** | **Homepage Catalog & Pricing Alignment** | Align `HomeClient.tsx` with canonical categories, starting rates, and flagship Daily Trend Creator (₹19,999). | **COMPLETED** | `node scripts/test-homepage-pricing-ui.mjs` (20/20 PASS), `npm run typecheck` |
-| **Step 04** | **Public Services Catalog & Details** | Update `src/app/(public)/services/page.tsx`, remove public automation promotion, align starter rates and modal specs. | **COMPLETED** | `npm run test:services` (28/28 PASS), deep-link & rewrite check |
-| **Step 05** | **Public Pricing Page Alignment** | Update `src/app/(public)/pricing/page.tsx` with Retainer Tiers (Starter ₹9,999, Growth ₹14,999, Daily Trend Creator ₹19,999) and Per-Project packs. | **COMPLETED** | Tab separation, scope exclusions, CTA parameter verification |
-| **Step 06** | **Client Dashboard & Quota Tracking** | Update `src/app/(client)/dashboard/page.tsx` to reflect active 30-day packages and commission scopes accurately. | **COMPLETED** | `npm run test:client-ownership` (10/10 PASS), paid-order gating verified |
-| **Step 07** | **Client Order Wizard Reconciliation** | Update `MasterOrderForm.tsx` & `src/app/(client)/orders/page.tsx` to remove legacy hardcoded catalogs and use canonical catalog. | **COMPLETED** | Canonical catalog bindings, multi-step intake validation, `test:orders` PASS |
-| **Step 08** | **Checkout & Payment Engine Alignment** | Verify UPI QR payments, draft confirmation `/orders/confirm`, amount display, UTR validation, zero client-trust rules. | **COMPLETED** | `npm run test:payments` (41/41 PASS), zero client amount trust |
-| **Step 09** | **Admin Dashboard & Catalog Controls** | Update `src/app/admin/orders/page.tsx` and `AdminClient.tsx` to support canonical services, plans, and order displays. | **COMPLETED** | `npm run test:admin-catalog` (13/13 PASS), audit logs & ceiling enforcement |
-| **Step 10** | **Comprehensive QA & Delivery** | Full regression run (`test:env`, `test:security`, `test:responsive`, `typecheck`, `lint`), route check, and generate `QA_REPORT.md`. | **COMPLETED** | `docs/antigravity/QA_REPORT.md`, 76/76 route & pricing assertions PASS, 0 errors |
-| **Step 11** | **Global Pricing, Branding & UI Consistency Fix** | Remove pricing from hero sections, standardize professional service names, align chatbot knowledge & local fallback synthesizers, update budget options. | **COMPLETED** | `PRICING_AUDIT.md`, `test:catalog` (125/125 PASS), `test:orders` (48/48 PASS), `typecheck` (0 errors) |
-| **Step 12** | **Master Client Experience & Central Pricing System** | Remove developer jargon across customer UI, unify knowledge bases (`aiKnowledgeService`, `ragLlmService`), audit WhatsApp Cloud API limitations, document central pricing. | **COMPLETED** | `docs/antigravity/CLIENT_LANGUAGE_AUDIT.md`, `test:catalog` PASS, `test:orders` PASS, `test:security` PASS |
-| **Step 13** | **Final Website Polish, Real Portfolio & 3D Logo Presentation** | Rebuild trust strip, replace dummy projects with 6 genuine client assets & Sutra Studio flagship, build Three.js WebGL 3D emblem with 360° orbit and static fallback, eliminate fake testimonials and unsupported SLAs. | **COMPLETED** | `PORTFOLIO_CONTENT_AUDIT.md`, `test:catalog` PASS, `test:orders` PASS, `test:security` PASS, `typecheck` (0 errors) |
+| **Phase 0** | **Comprehensive Audit (Non-Destructive)** | Full inspection of codebase, 44 routes, assets, canonical catalogs, chatbot, WhatsApp status, Firebase, orders, and responsive states. | **COMPLETED** | `AUDIT_REPORT.md`, `ASSET_INVENTORY.md`, zero code modifications |
+| **Phase 1** | **Shared Foundations** | Consolidate brand tokens (`#FAF9F5`, `#FFFDF9`, `#5C3A1E`, `#D4A35A`), central catalog bindings, unified FAQ knowledge schema, and shared UI primitives. | **READY TO PROCEED** | `npm run test:catalog`, `typecheck` (0 errors) |
+| **Phase 2** | **Visual Redesign & Client Experience** | Refine responsive header, homepage hero (outcome-focused), premier portfolio showcase, service cards, pricing tiers, and "Our Approach" trust section. | **QUEUED** | Responsive layout review across 320px–1440px viewports |
+| **Phase 3** | **Chatbot & WhatsApp Multi-Channel FAQ** | Unify floating assistant with canonical service catalog and 11 approved FAQ topics. Document missing WhatsApp Cloud API keys cleanly. | **QUEUED** | Chatbot FAQ test query suite & mock verification |
+| **Phase 4** | **Dashboards & Project Workflow** | Audit Client Dashboard and Admin Hub for mobile responsiveness, milestone tracking, and customer-friendly project file labels. | **QUEUED** | `npm run test:security`, role-guard checks |
+| **Phase 5** | **Original Media & Motion Enhancements** | Optimize Three.js 3D Logo presentation with reduced-motion fallback, studio showreel modal, and verified client case studies. | **QUEUED** | WebGL context fallback & reduced-motion test |
+| **Phase 6** | **QA, Regression & Final Delivery** | Execute full test suites (`test:catalog`, `test:orders`, `test:security`, `test:responsive`, `typecheck`). Generate `QA_REPORT.md` & `FINAL_CHANGELOG.md`. | **QUEUED** | 100% test pass rate, merge to `main` |
 
 ---
 
-## Step 00 to Step 13 Milestones Summary
+## 2. Phase 0 Detailed Audit Findings Summary
 
-- **Step 00 — Audit**: Completed with exhaustive 10-section audit report [AUDIT_REPORT.md](file:///d:/SutraStudio/docs/antigravity/AUDIT_REPORT.md).
-- **Step 01 — Catalog**: Completed with single canonical source in `services.ts`, `packages.ts`, and `pricing.ts`. 125/125 unit tests passed.
-- **Step 02 — Server Pricing**: Implemented authoritative server pricing calculation in `src/app/api/orders/route.ts` and `src/app/api/account/orders/repeat/route.ts`. Tampered totals rejected with HTTP 400.
-- **Step 03 & 05 — Public UI**: Homepage and Pricing page aligned with 3 monthly retainers (Starter ₹9,999, Growth ₹14,999, Daily Trend Creator ₹19,999) and per-project packs.
-- **Step 04 — Services Catalog**: Services page updated with 10 studio domains, 5-step daily production pipeline modal, and workflow automation concealed.
-- **Step 06 — Client Portal**: Dashboard, Invoices, Orders, and Media Vault aligned with canonical packages, quota counters, and deliverable download gating.
-- **Step 07 — Order Wizard**: MasterOrderForm bound directly to canonical catalog with exact turnaround and delivery specs.
-- **Step 08 — UPI QR Payments**: Authenticated payment modal locked to authoritative order totals. UTR submission recorded as `pending_verification` (never auto-paid).
-- **Step 09 — Admin Controls**: Admin catalog controls enforce strict ₹20,000 ceiling, INR currency, and audit logging.
-- **Step 10 — QA Verification**: All tests passed: `npm run typecheck` (0 errors), `npx eslint --quiet` (0 errors), `test:catalog` (125/125), `test:orders` (48/48), `test:payments` (41/41), `test:responsive` (44/44), `test:services` (28/28), `test:security` (59/59), `test:env` (19/19), `test:admin-catalog` (13/13), `test:client-ownership` (10/10), `test:integrations` (40/40), and comprehensive route QA (76/76).
-- **Step 11 — Global Consistency & Hero Cleanup**: Hero section starting prices removed. Service terminology standardized to professional names (*Commercial & Product Image Creation*, *Promotional Video & Reel Production*, *3D Product Modeling & Visualization*, etc.). AI chatbot knowledge bases & fallback synthesizers synchronized with canonical rates. Tested and verified.
-- **Step 12 — Master Client Experience & Central Pricing System**: Eradicated internal developer jargon, model names, and prompt engineering references across the client-facing website and services catalog. Synchronized `aiKnowledgeService` and `ragLlmService` with canonical pricing and studio copy. Audited WhatsApp Cloud API integration and documented real-world mock/sandbox fallback status honestly in [CLIENT_LANGUAGE_AUDIT.md](file:///d:/SutraStudio/docs/antigravity/CLIENT_LANGUAGE_AUDIT.md). All test suites verified.
-- **Step 13 — Final Website Polish, Real Portfolio & 3D Logo Presentation**: Rebuilt the 4-column trust strip with truthful studio values (*Thoughtful Creative Direction*, *Tailored Project Solutions*, *Clear Communication*, *Organized Project Delivery*). Integrated 6 verified client works (Viva Live Better, Shri Ram Tech, Yash Joshi QA, Crème d'Or, Koenigsegg Velocity, Vitrine Salon) plus Sutra Studio Flagship into `projectsData.ts` and `ProjectCard.tsx`. Created WebGL Three.js PBR 3D Logo Medallion with interactive 360° controls and static 2D fallback. Purged all unsupported 24–48h SLA promises, fake reviews, and technical pipeline terminology. Documented in [PORTFOLIO_CONTENT_AUDIT.md](file:///d:/SutraStudio/docs/antigravity/PORTFOLIO_CONTENT_AUDIT.md).
+1. **Architecture & Routes**: 44 Page routes and 67 API handlers running cleanly on Next.js 16 App Router. Zero broken imports or missing layout files.
+2. **Pricing Integrity**: Single canonical pricing system established in `src/config/services.ts`, `packages.ts`, and `pricing.ts`. Server recalculation blocks client price tampering. Hard ₹20,000 price ceiling enforced.
+3. **Genuine Brand & Portfolio Assets**:
+   - Brand Emblem: Authentic high-res lotus symbol (`public/brand/sutra-symbol.png`) and monogram (`public/brand/sutra-monogram.png`).
+   - Client Deliverables: 6 verified projects (Viva Live Better, Shri Ram Tech, Yash Joshi QA, Crème d'Or, Koenigsegg Velocity, Vitrine Salon) + Sutra Studio Atelier live flagship.
+   - Studio Concepts: Clearly classified and labeled to prevent misrepresentation.
+4. **Purged Inaccurate Marketing Claims**: Removed fake testimonials ("Vana Luxury Living"), fake star ratings, unsupported asset counts ("500+ Assets"), and blanket turnaround promises ("24–48h SLA").
+5. **Chatbot & WhatsApp FAQ**: Floating chat active and wired to RAG knowledge services. 11 core customer FAQ topics mapped. WhatsApp Cloud API operating in graceful mock/sandbox fallback mode due to unconfigured Meta environment variables (`WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`).
+6. **Responsiveness**: Verified layout scaling across 320px, 360px, 390px, 430px, 768px, 1024px, 1280px, and 1440px widths with zero horizontal overflow.
