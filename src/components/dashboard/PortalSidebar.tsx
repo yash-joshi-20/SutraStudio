@@ -64,6 +64,7 @@ export const ADMIN_NAV_ITEMS: PortalNavItem[] = [
   { name: "Ad Copy Desk", href: "/admin/ad-desk", icon: Megaphone },
   { name: "Agency Guidelines", href: "/admin/guidelines", icon: FileText },
   { name: "Meta Ads & Marketing", href: "/admin/marketing", icon: Megaphone },
+  { name: "Creative Automation Studio", href: "/admin/creative-automation", icon: Sparkles },
   { name: "Orders Ledger", href: "/admin?tab=approvals", tabKey: "approvals", icon: ShoppingBag },
   { name: "Client Directory", href: "/admin?tab=clients", tabKey: "clients", icon: User },
   { name: "Monthly Retainers", href: "/admin?tab=plans", tabKey: "plans", icon: Calendar },
