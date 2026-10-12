@@ -54,6 +54,15 @@ docs/
 - **Reuse First**: Inspect existing components and utilities before creating new ones.
 - **Zero Fake Implementations**: All interactive elements (forms, buttons, filters, portals) must be functional.
 
+---
+
+## 5. Automated Git Branching & Merging Lifecycle (Default Requirement)
+
+- **Every Prompt Auto-Branch**: For every user prompt or task, automatically create and switch to a descriptive feature branch (`feature/<task-name>` or `fix/<task-name>`). Never commit directly to `main`.
+- **Implement & Verify**: Complete all edits and run verification test suites while on the feature branch.
+- **Push & Merge to Main**: Commit with conventional commit format, push the feature branch to remote GitHub (`git push origin <branch>`), checkout `main`, pull (`git pull origin main`), merge the branch (`git merge <branch> --no-edit`), and push `main` (`git push origin main`).
+- **Zero Prompt Reminders Needed**: The developer should never have to manually instruct 'create a branch' or 'upload to GitHub' — this lifecycle executes automatically by default.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know
