@@ -30,7 +30,7 @@ export default function ProjectsPage() {
     <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A]">
       <Navbar />
 
-      <main id="main-content" className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14 w-full">
+      <main id="main-content" className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14 pb-28 md:pb-14 w-full">
         <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-12 space-y-3 sm:space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] shadow-xs">
             <span className="text-[#D4A35A] text-xs">◆</span>

@@ -144,7 +144,7 @@ export default function ServicesPage() {
     <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
       <Navbar />
 
-      <main id="main-content" className="flex-1 pb-10 sm:pb-16">
+      <main id="main-content" className="flex-1 pb-28 sm:pb-16">
         {/* Subtle Background Lotus Watermark */}
         <div className="absolute top-10 right-10 -z-10 opacity-[0.03] pointer-events-none">
           <LotusSymbol className="w-[700px] h-[700px]" color="gold" />

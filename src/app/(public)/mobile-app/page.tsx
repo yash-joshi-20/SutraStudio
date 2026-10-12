@@ -534,7 +534,7 @@ export default function MobileAppLandingPage() {
         </section>
 
         {/* FINAL DOWNLOAD CTA */}
-        <section className="py-16 sm:py-24 bg-gradient-to-b from-[#FFFDF9] to-[#F8F5EF] text-center">
+        <section className="pt-16 pb-28 sm:py-24 bg-gradient-to-b from-[#FFFDF9] to-[#F8F5EF] text-center">
           <div className="app-container-cap px-4 sm:px-6 lg:px-8 max-w-2xl space-y-6">
             <div className="w-14 h-14 rounded-2xl bg-[#5C3A1E] text-white flex items-center justify-center mx-auto shadow-md">
               <Smartphone className="w-7 h-7 text-[#D4A35A]" />

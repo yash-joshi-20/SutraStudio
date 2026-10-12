@@ -76,7 +76,7 @@ export function SutraStudioIntroLanding({
         initial={{ opacity: 1 }}
         exit={{ opacity: 0, scale: 1.03, filter: "blur(6px)" }}
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="fixed inset-0 z-[9999] flex flex-col items-center justify-between bg-[#FAF9F5] text-[#171717] overflow-hidden select-none p-6 sm:p-10"
+        className="fixed inset-0 z-[9999] flex flex-col items-center justify-between bg-[#FAF9F5] text-[#171717] overflow-y-auto overflow-x-hidden min-h-dvh select-none p-4 sm:p-10"
       >
         {/* Background Ambient Glow & Sacred Geometry Aura */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center">

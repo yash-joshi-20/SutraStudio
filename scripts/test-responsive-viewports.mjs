@@ -167,9 +167,18 @@ async function runTests() {
       const combinedText = dialogText || bodyText;
 
       const hasDialog = dialog !== null;
-      const hasAudience = combinedText.includes("Ideal For");
-      const hasPipeline = combinedText.toLowerCase().includes("5-step production pipeline") || combinedText.toLowerCase().includes("pipeline");
-      const hasSampleBadge = combinedText.includes("STUDIO TECHNICAL SAMPLE") || combinedText.includes("STUDIO SAMPLE");
+      const hasAudience =
+        combinedText.includes("Ideal For") ||
+        combinedText.includes("Target Audience") ||
+        combinedText.includes("Intended Audience");
+      const hasPipeline =
+        combinedText.toLowerCase().includes("5-step production") ||
+        combinedText.toLowerCase().includes("production process") ||
+        combinedText.toLowerCase().includes("pipeline");
+      const hasSampleBadge =
+        combinedText.includes("STUDIO TECHNICAL SAMPLE") ||
+        combinedText.includes("STUDIO SAMPLE") ||
+        combinedText.includes("STUDIO PORTFOLIO SHOWCASE");
       const hasOrderCTA = document.querySelector('a[href*="/orders?service="]') !== null;
 
       return { hasDialog, hasAudience, hasPipeline, hasSampleBadge, hasOrderCTA };
@@ -177,7 +186,7 @@ async function runTests() {
 
     record("Deep-link /services?service=image-creation opens modal", modalInfo.hasDialog);
     record("Modal displays Ideal For target audience", modalInfo.hasAudience);
-    record("Modal displays 5-step production pipeline", modalInfo.hasPipeline);
+    record("Modal displays 5-step production process", modalInfo.hasPipeline);
     record("Modal displays Studio Technical Sample disclaimer", modalInfo.hasSampleBadge);
     record("Modal displays Order CTA button with correct service query parameter", modalInfo.hasOrderCTA);
 

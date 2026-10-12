@@ -18,7 +18,7 @@ export default function StudioPage() {
     <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A]">
       <Navbar />
 
-      <main id="main-content" className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 w-full space-y-14 sm:space-y-20">
+      <main id="main-content" className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 pb-28 sm:pb-20 w-full space-y-14 sm:space-y-20">
         {/* Intro */}
         <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] shadow-xs">

@@ -660,7 +660,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-[#FAF9F5] flex flex-col justify-between">
       <Navbar />
-      <main className="relative flex-1 overflow-hidden py-8 sm:py-12 lg:py-16 px-4 sm:px-6 lg:px-8">
+      <main className="relative flex-1 overflow-hidden py-8 sm:py-12 lg:py-16 pb-28 sm:pb-12 lg:pb-16 px-4 sm:px-6 lg:px-8">
         <div
           className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 opacity-[0.035]"
           aria-hidden="true"

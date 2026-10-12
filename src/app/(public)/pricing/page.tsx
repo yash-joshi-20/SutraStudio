@@ -94,7 +94,7 @@ export default function PricingPage() {
     <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
       <Navbar />
 
-      <main id="main-content" className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 w-full flex flex-col items-center justify-center space-y-16">
+      <main id="main-content" className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-28 sm:py-16 w-full flex flex-col items-center justify-center space-y-16">
         {/* Intro Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4 w-full flex flex-col items-center justify-center">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] shadow-xs">
