@@ -147,8 +147,22 @@ function toSessionUser(decoded: DecodedIdToken): SessionUser {
 /** Read + verify the current session. Returns null for guests. */
 export async function getSessionUser(opts: { checkRevoked?: boolean } = {}): Promise<SessionUser | null> {
   const store = await cookies();
-  const value = store.get(SESSION_COOKIE_ADMIN)?.value ?? store.get(SESSION_COOKIE)?.value;
-  return decodeSession(value, opts);
+  const adminValue = store.get(SESSION_COOKIE_ADMIN)?.value;
+  const clientValue = store.get(SESSION_COOKIE)?.value;
+
+  // Try admin cookie first
+  if (adminValue) {
+    const adminUser = await decodeSession(adminValue, opts);
+    if (adminUser) return adminUser;
+  }
+
+  // Fall back to client cookie
+  if (clientValue) {
+    const clientUser = await decodeSession(clientValue, opts);
+    if (clientUser) return clientUser;
+  }
+
+  return null;
 }
 
 export async function requireUser(opts: { checkRevoked?: boolean } = {}): Promise<SessionUser> {
