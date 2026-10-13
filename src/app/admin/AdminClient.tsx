@@ -481,7 +481,7 @@ function AdminHubContent() {
 
   const normalizeTab = (tab: string | null): AdminTab => {
     if (!tab || tab === "overview") return "overview";
-    if (tab === "orders") return "approvals";
+    if (tab === "orders" || tab === "payments" || tab === "deliveries") return "approvals";
     if (tab === "settings") return "site-control";
     if (tab === "prompts") return "prompts";
     if (
@@ -491,8 +491,6 @@ function AdminHubContent() {
         "approvals",
         "plans",
         "services",
-        "payments",
-        "deliveries",
         "conversations",
         "workflows",
         "notifications",
@@ -2475,27 +2473,27 @@ const [adminDataError, setAdminDataError] = useState("");
 
   return (
     <RouteGuard requiredRole="admin">
-      <div className="min-h-screen flex bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
+      <div className="min-h-screen flex flex-col md:flex-row w-full max-w-full bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
         <PortalSidebar />
 
-        <main id="main-content" className="flex-1 p-4 sm:p-8 lg:p-10 max-w-7xl mx-auto pb-24 md:pb-12 space-y-8">
+        <main id="main-content" className="flex-1 min-w-0 w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 pb-32 md:pb-28 space-y-8">
           {/* Header Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-[#EADFCB] gap-4">
-            <div>
+          <div className="flex flex-col xl:flex-row xl:items-center justify-between pb-6 border-b border-[#EADFCB] gap-4 w-full min-w-0">
+            <div className="min-w-0">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[10px] font-semibold uppercase tracking-wider text-[#5C3A1E] mb-2">
                 <ShieldAlert className="w-3.5 h-3.5 text-[#D4A35A]" />
                 <span>STUDIO OPERATIONS COMMAND</span>
               </div>
-              <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-[#0F172A]">
-                Admin Operations & Client Management
+              <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-semibold text-[#0F172A]">
+                Admin Operations &amp; Client Management
               </h1>
-              <p className="text-xs text-[#64748B] mt-0.5">
+              <p className="text-xs text-[#64748B] mt-0.5 max-w-2xl">
                 Centralized control: manage client workspaces, inspect isolated AI pipelines, approve master deliverables, and audit security.
               </p>
             </div>
 
             {/* System Status Pills & Notification Bell */}
-            <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap justify-end">
+            <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap justify-start xl:justify-end w-full xl:w-auto shrink-0">
               <Link
                 href="/admin/outreach"
                 className="flex items-center gap-1.5 bg-[#FFFDF9] border border-[#EADFCB] hover:border-[#D4A35A] px-3 py-1.5 rounded-full text-xs text-[#5C3A1E] font-semibold transition-all shadow-2xs"
@@ -2515,7 +2513,7 @@ const [adminDataError, setAdminDataError] = useState("");
                 className="flex items-center gap-1.5 bg-[#FFFDF9] border border-[#EADFCB] hover:border-[#D4A35A] px-3 py-1.5 rounded-full text-xs text-[#5C3A1E] font-semibold transition-all shadow-2xs"
               >
                 <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
-                <span>Meta Ads & Marketing</span>
+                <span>Meta Ads &amp; Marketing</span>
               </Link>
               <div className="flex items-center gap-2 bg-[#FFFDF9] border border-[#EADFCB] px-3.5 py-1.5 rounded-full text-xs text-[#2E7D4F] font-semibold shadow-xs">
                 <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-pulse" />
@@ -2526,7 +2524,7 @@ const [adminDataError, setAdminDataError] = useState("");
           </div>
 
           {/* High-Density Top Navigation Tabs */}
-          <div className="flex items-center gap-2 overflow-x-auto border-b border-[#EADFCB] pb-2 no-scrollbar">
+          <div className="flex flex-wrap items-center gap-2 border-b border-[#EADFCB] pb-3 w-full min-w-0">
             {[
               { id: "overview", label: "Operations Overview" },
               { id: "clients", label: `Client Directory (${liveClients.length})` },
@@ -2541,6 +2539,9 @@ const [adminDataError, setAdminDataError] = useState("");
                 badge: totalUnreadChats > 0 ? `${totalUnreadChats} New` : undefined,
               },
               { id: "workflows", label: "Creative Pipelines" },
+              { id: "services", label: "Services & Pricing" },
+              { id: "plans", label: "Monthly Retainers" },
+              { id: "notifications", label: "Notifications & Crons" },
               { id: "site-control", label: "Website Site Control" },
               { id: "audit", label: "Security & Audit Logs" },
             ].map((tab) => (
@@ -2570,7 +2571,7 @@ const [adminDataError, setAdminDataError] = useState("");
           {activeTab === "overview" && (
             <div className="space-y-8">
               {/* KPI Metrics */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 w-full min-w-0">
                 <KPITile
                   label="Registered Clients"
                   value={String(liveClients.length)}
@@ -2611,13 +2612,13 @@ const [adminDataError, setAdminDataError] = useState("");
               </div>
 
               {/* Action Required & Pipeline Health */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 w-full min-w-0">
                 {/* Urgent Deliverables & Approvals (7 Cols) */}
-                <div className="lg:col-span-7 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 shadow-xs space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-[#EADFCB]">
-                    <h3 className="font-serif font-semibold text-base text-[#0F172A] flex items-center gap-2">
-                      <FileCheck className="w-4 h-4 text-[#5C3A1E]" />
-                      <span>Deliverables Pending Producer Review</span>
+                <div className="xl:col-span-7 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-5 sm:p-6 shadow-xs space-y-4 min-w-0">
+                  <div className="flex items-center justify-between pb-3 border-b border-[#EADFCB] gap-2">
+                    <h3 className="font-serif font-semibold text-base text-[#0F172A] flex items-center gap-2 truncate">
+                      <FileCheck className="w-4 h-4 text-[#5C3A1E] shrink-0" />
+                      <span className="truncate">Deliverables Pending Producer Review</span>
                     </h3>
                     <Badge variant="gold" size="sm">
                       {
@@ -2657,24 +2658,25 @@ const [adminDataError, setAdminDataError] = useState("");
                         .map((ord) => (
                           <div
                             key={ord.id}
-                            className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between gap-4"
+                            className="p-3.5 sm:p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0"
                           >
-                            <div>
-                              <div className="flex items-center gap-2">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <span className="font-mono text-xs font-bold text-[#5C3A1E]">
                                   {ord.orderNumber || ord.code}
                                 </span>
-                                <span className="text-xs font-semibold text-[#0F172A]">
+                                <span className="text-xs font-semibold text-[#0F172A] truncate">
                                   {ord.title || ord.service}
                                 </span>
                               </div>
-                              <p className="text-[11px] text-[#64748B] mt-0.5">
+                              <p className="text-[11px] text-[#64748B] mt-0.5 truncate">
                                 Client: {ord.clientName} ({ord.clientEmail}) • {ord.statusLabel}
                               </p>
                             </div>
                             <Button
                               variant="primary"
                               size="sm"
+                              className="shrink-0 self-start sm:self-auto"
                               onClick={() => {
                                 setInspectingAdminOrder(ord);
                                 handleTabChange("approvals");
@@ -2689,10 +2691,10 @@ const [adminDataError, setAdminDataError] = useState("");
                 </div>
 
                 {/* Engine Health & Sync Status (5 Cols) */}
-                <div className="lg:col-span-5 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 shadow-xs space-y-4">
+                <div className="xl:col-span-5 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-5 sm:p-6 shadow-xs space-y-4 min-w-0">
                   <div className="flex items-center justify-between pb-3 border-b border-[#EADFCB]">
                     <h3 className="font-serif font-semibold text-base text-[#0F172A] flex items-center gap-2">
-                      <Cpu className="w-4 h-4 text-[#5C3A1E]" />
+                      <Cpu className="w-4 h-4 text-[#5C3A1E] shrink-0" />
                       <span>Infrastructure Status</span>
                     </h3>
                     <Badge variant="completed" size="sm">
@@ -2701,28 +2703,28 @@ const [adminDataError, setAdminDataError] = useState("");
                   </div>
 
                   <div className="space-y-3 text-xs">
-                    <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <HardDrive className="w-4 h-4 text-[#5C3A1E]" />
-                        <span className="font-semibold text-[#0F172A]">Google Drive Vault API (Per-Client Isolated)</span>
+                    <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <HardDrive className="w-4 h-4 text-[#5C3A1E] shrink-0" />
+                        <span className="font-semibold text-[#0F172A] truncate">Google Drive Vault API</span>
                       </div>
-                      <span className="text-[#2E7D4F] font-bold">Reachable • Token Valid (AES-256)</span>
+                      <span className="text-[#2E7D4F] font-bold text-[11px] shrink-0">Reachable • Token Valid</span>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Lock className="w-4 h-4 text-[#5C3A1E]" />
-                        <span className="font-semibold text-[#0F172A]">Firebase Auth Service</span>
+                    <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Lock className="w-4 h-4 text-[#5C3A1E] shrink-0" />
+                        <span className="font-semibold text-[#0F172A] truncate">Firebase Auth Service</span>
                       </div>
-                      <span className="text-[#2E7D4F] font-bold">Active & Enforced</span>
+                      <span className="text-[#2E7D4F] font-bold text-[11px] shrink-0">Active &amp; Enforced</span>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Layers className="w-4 h-4 text-[#5C3A1E]" />
-                        <span className="font-semibold text-[#0F172A]">n8n Workflow Daemon</span>
+                    <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Layers className="w-4 h-4 text-[#5C3A1E] shrink-0" />
+                        <span className="font-semibold text-[#0F172A] truncate">n8n Workflow Daemon</span>
                       </div>
-                      <span className="text-[#2E7D4F] font-bold">12 Isolated Queues</span>
+                      <span className="text-[#2E7D4F] font-bold text-[11px] shrink-0">12 Queues Isolated</span>
                     </div>
                   </div>
                 </div>

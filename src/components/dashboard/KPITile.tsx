@@ -21,15 +21,17 @@ export function KPITile({
   }[variant];
 
   return (
-    <div className="rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] p-5 shadow-sm transition-all hover:border-[#D4A35A]/60">
-      <p className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">
+    <div className="rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] p-5 shadow-sm transition-all hover:border-[#D4A35A]/60 min-w-0 flex flex-col justify-between">
+      <p className="text-xs font-semibold uppercase tracking-wider text-[#64748B] truncate" title={label}>
         {label}
       </p>
-      <p className={`font-serif text-3xl font-bold mt-2 ${valueColors}`}>
+      <p className={`font-serif text-2xl sm:text-3xl font-bold mt-2 truncate ${valueColors}`} title={String(value)}>
         {value}
       </p>
       {sublabel && (
-        <p className="text-xs text-[#94A3B8] mt-1 font-medium">{sublabel}</p>
+        <p className="text-xs text-[#94A3B8] mt-1 font-medium truncate" title={sublabel}>
+          {sublabel}
+        </p>
       )}
     </div>
   );
