@@ -92,6 +92,13 @@ export async function POST(req: Request) {
         ipAddress: clientIp(req),
         userAgent: req.headers.get("user-agent") ?? "",
       });
+
+      const { ClientsStore } = await import("@/lib/services/clientsStore");
+      ClientsStore.upsertClient({
+        uid: decoded.uid,
+        email: decoded.email ?? "",
+        name: typeof decoded.name === "string" ? decoded.name : (decoded.email ?? "").split("@")[0],
+      });
     } catch (profileErr) {
       console.warn("[client-login] profile bootstrap notice:", profileErr);
     }

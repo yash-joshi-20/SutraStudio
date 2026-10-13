@@ -11,6 +11,8 @@ import {
   STUDIO_PAYMENT_CONFIG,
   formatCurrencyINR,
 } from "@/config/pricing";
+import { findServiceBySlug, type CanonicalServiceItem } from "@/config/services";
+import { findPackageById } from "@/config/packages";
 import {
   Sparkles,
   CheckCircle2,
@@ -39,11 +41,15 @@ import {
   Share2,
   MessageCircle,
   Zap,
+  Minus,
+  Plus,
 } from "lucide-react";
 
 export interface MasterOrderFormProps {
   initialServiceId?: string;
   initialTierId?: string;
+  /** Quantity deep-linked from /orders?...&qty=N (server-validated 1–100). */
+  initialQty?: number;
   onOrderSuccess?: (order: any) => void;
   className?: string;
 }
@@ -70,12 +76,16 @@ export interface IntakePackageOption {
   iconName: string;
 }
 
-export const INTAKE_PACKAGES: IntakePackageOption[] = [
+/**
+ * Package/retainer catalog options. The visible price of every option is
+ * resolved from the canonical catalog (`@/config/packages`) at module load —
+ * this file never states a price of its own.
+ */
+const INTAKE_PACKAGES_SOURCE: Omit<IntakePackageOption, "price">[] = [
   {
     id: "daily-trend-creator",
     title: "Daily Trend Creator (Flagship)",
     billingCycle: "monthly",
-    price: 19999,
     turnaround: "Daily Active Pipeline",
     popular: true,
     description: "Flagship 30-day production pipeline: 30 custom visual graphics + 30 commercial short videos (1 delivered daily) with daily trend research, QA, and Google Drive vault delivery.",
@@ -94,7 +104,6 @@ export const INTAKE_PACKAGES: IntakePackageOption[] = [
     id: "growth-trend",
     title: "Growth Trend",
     billingCycle: "monthly",
-    price: 14999,
     turnaround: "Priority Milestones",
     description: "High-velocity 30-day atelier delivering 20 branded images + 20 commercial short videos with 30-day content calendar.",
     iconName: "layers",
@@ -112,7 +121,6 @@ export const INTAKE_PACKAGES: IntakePackageOption[] = [
     id: "starter-trend",
     title: "Starter Trend",
     billingCycle: "monthly",
-    price: 9999,
     turnaround: "Scheduled Milestones",
     description: "Essential monthly creative engine: 15 branded images + 15 short videos across 30 days for boutique brands.",
     iconName: "sparkles",
@@ -130,7 +138,6 @@ export const INTAKE_PACKAGES: IntakePackageOption[] = [
     id: "branded-image-pack-5",
     title: "Branded Image Pack (5 Images)",
     billingCycle: "one_time",
-    price: 799,
     turnaround: "Project Milestone",
     description: "Curated 5-image campaign bundle with brand color grading and commercial licensing.",
     iconName: "sparkles",
@@ -145,7 +152,6 @@ export const INTAKE_PACKAGES: IntakePackageOption[] = [
     id: "promotional-reels-pack-3",
     title: "Promotional Reels Pack (3 Reels)",
     billingCycle: "one_time",
-    price: 1299,
     turnaround: "Project Milestone",
     description: "3 commercial promo reels with kinetic motion graphics, sound design, and vertical 9:16 master exports.",
     iconName: "video",
@@ -160,7 +166,6 @@ export const INTAKE_PACKAGES: IntakePackageOption[] = [
     id: "social-carousel-5-slides",
     title: "Social Carousel Pack (5 Slides)",
     billingCycle: "one_time",
-    price: 499,
     turnaround: "Project Milestone",
     description: "Seamless 5-slide educational or product storytelling carousel for Instagram & LinkedIn.",
     iconName: "layers",
@@ -173,84 +178,96 @@ export const INTAKE_PACKAGES: IntakePackageOption[] = [
   },
 ];
 
-export const INTAKE_SERVICES: IntakeServiceOption[] = [
-  {
-    id: "img-creation",
-    title: "Commercial & Product Image Creation",
-    category: "Creative & Brand",
-    basePrice: 99,
-    turnaround: "Project-Based Delivery",
-    description: "High-fidelity commercial product imagery, luxury brand mockups, and advertising visual assets.",
-    iconName: "camera",
-  },
-  {
-    id: "vid-creation",
-    title: "Promotional Video & Reel Production",
-    category: "Video & Motion",
-    basePrice: 199,
-    turnaround: "Project-Based Delivery",
-    description: "Engaging 10-to-30s cinematic video ads, social reels, and studio-narrated commercial clips.",
-    iconName: "video",
-  },
-  {
-    id: "des-brand-identity",
-    title: "Brand Identity Starter",
-    category: "Creative & Brand",
-    basePrice: 2999,
-    turnaround: "3–5 Days SLA",
-    description: "Vector logo mark, typography hierarchy, luxury color palette, and foundational brand guidelines.",
-    iconName: "palette",
-  },
-  {
-    id: "3d-spatial",
-    title: "3D Product Modeling & Visualization",
-    category: "3D & Spatial",
-    basePrice: 999,
-    turnaround: "48–72h SLA",
-    description: "High-precision CAD modeling, studio product lighting setups, and 4K photorealistic spatial renders.",
-    iconName: "box",
-  },
-  {
-    id: "tour-360",
-    title: "360° Virtual Tours",
-    category: "3D & Spatial",
-    basePrice: 2999,
-    turnaround: "3–5 Days SLA",
-    description: "Interactive equirectangular virtual walkthroughs with spatial navigation and custom branding.",
-    iconName: "compass",
-  },
-  {
-    id: "arch-viz",
-    title: "Interior & Exterior 3D Visualization",
-    category: "3D & Spatial",
-    basePrice: 1499,
-    turnaround: "48–72h SLA",
-    description: "Photorealistic interior staging, 3D floor plans, lighting studies, and exterior elevations.",
-    iconName: "building",
-  },
-  {
-    id: "mkt-growth",
-    title: "AI-Powered Digital Marketing & Meta Ads",
-    category: "Social & Ads",
-    basePrice: 4999,
-    turnaround: "48h SLA",
-    description: "End-to-end Facebook & Instagram ad campaign setups, high-converting creative ad variations, and audience optimization.",
-    iconName: "share",
-  },
-  {
-    id: "web-development",
-    title: "Website Design & Development",
-    category: "Digital",
-    basePrice: 4999,
-    turnaround: "5–10 Days SLA",
-    description: "High-performance bespoke Next.js landing pages, boutique e-commerce storefronts, and full-stack web prototypes.",
-    iconName: "monitor",
-  },
+/** Canonical prices — single source of truth (this file holds no local price copy). */
+export const INTAKE_PACKAGES: IntakePackageOption[] = INTAKE_PACKAGES_SOURCE.flatMap((pkg) => {
+  const canonical = findPackageById(pkg.id);
+  if (!canonical || canonical.active === false) return [];
+  return [{ ...pkg, price: canonical.numericPrice }];
+});
+
+/**
+ * Service options offered by the intake picker. Titles, descriptions,
+ * turnaround and price are all resolved from the canonical catalog.
+ */
+const INTAKE_SERVICE_SOURCES: Array<{
+  canonicalId: string;
+  category: IntakeServiceOption["category"];
+  iconName: string;
+}> = [
+  { canonicalId: "img-creation", category: "Creative & Brand", iconName: "camera" },
+  { canonicalId: "vid-creation", category: "Video & Motion", iconName: "video" },
+  { canonicalId: "des-brand-identity-starter", category: "Creative & Brand", iconName: "palette" },
+  { canonicalId: "3d-modeling", category: "3D & Spatial", iconName: "box" },
+  { canonicalId: "360-view", category: "3D & Spatial", iconName: "compass" },
+  { canonicalId: "interior-design", category: "3D & Spatial", iconName: "building" },
+  { canonicalId: "meta-ads", category: "Social & Ads", iconName: "share" },
+  { canonicalId: "website-development", category: "Digital", iconName: "monitor" },
 ];
+
+export const INTAKE_SERVICES: IntakeServiceOption[] = INTAKE_SERVICE_SOURCES.flatMap((src) => {
+  const canonical = findServiceBySlug(src.canonicalId);
+  if (!canonical || canonical.active === false) return [];
+  return [
+    {
+      id: canonical.id,
+      title: canonical.name,
+      category: src.category,
+      basePrice: canonical.numericPrice,
+      turnaround: canonical.turnaround || "Project-Based Delivery",
+      description: canonical.description,
+      iconName: src.iconName,
+    },
+  ];
+});
+
+/** Historical intake / deep-link IDs → canonical catalog IDs. */
+const LEGACY_INTAKE_TO_CANONICAL: Record<string, string> = {
+  "des-brand-identity": "des-brand-identity-starter",
+  "3d-spatial": "3d-modeling",
+  "tour-360": "360-view",
+  "arch-viz": "interior-design",
+  "mkt-growth": "meta-ads",
+  "web-development": "website-development",
+  "meta-ad-bundles": "meta-ads",
+  "social-micro-reels": "vid-creation",
+  "arch-3d": "interior-design",
+  "interior-staging": "interior-design",
+  "virtual-tour-360": "360-view",
+  "product-3d-cgi": "3d-modeling",
+  "custom-web-digital": "website-development",
+  "mobile-app-dev": "website-development",
+};
+
+/** Historical deep-link prefixes → nearest canonical discipline. */
+const LEGACY_PREFIX_TO_CANONICAL: Array<[RegExp, string]> = [
+  [/^(img|image|visuals)/, "img-creation"],
+  [/^(vid|video)/, "vid-creation"],
+  [/^(des|brand)/, "des-brand-identity-starter"],
+  [/^3d/, "3d-modeling"],
+  [/^(tour|360)/, "360-view"],
+  [/^(arch|interior|window)/, "interior-design"],
+  [/^(mkt|meta|market|digital)/, "meta-ads"],
+  [/^(dev|web|mobile|ecom|shop)/, "website-development"],
+];
+
+/** Canonical service category → intake picker category label. */
+const CATEGORY_BY_CANONICAL: Partial<
+  Record<CanonicalServiceItem["category"], IntakeServiceOption["category"]>
+> = {
+  Image: "Creative & Brand",
+  Design: "Creative & Brand",
+  Creative: "Creative & Brand",
+  Video: "Video & Motion",
+  "3D & Spatial": "3D & Spatial",
+  Marketing: "Social & Ads",
+  Development: "Digital",
+  Automation: "Automation",
+};
 
 export function MasterOrderForm({
   initialServiceId,
   initialTierId,
+  initialQty,
   onOrderSuccess,
   className = "",
 }: MasterOrderFormProps) {
@@ -272,16 +289,24 @@ export function MasterOrderForm({
   const [selectedServiceId, setSelectedServiceId] = useState<string>(() => {
     if (!initialServiceId) return "img-creation";
     const clean = initialServiceId.toLowerCase().trim();
-    if (clean === "image-creation" || clean === "img-creation" || clean.startsWith("img-")) return "img-creation";
-    if (clean === "video-creation" || clean === "vid-creation" || clean.startsWith("vid-")) return "vid-creation";
-    if (clean === "brand-identity" || clean.startsWith("des-")) return "des-brand-identity";
-    if (clean === "3d-modeling" || clean.startsWith("3d-")) return "3d-spatial";
-    if (clean === "360-view" || clean.startsWith("tour-")) return "tour-360";
-    if (clean === "interior-design" || clean.startsWith("arch-")) return "arch-viz";
-    if (clean === "digital-marketing" || clean.startsWith("mkt-")) return "mkt-growth";
-    if (clean === "web-development" || clean.startsWith("dev-")) return "web-development";
-    const found = INTAKE_SERVICES.find((s) => s.id === clean);
-    return found ? found.id : "img-creation";
+
+    // 1. Canonical catalog slug/ID or alias — resolves to the canonical item so
+    //    the price shown in the form equals the server-validated price.
+    const canonical = findServiceBySlug(clean);
+    if (canonical && canonical.active !== false) return canonical.id;
+
+    // 2. Historical intake IDs → canonical equivalents.
+    const mapped = LEGACY_INTAKE_TO_CANONICAL[clean];
+    if (mapped) return mapped;
+
+    // 3. Historical deep-link prefixes → nearest canonical discipline.
+    for (const [pattern, target] of LEGACY_PREFIX_TO_CANONICAL) {
+      if (pattern.test(clean)) return target;
+    }
+
+    // 4. Unparseable input falls back to the base discipline so the form and
+    //    the server still agree on what is being ordered.
+    return "img-creation";
   });
   const [selectedPackageId, setSelectedPackageId] = useState<string>(() => {
     if (!initialTierId && !initialServiceId) return "daily-trend-creator";
@@ -294,6 +319,12 @@ export function MasterOrderForm({
   });
   const [selectedTierId, setSelectedTierId] = useState<string>(() => {
     return initialTierId || "daily-trend-creator";
+  });
+
+  // Quantity for per-unit / pack service orders (validated server-side 1–100)
+  const [quantity, setQuantity] = useState<number>(() => {
+    const parsed = Number(initialQty);
+    return Number.isFinite(parsed) && parsed >= 1 ? Math.min(100, Math.floor(parsed)) : 1;
   });
 
   // Direct UPI UTR Input
@@ -360,18 +391,43 @@ export function MasterOrderForm({
   // Active Package & Service Details
   const activePackage =
     INTAKE_PACKAGES.find((p) => p.id === selectedPackageId) || INTAKE_PACKAGES[0];
-  const activeService =
-    INTAKE_SERVICES.find((s) => s.id === selectedServiceId) || INTAKE_SERVICES[0];
+
+  /** Canonical catalog item behind the current service selection (if any). */
+  const activeCanonical = findServiceBySlug(selectedServiceId);
+
+  const activeService = React.useMemo<IntakeServiceOption>(() => {
+    const intakeMatch = INTAKE_SERVICES.find((s) => s.id === selectedServiceId);
+    if (intakeMatch) return intakeMatch;
+    // Deep-linked canonical service (e.g. /orders?service=branded-image-pack-5):
+    // render and price it straight from the canonical catalog.
+    const canonical = findServiceBySlug(selectedServiceId);
+    if (canonical && canonical.active !== false) {
+      return {
+        id: canonical.id,
+        title: canonical.name,
+        category: CATEGORY_BY_CANONICAL[canonical.category] ?? "Creative & Brand",
+        basePrice: canonical.numericPrice,
+        turnaround: canonical.turnaround || "Project-Based Delivery",
+        description: canonical.description,
+        iconName: "sparkles",
+      };
+    }
+    return INTAKE_SERVICES[0];
+  }, [selectedServiceId]);
 
   const isMonthlyRetainer =
     orderMode === "packages"
       ? activePackage.billingCycle === "monthly"
       : selectedTierId === "retainer";
   const isMetaAds =
+    activeService.id === "meta-ads" ||
+    activeService.id === "meta-ads-management" ||
+    activeService.id === "digital-marketing" ||
     activeService.id === "mkt-growth" ||
     activeService.id === "meta-ad-bundles" ||
     activeService.id === "social-micro-reels";
   const isSpatialOr3D =
+    activeCanonical?.category === "3D & Spatial" ||
     activeService.id === "3d-spatial" ||
     activeService.id === "tour-360" ||
     activeService.id === "arch-viz" ||
@@ -380,6 +436,7 @@ export function MasterOrderForm({
     activeService.id === "virtual-tour-360" ||
     activeService.id === "product-3d-cgi";
   const isWebDev =
+    activeCanonical?.category === "Development" ||
     activeService.id === "web-development" ||
     activeService.id === "custom-web-digital" ||
     activeService.id === "mobile-app-dev";
@@ -387,14 +444,13 @@ export function MasterOrderForm({
   // Standard checkout is active across all services and packages
   const isBespokeService = false;
 
-  // Calculate Order Amount
+  // Calculate Order Amount — always canonical price × quantity (server re-validates)
   const orderAmount = React.useMemo(() => {
     if (orderMode === "packages") {
       return activePackage.price;
     }
-    if (typeof activeService.basePrice === "number") return activeService.basePrice;
-    return 99;
-  }, [orderMode, activePackage, activeService]);
+    return activeService.basePrice * Math.max(1, quantity);
+  }, [orderMode, activePackage, activeService, quantity]);
 
   // Validation before proceeding
   const handleNextStep = () => {
@@ -432,7 +488,9 @@ export function MasterOrderForm({
     const hasUtr = Boolean(utrNumber.trim());
     const paymentStatus = hasUtr ? "pending_verification" : "pending";
     const resolvedTitle = orderMode === "packages" ? activePackage.title : activeService.title;
-    const resolvedTierId = orderMode === "packages" ? activePackage.id : (selectedTierId || "starter");
+    // The server resolves `package.tierId` first — it must point at exactly the
+    // item being purchased (canonical service ID or canonical package ID).
+    const resolvedTierId = orderMode === "packages" ? activePackage.id : activeService.id;
     const canonicalServiceId = orderMode === "packages" ? activePackage.id : activeService.id;
 
     const idempotencyKey = `idemp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -453,6 +511,7 @@ export function MasterOrderForm({
         price: orderAmount,
         billingCycle: isMonthlyRetainer ? ("monthly" as const) : ("project" as const),
       },
+      quantity: orderMode === "packages" ? 1 : Math.max(1, quantity),
       serviceDetails: {
         orderMode,
         ...(orderMode === "packages" && {
@@ -640,10 +699,10 @@ export function MasterOrderForm({
               <>
                 <div>
                   <h3 className="font-serif text-lg font-semibold text-[#0F172A] mb-1">
-                    1. Select Studio Service (7 Disciplines)
+                    1. Select Studio Service (8 Disciplines)
                   </h3>
                   <p className="text-xs text-[#64748B]">
-                    Choose from 7 specialized creative technology & design disciplines with guaranteed SLAs.
+                    Choose from 8 specialized creative technology & design disciplines with guaranteed SLAs.
                   </p>
                 </div>
 
@@ -653,7 +712,10 @@ export function MasterOrderForm({
                     return (
                       <div
                         key={srv.id}
-                        onClick={() => setSelectedServiceId(srv.id)}
+                        onClick={() => {
+                          setSelectedServiceId(srv.id);
+                          setQuantity(1);
+                        }}
                         className={`p-4 rounded-2xl border text-left cursor-pointer transition-all flex flex-col justify-between gap-3 ${
                           isSelected
                             ? "bg-[#5C3A1E] text-white border-[#5C3A1E] shadow-sm"
@@ -703,19 +765,49 @@ export function MasterOrderForm({
                   })}
                 </div>
 
-                {/* Service Selection Summary Pill */}
-                <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between">
+                {/* Service Selection Summary, Quantity & Live Total */}
+                <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
                     <span className="font-serif font-bold text-sm text-[#0F172A] block">
                       {activeService.title}
                     </span>
                     <span className="text-xs text-[#64748B]">
-                      {activeService.turnaround} • Standard studio production workflow
+                      {activeService.turnaround} • {formatCurrencyINR(activeService.basePrice)} per unit • Standard studio production workflow
                     </span>
                   </div>
-                  <span className="font-serif font-bold text-lg text-[#5C3A1E]">
-                    ₹{activeService.basePrice.toLocaleString("en-IN")}
-                  </span>
+                  <div className="flex items-center gap-4">
+                    <div className="inline-flex items-center gap-1 rounded-xl border border-[#EADFCB] bg-white p-1">
+                      <button
+                        type="button"
+                        aria-label="Decrease quantity"
+                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                        disabled={quantity <= 1}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-[#4A3B22] hover:bg-[#F4EFE6] disabled:opacity-40"
+                      >
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <span className="min-w-8 text-center text-sm font-semibold text-[#171717]">
+                        {quantity}
+                      </span>
+                      <button
+                        type="button"
+                        aria-label="Increase quantity"
+                        onClick={() => setQuantity((q) => Math.min(100, q + 1))}
+                        disabled={quantity >= 100}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-[#4A3B22] hover:bg-[#F4EFE6] disabled:opacity-40"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">
+                        {quantity > 1 ? `Total (×${quantity})` : "Total"}
+                      </span>
+                      <span className="font-serif font-bold text-lg text-[#5C3A1E]">
+                        {formatCurrencyINR(orderAmount)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </>
             ) : (

@@ -228,6 +228,7 @@ export default function OrdersPage() {
   const [isMasterOrderModalOpen, setIsMasterOrderModalOpen] = useState(false);
   const [initialMasterService, setInitialMasterService] = useState<string | undefined>(undefined);
   const [initialMasterTier, setInitialMasterTier] = useState<string | undefined>(undefined);
+  const [initialMasterQty, setInitialMasterQty] = useState<number>(1);
   const [flowStep, setFlowStep] = useState<
     | "choose_type"
     | "services_select"
@@ -301,6 +302,10 @@ export default function OrdersPage() {
     const refParam = params.get("ref");
     const packageParam = params.get("package");
     const serviceParam = params.get("service");
+    const qtyParam = Number(params.get("qty"));
+    if (Number.isFinite(qtyParam) && qtyParam >= 1) {
+      setInitialMasterQty(Math.min(100, Math.floor(qtyParam)));
+    }
 
     const utmSource = params.get("utm_source");
     const utmMedium = params.get("utm_medium");
@@ -3791,7 +3796,7 @@ export default function OrdersPage() {
             isOpen={isMasterOrderModalOpen}
             onClose={() => setIsMasterOrderModalOpen(false)}
             title="Commission Creative Project"
-            description="Select from 7 Studio Disciplines • Autonomous n8n Workflow Dispatch • Pay by UPI QR"
+            description="Select from 8 Studio Disciplines • Autonomous n8n Workflow Dispatch • Pay by UPI QR"
             maxWidth="2xl"
             variant="auto"
           >
@@ -3799,6 +3804,7 @@ export default function OrdersPage() {
               <MasterOrderForm
                 initialServiceId={initialMasterService}
                 initialTierId={initialMasterTier}
+                initialQty={initialMasterQty}
                 onOrderSuccess={() => {
                   setIsMasterOrderModalOpen(false);
                   loadOrders();

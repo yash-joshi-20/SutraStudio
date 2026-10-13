@@ -167,6 +167,19 @@ export async function POST(req: Request) {
       userAgent: req.headers.get("user-agent") ?? "",
     });
 
+    try {
+      const { ClientsStore } = await import("@/lib/services/clientsStore");
+      ClientsStore.upsertClient({
+        uid: decoded.uid,
+        email,
+        name,
+        phone,
+        company: companyName || "Studio Client",
+      });
+    } catch (clientSyncErr) {
+      console.warn("[register] ClientsStore sync notice:", clientSyncErr);
+    }
+
     const { cookie, maxAge } = await createSessionCookie(body.idToken, {
       rememberMe: body.rememberMe ?? true,
     });

@@ -22,6 +22,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: true, dossier });
     }
 
+    await ClientsStore.syncFromFirestore();
     const directory = ClientsStore.getDirectory(query, tier);
 
     return NextResponse.json({

@@ -1069,9 +1069,10 @@ export async function POST(req: Request) {
       message:
         "Order securely registered in Firestore with server-verified pricing. UPI QR payment intent initialized.",
     });
-  } catch {
+  } catch (err: any) {
+    console.error("[Orders API] Failed to create order in Firestore:", err);
     return NextResponse.json(
-      { error: "Failed to create order in Firestore." },
+      { error: err?.message || "Failed to create order in Firestore." },
       { status: 400 }
     );
   }
