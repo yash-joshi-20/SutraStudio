@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { PortalSidebar } from "@/components/dashboard/PortalSidebar";
 import { KPITile } from "@/components/dashboard/KPITile";
 import { Badge } from "@/components/ui/Badge";
@@ -79,6 +80,7 @@ interface OrderItem {
 }
 
 export default function ClientDashboardPage() {
+  const router = useRouter();
   const { user, profile, resendVerification } = useAuth();
   const [viewMode, setViewMode] = useState<"orders" | "commission" | "zero_state">("orders");
   const isZeroState = viewMode === "zero_state";
@@ -1601,7 +1603,7 @@ export default function ClientDashboardPage() {
                       size="sm"
                       onClick={() => {
                         const targetId = inspectingOrder.package || inspectingOrder.service || "img-creation";
-                        window.location.href = `/orders?service=${encodeURIComponent(targetId)}&repeatOrderId=${encodeURIComponent(inspectingOrder.id)}`;
+                        router.push(`/orders?service=${encodeURIComponent(targetId)}&repeatOrderId=${encodeURIComponent(inspectingOrder.id)}`);
                       }}
                       leftIcon={<Sparkles className="w-3.5 h-3.5 text-[#A98B57]" />}
                     >

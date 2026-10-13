@@ -16,6 +16,7 @@ import {
   CheckCircle,
   GitBranch,
   ShoppingBag,
+  Briefcase,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/authContext";
 
@@ -52,6 +53,7 @@ export function MobileBottomNav() {
     : [
         { name: "Home", href: "/", icon: Home },
         { name: "Services", href: "/services", icon: Sparkles },
+        { name: "Work", href: "/projects", icon: Briefcase },
         { name: "Contact", href: "/contact", icon: Mail },
         { name: "Sign In", href: "/login", icon: User },
       ];

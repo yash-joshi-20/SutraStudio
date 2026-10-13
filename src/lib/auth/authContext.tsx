@@ -35,6 +35,7 @@ import {
   signOut,
   EmailAuthProvider,
 } from "firebase/auth";
+import { useRouter } from "next/navigation";
 import {
   applyPersistence,
   firebaseClientConfigured,
@@ -225,6 +226,7 @@ function toAuthUser(fbUser: {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<ProfileSnapshot | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -595,9 +597,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setRole("guest");
     setIsSessionStale(false);
     if (typeof window !== "undefined") {
-      window.location.href = "/login";
+      router.replace("/login");
+      router.refresh();
     }
-  }, [configurationError]);
+  }, [configurationError, router]);
 
   /** Signs out of this device AND revokes every other refresh token. */
   const logoutEverywhere = useCallback(async () => {
@@ -617,9 +620,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setRole("guest");
     setIsSessionStale(false);
     if (typeof window !== "undefined") {
-      window.location.href = "/login";
+      router.replace("/login");
+      router.refresh();
     }
-  }, [configurationError]);
+  }, [configurationError, router]);
 
   const requestPasswordReset = useCallback(
     async (email: string): Promise<string> => {

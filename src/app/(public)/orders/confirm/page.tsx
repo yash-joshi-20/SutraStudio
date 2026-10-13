@@ -3,8 +3,6 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { useAuth } from "@/lib/auth/authContext";
@@ -390,8 +388,7 @@ function OrderConfirmationContent() {
 
 export default function OrderConfirmPage() {
   return (
-    <div className="min-h-screen bg-[#FAF9F5] flex flex-col justify-between">
-      <Navbar />
+    <div className="flex-1 bg-[#FAF9F5] flex flex-col justify-between">
       <main className="flex-1">
         <Suspense
           fallback={
@@ -403,7 +400,6 @@ export default function OrderConfirmPage() {
           <OrderConfirmationContent />
         </Suspense>
       </main>
-      <Footer />
     </div>
   );
 }

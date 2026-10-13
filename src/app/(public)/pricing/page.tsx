@@ -1,9 +1,6 @@
 "use client";
 
 import React from "react";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
-import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import {
@@ -45,9 +42,7 @@ const FAQS = [
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
-      <Navbar />
-
+    <div className="flex-1 flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
       <main id="main-content" className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-28 sm:py-16 w-full flex flex-col items-center justify-center space-y-16">
         {/* Reusable Canonical Pricing Catalog with Responsive CustomDropdowns */}
         <PricingCatalogSection variant="page" />
@@ -204,9 +199,6 @@ export default function PricingPage() {
           </div>
         </div>
       </main>
-
-      <Footer />
-      <MobileBottomNav />
     </div>
   );
 }

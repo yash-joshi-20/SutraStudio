@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import HomePage from "./HomeClient";
+import HomePage from "../HomeClient";
 
 export const dynamic = "force-dynamic";
 

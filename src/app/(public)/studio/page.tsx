@@ -1,7 +1,4 @@
 import React from "react";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
-import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { VideoCard } from "@/components/media/VideoCard";
 import { SutraParticleWings } from "@/components/canvas/SutraParticleWings";
 import { Interactive3DViewer } from "@/components/spatial/Interactive3DViewer";
@@ -16,9 +13,7 @@ import { Sparkles, Compass, Cpu, Palette, Box, Layers, Globe, Smartphone, ArrowR
 
 export default function StudioPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A]">
-      <Navbar />
-
+    <div className="flex-1 flex flex-col bg-[#F8F5EF] text-[#0F172A]">
       <main id="main-content" className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 pb-28 sm:pb-20 w-full space-y-14 sm:space-y-20">
         {/* Intro */}
         <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4">
@@ -306,9 +301,6 @@ export default function StudioPage() {
           </div>
         </div>
       </main>
-
-      <Footer />
-      <MobileBottomNav />
     </div>
   );
 }

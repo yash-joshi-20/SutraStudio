@@ -80,7 +80,8 @@ function AdminLoginForm() {
   // Already signed in as admin - redirect immediately
   useEffect(() => {
     if (isAuthenticated && !authLoading && role === "admin" && !loading) {
-      window.location.replace(returnTo);
+      router.replace(returnTo);
+      router.refresh();
     }
   }, [isAuthenticated, authLoading, role, returnTo, loading]);
 
@@ -131,7 +132,8 @@ function AdminLoginForm() {
       soundSystem.play("welcome");
 
       // The server set an httpOnly session cookie carrying the admin role claim.
-      window.location.replace(returnTo);
+      router.replace(returnTo);
+      router.refresh();
     } catch (err: any) {
       console.error("[Admin Login Error]", err);
       const code =

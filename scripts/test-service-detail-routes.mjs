@@ -125,9 +125,24 @@ check("services/page.tsx pushes history state when selecting and closing service
   assert(servicesPageContent.includes("window.history.pushState({}, \"\", cleanUrl)"), "Must push clean state on close");
 });
 
-check("next.config.ts rewrites /services/:slug to /services?service=:slug", () => {
-  assert(nextConfigContent.includes('source: "/services/:slug"'), "Must have source /services/:slug");
-  assert(nextConfigContent.includes('destination: "/services?service=:slug"'), "Must rewrite to /services?service=:slug");
+check("Dynamic /services/[slug] route exists and 404s invalid slugs", () => {
+  const detailPagePath = path.join(
+    ROOT,
+    "src",
+    "app",
+    "(public)",
+    "services",
+    "[slug]",
+    "page.tsx"
+  );
+  assert(fs.existsSync(detailPagePath), "services/[slug]/page.tsx must exist");
+  const detailPageContent = fs.readFileSync(detailPagePath, "utf8");
+  assert(detailPageContent.includes("notFound()"), "Invalid slugs must render 404 via notFound()");
+  assert(detailPageContent.includes("generateStaticParams"), "Route must pre-render catalog slugs");
+  assert(
+    !nextConfigContent.includes('source: "/services/:slug"'),
+    "Legacy /services/:slug rewrite must be removed so the real route serves it"
+  );
 });
 
 console.log("\n--> 6. Verifying Order CTA Navigation Parameters...");

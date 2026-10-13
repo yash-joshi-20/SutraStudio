@@ -3,9 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
-import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
@@ -178,9 +175,7 @@ export default function MobileAppLandingPage() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
-      <Navbar />
-
+    <div className="flex-1 flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
       <main id="main-content" className="flex-1">
         {/* HERO SECTION */}
         <section className="relative overflow-hidden py-14 sm:py-20 lg:py-24 border-b border-[#EADFCB]">
@@ -615,9 +610,6 @@ export default function MobileAppLandingPage() {
           </Button>
         </div>
       </Modal>
-
-      <Footer />
-      <MobileBottomNav />
     </div>
   );
 }

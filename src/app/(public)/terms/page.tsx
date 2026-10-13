@@ -1,8 +1,5 @@
 import React from "react";
 import Link from "next/link";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
-import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { FileText, CheckCircle2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
@@ -13,9 +10,7 @@ export const metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
-      <Navbar />
-
+    <div className="flex-1 flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
       <main id="main-content" className="flex-1 py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto space-y-8">
           <div className="space-y-3 pb-6 border-b border-[#EADFCB]">
@@ -93,9 +88,6 @@ export default function TermsPage() {
           </div>
         </div>
       </main>
-
-      <Footer />
-      <MobileBottomNav />
     </div>
   );
 }

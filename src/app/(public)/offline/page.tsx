@@ -2,9 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
-import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { Button } from "@/components/ui/Button";
 import { WifiOff, RefreshCw, Home, HardDrive, Smartphone } from "lucide-react";
 
@@ -31,9 +28,7 @@ export default function OfflinePage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A]">
-      <Navbar />
-
+    <div className="flex-1 flex flex-col bg-[#F8F5EF] text-[#0F172A]">
       <main id="main-content" className="flex-1 flex items-center justify-center p-6 py-20">
         <div className="max-w-md w-full p-8 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-xl text-center space-y-6">
           <div className="w-14 h-14 rounded-2xl bg-[#FEF3F2] border border-[#FECDCA] text-[#B42318] flex items-center justify-center mx-auto">
@@ -82,9 +77,6 @@ export default function OfflinePage() {
           </div>
         </div>
       </main>
-
-      <Footer />
-      <MobileBottomNav />
     </div>
   );
 }

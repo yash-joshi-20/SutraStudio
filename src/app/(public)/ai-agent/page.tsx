@@ -2,9 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
-import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { LotusSymbol } from "@/components/brand/SutraLogo";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -85,9 +82,7 @@ export default function PhoneAiAgentPage() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
-      <Navbar />
-
+    <div className="flex-1 flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
       <main id="main-content" className="flex-1 py-4 sm:py-8 px-3 sm:px-6 lg:px-8 app-container-cap pb-28 md:pb-12">
         {/* Large screen 3-panel layout / Mobile full-screen call stack */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
@@ -321,9 +316,6 @@ export default function PhoneAiAgentPage() {
           </div>
         </Modal>
       </main>
-
-      <Footer />
-      <MobileBottomNav />
     </div>
   );
 }

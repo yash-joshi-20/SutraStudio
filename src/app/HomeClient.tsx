@@ -3,9 +3,6 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
-import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { Button } from "@/components/ui/Button";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Modal } from "@/components/ui/Modal";
@@ -73,11 +70,9 @@ export default function HomePage() {
     HERO_DISCIPLINES.find((d) => d.id === activeHeroDiscipline) || HERO_DISCIPLINES[0];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
+    <div className="flex-1 flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
       {/* First-Visit Atelier Cinematic Landing Splash with Animated 'S' Emblem */}
       <SutraStudioIntroLanding />
-
-      <Navbar />
 
       <main id="main-content" className="flex-1 pb-28 md:pb-0 overflow-x-hidden">
         {/* ===================================================
@@ -365,9 +360,9 @@ export default function HomePage() {
                     View All Services (15+)
                   </Button>
                 </Link>
-                <Link href="/pricing">
+                <Link href="/contact">
                   <Button variant="outline" size="md" className="shadow-xs text-xs font-semibold bg-[#FFFDF9] hover:bg-[#F8F5EF] text-[#5C3A1E] border-[#EADFCB]">
-                    Pricing Guide
+                    Request a Quote
                   </Button>
                 </Link>
               </div>
@@ -398,9 +393,9 @@ export default function HomePage() {
                     Read More: Full Services Catalog
                   </Button>
                 </Link>
-                <Link href="/pricing">
+                <Link href="/contact">
                   <Button variant="secondary" size="md" className="text-xs font-medium">
-                    View Retainers &amp; Pricing
+                    Talk to the Studio
                   </Button>
                 </Link>
               </div>
@@ -916,9 +911,6 @@ export default function HomePage() {
           </div>
         </section>
       </main>
-
-      <Footer />
-      <MobileBottomNav />
 
       {/* Showreel Demo Modal */}
       <Modal

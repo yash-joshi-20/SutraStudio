@@ -1,7 +1,5 @@
 import React from "react";
 import Link from "next/link";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
 import { ShieldCheck, RotateCcw, AlertCircle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
@@ -12,9 +10,7 @@ export const metadata = {
 
 export default function CancellationRefundPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAF9F5] text-[#171717] selection:bg-[#A98B57]/20 selection:text-[#171717]">
-      <Navbar />
-
+    <div className="flex-1 flex flex-col bg-[#FAF9F5] text-[#171717] selection:bg-[#A98B57]/20 selection:text-[#171717]">
       <main id="main-content" className="flex-1 py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto space-y-8">
           <div className="space-y-3 pb-6 border-b border-[#E5E1D8]">
@@ -101,8 +97,6 @@ export default function CancellationRefundPage() {
           </div>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

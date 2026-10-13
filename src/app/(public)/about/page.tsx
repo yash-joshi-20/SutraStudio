@@ -3,9 +3,6 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
-import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -65,9 +62,7 @@ const MILESTONES = [
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
-      <Navbar />
-
+    <div className="flex-1 flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
       <main id="main-content" className="flex-1 pb-28 md:pb-20">
         {/* ===================================================
             1. HERO SECTION (Split Editorial)
@@ -355,9 +350,6 @@ export default function AboutPage() {
           </div>
         </section>
       </main>
-
-      <Footer />
-      <MobileBottomNav />
     </div>
   );
 }
