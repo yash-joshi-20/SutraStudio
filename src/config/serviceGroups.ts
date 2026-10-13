@@ -112,7 +112,7 @@ const GROUP_DEFINITIONS: Array<{
     title: "Logo & Brand Design",
     blurb:
       "Logo design, logo variations and export formats, and the brand identity system around them.",
-    slugs: ["brand-identity-starter"],
+    slugs: ["logo-design", "brand-identity-starter"],
   },
   {
     id: "ads-graphics",
