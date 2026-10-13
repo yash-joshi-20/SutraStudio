@@ -83,6 +83,8 @@ import { RouteGuard } from "@/components/auth/RouteGuard";
 import { OrderReceiptModal, ReceiptOrderData } from "@/components/orders/OrderReceiptModal";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { AdminBrandPromptsView } from "@/components/admin/AdminBrandPromptsView";
+import { AdminServicesManagementView } from "@/components/admin/AdminServicesManagementView";
+import { AdminPackagesManagementView } from "@/components/admin/AdminPackagesManagementView";
 import { computeOrderProgress, computeN8nWorkflowProgress } from "@/lib/services/orderProgress";
 import type {
   KnowledgeBaseEntry,
@@ -6711,6 +6713,16 @@ const [adminDataError, setAdminDataError] = useState("");
               )}
             </div>
           )}
+
+          {/* ========================================================
+              TAB: SERVICES & PRICING MANAGEMENT
+              ======================================================== */}
+          {activeTab === "services" && <AdminServicesManagementView />}
+
+          {/* ========================================================
+              TAB: MONTHLY RETAINERS & PRODUCTION PACKAGES
+              ======================================================== */}
+          {activeTab === "plans" && <AdminPackagesManagementView />}
 
           {/* ========================================================
               TAB: NOTIFICATIONS & AUTOMATION CRON SCHEDULER

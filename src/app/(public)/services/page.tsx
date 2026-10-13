@@ -53,14 +53,17 @@ import { motion, AnimatePresence } from "framer-motion";
  */
 const publicServices = SUTRA_SERVICES.filter((s) => s.active !== false);
 
-/** Customer-facing catalog filters — grouped by what the customer wants to buy. */
+/** Customer-facing catalog filters — 8 distinct creative and engineering disciplines. */
 const CATEGORIES = [
   { value: "All", label: "All Services" },
-  { value: "logo-brand", label: "Logo & Brand" },
-  { value: "ads-graphics", label: "Ads & Graphics" },
-  { value: "video-reels", label: "Video & Reels" },
+  { value: "image-design", label: "Image & Creative" },
+  { value: "video-advertising", label: "Video & Reels" },
+  { value: "logo-branding", label: "Logo & Branding" },
   { value: "spatial-3d", label: "3D & 360°" },
-  { value: "web-digital", label: "Web & Digital" },
+  { value: "interior-design", label: "Interior Design" },
+  { value: "digital-marketing", label: "Digital Marketing" },
+  { value: "web-development", label: "Web Development" },
+  { value: "app-development", label: "App Development" },
 ];
 
 function matchesSearch(entry: ServiceCatalogEntry, query: string): boolean {

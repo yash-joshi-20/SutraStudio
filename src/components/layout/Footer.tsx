@@ -40,6 +40,7 @@ export function Footer() {
     { label: "Craft & Technology", href: "/studio" },
     { label: "Curated Projects", href: "/projects" },
     { label: "Verified Service Pricing", href: "/services" },
+    { label: "Production Packages", href: "/packages" },
     { label: "Mobile App for iOS & Android", href: "/mobile-app" },
     { label: "Client Discovery Desk", href: "/contact" },
   ];

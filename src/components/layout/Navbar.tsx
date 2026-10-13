@@ -24,6 +24,7 @@ interface NavLinkItem {
 
 const PUBLIC_NAV_LINKS: NavLinkItem[] = [
   { name: "Services", href: "/services" },
+  { name: "Packages", href: "/packages" },
   { name: "Studio", href: "/studio" },
   { name: "Projects", href: "/projects" },
   { name: "Contact", href: "/contact" },

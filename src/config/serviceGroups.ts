@@ -22,11 +22,14 @@ import {
 } from "@/config/services";
 
 export type ServiceGroupId =
-  | "logo-brand"
-  | "ads-graphics"
-  | "video-reels"
+  | "image-design"
+  | "video-advertising"
+  | "logo-branding"
   | "spatial-3d"
-  | "web-digital";
+  | "interior-design"
+  | "digital-marketing"
+  | "web-development"
+  | "app-development";
 
 export interface ServiceCatalogOption {
   /** Customer-facing quantity label, e.g. "1 image", "3 images", "5 reels". */
@@ -95,9 +98,7 @@ const QUANTITY_FAMILIES: Record<
 };
 
 /**
- * Group definitions — only services that the canonical catalog actually
- * offers are listed here. Unknown slugs are skipped at resolution time, so
- * this file can never invent a deliverable or a price.
+ * Group definitions — 8 explicit categories conforming to the approved service catalog.
  */
 const GROUP_DEFINITIONS: Array<{
   id: ServiceGroupId;
@@ -107,19 +108,11 @@ const GROUP_DEFINITIONS: Array<{
   slugs: string[];
 }> = [
   {
-    id: "logo-brand",
+    id: "image-design",
     index: "A",
-    title: "Logo & Brand Design",
+    title: "Image & Creative Design",
     blurb:
-      "Logo design, logo variations and export formats, and the brand identity system around them.",
-    slugs: ["logo-design", "brand-identity-starter"],
-  },
-  {
-    id: "ads-graphics",
-    index: "B",
-    title: "Advertising Images & Graphics",
-    blurb:
-      "Social media ad images, promotional and festival campaign creatives, website banners, carousels, image clean-up and post caption copy.",
+      "Social media ad visuals, promotional campaign creatives, website banners, carousel decks, and product image retouching.",
     slugs: [
       "branded-social-image",
       "basic-template-image",
@@ -127,15 +120,14 @@ const GROUP_DEFINITIONS: Array<{
       "banner-cover-design",
       "social-carousel-5-slides",
       "product-image-cleanup",
-      "caption-hashtags",
     ],
   },
   {
-    id: "video-reels",
-    index: "C",
-    title: "Video & Reels",
+    id: "video-advertising",
+    index: "B",
+    title: "Video & Advertising",
     blurb:
-      "Short promotional reels, product and service advertisement videos, and template video edits — single units or value packs.",
+      "Dynamic commercial promo reels, short advertising video cuts, AI product reels, and template motion graphics.",
     slugs: [
       "promotional-reel-30s",
       "ai-product-reel-30s",
@@ -143,41 +135,75 @@ const GROUP_DEFINITIONS: Array<{
     ],
   },
   {
+    id: "logo-branding",
+    index: "C",
+    title: "Logo & Branding",
+    blurb:
+      "Bespoke vector logo design, monogram lockups, brand color systems, and comprehensive style guide kits.",
+    slugs: ["logo-design", "brand-identity-starter"],
+  },
+  {
     id: "spatial-3d",
     index: "D",
-    title: "3D, Interior & 360°",
+    title: "3D & Visualization",
     blurb:
-      "3D product visualisation, interior and exterior renders, floor plans, architectural walkthroughs and 360° virtual tours.",
+      "3D product modeling, photorealistic 4K CAD renders, 10s motion animations, and 360° virtual tours.",
     slugs: [
       "simple-3d-model",
       "3d-render-from-model",
       "simple-3d-animation-10s",
-      "basic-interior-viz-view",
-      "single-room-starter",
-      "3d-floor-plan",
-      "facade-elevation-render",
       "digital-360-tour-supplied",
       "local-360-capture-tour",
     ],
   },
   {
-    id: "web-digital",
+    id: "interior-design",
     index: "E",
-    title: "Website & Digital Services",
+    title: "Interior Design & Architecture",
     blurb:
-      "Website design and development, landing pages, e-commerce, app prototypes and other verified digital services.",
+      "Interior spatial CGI, residential/commercial room concepts, isometric 3D floor plans, and exterior facade renders.",
+    slugs: [
+      "basic-interior-viz-view",
+      "single-room-starter",
+      "3d-floor-plan",
+      "facade-elevation-render",
+    ],
+  },
+  {
+    id: "digital-marketing",
+    index: "F",
+    title: "Digital Marketing & Strategy",
+    blurb:
+      "Meta Ads campaign management, 30-day editorial content planning, trending topic intelligence, and organic SEO.",
+    slugs: [
+      "social-media-management",
+      "meta-ads-management",
+      "30-day-content-calendar",
+      "trending-topic-research",
+      "seo-starter",
+      "caption-hashtags",
+    ],
+  },
+  {
+    id: "web-development",
+    index: "G",
+    title: "Web Development",
+    blurb:
+      "High-conversion Next.js 16 landing pages, 5-page studio web architecture, boutique e-commerce, and SaaS prototypes.",
     slugs: [
       "landing-page-starter",
       "business-website-5-pages",
       "starter-ecommerce",
       "web-app-prototype",
-      "mobile-app-prototype",
-      "30-day-content-calendar",
-      "trending-topic-research",
-      "social-media-management",
-      "meta-ads-management",
-      "seo-starter",
     ],
+  },
+  {
+    id: "app-development",
+    index: "H",
+    title: "App Development",
+    blurb:
+      "Cross-platform mobile app prototypes, user journey mapping, and interactive iOS & Android UI/UX architectures.",
+    slugs: ["mobile-app-prototype"],
   },
 ];
 

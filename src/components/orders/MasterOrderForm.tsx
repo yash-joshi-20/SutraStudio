@@ -176,6 +176,66 @@ const INTAKE_PACKAGES_SOURCE: Omit<IntakePackageOption, "price">[] = [
       "1080×1350 High-Res Master Exports",
     ],
   },
+  {
+    id: "pkg-branding-logo-bundle",
+    title: "Branding & Logo Identity Bundle",
+    billingCycle: "one_time",
+    turnaround: "5-7 Days",
+    description: "Complete visual identity system: Custom logo mark, typography hierarchy, brand color palette, and business stationery kit.",
+    iconName: "palette",
+    features: [
+      "3 Bespoke Logo Concepts + Final Master Vector Export",
+      "Comprehensive Brand Guidelines & Color Harmonies",
+      "Typography Scale & Font Pairing Spec",
+      "Business Stationery Kit (Business Card & Letterhead)",
+      "Full Commercial Copyright License & Transfer",
+    ],
+  },
+  {
+    id: "pkg-digital-marketing-bundle",
+    title: "Digital Marketing & Growth Bundle",
+    billingCycle: "one_time",
+    turnaround: "48-72h",
+    description: "End-to-end performance marketing launch pack: high-converting Meta ad creatives, targeted copywriting hooks, and audience segmentation architecture.",
+    iconName: "share",
+    features: [
+      "5x High-Converting Meta/Instagram Ad Creatives",
+      "Persuasive Ad Copywriting & Hook Variations",
+      "Audience Targeting & Campaign Structure Guide",
+      "A/B Creative Test Matrix",
+      "1 Consolidated Revision Round",
+    ],
+  },
+  {
+    id: "pkg-real-estate-viz-bundle",
+    title: "Real Estate & Spatial Viz Bundle",
+    billingCycle: "one_time",
+    turnaround: "5-7 Days",
+    description: "Luxury spatial showcase: 3 photorealistic interior renders, 1 interactive 360° virtual tour panorama, and lighting staging.",
+    iconName: "building",
+    features: [
+      "3x Photorealistic 4K Interior Renders",
+      "1x Interactive 360° Panorama Virtual Tour",
+      "Day & Night Architectural Lighting Staging",
+      "High-Resolution Print & Web Master Exports",
+      "1 Consolidated Revision Round",
+    ],
+  },
+  {
+    id: "pkg-business-web-launch-bundle",
+    title: "Business Web & Launch Bundle",
+    billingCycle: "one_time",
+    turnaround: "7-10 Days",
+    description: "Complete digital flagship: High-performance Next.js responsive website, SEO optimization, lead intake forms, and cloud deployment.",
+    iconName: "monitor",
+    features: [
+      "Modern 5-Page Responsive Web Application (Next.js)",
+      "High-Conversion Lead Capture & Contact Ingestion",
+      "Full Mobile & Desktop Responsive Optimization",
+      "Core Web Vitals & Technical SEO Architecture",
+      "Vercel Cloud Deployment & Domain DNS Link",
+    ],
+  },
 ];
 
 /** Canonical prices — single source of truth (this file holds no local price copy). */
@@ -196,6 +256,7 @@ const INTAKE_SERVICE_SOURCES: Array<{
 }> = [
   { canonicalId: "img-creation", category: "Creative & Brand", iconName: "camera" },
   { canonicalId: "vid-creation", category: "Video & Motion", iconName: "video" },
+  { canonicalId: "des-logo-design", category: "Creative & Brand", iconName: "palette" },
   { canonicalId: "des-brand-identity-starter", category: "Creative & Brand", iconName: "palette" },
   { canonicalId: "3d-modeling", category: "3D & Spatial", iconName: "box" },
   { canonicalId: "360-view", category: "3D & Spatial", iconName: "compass" },
@@ -222,6 +283,12 @@ export const INTAKE_SERVICES: IntakeServiceOption[] = INTAKE_SERVICE_SOURCES.fla
 
 /** Historical intake / deep-link IDs → canonical catalog IDs. */
 const LEGACY_INTAKE_TO_CANONICAL: Record<string, string> = {
+  "logo-design": "des-logo-design",
+  "des-logo-design": "des-logo-design",
+  "branding-logo-bundle": "pkg-branding-logo-bundle",
+  "digital-marketing-bundle": "pkg-digital-marketing-bundle",
+  "real-estate-viz-bundle": "pkg-real-estate-viz-bundle",
+  "business-web-launch-bundle": "pkg-business-web-launch-bundle",
   "des-brand-identity": "des-brand-identity-starter",
   "3d-spatial": "3d-modeling",
   "tour-360": "360-view",

@@ -631,6 +631,154 @@ export const APPROVED_COMMISSION_PACKAGES: CommissionPackage[] = [
     active: true,
   },
   {
+    id: "pkg-branding-logo-bundle",
+    slug: "branding-logo-bundle",
+    name: "Branding & Logo Bundle",
+    price: 3999,
+    numericPrice: 3999,
+    pricingType: "fixed",
+    formattedPrice: "₹3,999",
+    tagline: "Primary Logo Suite + Guidelines + 5 Social Creatives",
+    description:
+      "Complete brand foundation pack combining bespoke vector logo design, official color/typography style guide, and 5 branded launch graphics.",
+    turnaround: "3–4 Days SLA",
+    estimatedTurnaround: "3–4 Days",
+    features: [
+      "Custom Primary Logo Design & Monogram Suite",
+      "Vector Master Files (SVG, PDF, PNG)",
+      "Curated Brand Guidelines & Color/Font Hierarchy",
+      "5x Custom Branded Visual Launch Graphics",
+      "Private Google Drive Vault staging",
+      "2 Revision rounds included",
+    ],
+    deliverables: [
+      "Vector Logo Suite (SVG, PDF, PNG)",
+      "Brand Guidelines Deck (PDF)",
+      "5x Branded Visual Launch Graphics",
+      "Private Google Drive Vault archive",
+    ],
+    quantity: 6,
+    duration: "One-time delivery",
+    revisionPolicy: "2 revision rounds",
+    exclusions: ["3D CAD packaging design excluded"],
+    popular: true,
+    ctaText: "Order Branding Bundle - ₹3,999",
+    ctaHref: "/orders?package=pkg-branding-logo-bundle",
+    ctaTarget: "/orders?package=pkg-branding-logo-bundle",
+    revisionRounds: 2,
+    active: true,
+  },
+  {
+    id: "pkg-digital-marketing-bundle",
+    slug: "digital-marketing-bundle",
+    name: "Digital Marketing Campaign Bundle",
+    price: 5999,
+    numericPrice: 5999,
+    pricingType: "fixed",
+    formattedPrice: "₹5,999",
+    tagline: "Meta Campaign Setup + 5 Creatives + 3 Promo Reels",
+    description:
+      "High-converting paid advertising and organic launch bundle with targeted Meta campaign structure, 5 static creatives, and 3 motion reels.",
+    turnaround: "4–5 Days SLA",
+    estimatedTurnaround: "4–5 Days",
+    features: [
+      "Meta Ads Campaign Setup & Audience Blueprint",
+      "5x High-Converting Ad Creative Images (Multi-Ratio)",
+      "3x Commercial Video Reels (15–30s)",
+      "Headline, body copy & hook matrix",
+      "2 Revision rounds included",
+    ],
+    deliverables: [
+      "Meta Ads Blueprint & Audience Architecture",
+      "5x Ad Creative Images",
+      "3x Commercial Video Reels",
+      "Copywriting & Hook Matrix Deck",
+    ],
+    quantity: 8,
+    duration: "One-time delivery",
+    revisionPolicy: "2 revision rounds",
+    exclusions: ["Media advertising spend billed to client Meta account"],
+    popular: false,
+    ctaText: "Order Marketing Bundle - ₹5,999",
+    ctaHref: "/orders?package=pkg-digital-marketing-bundle",
+    ctaTarget: "/orders?package=pkg-digital-marketing-bundle",
+    revisionRounds: 2,
+    active: true,
+  },
+  {
+    id: "pkg-real-estate-viz-bundle",
+    slug: "real-estate-viz-bundle",
+    name: "Real Estate & 3D Visualization Bundle",
+    price: 8999,
+    numericPrice: 8999,
+    pricingType: "fixed",
+    formattedPrice: "₹8,999",
+    tagline: "3D Floor Plan + 3 Interior Views + Interactive 360° Tour",
+    description:
+      "Complete spatial visualization suite for real estate developers and designers featuring 3D cutaways, interior CGI, and WebGL virtual tours.",
+    turnaround: "5–7 Days SLA",
+    estimatedTurnaround: "5–7 Days",
+    features: [
+      "1x Isometric 3D Cutaway Floor Plan (4K)",
+      "3x 4K Architectural Interior Perspective Renders",
+      "Interactive 360° WebGL Virtual Tour (Up to 5 nodes)",
+      "Photometric daylight and evening lighting passes",
+      "Embeddable tour code & private Drive Vault staging",
+    ],
+    deliverables: [
+      "1x 4K 3D Floor Plan Render",
+      "3x 4K Interior Perspective Views",
+      "Interactive 360° Virtual Tour with hotspots",
+    ],
+    quantity: 4,
+    duration: "One-time delivery",
+    revisionPolicy: "2 revision rounds",
+    exclusions: ["Physical on-site capture outside perimeter requires custom quote"],
+    popular: false,
+    ctaText: "Order Real Estate Bundle - ₹8,999",
+    ctaHref: "/orders?package=pkg-real-estate-viz-bundle",
+    ctaTarget: "/orders?package=pkg-real-estate-viz-bundle",
+    revisionRounds: 2,
+    active: true,
+  },
+  {
+    id: "pkg-business-web-launch-bundle",
+    slug: "business-web-launch-bundle",
+    name: "Business Website & Launch Bundle",
+    price: 18999,
+    numericPrice: 18999,
+    pricingType: "fixed",
+    formattedPrice: "₹18,999",
+    tagline: "5-Page Next.js 16 Web Platform + Logo + 10 Launch Assets",
+    description:
+      "Comprehensive digital launch package delivering a custom 5-page responsive Next.js web platform, primary logo mark, and 10 branded social creatives.",
+    turnaround: "7–10 Days SLA",
+    estimatedTurnaround: "7–10 Days",
+    features: [
+      "Up to 5 Responsive Next.js 16 Custom Pages (Home, About, Services, Work, Contact)",
+      "Vector Primary Logo Design & Monogram Suite",
+      "10x Branded Social & Launch Marketing Graphics",
+      "SEO metadata tags, Google Analytics & Vercel deployment",
+      "Automated lead intake form with email notification",
+      "3 Revision rounds included",
+    ],
+    deliverables: [
+      "Production Next.js Codebase deployed on live domain",
+      "Vector Logo Suite (SVG, PDF, PNG)",
+      "10x Branded Visual Assets",
+    ],
+    quantity: 12,
+    duration: "One-time delivery",
+    revisionPolicy: "3 revision rounds",
+    exclusions: ["Custom SaaS multi-tenant portals excluded"],
+    popular: true,
+    ctaText: "Order Web Launch Bundle - ₹18,999",
+    ctaHref: "/orders?package=pkg-business-web-launch-bundle",
+    ctaTarget: "/orders?package=pkg-business-web-launch-bundle",
+    revisionRounds: 3,
+    active: true,
+  },
+  {
     id: "commission-bespoke-project",
     slug: "bespoke-project-quote",
     name: "Bespoke Project Scope",
@@ -723,9 +871,29 @@ export function findPackageById(
 export const resolvePackageById = findPackageById;
 
 /**
+ * Union type for any approved studio package
+ */
+export type AnyStudioPackage =
+  | RetainerPackage
+  | StandaloneDeliverablePackage
+  | CommissionPackage;
+
+/**
+ * Retrieve all approved studio packages
+ */
+export function getAllApprovedPackages(): AnyStudioPackage[] {
+  return [
+    ...APPROVED_MONTHLY_PACKAGES,
+    ...APPROVED_COMMISSION_PACKAGES.filter((p) => p.numericPrice > 0),
+    ...APPROVED_STANDALONE_PACKAGES,
+  ];
+}
+
+/**
  * Check if a package uses bundle/pack pricing
  */
 export function isPackPricing(item: { pricingType?: string }): boolean {
   return item.pricingType === "pack";
 }
+
 
