@@ -812,6 +812,43 @@ export const CANONICAL_SERVICES: CanonicalServiceItem[] = [
     active: true,
   },
   {
+    id: "des-logo-design",
+    slug: "logo-design",
+    name: "Logo Design",
+    category: "Design",
+    tagline: "Bespoke Brand Logo & Vector Suite",
+    description: "Custom primary logo concept crafted with precision vector geometric guidelines, variations, and export formats.",
+    numericPrice: 1999,
+    pricingType: "fixed",
+    startingPrice: "₹1,999",
+    priceDisplay: "₹1,999 fixed",
+    isCustomQuote: false,
+    ctaText: "Order Logo Design",
+    ctaHref: "/orders?service=logo-design",
+    ctaTarget: "/orders?service=logo-design",
+    deliverables: [
+      "Custom Primary Logo Design & Monogram Mark",
+      "Vector Master Files (SVG, PDF, High-Res PNG)",
+      "Dark & Light Background Adaptation Variations",
+      "Full commercial usage rights & copyright release",
+    ],
+    subBullets: ["Custom Primary Logo", "Vector SVG, PDF & PNG", "1–2 Days SLA"],
+    quantity: 1,
+    duration: "One-time delivery",
+    revisionPolicy: "2 revision rounds",
+    estimatedTurnaround: "1–2 Days",
+    turnaround: "1–2 Days",
+    exclusions: ["Comprehensive brand book guide excluded (included in Brand Identity Starter)"],
+    icon: "Image",
+    thumbnail: "/images/services/image-creation.webp",
+    badge: "Vector Logo",
+    mediaType: "image",
+    mediaFormat: "Vector SVG, PDF & PNG Master Files",
+    pipelineEngine: "Brand Identity Engine",
+    workflow: "image",
+    active: true,
+  },
+  {
     id: "des-brand-identity-starter",
     slug: "brand-identity-starter",
     name: "Brand Identity Starter",
@@ -2336,7 +2373,8 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
     slug === "meta-ads" ||
     slug === "social-media-management" ||
     slug === "meta-ads-management" ||
-    slug === "brand-identity-starter"
+    slug === "brand-identity-starter" ||
+    slug === "logo-design"
   ) {
     return {
       intendedAudience:
