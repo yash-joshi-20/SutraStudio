@@ -143,8 +143,25 @@ async function postJson(url: string, body: unknown) {
 }
 
 function friendlyAuthError(code?: string, fallbackMessage?: string): string {
-  if (code) {
-    switch (code) {
+  let effectiveCode = code;
+  if (!effectiveCode && typeof fallbackMessage === "string") {
+    const match = fallbackMessage.match(/auth\/[a-z0-9-]+/i);
+    if (match) effectiveCode = match[0].toLowerCase();
+  }
+
+  if (effectiveCode) {
+    switch (effectiveCode) {
+      case "auth/operation-not-allowed":
+        return "Google Sign-In is not enabled yet in your Firebase Project. Please enable Google provider in Firebase Console > Authentication > Sign-in method, or sign in using your email and password.";
+      case "auth/unauthorized-domain":
+        return "Domain authorization notice: If developing locally, ensure you open http://localhost:3000 (not 127.0.0.1). Otherwise, add your current domain to Firebase Console > Authentication > Settings > Authorized Domains.";
+      case "auth/popup-blocked":
+        return "The Google sign-in popup was blocked by your browser. Please allow popups for this site or sign in using email and password.";
+      case "auth/popup-closed-by-user":
+      case "auth/cancelled-popup-request":
+        return "Google sign-in was cancelled.";
+      case "auth/account-exists-with-different-credential":
+        return "An account already exists with this email using a different sign-in method. Please sign in using your email and password.";
       case "auth/invalid-credential":
       case "auth/wrong-password":
       case "auth/user-not-found":
@@ -156,25 +173,36 @@ function friendlyAuthError(code?: string, fallbackMessage?: string): string {
       case "auth/weak-password":
         return "Choose a stronger password — at least 8 characters with a letter and a number.";
       case "auth/too-many-requests":
-        return "Too many attempts. Please wait a minute and try again.";
+        return "Too many sign-in attempts. Please wait a minute and try again.";
       case "auth/network-request-failed":
-        return "Network problem. Check your connection and try again.";
-      case "auth/popup-closed-by-user":
-      case "auth/cancelled-popup-request":
-        return "Google sign-in was cancelled.";
-      case "auth/popup-blocked":
-        return "Your browser blocked the sign-in popup. Allow popups and try again.";
-      case "auth/account-exists-with-different-credential":
-        return "That email is already registered with a different sign-in method.";
+        return "Network connection issue. Please check your internet connection and try again.";
       case "auth/requires-recent-login":
         return "For security, please sign in again before making this change.";
-      case "auth/unauthorized-domain":
-        return "Authentication domain notice: Ensure sutrastudios.in (and sutrastudio-fq9d.onrender.com) is added to Firebase Console > Authentication > Settings > Authorized Domains.";
+      case "auth/user-disabled":
+        return "This account has been suspended or disabled. Please contact the studio for assistance.";
+      case "auth/invalid-api-key":
+        return "Firebase API configuration is invalid. Please verify your project credentials.";
     }
   }
-  return fallbackMessage && fallbackMessage !== "[object Object]"
-    ? fallbackMessage
-    : "Sign-in could not be completed. Please check your credentials and try again.";
+
+  if (fallbackMessage && fallbackMessage !== "[object Object]") {
+    return (
+      fallbackMessage
+        .replace(/^Firebase:\s*(Error\s*)?(\(auth\/[a-z0-9-]+\)\.?\s*)?/i, "")
+        .trim() || fallbackMessage
+    );
+  }
+  return "Sign-in could not be completed. Please check your credentials and try again.";
+}
+
+function createAuthError(err: any): Error & { code?: string } {
+  const code =
+    err?.code ||
+    (typeof err?.message === "string" ? err.message.match(/auth\/[a-z0-9-]+/i)?.[0]?.toLowerCase() : undefined);
+  const message = friendlyAuthError(code, err?.message);
+  const outErr = new Error(message) as Error & { code?: string };
+  outErr.code = code;
+  return outErr;
 }
 
 function toAuthUser(fbUser: {
@@ -403,7 +431,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         void refreshProfile();
         return next;
       } catch (err: any) {
-        throw new Error(err?.message || friendlyAuthError(err?.code, err?.message));
+        throw createAuthError(err);
       }
     },
     [configurationError, establishServerSession, refreshProfile]
@@ -419,6 +447,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
+      provider.addScope("email");
+      provider.addScope("profile");
       try {
         const cred = await signInWithPopup(getFirebaseAuth(), provider);
         const idTokenResult = await cred.user.getIdTokenResult();
@@ -470,7 +500,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         void refreshProfile();
         return next;
       } catch (err: any) {
-        throw new Error(err?.message || friendlyAuthError(err?.code, err?.message));
+        throw createAuthError(err);
       }
     },
     [configurationError, establishServerSession, refreshProfile]
@@ -488,7 +518,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           input.password
         );
       } catch (err: any) {
-        throw new Error(friendlyAuthError(err?.code, err?.message));
+        throw createAuthError(err);
       }
 
       const email = input.email.trim();

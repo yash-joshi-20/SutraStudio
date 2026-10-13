@@ -15,8 +15,9 @@ import {
   SESSION_COOKIE,
   setUserRole,
   safeReturnTo,
+  createProfileOnSignup,
 } from "@/lib/auth/session";
-import { badRequest, guarded, notConfigured, ok, sameOrigin } from "@/lib/api/response";
+import { badRequest, clientIp, guarded, notConfigured, ok, sameOrigin } from "@/lib/api/response";
 import {
   GENERIC_AUTH_FAILURE,
   GENERIC_AUTH_FAILURE_CODE,
@@ -78,6 +79,21 @@ export async function POST(req: Request) {
     // Anyone else can sign in; a missing/unknown role is normalised to client.
     if (claims.role !== "client") {
       await setUserRole(decoded.uid, "client");
+    }
+
+    // Ensure client profile document exists in Firestore (idempotent for Google OAuth & returning sign-ins)
+    try {
+      await createProfileOnSignup({
+        uid: decoded.uid,
+        email: decoded.email ?? "",
+        name: typeof decoded.name === "string" ? decoded.name : (decoded.email ?? "").split("@")[0],
+        acceptedTerms: true,
+        acceptedPrivacy: true,
+        ipAddress: clientIp(req),
+        userAgent: req.headers.get("user-agent") ?? "",
+      });
+    } catch (profileErr) {
+      console.warn("[client-login] profile bootstrap notice:", profileErr);
     }
 
     const { cookie, maxAge } = await createSessionCookie(body.idToken, {

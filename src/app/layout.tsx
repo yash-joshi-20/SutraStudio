@@ -20,6 +20,8 @@ export const dynamic = "force-dynamic";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: "#FAF9F5",
+  colorScheme: "light",
 };
 
 const rawBaseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudios.in";
@@ -45,6 +47,16 @@ export const metadata: Metadata = {
     "Enterprise creative technology atelier delivering 4K photorealistic product renders, 3D architectural spatial systems, 360 virtual tours, and bespoke web applications with zero hidden fees.",
   keywords:
     "Enterprise creative technology, 4K photorealistic product renders, 3D architectural spatial systems, 360 virtual tours, Bespoke software architecture, Sutra Studios India, Digital architecture atelier, Creative technology firm",
+  applicationName: "Sutra Studios",
+  authors: [{ name: "Yash Joshi", url: "https://sutrastudios.in" }],
+  creator: "Yash Joshi",
+  publisher: "Sutra Studios",
+  category: "Creative Technology Atelier",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   alternates: {
     canonical: baseUrl,
   },
@@ -71,11 +83,34 @@ export const metadata: Metadata = {
     description:
       "High-precision 4K renders, spatial 3D architecture, and cinematic commercial reels delivered directly to your client deliverables library.",
     images: ["/brand/sutra-logo-primary.png"],
+    creator: "@yashsutrastudio",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
   manifest: "/manifest.json",
   icons: {
-    icon: "/brand/sutra-favicon.png",
-    apple: "/brand/sutra-app-icon.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.png", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Sutra Studios",
   },
 };
 

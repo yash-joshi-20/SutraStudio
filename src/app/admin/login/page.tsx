@@ -134,17 +134,21 @@ function AdminLoginForm() {
       window.location.replace(returnTo);
     } catch (err: any) {
       console.error("[Admin Login Error]", err);
-      const code = (err as { code?: string })?.code ?? "";
+      const code =
+        (err as { code?: string })?.code ??
+        (typeof err?.message === "string" ? err.message.match(/auth\/[a-z0-9-]+/i)?.[0]?.toLowerCase() : "");
       setErrorMsg(
         code === "auth/unauthorized-domain"
-          ? "Ensure sutrastudios.in (and sutrastudio-fq9d.onrender.com) is added to Firebase Console > Authentication > Settings > Authorized Domains."
+          ? "Domain authorization notice: If developing locally, ensure you open via http://localhost:3000 (not 127.0.0.1). Otherwise, add your current domain to Firebase Console > Authentication > Settings > Authorized Domains."
           : code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found"
             ? "Those sign-in details were not recognised. Please verify your administrator email and passkey."
             : code === "auth/too-many-requests"
               ? "Too many failed attempts. Please wait a moment and try again."
-              : err instanceof Error && err.message
-                ? err.message
-                : "Access denied: administrative clearance required."
+              : code === "auth/network-request-failed"
+                ? "Network connection issue. Please check your internet connection and try again."
+                : err instanceof Error && err.message
+                  ? err.message.replace(/^Firebase:\s*(Error\s*)?(\(auth\/[a-z0-9-]+\)\.?\s*)?/i, "").trim() || err.message
+                  : "Access denied: administrative clearance required."
       );
       setLoading(false);
     }
