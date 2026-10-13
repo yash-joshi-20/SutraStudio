@@ -122,70 +122,8 @@ export type EnvKey =
   | "N8N_INBOUND_WEBHOOK"
   | "NEXT_PUBLIC_GA_MEASUREMENT_ID";
 
-let cachedDiskEnv: Record<string, string> | null = null;
-
 function getDiskEnv(): Record<string, string> {
-  if (typeof window !== "undefined" || process.env.NEXT_RUNTIME === "edge") return {};
-  if (cachedDiskEnv) return cachedDiskEnv;
-  const map: Record<string, string> = {};
-  try {
-    // Dynamic import to prevent Webpack client-side bundle errors
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const fs = require("fs");
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const path = require("path");
-
-    const candidates = [
-      path.resolve(process.cwd(), ".env.local"),
-      path.resolve(process.cwd(), ".env"),
-    ];
-    for (const file of candidates) {
-      if (fs.existsSync(/*turbopackIgnore: true*/ file)) {
-        const content = fs.readFileSync(/*turbopackIgnore: true*/ file, "utf8");
-        for (const rawLine of content.split(/\r?\n/)) {
-          const line = rawLine.trim();
-          if (!line || line.startsWith("#")) continue;
-          const eq = line.indexOf("=");
-          if (eq <= 0) continue;
-          const k = line.slice(0, eq).trim();
-          if (map[k] !== undefined) continue;
-          let val = line.slice(eq + 1).trim();
-          if (
-            (val.startsWith('"') && val.endsWith('"')) ||
-            (val.startsWith("'") && val.endsWith("'"))
-          ) {
-            val = val.slice(1, -1);
-          }
-          map[k] = val;
-        }
-      }
-    }
-
-    // Also check secrets/sutra-studio-firebase-adminsdk.json if service account is used
-    const saPath =
-      map["FIREBASE_SERVICE_ACCOUNT"] ||
-      path.resolve(process.cwd(), "secrets/sutra-studio-firebase-adminsdk.json");
-    if (fs.existsSync(/*turbopackIgnore: true*/ saPath)) {
-      try {
-        const saData = JSON.parse(fs.readFileSync(/*turbopackIgnore: true*/ saPath, "utf8"));
-        if (saData.client_email && !map["FIREBASE_CLIENT_EMAIL"]) {
-          map["FIREBASE_CLIENT_EMAIL"] = saData.client_email;
-        }
-        if (saData.private_key && !map["FIREBASE_PRIVATE_KEY"]) {
-          map["FIREBASE_PRIVATE_KEY"] = saData.private_key;
-        }
-        if (saData.project_id && !map["FIREBASE_PROJECT_ID"]) {
-          map["FIREBASE_PROJECT_ID"] = saData.project_id;
-        }
-      } catch {
-        // quiet
-      }
-    }
-  } catch {
-    // quiet
-  }
-  cachedDiskEnv = map;
-  return map;
+  return {};
 }
 
 /** Read a raw value. Server-only. Returns "" when unset. */

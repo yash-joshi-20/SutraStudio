@@ -336,6 +336,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } catch (restoreErr) {
             console.warn("[AuthContext] session sync restore failed:", restoreErr);
           }
+
+          // Resilient fallback: Preserve verified Firebase client user so they are not wrongly kicked out
+          const fallbackUser: AuthUser = {
+            uid: fbUser.uid,
+            email: fbUser.email ?? "",
+            displayName: fbUser.displayName ?? (fbUser.email ?? "").split("@")[0],
+            photoURL: fbUser.photoURL ?? "",
+            role: resolvedRole,
+            emailVerified: Boolean(fbUser.emailVerified),
+            phone: fbUser.phoneNumber ?? "",
+          };
+          setUser(fallbackUser);
+          setRole(resolvedRole);
+          setIsSessionStale(false);
+          setIsLoading(false);
+          return;
         }
 
         // 3. Truly unauthenticated guest

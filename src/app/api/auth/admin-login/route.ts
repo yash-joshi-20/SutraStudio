@@ -167,12 +167,22 @@ export async function POST(req: Request) {
     }
 
     // ---- Accepted -----------------------------------------------------------
-    await recordAdminLoginSuccess(email, ip);
-    await auditAdminLogin({ email, ip, outcome: "success", uid: decoded.uid, userAgent });
+    let newDevice = false;
+    try {
+      newDevice = await isNewAdminDevice(email, ip);
+    } catch {
+      newDevice = false;
+    }
 
-    const newDevice = await isNewAdminDevice(email, ip);
-    await queueAdminLoginAlert({ email, ip, userAgent, newDevice });
-    await rememberAdminDevice(email, ip);
+    // Non-blocking security audit and device memory (never delays session minting)
+    Promise.allSettled([
+      recordAdminLoginSuccess(email, ip),
+      auditAdminLogin({ email, ip, outcome: "success", uid: decoded.uid, userAgent }),
+      queueAdminLoginAlert({ email, ip, userAgent, newDevice }),
+      rememberAdminDevice(email, ip),
+    ]).catch((auditErr) => {
+      console.warn("[admin-login] non-fatal audit notice:", auditErr);
+    });
 
     // Step 1.5: 12-hour admin session on its own cookie. `rememberMe` only
     // shortens nothing further — the admin window is fixed by policy.
