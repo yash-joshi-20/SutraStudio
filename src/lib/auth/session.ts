@@ -125,6 +125,30 @@ export async function decodeSession(
   }
 }
 
+/**
+ * Verify an ID token (JWT) issued by Firebase Client Web SDK (auth.currentUser.getIdToken()).
+ */
+export async function decodeIdToken(
+  tokenValue: string | undefined,
+  checkRevoked = false
+): Promise<SessionUser | null> {
+  if (!tokenValue) return null;
+  if (!isFirebaseAdminReady()) return null;
+
+  try {
+    const decoded: DecodedIdToken = await adminAuth().verifyIdToken(tokenValue, checkRevoked);
+    return toSessionUser(decoded);
+  } catch {
+    // Fallback: in case a session cookie was passed as the Bearer token
+    try {
+      const decodedCookie = await adminAuth().verifySessionCookie(tokenValue, checkRevoked);
+      return toSessionUser(decodedCookie);
+    } catch {
+      return null;
+    }
+  }
+}
+
 function toSessionUser(decoded: DecodedIdToken): SessionUser {
   const rawRole = (decoded as Record<string, unknown>).role;
   const isStaff =
