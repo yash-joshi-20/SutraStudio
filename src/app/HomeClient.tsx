@@ -760,7 +760,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Mobile View: Category Dropdown */}
-                <div className="w-full sm:hidden pt-2">
+                <div className="w-full md:hidden pt-2">
                   <CustomDropdown
                     options={FILTER_CATEGORIES.map((cat) => ({
                       label: cat === "All" ? "All Disciplines" : `${cat} Creations`,
@@ -778,15 +778,15 @@ export default function HomePage() {
                   />
                 </div>
 
-                {/* Desktop / Tablet View: Tab Pills System */}
-                <div className="hidden sm:flex flex-wrap items-center gap-2">
+                {/* Desktop View: Tab Pills System */}
+                <div className="hidden md:flex flex-wrap items-center gap-2">
                   {FILTER_CATEGORIES.map((cat) => {
                     const isActive = selectedCategory === cat;
                     return (
                       <button
                         key={cat}
                         onClick={() => setSelectedCategory(cat)}
-                        className={`interactive-pill focus-ring px-4 py-1.5 rounded-full text-xs font-medium cursor-pointer ${
+                        className={`interactive-pill focus-ring px-4 py-1.5 rounded-full text-xs font-medium cursor-pointer whitespace-nowrap shrink-0 ${
                           isActive
                             ? "bg-[#5C3A1E] text-white shadow-xs font-semibold"
                             : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A] hover:text-[#0F172A]"

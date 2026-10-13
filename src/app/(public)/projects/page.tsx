@@ -49,8 +49,8 @@ export default function ProjectsPage() {
             architectural films, brand portals, and Meta growth campaigns.
           </p>
 
-          {/* Mobile View: Custom Dropdown Filter */}
-          <div className="w-full max-w-xs mx-auto pt-3 sm:hidden">
+          {/* Mobile & Tablet View: Custom Dropdown Filter */}
+          <div className="w-full max-w-xs mx-auto pt-3 md:hidden">
             <CustomDropdown
               options={PROJECT_CATEGORIES.map((cat) => ({
                 label: cat === "All" ? "All Disciplines" : `${cat} Projects`,
@@ -68,15 +68,15 @@ export default function ProjectsPage() {
             />
           </div>
 
-          {/* Desktop / Tablet View: Tab Pills System */}
-          <div className="hidden sm:flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 pt-4">
+          {/* Desktop View: Tab Pills System */}
+          <div className="hidden md:flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 pt-4">
             {PROJECT_CATEGORIES.map((cat) => {
               const isActive = selectedCat === cat;
               return (
                 <button
                   key={cat}
                   onClick={() => setSelectedCat(cat)}
-                  className={`interactive-pill focus-ring px-4 sm:px-5 py-2 rounded-full text-xs font-medium cursor-pointer transition-all ${
+                  className={`interactive-pill focus-ring px-4 sm:px-5 py-2 rounded-full text-xs font-medium cursor-pointer transition-all whitespace-nowrap shrink-0 ${
                     isActive
                       ? "bg-[#5C3A1E] text-white shadow-xs font-semibold ring-1 ring-[#D4A35A]"
                       : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A] hover:text-[#0F172A]"

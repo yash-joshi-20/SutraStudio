@@ -17,27 +17,6 @@ export interface ProjectItem {
 
 export const SUTRA_PROJECTS: ProjectItem[] = [
   {
-    id: "proj-sutra-studio",
-    title: "Sutra Studio — Creative Digital Flagship",
-    category: "Website",
-    client: "Sutra Studio",
-    year: "2026",
-    projectType: "Studio Platform",
-    description:
-      "The official Sutra Studio flagship digital platform. Designed with traditional Indian geometric doctrines, warm ivory surfaces, Next.js App Router architecture, canonical pricing catalog, interactive 3D logo showcase, and seamless UPI QR checkout.",
-    badge: "Interactive",
-    thumbnail: "/assets/showcase/live-home-desktop.png",
-    deliverables: [
-      "Next.js App Router & Tailwind CSS Architecture",
-      "Vedic Symmetry & Warm Ivory Design System",
-      "Canonical INR Pricing & Order Engine",
-      "Interactive 3D WebGL Logo & Showreel Viewer",
-      "Client Workspace & Private File Storage",
-    ],
-    liveUrl: "https://sutrastudio.com",
-    status: "Live Platform",
-  },
-  {
     id: "proj-viva-lifestyle",
     title: "Viva Live Better — Living Essentials & E-Commerce Store",
     category: "Website",

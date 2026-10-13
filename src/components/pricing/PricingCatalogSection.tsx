@@ -102,7 +102,7 @@ export function PricingCatalogSection({
         {/* Primary Catalog Navigation Switcher */}
         <div className="pt-4 flex flex-col items-center justify-center w-full">
           {/* Mobile View: Custom Dropdown Menu (Guaranteed Zero Squishing / Overflow) */}
-          <div className="w-full sm:hidden max-w-xs mx-auto">
+          <div className="w-full md:hidden max-w-xs mx-auto">
             <CustomDropdown
               options={[
                 {
@@ -131,26 +131,26 @@ export function PricingCatalogSection({
             />
           </div>
 
-          {/* Desktop / Tablet View: Tablist Pill Switcher */}
-          <div className="hidden sm:flex items-center justify-center w-full">
+          {/* Desktop View: Tablist Pill Switcher (Unbreakable Single Line) */}
+          <div className="hidden md:flex items-center justify-center w-full">
             <div
               role="tablist"
               aria-label="Pricing catalog navigation"
-              className="grid grid-cols-3 w-full max-w-xl rounded-full bg-[#FFFDF9] border border-[#EADFCB] p-1.5 shadow-xs gap-1"
+              className="grid grid-cols-3 w-full max-w-2xl rounded-full bg-[#FFFDF9] border border-[#EADFCB] p-1.5 shadow-xs gap-1.5"
             >
               <button
                 type="button"
                 role="tab"
                 aria-selected={activeTab === "monthly"}
                 onClick={() => setActiveTab("monthly")}
-                className={`py-2 px-4 rounded-full text-xs font-semibold cursor-pointer transition-all text-center flex items-center justify-center gap-1.5 ${
+                className={`py-2.5 px-3 lg:px-4 rounded-full text-xs lg:text-sm font-semibold cursor-pointer transition-all text-center flex items-center justify-center gap-1.5 whitespace-nowrap ${
                   activeTab === "monthly"
                     ? "bg-[#5C3A1E] text-white shadow-xs"
                     : "text-[#64748B] hover:text-[#0F172A]"
                 }`}
               >
-                <span>30-Day Retainers</span>
-                <span className="text-[10px] bg-[#D4A35A] text-[#0F172A] px-1.5 py-0.2 rounded-full font-bold">
+                <span className="whitespace-nowrap">30-Day Retainers</span>
+                <span className="text-[10px] bg-[#D4A35A] text-[#0F172A] px-1.5 py-0.5 rounded-full font-bold shrink-0">
                   Flagship
                 </span>
               </button>
@@ -160,13 +160,13 @@ export function PricingCatalogSection({
                 role="tab"
                 aria-selected={activeTab === "services"}
                 onClick={() => setActiveTab("services")}
-                className={`py-2 px-4 rounded-full text-xs font-semibold cursor-pointer transition-all text-center ${
+                className={`py-2.5 px-3 lg:px-4 rounded-full text-xs lg:text-sm font-semibold cursor-pointer transition-all text-center whitespace-nowrap ${
                   activeTab === "services"
                     ? "bg-[#5C3A1E] text-white shadow-xs"
                     : "text-[#64748B] hover:text-[#0F172A]"
                 }`}
               >
-                Individual Solutions
+                <span className="whitespace-nowrap">Individual Solutions</span>
               </button>
 
               <button
@@ -174,13 +174,13 @@ export function PricingCatalogSection({
                 role="tab"
                 aria-selected={activeTab === "packs"}
                 onClick={() => setActiveTab("packs")}
-                className={`py-2 px-4 rounded-full text-xs font-semibold cursor-pointer transition-all text-center ${
+                className={`py-2.5 px-3 lg:px-4 rounded-full text-xs lg:text-sm font-semibold cursor-pointer transition-all text-center whitespace-nowrap ${
                   activeTab === "packs"
                     ? "bg-[#5C3A1E] text-white shadow-xs"
                     : "text-[#64748B] hover:text-[#0F172A]"
                 }`}
               >
-                Essential Deliverable Packs
+                <span className="whitespace-nowrap">Essential Deliverable Packs</span>
               </button>
             </div>
           </div>
@@ -342,8 +342,8 @@ export function PricingCatalogSection({
               Order individual single deliverables on demand with transparent fixed pricing and guaranteed studio SLA.
             </p>
 
-            {/* Mobile View: Category Custom Dropdown (Guaranteed Clean Responsive Experience) */}
-            <div className="w-full sm:hidden max-w-xs mx-auto pt-2">
+            {/* Mobile & Tablet View: Category Custom Dropdown (Guaranteed Clean Responsive Experience) */}
+            <div className="w-full md:hidden max-w-xs mx-auto pt-2">
               <CustomDropdown
                 options={SERVICE_CATEGORY_TABS.map((cat) => ({
                   label: cat === "All" ? "All Categories" : `${cat} Services`,
@@ -365,14 +365,14 @@ export function PricingCatalogSection({
               />
             </div>
 
-            {/* Desktop / Tablet View: Tab Pills System */}
-            <div className="hidden sm:flex items-center justify-center flex-wrap gap-2 pt-4">
+            {/* Desktop View: Tab Pills System */}
+            <div className="hidden md:flex items-center justify-center flex-wrap gap-2 pt-4">
               {SERVICE_CATEGORY_TABS.map((cat) => (
                 <button
                   key={cat}
                   type="button"
                   onClick={() => setSelectedServiceCategory(cat)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                     selectedServiceCategory === cat
                       ? "bg-[#5C3A1E] text-white shadow-xs"
                       : "bg-[#FFFDF9] border border-[#EADFCB] text-[#64748B] hover:text-[#0F172A]"

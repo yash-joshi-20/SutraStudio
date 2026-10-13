@@ -194,7 +194,7 @@ export default function ServicesPage() {
               </div>
 
               {/* Mobile View: Clean Custom Dropdown Filter */}
-              <div className="w-full sm:hidden">
+              <div className="w-full md:hidden">
                 <CustomDropdown
                   options={CATEGORIES.map((cat) => ({
                     label: cat === "All" ? "All Disciplines" : `${cat} Solutions`,
@@ -212,8 +212,8 @@ export default function ServicesPage() {
                 />
               </div>
 
-              {/* Desktop / Tablet View: Tab Pills System */}
-              <div className="hidden sm:flex flex-wrap items-center justify-center gap-2 pt-1">
+              {/* Desktop View: Tab Pills System */}
+              <div className="hidden md:flex flex-wrap items-center justify-center gap-2 pt-1">
                 {CATEGORIES.map((cat) => {
                   const isActive = activeCategory === cat;
                   const count =
@@ -225,7 +225,7 @@ export default function ServicesPage() {
                     <button
                       key={cat}
                       onClick={() => setActiveCategory(cat)}
-                      className={`interactive-pill focus-ring px-3.5 py-1.5 rounded-full text-xs font-medium cursor-pointer flex items-center gap-1.5 transition-all ${
+                      className={`interactive-pill focus-ring px-3.5 py-1.5 rounded-full text-xs font-medium cursor-pointer flex items-center gap-1.5 transition-all whitespace-nowrap shrink-0 ${
                         isActive
                           ? "bg-[#5C3A1E] text-white shadow-xs border border-[#5C3A1E]"
                           : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A] hover:text-[#0F172A]"
