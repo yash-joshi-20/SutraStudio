@@ -1,11 +1,11 @@
 /**
  * SUTRA STUDIO — Automated Headless Browser Capture Pipeline
- * Captures authentic production assets from https://sutrastudio-1.onrender.com
+ * Captures authentic production assets from http://localhost:3000
  *
  * Deliverables:
  * 1. Desktop Full-Page: public/assets/showcase/live-home-desktop.png (1920x1080 @ 2x)
  * 2. Mobile Viewport: public/assets/showcase/live-home-mobile.png (390x844 iPhone 16 Pro)
- * 3. Authentic Showreel Video: public/assets/showcase/live-site-showreel.mp4
+ * 3. Authentic Showreel Video: public/assets/showcase/live-site-showreel.mp4 & .webm
  */
 
 import { chromium } from "playwright";
@@ -16,7 +16,7 @@ import { promisify } from "util";
 
 const execAsync = promisify(exec);
 
-const TARGET_URL = process.env.CAPTURE_URL || "https://sutrastudios.in";
+const TARGET_URL = process.env.CAPTURE_URL || "http://localhost:3000";
 const OUTPUT_DIR = path.join(process.cwd(), "public", "assets", "showcase");
 
 async function ensureDir(dir: string) {
@@ -33,25 +33,19 @@ async function convertVideo(webmPath: string, mp4Path: string) {
     );
     console.log(`[Showreel] Successfully generated MP4 video at ${mp4Path}`);
   } catch (err: any) {
-    console.warn(`[Showreel] FFmpeg transcoding failed or not found: ${err.message}`);
-    // Fallback: Copy WebM if MP4 transcoding unavailable, or copy hero desktop
-    const fallbackSource = path.join(process.cwd(), "public", "videos", "hero", "hero-desktop.mp4");
-    if (fs.existsSync(fallbackSource)) {
-      console.log(`[Showreel] Linking authenticated studio video from hero-desktop.mp4 to ${mp4Path}`);
-      fs.copyFileSync(fallbackSource, mp4Path);
-    } else {
-      fs.copyFileSync(webmPath, mp4Path);
-    }
+    console.warn(`[Showreel] FFmpeg not found, saving WebM directly to ${mp4Path}`);
+    fs.copyFileSync(webmPath, mp4Path);
   }
 }
 
 export async function captureLiveAssets() {
-  console.log(`[Asset Capture] Target: ${TARGET_URL}`);
+  console.log(`[Asset Capture] Target URL: ${TARGET_URL}`);
   await ensureDir(OUTPUT_DIR);
 
   const desktopScreenshotPath = path.join(OUTPUT_DIR, "live-home-desktop.png");
   const mobileScreenshotPath = path.join(OUTPUT_DIR, "live-home-mobile.png");
   const showreelMp4Path = path.join(OUTPUT_DIR, "live-site-showreel.mp4");
+  const showreelWebmPath = path.join(OUTPUT_DIR, "live-site-showreel.webm");
   const videoTempDir = path.join(OUTPUT_DIR, "temp_video");
   await ensureDir(videoTempDir);
 
@@ -73,34 +67,39 @@ export async function captureLiveAssets() {
       },
     });
 
+    // Dismiss splash intro immediately
+    await desktopContext.addInitScript(() => {
+      sessionStorage.setItem("sutra_intro_dismissed", "true");
+    });
+
     const desktopPage = await desktopContext.newPage();
     console.log(`[Desktop] Navigating to ${TARGET_URL}...`);
     try {
       await desktopPage.goto(TARGET_URL, { waitUntil: "networkidle", timeout: 45000 });
     } catch {
-      console.warn("[Desktop] Networkidle timeout, proceeding with domcontentloaded...");
+      console.warn("[Desktop] Proceeding with domcontentloaded...");
       await desktopPage.waitForLoadState("domcontentloaded");
     }
 
     // Wait for animations and fonts to settle
     await desktopPage.waitForTimeout(3000);
 
-    // Capture desktop hero / full screenshot
-    console.log(`[Desktop] Capturing live screenshot -> ${desktopScreenshotPath}`);
+    // Capture desktop hero screenshot
+    console.log(`[Desktop] Capturing live desktop screenshot -> ${desktopScreenshotPath}`);
     await desktopPage.screenshot({
       path: desktopScreenshotPath,
       fullPage: false,
     });
 
     // Programmatic smooth scroll to record 8-10 second showreel
-    console.log("[Desktop] Recording smooth 8-10s scroll through Hero and Atelier showcase...");
-    const scrollSteps = 20;
+    console.log("[Desktop] Recording smooth scroll through Hero and Curated Services...");
+    const scrollSteps = 24;
     const distancePerStep = 60;
     for (let i = 0; i < scrollSteps; i++) {
       await desktopPage.evaluate((y) => window.scrollBy({ top: y, behavior: "smooth" }), distancePerStep);
-      await desktopPage.waitForTimeout(250);
+      await desktopPage.waitForTimeout(200);
     }
-    // Pause on showcase
+    // Pause on services section
     await desktopPage.waitForTimeout(2000);
 
     // Scroll back up to hero
@@ -110,13 +109,15 @@ export async function captureLiveAssets() {
     }
     await desktopPage.waitForTimeout(1500);
 
-    // Close desktop context to finalize the video file
+    // Close desktop context to finalize the video recording file
     await desktopContext.close();
 
     // Locate the generated video
     const videoFiles = fs.readdirSync(videoTempDir).filter((f) => f.endsWith(".webm"));
     if (videoFiles.length > 0) {
       const generatedVideoPath = path.join(videoTempDir, videoFiles[0]);
+      console.log(`[Showreel] Copying authentic video recording to ${showreelWebmPath}`);
+      fs.copyFileSync(generatedVideoPath, showreelWebmPath);
       await convertVideo(generatedVideoPath, showreelMp4Path);
       // Clean up temp video folder
       fs.rmSync(videoTempDir, { recursive: true, force: true });
@@ -134,6 +135,10 @@ export async function captureLiveAssets() {
         "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Mobile/15E148 Safari/604.1",
     });
 
+    await mobileContext.addInitScript(() => {
+      sessionStorage.setItem("sutra_intro_dismissed", "true");
+    });
+
     const mobilePage = await mobileContext.newPage();
     console.log(`[Mobile] Navigating to ${TARGET_URL}...`);
     try {
@@ -144,7 +149,7 @@ export async function captureLiveAssets() {
 
     await mobilePage.waitForTimeout(2500);
 
-    console.log(`[Mobile] Capturing live screenshot -> ${mobileScreenshotPath}`);
+    console.log(`[Mobile] Capturing live mobile screenshot -> ${mobileScreenshotPath}`);
     await mobilePage.screenshot({
       path: mobileScreenshotPath,
       fullPage: false,

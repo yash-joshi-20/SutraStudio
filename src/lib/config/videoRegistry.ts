@@ -86,13 +86,13 @@ export const SUTRA_VIDEO_REGISTRY: Record<string, VideoAssetConfig> = {
     promptUsed: 'Sutra Studio craftsmanship documentary reel, golden ratio proportions, architectural blueprints merging into photorealistic 3D spatial renders, warm teak wood, calm refined editorial lighting, sacred geometry overlays.',
     desktop: {
       mp4: '/assets/showcase/live-site-showreel.mp4',
-      webm: '/videos/studio/studio-reel-desktop.webm',
+      webm: '/assets/showcase/live-site-showreel.webm',
       width: 1280,
       height: 720,
     },
     mobile: {
       mp4: '/assets/showcase/live-site-showreel.mp4',
-      webm: '/videos/studio/studio-reel-mobile.webm',
+      webm: '/assets/showcase/live-site-showreel.webm',
       width: 720,
       height: 1280,
     },

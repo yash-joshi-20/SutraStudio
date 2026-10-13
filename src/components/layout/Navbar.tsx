@@ -29,7 +29,6 @@ const PUBLIC_NAV_LINKS: NavLinkItem[] = [
   { name: "Pricing", href: "/pricing" },
   { name: "About", href: "/about" },
   { name: "Mobile App", href: "/mobile-app" },
-  { name: "Contact", href: "/contact" },
 ];
 
 export function Navbar() {
