@@ -9,13 +9,13 @@ import {
   Mail,
   User,
   LayoutDashboard,
-  ShoppingBag,
   FolderOpen,
   FileText,
   ShieldCheck,
   Users,
   CheckCircle,
   GitBranch,
+  ShoppingBag,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/authContext";
 
@@ -52,7 +52,6 @@ export function MobileBottomNav() {
     : [
         { name: "Home", href: "/", icon: Home },
         { name: "Services", href: "/services", icon: Sparkles },
-        { name: "Pricing", href: "/pricing", icon: ShoppingBag },
         { name: "Contact", href: "/contact", icon: Mail },
         { name: "Sign In", href: "/login", icon: User },
       ];

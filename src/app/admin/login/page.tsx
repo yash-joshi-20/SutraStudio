@@ -23,8 +23,8 @@ import { NotConfiguredState } from "@/components/ui/States";
 import { useAuth } from "@/lib/auth/authContext";
 import { Modal } from "@/components/ui/Modal";
 import { getFirebaseAuth, firebaseClientConfigured, applyPersistence } from "@/lib/firebase/client";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { ArrowLeft, ArrowRight, ShieldCheck, Terminal, CheckCircle2, UserPlus } from "lucide-react";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { ArrowLeft, ArrowRight, ShieldCheck, Terminal, CheckCircle2 } from "lucide-react";
 import { soundSystem } from "@/lib/audio/soundSystem";
 import { AnimatedWelcomeBadge } from "@/components/ui/AnimatedStatusIcons";
 
@@ -61,11 +61,8 @@ function AdminLoginForm() {
 
   const { isAuthenticated, role, isLoading: authLoading, requestPasswordReset } = useAuth();
 
-  const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -157,95 +154,6 @@ function AdminLoginForm() {
     }
   }
 
-  async function handleAdminSignUp(e: React.FormEvent) {
-    e.preventDefault();
-    setErrorMsg("");
-    const cleanName = name.trim().replace(/[\u200B-\u200D\uFEFF]/g, "");
-    const cleanEmail = email.trim().replace(/[\u200B-\u200D\uFEFF]/g, "");
-    const cleanPassword = password.trim().replace(/[\u200B-\u200D\uFEFF]/g, "");
-    const cleanConfirm = confirmPassword.trim().replace(/[\u200B-\u200D\uFEFF]/g, "");
-
-    if (!cleanName || cleanName.length < 2) {
-      setErrorMsg("Please enter your administrator name (minimum 2 characters).");
-      return;
-    }
-    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cleanEmail)) {
-      setErrorMsg("Please enter a valid administrator email address.");
-      return;
-    }
-    if (!cleanPassword || cleanPassword.length < 8) {
-      setErrorMsg("Passkey must be at least 8 characters.");
-      return;
-    }
-    if (cleanPassword !== cleanConfirm) {
-      setErrorMsg("Security passkeys do not match.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      let cred;
-      try {
-        cred = await createUserWithEmailAndPassword(getFirebaseAuth(), cleanEmail, cleanPassword);
-      } catch (createErr: any) {
-        if (createErr?.code === "auth/email-already-in-use") {
-          // Gracefully sign in if account already created in Firebase Auth
-          cred = await signInWithEmailAndPassword(getFirebaseAuth(), cleanEmail, cleanPassword);
-        } else {
-          throw createErr;
-        }
-      }
-
-      await updateProfile(cred.user, { displayName: cleanName });
-
-      // Call server admin registration route to assign claims & session cookies
-      const res = await fetch("/api/auth/admin-register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({
-          idToken: await cred.user.getIdToken(),
-          name: cleanName,
-          email: cleanEmail,
-          rememberMe: true,
-        }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(() => undefined);
-        setErrorMsg(
-          typeof data.error === "string" && data.error
-            ? data.error
-            : "Administrative clearance restricted: only authorized studio administrator emails can register."
-        );
-        setLoading(false);
-        return;
-      }
-
-      soundSystem.play("welcome");
-      window.location.replace(returnTo);
-    } catch (err: any) {
-      console.error("[Admin SignUp Error]", err);
-      const code =
-        (err as { code?: string })?.code ??
-        (typeof err?.message === "string" ? err.message.match(/auth\/[a-z0-9-]+/i)?.[0]?.toLowerCase() : "");
-      setErrorMsg(
-        code === "auth/email-already-in-use"
-          ? "This email is already registered. Please switch to Sign In or verify your credentials."
-          : code === "auth/weak-password"
-            ? "Passkey is too weak. Please use at least 8 characters with letters and numbers."
-            : code === "auth/invalid-credential" || code === "auth/wrong-password"
-              ? "This administrator email already exists with a different passkey. Please sign in with your existing passkey."
-              : err instanceof Error && err.message
-                ? err.message.replace(/^Firebase:\s*(Error\s*)?(\(auth\/[a-z0-9-]+\)\.?\s*)?/i, "").trim() || err.message
-                : "Admin registration failed. Please try again."
-      );
-      setLoading(false);
-    }
-  }
-
   async function handlePasswordReset(e: React.FormEvent) {
     e.preventDefault();
     setResetNotice("");
@@ -317,168 +225,68 @@ function AdminLoginForm() {
           </span>
         </div>
         <h2 className="font-serif text-2xl font-bold tracking-tight text-[#0F172A] sm:text-3xl">
-          {authMode === "signin" ? "Administrative Clearance" : "Admin Registration"}
+          Administrative Clearance
         </h2>
         <p className="mx-auto max-w-sm text-xs leading-relaxed text-[#64748B]">
-          {authMode === "signin"
-            ? "Restricted exclusively to Studio Administrators. Client accounts cannot authenticate here."
-            : "Register and authorize your Studio Executive Administrator account with full operational clearance."}
+          Restricted exclusively to Studio Administrators.
         </p>
       </div>
 
       <div className="mt-8 space-y-6 rounded-3xl border border-[#EADFCB] bg-[#FFFDF9] px-6 py-8 shadow-warm sm:px-10">
-        {/* Toggle between Admin Sign In and Admin Sign Up */}
-        <div className="grid grid-cols-2 rounded-2xl bg-[#F8F5EF] p-1 border border-[#EADFCB]">
-          <button
-            type="button"
-            onClick={() => {
-              setAuthMode("signin");
-              setErrorMsg("");
-            }}
-            className={`py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
-              authMode === "signin"
-                ? "bg-[#171717] text-[#FAF9F5] shadow-xs"
-                : "text-[#64748B] hover:text-[#0F172A]"
-            }`}
-          >
-            Authorize Sign In
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setAuthMode("signup");
-              setErrorMsg("");
-            }}
-            className={`py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
-              authMode === "signup"
-                ? "bg-[#171717] text-[#FAF9F5] shadow-xs"
-                : "text-[#64748B] hover:text-[#0F172A]"
-            }`}
-          >
-            Register Admin
-          </button>
-        </div>
-
         {errorMsg ? <FormAlert tone="error" message={errorMsg} /> : null}
 
-        {authMode === "signin" ? (
-          <form onSubmit={handleAdminSubmit} method="post" noValidate className="space-y-4">
-            <TextField
-              label="Admin Email Address"
-              required
-              name="username"
-              type="email"
-              inputMode="email"
-              value={email}
-              onChange={setEmail}
-              placeholder="yashjoshi20@zohomail.in"
-              autoComplete="username"
-              disabled={loading}
-            />
+        <form onSubmit={handleAdminSubmit} method="post" noValidate className="space-y-4">
+          <TextField
+            label="Admin Email Address"
+            required
+            name="username"
+            type="email"
+            inputMode="email"
+            value={email}
+            onChange={setEmail}
+            placeholder="yashjoshi20@zohomail.in"
+            autoComplete="username"
+            disabled={loading}
+          />
 
-            <div>
-              <TextField
-                label="Security Passkey"
-                required
-                name="password"
-                type="password"
-                value={password}
-                onChange={setPassword}
-                placeholder="••••••••••••"
-                autoComplete="current-password"
-                disabled={loading}
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  setResetEmail(email);
-                  setResetNotice("");
-                  setForgotOpen(true);
-                }}
-                className="mt-1.5 cursor-pointer text-[11px] font-medium text-[#5C3A1E] hover:underline"
-              >
-                Forgot passkey?
-              </button>
-            </div>
-
-            <div className="pt-3">
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                className="w-full justify-center !bg-[#171717] !text-[#FAF9F5] hover:!bg-[#262626] border-transparent"
-                isLoading={loading}
-                leftIcon={<ShieldCheck className="w-4 h-4 text-[#D4A35A]" />}
-              >
-                Authorize &amp; Open Terminal
-              </Button>
-            </div>
-          </form>
-        ) : (
-          <form onSubmit={handleAdminSignUp} method="post" noValidate className="space-y-4">
+          <div>
             <TextField
-              label="Administrator Full Name"
+              label="Security Passkey"
               required
-              name="fullname"
-              type="text"
-              value={name}
-              onChange={setName}
-              placeholder="Yash Joshi"
-              autoComplete="name"
-              disabled={loading}
-            />
-
-            <TextField
-              label="Admin Email Address"
-              required
-              name="adminEmail"
-              type="email"
-              inputMode="email"
-              value={email}
-              onChange={setEmail}
-              placeholder="yashjoshi20@zohomail.in"
-              autoComplete="email"
-              disabled={loading}
-            />
-
-            <TextField
-              label="Create Security Passkey"
-              required
-              name="newPassword"
+              name="password"
               type="password"
               value={password}
               onChange={setPassword}
-              placeholder="Minimum 8 characters"
-              autoComplete="new-password"
+              placeholder="••••••••••••"
+              autoComplete="current-password"
               disabled={loading}
             />
+            <button
+              type="button"
+              onClick={() => {
+                setResetEmail(email || "yashjoshi20@zohomail.in");
+                setResetNotice("");
+                setForgotOpen(true);
+              }}
+              className="mt-1.5 cursor-pointer text-[11px] font-medium text-[#5C3A1E] hover:underline"
+            >
+              Forgot passkey?
+            </button>
+          </div>
 
-            <TextField
-              label="Confirm Security Passkey"
-              required
-              name="confirmPassword"
-              type="password"
-              value={confirmPassword}
-              onChange={setConfirmPassword}
-              placeholder="Re-enter your passkey"
-              autoComplete="new-password"
-              disabled={loading}
-            />
-
-            <div className="pt-3">
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                className="w-full justify-center !bg-[#171717] !text-[#FAF9F5] hover:!bg-[#262626] border-transparent"
-                isLoading={loading}
-                leftIcon={<UserPlus className="w-4 h-4 text-[#D4A35A]" />}
-              >
-                Register &amp; Authorize Administrator
-              </Button>
-            </div>
-          </form>
-        )}
+          <div className="pt-3">
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              className="w-full justify-center !bg-[#171717] !text-[#FAF9F5] hover:!bg-[#262626] border-transparent"
+              isLoading={loading}
+              leftIcon={<ShieldCheck className="w-4 h-4 text-[#D4A35A]" />}
+            >
+              Authorize &amp; Open Terminal
+            </Button>
+          </div>
+        </form>
 
         <div className="border-t border-[#EADFCB]/60 pt-4 text-center">
           <p className="text-[11px] leading-relaxed text-[#94A3B8]">

@@ -21,7 +21,7 @@ import { SutraStudioIntroLanding } from "@/components/motion/SutraStudioIntroLan
 import { CustomDropdown } from "@/components/ui/CustomDropdown";
 import { SUTRA_SERVICES } from "@/data/servicesData";
 import { SUTRA_PROJECTS } from "@/data/projectsData";
-import { PricingCatalogSection } from "@/components/pricing/PricingCatalogSection";
+
 import {
   Play,
   Sparkles,
@@ -718,11 +718,35 @@ export default function HomePage() {
         </section>
 
         {/* ===================================================
-            4. TRANSPARENT PRICING & COMMISSION MATRIX
+            4. SERVICES CTA BAND (replaces homepage pricing section)
             =================================================== */}
-        <section id="pricing" className="py-20 bg-[#FAF9F5] border-t border-[#EADFCB]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <PricingCatalogSection id="pricing-catalog" variant="home" />
+        <section className="py-12 bg-[#FAF9F5] border-t border-[#EADFCB]">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 p-6 sm:p-8 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-xs">
+              <div className="text-center sm:text-left space-y-1.5">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#A98B57]">
+                  Services &amp; Pricing
+                </span>
+                <h2 className="font-serif text-xl sm:text-2xl font-semibold text-[#0F172A]">
+                  Browse our full service catalog &amp; transparent pricing
+                </h2>
+                <p className="text-sm text-[#64748B]">
+                  From ₹99 per image to full website builds — all prices listed upfront.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+                <Link href="/services">
+                  <Button variant="primary" size="md" withArrow className="whitespace-nowrap">
+                    View All Services
+                  </Button>
+                </Link>
+                <Link href="/contact">
+                  <Button variant="secondary" size="md" className="whitespace-nowrap">
+                    Get a Custom Quote
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
 

@@ -26,7 +26,7 @@ const PUBLIC_NAV_LINKS: NavLinkItem[] = [
   { name: "Services", href: "/services" },
   { name: "Studio", href: "/studio" },
   { name: "Projects", href: "/projects" },
-  { name: "Pricing", href: "/pricing" },
+  { name: "Contact", href: "/contact" },
   { name: "About", href: "/about" },
   { name: "Mobile App", href: "/mobile-app" },
 ];
