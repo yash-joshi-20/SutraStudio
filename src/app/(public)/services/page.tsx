@@ -370,7 +370,7 @@ export default function ServicesPage() {
                             <span className="truncate max-w-[170px] drop-shadow-sm text-[10px] text-[#F8F5EF]/90 font-sans">
                               {service.duration || "Creative Commission"}
                             </span>
-                            <span className="text-[10px] text-[#D4A35A] font-semibold drop-shadow-sm">
+                            <span className="text-[10px] text-[#D4A35A] font-semibold drop-shadow-sm shrink-0 whitespace-nowrap">
                               {service.badge}
                             </span>
                           </div>

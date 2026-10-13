@@ -318,18 +318,18 @@ export default function PricingPage() {
                   </div>
 
                   {/* Card CTA */}
-                  <div className="mt-8 pt-6 border-t border-[#EADFCB]/60 space-y-2">
-                    <Link href={`/orders?package=${tier.id}&cycle=monthly`} className="block">
+                  <div className="mt-8 pt-6 border-t border-[#EADFCB]/60 flex flex-col gap-3.5">
+                    <Link href={`/orders?package=${tier.id}&cycle=monthly`} className="block w-full">
                       <Button
                         variant={tier.popular ? "primary" : "secondary"}
                         size="md"
-                        className="w-full justify-center text-xs font-semibold"
+                        className="w-full justify-center text-xs sm:text-sm font-semibold whitespace-nowrap"
                         withArrow
                       >
                         {tier.ctaText}
                       </Button>
                     </Link>
-                    <p className="text-[10px] text-[#94A3B8] text-center">
+                    <p className="text-xs text-[#64748B] text-center font-medium leading-relaxed">
                       Direct Google Pay / UPI QR Settlement
                     </p>
                   </div>

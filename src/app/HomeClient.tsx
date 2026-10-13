@@ -201,37 +201,38 @@ export default function HomePage() {
                         />
 
                         {/* Center Video Play Badge */}
-                        <div className="absolute inset-0 flex items-center justify-center z-10">
+                        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                           <button
+                            type="button"
                             onClick={() => setDemoModalOpen(true)}
-                            className="group flex items-center gap-3 bg-[#FFFDF9]/95 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/60 shadow-lg transition-transform duration-300 hover:scale-105 cursor-pointer touch-target"
+                            className="group pointer-events-auto flex items-center gap-2.5 sm:gap-3 bg-[#FFFDF9]/95 backdrop-blur-md px-4 sm:px-5 py-2 sm:py-2.5 rounded-full border border-white/60 shadow-lg transition-transform duration-300 hover:scale-105 cursor-pointer touch-target whitespace-nowrap"
                           >
-                            <span className="w-8 h-8 rounded-full bg-[#5C3A1E] text-white flex items-center justify-center">
+                            <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#5C3A1E] text-white flex items-center justify-center shrink-0">
                               <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
                             </span>
-                            <span className="text-xs font-semibold text-[#0F172A] tracking-wider uppercase">
+                            <span className="text-xs font-semibold text-[#0F172A] tracking-wider uppercase whitespace-nowrap">
                               Watch Full Reel
                             </span>
                           </button>
                         </div>
 
                         {/* Bottom Floating Badge */}
-                        <div className="absolute bottom-6 inset-x-6 z-10">
-                          <div className="bg-[#FFFDF9]/95 backdrop-blur-md rounded-2xl p-4 border border-[#EADFCB] shadow-warm flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center shrink-0">
-                                <Sparkles className="w-5 h-5 text-[#D4A35A]" />
+                        <div className="absolute bottom-3 sm:bottom-5 inset-x-3 sm:inset-x-5 z-10">
+                          <div className="bg-[#FFFDF9]/95 backdrop-blur-md rounded-xl sm:rounded-2xl p-3 sm:p-3.5 border border-[#EADFCB] shadow-warm flex items-center justify-between gap-2.5 sm:gap-3">
+                            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center shrink-0">
+                                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#D4A35A]" />
                               </div>
-                              <div>
-                                <p className="text-xs font-bold text-[#0F172A]">
+                              <div className="min-w-0">
+                                <p className="text-xs font-bold text-[#0F172A] truncate">
                                   Studio Craftsmanship Reel
                                 </p>
-                                <p className="text-[11px] text-[#64748B]">
+                                <p className="text-[10px] sm:text-[11px] text-[#64748B] truncate">
                                   Tradition Meets Modern Creative Technology
                                 </p>
                               </div>
                             </div>
-                            <span className="text-[11px] font-semibold text-[#A98B57] bg-[#FAF8F5] px-2.5 py-1 rounded-full border border-[#EADFCB]">
+                            <span className="text-[10px] sm:text-[11px] font-semibold text-[#A98B57] bg-[#FAF8F5] px-2.5 py-1 rounded-full border border-[#EADFCB] shrink-0 whitespace-nowrap">
                               Studio Verified
                             </span>
                           </div>
@@ -248,22 +249,22 @@ export default function HomePage() {
                           priority
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/85 via-black/20 to-transparent pointer-events-none" />
-                        <div className="absolute bottom-4 inset-x-4 z-10 bg-[#FFFDF9]/95 backdrop-blur-md rounded-2xl p-3.5 border border-[#EADFCB] shadow-warm">
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center shrink-0">
+                        <div className="absolute bottom-3 sm:bottom-4 inset-x-3 sm:inset-x-4 z-10 bg-[#FFFDF9]/95 backdrop-blur-md rounded-xl sm:rounded-2xl p-3 sm:p-3.5 border border-[#EADFCB] shadow-warm">
+                          <div className="flex items-center justify-between gap-2.5 sm:gap-3">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="w-8 h-8 rounded-lg sm:rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center shrink-0">
                                 <Sparkles className="w-4 h-4 text-[#D4A35A]" />
                               </div>
-                              <div>
-                                <p className="text-xs font-bold text-[#0F172A]">
+                              <div className="min-w-0">
+                                <p className="text-xs font-bold text-[#0F172A] truncate">
                                   Sutra Studio Atelier
                                 </p>
-                                <p className="text-[10px] text-[#64748B]">
+                                <p className="text-[10px] text-[#64748B] truncate">
                                   Warm ivory, walnut &amp; brass creative sanctuary
                                 </p>
                               </div>
                             </div>
-                            <span className="text-[10px] font-semibold text-[#A98B57] bg-[#FAF8F5] px-2 py-0.5 rounded-full border border-[#EADFCB] shrink-0">
+                            <span className="text-[10px] font-semibold text-[#A98B57] bg-[#FAF8F5] px-2 py-0.5 rounded-full border border-[#EADFCB] shrink-0 whitespace-nowrap">
                               Physical Studio
                             </span>
                           </div>
@@ -838,18 +839,18 @@ export default function HomePage() {
                         </ul>
                       </div>
 
-                      <div className="mt-8 pt-6 border-t border-[#EADFCB]/60 space-y-3">
-                        <Link href={tier.ctaHref || `/orders?package=${tier.id}`}>
+                      <div className="mt-8 pt-6 border-t border-[#EADFCB]/60 flex flex-col gap-4">
+                        <Link href={tier.ctaHref || `/orders?package=${tier.id}`} className="block w-full">
                           <Button
                             variant={tier.popular ? "primary" : "secondary"}
                             size="md"
-                            className="w-full justify-center shadow-xs"
+                            className="w-full justify-center shadow-xs text-xs sm:text-sm py-3 px-4 font-semibold whitespace-nowrap"
                             withArrow
                           >
                             {tier.ctaText}
                           </Button>
                         </Link>
-                        <p className="text-[11px] text-[#94A3B8] text-center">
+                        <p className="text-xs text-[#64748B] text-center font-medium leading-relaxed">
                           Turnaround: {tier.turnaround} • Direct UPI / Bank
                         </p>
                       </div>
@@ -954,18 +955,18 @@ export default function HomePage() {
                         </ul>
                       </div>
 
-                      <div className="mt-8 pt-6 border-t border-[#EADFCB]/60 space-y-3">
-                        <Link href={`/orders?package=${tier.id}&cycle=monthly`}>
+                      <div className="mt-8 pt-6 border-t border-[#EADFCB]/60 flex flex-col gap-4">
+                        <Link href={`/orders?package=${tier.id}&cycle=monthly`} className="block w-full">
                           <Button
                             variant={tier.popular ? "primary" : "secondary"}
                             size="md"
-                            className="w-full justify-center shadow-xs"
+                            className="w-full justify-center shadow-xs text-xs sm:text-sm py-3 px-4 font-semibold whitespace-nowrap"
                             withArrow
                           >
                             {tier.ctaText}
                           </Button>
                         </Link>
-                        <p className="text-[11px] text-[#94A3B8] text-center">
+                        <p className="text-xs text-[#64748B] text-center font-medium leading-relaxed">
                           {tier.turnaround} • 1 revision round included
                         </p>
                       </div>
