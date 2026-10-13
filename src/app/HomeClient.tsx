@@ -21,8 +21,7 @@ import { SutraStudioIntroLanding } from "@/components/motion/SutraStudioIntroLan
 import { CustomDropdown } from "@/components/ui/CustomDropdown";
 import { SUTRA_SERVICES } from "@/data/servicesData";
 import { SUTRA_PROJECTS } from "@/data/projectsData";
-import { PER_PROJECT_TIERS, MONTHLY_RETAINER_TIERS } from "@/config/pricing";
-import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
+import { PricingCatalogSection } from "@/components/pricing/PricingCatalogSection";
 import {
   Play,
   Sparkles,
@@ -64,7 +63,6 @@ export default function HomePage() {
   const [demoModalOpen, setDemoModalOpen] = useState(false);
   const [activeHeroDiscipline, setActiveHeroDiscipline] = useState("image-creation");
   const [heroRightTab, setHeroRightTab] = useState<"video" | "atelier" | "particle">("video");
-  const [pricingCycle, setPricingCycle] = useState<"project" | "monthly">("project");
 
   const filteredProjects =
     selectedCategory === "All"
@@ -81,7 +79,7 @@ export default function HomePage() {
 
       <Navbar />
 
-      <main id="main-content" className="flex-1 pb-28 md:pb-0">
+      <main id="main-content" className="flex-1 pb-28 md:pb-0 overflow-x-hidden">
         {/* ===================================================
             1. HERO SECTION (Clean White / Warm Ivory Luxury Atelier)
             =================================================== */}
@@ -292,8 +290,10 @@ export default function HomePage() {
                   </div>
 
                   {/* Decorative background watermark */}
-                  <div className="absolute -top-12 -right-12 -z-10 opacity-20 pointer-events-none">
-                    <LotusSymbol className="w-72 h-72" color="gold" />
+                  <div className="absolute inset-0 overflow-hidden -z-10 pointer-events-none">
+                    <div className="absolute -top-12 -right-12 opacity-20">
+                      <LotusSymbol className="w-72 h-72" color="gold" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -359,7 +359,7 @@ export default function HomePage() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-3 shrink-0">
+              <div className="flex flex-wrap items-center gap-3">
                 <Link href="/services">
                   <Button variant="secondary" size="md" withArrow className="shadow-xs text-xs font-semibold">
                     View All Services (15+)
@@ -392,7 +392,7 @@ export default function HomePage() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-3 shrink-0">
+              <div className="flex flex-wrap items-center gap-3">
                 <Link href="/services">
                   <Button variant="primary" size="md" withArrow className="shadow-warm text-xs font-medium">
                     Read More: Full Services Catalog
@@ -721,260 +721,8 @@ export default function HomePage() {
             4. TRANSPARENT PRICING & COMMISSION MATRIX
             =================================================== */}
         <section id="pricing" className="py-20 bg-[#FAF9F5] border-t border-[#EADFCB]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-            <div className="text-center max-w-3xl mx-auto space-y-4">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] shadow-xs">
-                <span className="text-[#D4A35A] text-xs">◆</span>
-                <span className="text-[10px] md:text-xs font-semibold tracking-[0.22em] text-[#5C3A1E] uppercase">
-                  TRANSPARENT STUDIO INVESTMENT
-                </span>
-              </div>
-
-              <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-semibold text-[#0F172A]">
-                Transparent Investment: <span className="text-gold-gradient">Choose the Right Plan for Your Goals</span>
-              </h2>
-
-              <p className="text-sm sm:text-base text-[#64748B] leading-relaxed">
-                Choose between single standalone deliverables starting at ₹99, rapid turnaround packs, or our flagship 30-Day Daily Trend Creator at ₹19,999 / 30 days with daily active fulfillment.
-              </p>
-
-              {/* Billing Cycle Toggle */}
-              <div className="pt-2 flex items-center justify-center">
-                <div
-                  role="tablist"
-                  aria-label="Billing frequency"
-                  className="grid grid-cols-2 w-full max-w-xs sm:max-w-md rounded-2xl sm:rounded-full bg-[#FFFDF9] border border-[#EADFCB] p-1 shadow-xs"
-                >
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={pricingCycle === "project"}
-                    onClick={() => setPricingCycle("project")}
-                    className={`py-2 px-2 sm:px-4 rounded-xl sm:rounded-full text-xs font-semibold cursor-pointer transition-all text-center ${
-                      pricingCycle === "project"
-                        ? "bg-[#5C3A1E] text-white shadow-xs"
-                        : "text-[#64748B] hover:text-[#0F172A]"
-                    }`}
-                  >
-                    Per-Project
-                  </button>
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={pricingCycle === "monthly"}
-                    onClick={() => setPricingCycle("monthly")}
-                    className={`py-2 px-2 sm:px-4 rounded-xl sm:rounded-full text-xs font-semibold cursor-pointer flex items-center justify-center gap-1.5 transition-all text-center ${
-                      pricingCycle === "monthly"
-                        ? "bg-[#5C3A1E] text-white shadow-xs"
-                        : "text-[#64748B] hover:text-[#0F172A]"
-                    }`}
-                  >
-                    <span>30-Day Retainer</span>
-                    <span className="text-[10px] bg-[#D4A35A] text-[#0F172A] px-1.5 py-0.2 rounded-full font-bold hidden sm:inline">
-                      Daily Flagship
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Dynamic Pricing Cards Grid */}
-            <AnimatePresence mode="wait">
-              {pricingCycle === "project" ? (
-                <motion.div
-                  key="project-grid"
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -12 }}
-                  transition={{ duration: 0.3 }}
-                  className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch"
-                >
-                  {PER_PROJECT_TIERS.map((tier) => (
-                    <div
-                      key={tier.id}
-                      className={`rounded-3xl p-8 flex flex-col justify-between transition-all duration-300 ${
-                        tier.popular
-                           ? "bg-[#FFFDF9] border-2 border-[#D4A35A] shadow-warm relative ring-1 ring-[#D4A35A]/30"
-                           : "bg-[#FFFDF9] border border-[#EADFCB] shadow-sm hover:border-[#D4A35A]/60"
-                      }`}
-                    >
-                      {tier.popular && (
-                        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#5C3A1E] text-white px-4 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase shadow-xs">
-                          Most Popular
-                        </div>
-                      )}
-
-                      <div className="space-y-6">
-                        <div>
-                          <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
-                            {tier.name}
-                          </h3>
-                          <p className="text-xs text-[#64748B] mt-1.5 leading-relaxed">
-                            {tier.description}
-                          </p>
-                        </div>
-
-                        {/* Price Display */}
-                        <div className="flex items-baseline gap-1.5 pb-6 border-b border-[#EADFCB]/60">
-                          <span className="font-serif text-3xl sm:text-4xl font-bold text-[#5C3A1E]">
-                            {typeof tier.price === "number" ? (
-                              <AnimatedNumber value={tier.price} prefix="₹" />
-                            ) : (
-                              "Custom Quote"
-                            )}
-                          </span>
-                          <span className="text-xs text-[#64748B] font-mono">
-                            {tier.price === "custom" ? "" : "/ commission"}
-                          </span>
-                        </div>
-
-                        {/* Feature List */}
-                        <ul className="space-y-3 text-xs text-[#475569]">
-                          {tier.features.map((feat) => (
-                            <li key={feat} className="flex items-start gap-2.5">
-                              <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
-                              <span>{feat}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      <div className="mt-8 pt-6 border-t border-[#EADFCB]/60 flex flex-col gap-4">
-                        <Link href={tier.ctaHref || `/orders?package=${tier.id}`} className="block w-full">
-                          <Button
-                            variant={tier.popular ? "primary" : "secondary"}
-                            size="md"
-                            className="w-full justify-center shadow-xs text-xs sm:text-sm py-3 px-4 font-semibold whitespace-nowrap"
-                            withArrow
-                          >
-                            {tier.ctaText}
-                          </Button>
-                        </Link>
-                        <p className="text-xs text-[#64748B] text-center font-medium leading-relaxed">
-                          Turnaround: {tier.turnaround} • Direct UPI / Bank
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="monthly-grid"
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -12 }}
-                  transition={{ duration: 0.3 }}
-                  className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto items-stretch"
-                >
-                  {MONTHLY_RETAINER_TIERS.map((tier) => (
-                    <div
-                      key={tier.id}
-                      className={`rounded-3xl p-8 flex flex-col justify-between transition-all duration-300 ${
-                        tier.popular
-                          ? "bg-[#FFFDF9] border-2 border-[#D4A35A] shadow-warm relative ring-2 ring-[#D4A35A]/30"
-                          : "bg-[#FFFDF9] border border-[#EADFCB] shadow-sm hover:border-[#D4A35A]/60"
-                      }`}
-                    >
-                      {tier.popular && (
-                        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#5C3A1E] text-white px-4 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase shadow-xs whitespace-nowrap">
-                          FLAGSHIP: DAILY CREATIVE QUEUE
-                        </div>
-                      )}
-
-                      <div className="space-y-6">
-                        <div>
-                          <div className="flex items-center justify-between gap-2">
-                            <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
-                              {tier.name}
-                            </h3>
-                            {tier.popular && (
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A35A] bg-[#5C3A1E] px-2 py-0.5 rounded-full">
-                                1 + 1 Daily
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-[#64748B] mt-1.5 leading-relaxed">
-                            {tier.description}
-                          </p>
-                        </div>
-
-                        {/* Price Display */}
-                        <div className="flex items-baseline gap-1.5 pb-6 border-b border-[#EADFCB]/60">
-                          <span className="font-serif text-3xl sm:text-4xl font-bold text-[#5C3A1E]">
-                            <AnimatedNumber value={tier.priceMonthly ?? tier.price} prefix="₹" />
-                          </span>
-                          <span className="text-xs text-[#64748B] font-mono">
-                            / 30-day billing
-                          </span>
-                        </div>
-
-                        {/* Quota Highlight */}
-                        <div className="p-3 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E]">
-                          {tier.monthlyQuotaDescription || tier.dailyDeliverables}
-                        </div>
-
-                        {/* 5-Step Production Engine (Featured for Daily Trend Creator) */}
-                        {tier.popular && (
-                          <div className="p-3.5 rounded-2xl bg-[#FFFDF9] border border-[#D4A35A]/40 space-y-2">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#A98B57] block">
-                              5-Step Daily Production Engine:
-                            </span>
-                            <div className="space-y-1.5 text-[11px] text-[#475569]">
-                              <div className="flex items-center gap-1.5 font-medium text-[#0F172A]">
-                                <span className="w-4 h-4 rounded-full bg-[#5C3A1E] text-white text-[9px] flex items-center justify-center font-bold">1</span>
-                                <span>Daily Trend Research &amp; Hook Discovery</span>
-                              </div>
-                              <div className="flex items-center gap-1.5 font-medium text-[#0F172A]">
-                                <span className="w-4 h-4 rounded-full bg-[#5C3A1E] text-white text-[9px] flex items-center justify-center font-bold">2</span>
-                                <span>Brand Creative Direction &amp; Content Planning</span>
-                              </div>
-                              <div className="flex items-center gap-1.5 font-medium text-[#0F172A]">
-                                <span className="w-4 h-4 rounded-full bg-[#5C3A1E] text-white text-[9px] flex items-center justify-center font-bold">3</span>
-                                <span>Dual Asset Production (1 Image + 1 Video)</span>
-                              </div>
-                              <div className="flex items-center gap-1.5 font-medium text-[#0F172A]">
-                                <span className="w-4 h-4 rounded-full bg-[#5C3A1E] text-white text-[9px] flex items-center justify-center font-bold">4</span>
-                                <span>Rigorous Studio QA &amp; Color Calibration</span>
-                              </div>
-                              <div className="flex items-center gap-1.5 font-medium text-[#0F172A]">
-                                <span className="w-4 h-4 rounded-full bg-[#5C3A1E] text-white text-[9px] flex items-center justify-center font-bold">5</span>
-                                <span>Private Google Drive Vault Delivery</span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Feature List */}
-                        <ul className="space-y-2.5 text-xs text-[#475569]">
-                          {tier.features.slice(0, 5).map((feat) => (
-                            <li key={feat} className="flex items-start gap-2.5">
-                              <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
-                              <span>{feat}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      <div className="mt-8 pt-6 border-t border-[#EADFCB]/60 flex flex-col gap-4">
-                        <Link href={`/orders?package=${tier.id}&cycle=monthly`} className="block w-full">
-                          <Button
-                            variant={tier.popular ? "primary" : "secondary"}
-                            size="md"
-                            className="w-full justify-center shadow-xs text-xs sm:text-sm py-3 px-4 font-semibold whitespace-nowrap"
-                            withArrow
-                          >
-                            {tier.ctaText}
-                          </Button>
-                        </Link>
-                        <p className="text-xs text-[#64748B] text-center font-medium leading-relaxed">
-                          {tier.turnaround} • 1 revision round included
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <PricingCatalogSection id="pricing-catalog" variant="home" />
           </div>
         </section>
 

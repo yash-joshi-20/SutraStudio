@@ -6,7 +6,7 @@ import { CreativeJob, StepExecutionStatus } from "@/lib/creative-automation/type
 export const dynamic = "force-dynamic";
 
 // In-memory / initial job tracker for admin session demo & state
-let IN_MEMORY_JOBS: CreativeJob[] = [
+const IN_MEMORY_JOBS: CreativeJob[] = [
   createNewCreativeJob({
     brandId: "brand-sutra-flagship",
     clientUid: "admin-sutra-master",
