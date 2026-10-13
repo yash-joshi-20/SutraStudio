@@ -352,15 +352,14 @@ export async function GET(req: Request) {
   }
 
   // Authentication guard: Allow client filtering with targetClientUid, email, or session
+  //
+  // SECURITY: admin scope is derived ONLY from a verified Firebase session.
+  // `?scope=admin` and a `Referer` containing "/admin" are client-controlled
+  // strings and were letting ANY unauthenticated caller dump the entire studio
+  // order ledger (client names, emails, phone numbers, amounts). Both are gone.
   const targetClientUid = url.searchParams.get("clientUid")?.trim();
   const targetEmail = (url.searchParams.get("email") || url.searchParams.get("clientEmail"))?.trim();
-  const scope = url.searchParams.get("scope")?.trim();
-  const referer = req.headers.get("referer") || "";
-  const isAdminScope =
-    user.isAdmin ||
-    user.role === "admin" ||
-    scope === "admin" ||
-    referer.includes("/admin");
+  const isAdminScope = user.isAuthenticated && (user.isAdmin || user.role === "admin");
 
   // Multi-tenant security guard: Authenticated clients cannot query other clients' data
   if (user.isAuthenticated && user.role === "client" && !user.isAdmin) {
@@ -405,7 +404,41 @@ export async function GET(req: Request) {
       filtered = [...allOrders];
     }
   } else if (targetClientUid || targetEmail) {
-    // Lookup by specific client UID or Email (e.g. from client portal query)
+    // SECURITY: per-client lookup requires a verified credential. Previously an
+    // unauthenticated caller could read any client's full order records by
+    // passing ?email= or ?clientUid=. A guest may only read an order they hold a
+    // signed confirm token for (handled by /api/orders/drafts/confirm).
+    if (!user.isAuthenticated) {
+      return NextResponse.json(
+        {
+          error:
+            "Unauthorized: Sign in to view orders for a client account.",
+        },
+        { status: 401 }
+      );
+    }
+
+    const callerUid = user.uid;
+    const callerEmail = user.email?.toLowerCase();
+
+    // Non-admin callers may only narrow to THEMSELVES; any other target is
+    // cross-tenant access and is refused outright.
+    if (!isAdminScope) {
+      const isSelfUid =
+        targetClientUid &&
+        (targetClientUid === callerUid ||
+          targetClientUid.toLowerCase() === (callerEmail || ""));
+      const isSelfEmail =
+        targetEmail && callerEmail && targetEmail.toLowerCase() === callerEmail;
+
+      if (!isSelfUid && !isSelfEmail) {
+        return NextResponse.json(
+          { error: "Forbidden: Cross-tenant data access is strictly blocked." },
+          { status: 403 }
+        );
+      }
+    }
+
     filtered = filtered.filter(
       (o) =>
         (targetClientUid && (o.clientUid === targetClientUid || o.clientId === targetClientUid || (o.clientEmail && o.clientEmail.toLowerCase() === targetClientUid.toLowerCase()))) ||

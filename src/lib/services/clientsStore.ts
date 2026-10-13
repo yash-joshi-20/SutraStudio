@@ -90,13 +90,23 @@ export class ClientsStore {
     }
 
     const now = Date.now();
-    if (!force && now - globalAny.__SUTRA_CLIENTS_LAST_SYNC__ < 3000) {
+    if (!force && now - (globalAny.__SUTRA_CLIENTS_LAST_SYNC__ || 0) < 3000) {
+      return globalAny.__SUTRA_CLIENT_PROFILES__ as ClientProfileRecord[];
+    }
+
+    // Firestore free-tier quota guard: back off for 60s once exhausted so a
+    // burst of requests does not hammer the API and stall every page load.
+    if (
+      !force &&
+      globalAny.__SUTRA_CLIENTS_QUOTA_EXHAUSTED_UNTIL__ &&
+      now < globalAny.__SUTRA_CLIENTS_QUOTA_EXHAUSTED_UNTIL__
+    ) {
       return globalAny.__SUTRA_CLIENT_PROFILES__ as ClientProfileRecord[];
     }
 
     try {
       const db = adminDb();
-      const snapshot = await db.collection("users").get();
+      const snapshot = await db.collection("users").limit(200).get();
       const loaded: ClientProfileRecord[] = [];
       snapshot.forEach((doc) => {
         const d = doc.data();
@@ -122,8 +132,19 @@ export class ClientsStore {
       globalAny.__SUTRA_CLIENT_PROFILES__ = loaded;
       globalAny.__SUTRA_CLIENTS_LAST_SYNC__ = now;
       return loaded;
-    } catch (err) {
-      console.warn("[ClientsStore] syncFromFirestore warning:", err);
+    } catch (err: any) {
+      const isQuota =
+        err?.code === 8 ||
+        err?.message?.includes("RESOURCE_EXHAUSTED") ||
+        err?.message?.includes("Quota exceeded");
+      if (isQuota) {
+        globalAny.__SUTRA_CLIENTS_QUOTA_EXHAUSTED_UNTIL__ = Date.now() + 60000;
+        console.warn(
+          "[ClientsStore] Firestore quota reached. Serving from local cache for 60s."
+        );
+      } else {
+        console.warn("[ClientsStore] syncFromFirestore warning:", err);
+      }
       return globalAny.__SUTRA_CLIENT_PROFILES__ as ClientProfileRecord[];
     }
   }

@@ -12,6 +12,8 @@
  */
 
 import Module from "node:module";
+import fs from "node:fs";
+import path from "node:path";
 
 // Allow server-only modules to load during standalone test runs
 const origLoad = Module._load;
@@ -199,13 +201,23 @@ async function runPaymentSuite() {
   const dataSubmitUtr = await resSubmitUtr.json();
   assert(dataSubmitUtr.status === "payment_submitted", "Payment status transitioned to 'payment_submitted' (NOT 'paid')");
 
-  // Verify order in database is 'pending_verification' and NOT 'paid'
+  // Verify the client-scoped read path now requires a verified session (no anonymous tenant leak)
   const resOrderCheckA = await fetch(`${BASE_URL}/api/orders?clientUid=usr_client_alpha_001`);
-  const dataOrderCheckA = await resOrderCheckA.json();
-  const foundOrderA = dataOrderCheckA.orders?.find((o) => o.id === orderA.id);
-  assert(foundOrderA, "Order A retrieved from orders database");
-  assert(foundOrderA.paymentStatus === "pending_verification", "Order paymentStatus is 'pending_verification' (UTR is NOT automatic verification)");
-  assert(foundOrderA.status !== "paid", "Order status is NOT marked as paid");
+  assert(resOrderCheckA.status === 401, "Unauthenticated client-scoped order lookup rejected with HTTP 401 (tenant reads require session)");
+
+  // Verify the persisted order transition on disk (UTR is NOT automatic verification)
+  let foundOrderA;
+  try {
+    const ordersDisk = JSON.parse(
+      fs.readFileSync(path.resolve(process.cwd(), "data", "sutra_orders_store.json"), "utf8")
+    );
+    foundOrderA = ordersDisk.find((o) => o.id === orderA.id);
+  } catch {
+    foundOrderA = undefined;
+  }
+  assert(foundOrderA, "Order A retrieved from on-disk orders store");
+  assert(foundOrderA?.paymentStatus === "pending_verification", "Order paymentStatus is 'pending_verification' (UTR is NOT automatic verification)");
+  assert(foundOrderA?.status !== "paid", "Order status is NOT marked as paid");
 
   // -------------------------------------------------------------------------
   // Step 5: Single-Use UTR & Duplicate Replay Protection

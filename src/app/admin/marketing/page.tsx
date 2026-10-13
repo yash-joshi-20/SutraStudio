@@ -1484,8 +1484,8 @@ export default function AdminMarketingPage() {
                         <option value="tour_360">360 Tour (₹7,999)</option>
                         <option value="interior_viz">Interior Viz (₹6,499)</option>
                         <option value="brand_strategy">Brand Strategy (₹8,999)</option>
-                        <option value="starter">Starter Plan (₹14,999/mo)</option>
-                        <option value="growth">Growth Plan (₹29,999/mo)</option>
+                        <option value="starter">Starter Trend (₹9,999/mo)</option>
+                        <option value="growth">Growth Trend (₹14,999/mo)</option>
                       </select>
                     </div>
 

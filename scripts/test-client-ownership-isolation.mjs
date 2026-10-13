@@ -65,24 +65,17 @@ async function runTests() {
     failed++;
   }
 
-  // TEST 4: Client query with isolated UID
+  // TEST 4: Client-scoped query without a verified session must be rejected
+  // (Tenant reads require an authenticated session; anonymous clientUid probing must never return data.)
   try {
     const res = await fetch(`${baseUrl}/api/orders?clientUid=isolated-test-client-abc`);
     const data = await res.json();
-    if (res.status === 200 && Array.isArray(data.orders)) {
-      // All returned orders must belong to isolated-test-client-abc or be empty
-      const leaked = data.orders.filter(
-        (o) => o.clientId && o.clientId !== "isolated-test-client-abc" && !o.id?.startsWith("demo-")
-      );
-      if (leaked.length === 0) {
-        console.log("✓ TEST 4 PASSED: Tenant query returned only matching tenant records (0 foreign records).");
-        passed++;
-      } else {
-        console.error(`✗ TEST 4 FAILED: Tenant query leaked ${leaked.length} foreign records.`);
-        failed++;
-      }
+    const leaked = Array.isArray(data.orders) ? data.orders.length : 0;
+    if (res.status === 401 && leaked === 0) {
+      console.log("✓ TEST 4 PASSED: Unauthenticated tenant query rejected with 401 (0 records leaked).");
+      passed++;
     } else {
-      console.error(`✗ TEST 4 FAILED: Unexpected response status ${res.status}.`);
+      console.error(`✗ TEST 4 FAILED: Expected 401 with 0 records, got status ${res.status} and ${leaked} records.`);
       failed++;
     }
   } catch (err) {

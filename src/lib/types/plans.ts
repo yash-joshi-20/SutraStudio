@@ -38,8 +38,8 @@ export const SEEDED_MONTHLY_PLANS: MonthlyPlan[] = [
     id: 'autonomous-growth-retainer',
     name: 'Autonomous Growth Retainer',
     tagline: '30-Day Autonomous Campaign Engine with Daily Active Queue',
-    priceMonthlyINR: 14999,
-    priceFormattedINR: '₹14,999/month',
+    priceMonthlyINR: 19999,
+    priceFormattedINR: '₹19,999/month',
     turnaround: 'Daily Active Queue',
     isPopular: true,
     quotas: [
@@ -59,6 +59,6 @@ export const SEEDED_MONTHLY_PLANS: MonthlyPlan[] = [
       'Private Sutra Cloud Vault with Auto-Sync & Instant Downloads',
       'Executive Producer Direct Access & Priority Daily Active Queue',
     ],
-    ctaLabel: 'Activate Retainer (₹14,999/mo)',
+    ctaLabel: 'Activate Retainer (₹19,999/mo)',
   },
 ];

@@ -142,7 +142,7 @@ Explore catalog & work ↓
 • Highlights Structure:
 1. Disciplines — 12-dot minimal icon. Story cards of the 12 services with starting rates.
 2. Projects — Architectural frame icon. High-res client deliverables across commercial sectors.
-3. Retainers — Calendar icon. Dedicated monthly retainers: Starter (₹14,999), Growth (₹29,999), Enterprise (₹59,999).
+3. Retainers — Calendar icon. Dedicated monthly retainers: Starter (₹9,999), Growth (₹14,999), Daily Trend Creator (₹19,999).
 4. Process — 4-step circle icon. Brief > Production > Review > High-res Delivery.
 5. Inquiries — Chat bubble icon. Direct concierge contact and order placement.
 
@@ -1472,7 +1472,7 @@ const INSTAGRAM_HIGHLIGHTS = [
   {
     title: "03 Retainers",
     icon: <Clock className="w-5 h-5" />,
-    description: "Dedicated monthly retainers: Starter (₹14,999/mo), Growth (₹29,999/mo), Enterprise (₹59,999/mo).",
+    description: "Dedicated monthly retainers: Starter (₹9,999/mo), Growth (₹14,999/mo), Daily Trend Creator (₹19,999/mo).",
     coverBrief: "Calendar ring icon with daily pulse marker.",
     frameCount: "5 Story Frames",
   },
@@ -1545,7 +1545,7 @@ const INSTAGRAM_LAUNCH_POSTS = [
     position: 7,
     title: "Monthly Creative Retainers",
     format: "Carousel (3 Slides)",
-    visualBrief: "Minimalist breakdown of our 3 monthly creative retainers: Starter (₹14,999/mo), Growth (₹29,999/mo), and Enterprise Brand Atelier (₹59,999/mo).",
+    visualBrief: "Minimalist breakdown of our 3 monthly creative retainers: Starter (₹9,999/mo), Growth (₹14,999/mo), and Daily Trend Creator (₹19,999/mo).",
     caption: "Consistent brand momentum without the overhead of multiple agencies. Sutra Studios offers dedicated monthly creative retainers delivering continuous visual, motion, and digital assets.\n\nSelect your studio retainer at sutrastudios.in/pricing.",
     hashtags: "#GrowthPlan #CreativeRetainer #MarketingStrategy #BrandMomentum #ContentProduction",
   },
@@ -1588,7 +1588,7 @@ const FACEBOOK_LAUNCH_POSTS = [
     position: 3,
     title: "Monthly Creative Retainers",
     format: "Infographic Card",
-    visualBrief: "Retainer tier breakdown: Starter (₹14,999/mo), Growth (₹29,999/mo), and Enterprise Brand Atelier (₹59,999/mo).",
+    visualBrief: "Retainer tier breakdown: Starter (₹9,999/mo), Growth (₹14,999/mo), and Daily Trend Creator (₹19,999/mo).",
     caption: "Fuel your brand's daily content cadence. Our dedicated creative retainers provide scheduled high-resolution image, video, and 3D deliverables with direct priority revision queues.\n\nInquire today via Messenger or visit sutrastudios.in/pricing.",
     hashtags: "#MarketingRetainer #BrandGrowth #DailyDeliverables #SutraStudios",
   },

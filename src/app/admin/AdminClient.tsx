@@ -1792,19 +1792,19 @@ function AdminHubContent() {
     seoTitle: "Sutra Studio — Tradition Meets Technology | Creative & AI Studio",
     seoDescription: "Luxury creative-technology agency bridging ancient geometric principles with computational design and generative AI pipelines.",
     prices: {
-      image: "₹5,499",
-      video: "₹14,999",
-      threeD: "₹18,999",
-      threeSixty: "₹12,499",
-      interior: "₹16,999",
-      marketing: "₹8,999",
-      website: "₹19,999",
-      app: "₹19,999",
+      image: "₹99",
+      video: "₹199",
+      threeD: "₹999",
+      threeSixty: "₹2,999",
+      interior: "₹1,499",
+      marketing: "₹999",
+      website: "₹4,999",
+      app: "₹9,999",
     },
     packages: [
-      { name: "Starter Creative Pack", price: "₹5,999/mo", active: true },
-      { name: "Growth Creative Studio", price: "₹12,999/mo", active: true },
-      { name: "Atelier Enterprise Retainer", price: "₹19,999/mo", active: true },
+      { name: "Starter Trend", price: "₹9,999/mo", active: true },
+      { name: "Growth Trend", price: "₹14,999/mo", active: true },
+      { name: "Daily Trend Creator", price: "₹19,999/mo", active: true },
     ],
   });
   const [siteSaveSuccess, setSiteSaveSuccess] = useState("");
@@ -7349,7 +7349,7 @@ const [adminDataError, setAdminDataError] = useState("");
                       <button
                         type="button"
                         onClick={() => {
-                          const pitch = `Namaste! At Sutra Studio, you can work with us in two flexible ways:\n\n1. Per-Project (Commissions): Starter Creative at ₹3,499 (48h turnaround, 5x 4K renders, 1x 10s video ad), Studio Growth at ₹7,999 (15x 3D renders, 3x 15s video ads, 360° tour, 3x Meta ads), or Bespoke Enterprise with custom proposals.\n\n2. Monthly Retainer: Autonomous Growth Retainer (₹14,999/mo) gives you an always-on creative engine (daily 4K renders & video reels, 3D modeling, Meta ads) with a Daily Active Queue.\n\nAll deliverables stage directly into your private Sutra Cloud Vault.`;
+                          const pitch = `Namaste! At Sutra Studio, you can work with us in two flexible ways:\n\n1. Per-Project (Commissions): Starter Creative at ₹1,999, Studio Growth at ₹4,999, or Bespoke Enterprise with custom proposals.\n\n2. Monthly Retainer: Starter Trend (₹9,999/mo), Growth Trend (₹14,999/mo), or Daily Trend Creator (₹19,999/mo) — an always-on creative engine with a Daily Active Queue.\n\nAll deliverables stage directly into your private Sutra Cloud Vault.`;
                           navigator.clipboard.writeText(pitch);
                           setCopiedPitch(true);
                           setTimeout(() => setCopiedPitch(false), 2500);
