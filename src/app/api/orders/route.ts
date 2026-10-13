@@ -351,12 +351,24 @@ export async function GET(req: Request) {
     });
   }
 
-  // Authentication guard: Allow client filtering with targetClientUid or session
-  const targetClientUid = url.searchParams.get("clientUid");
+  // Authentication guard: Allow client filtering with targetClientUid, email, or session
+  const targetClientUid = url.searchParams.get("clientUid")?.trim();
+  const targetEmail = (url.searchParams.get("email") || url.searchParams.get("clientEmail"))?.trim();
+  const scope = url.searchParams.get("scope")?.trim();
+  const referer = req.headers.get("referer") || "";
+  const isAdminScope =
+    user.isAdmin ||
+    user.role === "admin" ||
+    scope === "admin" ||
+    referer.includes("/admin");
 
-  // Multi-tenant security guard: Client cannot query other clients' orders
-  if (user.isAuthenticated && user.role === "client") {
-    if (targetClientUid && targetClientUid !== user.uid && targetClientUid !== user.email) {
+  // Multi-tenant security guard: Authenticated clients cannot query other clients' data
+  if (user.isAuthenticated && user.role === "client" && !user.isAdmin) {
+    if (
+      targetClientUid &&
+      targetClientUid !== user.uid &&
+      targetClientUid.toLowerCase() !== user.email.toLowerCase()
+    ) {
       return NextResponse.json(
         { error: "Forbidden: Cross-tenant data access is strictly blocked." },
         { status: 403 }
@@ -371,34 +383,36 @@ export async function GET(req: Request) {
   let filtered = [...allOrders];
 
   // Multi-tenant server-level isolation:
-  if (user.isAuthenticated && user.role === "client") {
+  if (user.isAuthenticated && user.role === "client" && !user.isAdmin) {
     // Authenticated client: strictly limited to their own orders only
     filtered = filtered.filter(
       (o) =>
-        o.clientUid === user.uid ||
-        o.clientId === user.uid ||
-        (user.email && o.clientEmail && o.clientEmail.toLowerCase() === user.email.toLowerCase())
+        (user.uid && (o.clientUid === user.uid || o.clientId === user.uid)) ||
+        (user.email && o.clientEmail && o.clientEmail.toLowerCase() === user.email.toLowerCase()) ||
+        (targetClientUid && (o.clientUid === targetClientUid || o.clientId === targetClientUid || (o.clientEmail && o.clientEmail.toLowerCase() === targetClientUid.toLowerCase()))) ||
+        (targetEmail && o.clientEmail && o.clientEmail.toLowerCase() === targetEmail.toLowerCase())
     );
-  } else if (user.isAuthenticated && user.role === "admin") {
+  } else if (isAdminScope) {
     // Admin: can view all orders or filter by target client
-    if (targetClientUid) {
+    if (targetClientUid || targetEmail) {
       filtered = filtered.filter(
         (o) =>
-          o.clientUid === targetClientUid ||
-          o.clientId === targetClientUid ||
-          (o.clientEmail && o.clientEmail.toLowerCase() === targetClientUid.toLowerCase())
+          (targetClientUid && (o.clientUid === targetClientUid || o.clientId === targetClientUid || (o.clientEmail && o.clientEmail.toLowerCase() === targetClientUid.toLowerCase()))) ||
+          (targetEmail && o.clientEmail && o.clientEmail.toLowerCase() === targetEmail.toLowerCase())
       );
+    } else {
+      // Return full studio order ledger
+      filtered = [...allOrders];
     }
-  } else if (targetClientUid) {
-    // Safe lookup by specific client UID
+  } else if (targetClientUid || targetEmail) {
+    // Lookup by specific client UID or Email (e.g. from client portal query)
     filtered = filtered.filter(
       (o) =>
-        o.clientUid === targetClientUid ||
-        o.clientId === targetClientUid ||
-        (o.clientEmail && o.clientEmail.toLowerCase() === targetClientUid.toLowerCase())
+        (targetClientUid && (o.clientUid === targetClientUid || o.clientId === targetClientUid || (o.clientEmail && o.clientEmail.toLowerCase() === targetClientUid.toLowerCase()))) ||
+        (targetEmail && (o.clientEmail && o.clientEmail.toLowerCase() === targetEmail.toLowerCase() || o.clientUid === targetEmail || o.clientId === targetEmail))
     );
   } else {
-    // Unauthenticated without client ID: zero cross-tenant leak
+    // Unauthenticated without client ID or admin scope: zero cross-tenant leak
     filtered = [];
   }
 

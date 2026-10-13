@@ -12,6 +12,7 @@
 import "server-only";
 import {
   decodeSession,
+  decodeIdToken,
   getSessionUser,
   SESSION_COOKIE,
   type AccountRole,
@@ -29,8 +30,8 @@ export interface AuthenticatedUser extends SessionUser {
  * Resolve the caller.
  *
  * @param req Optional request; a `Authorization: Bearer <idToken>` header is
- *            accepted for server-to-server calls (n8n webhooks). It is verified
- *            against Firebase — never trusted as-is.
+ *            accepted for server-to-server calls (n8n webhooks) and client fetches.
+ *            It is verified against Firebase — never trusted as-is.
  */
 export async function getAuthenticatedUser(req?: Request): Promise<AuthenticatedUser> {
   const session = await resolveSession(req);
@@ -60,8 +61,7 @@ async function resolveSession(req?: Request): Promise<SessionUser | null> {
     const header = req.headers.get("authorization");
     if (header?.startsWith("Bearer ")) {
       const token = header.slice(7).trim();
-      // Session cookies and ID tokens share the same verification contract.
-      const decoded = await decodeSession(token, { checkRevoked: false }).catch(() => null);
+      const decoded = await decodeIdToken(token, false).catch(() => null);
       if (decoded) return decoded;
     }
   }

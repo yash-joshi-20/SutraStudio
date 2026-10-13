@@ -182,7 +182,7 @@ export class OrdersStore {
   public static async syncFromFirestore(force = false): Promise<FirestoreOrderRecord[]> {
     const now = Date.now();
     // Throttle syncs to every 2 seconds unless forced
-    if (!force && now - globalAny.__SUTRA_ORDERS_LAST_SYNC__ < 2000) {
+    if (!force && now - (globalAny.__SUTRA_ORDERS_LAST_SYNC__ || 0) < 2000) {
       return globalAny.__SUTRA_STORED_ORDERS__;
     }
 
@@ -199,19 +199,29 @@ export class OrdersStore {
       if (ord && ord.id) map.set(ord.id, { ...(map.get(ord.id) || {}), ...ord });
     }
 
-    // 3. Overlay Firestore documents if available
-    if (isFirebaseAdminReady()) {
+    // 3. Overlay Firestore documents if available and quota not exhausted
+    const isQuotaCooling =
+      globalAny.__SUTRA_FIRESTORE_QUOTA_EXHAUSTED_UNTIL__ &&
+      now < globalAny.__SUTRA_FIRESTORE_QUOTA_EXHAUSTED_UNTIL__;
+
+    if (isFirebaseAdminReady() && (!isQuotaCooling || force)) {
       try {
         const db = adminDb();
-        const snapshot = await db.collection("orders").get();
+        const snapshot = await db.collection("orders").limit(100).get();
         snapshot.forEach((doc) => {
           const data = doc.data() as FirestoreOrderRecord;
           if (data && data.id) {
             map.set(data.id, { ...(map.get(data.id) || {}), ...data });
           }
         });
-      } catch (err) {
-        console.warn("[OrdersStore] syncFromFirestore warning:", err);
+      } catch (err: any) {
+        if (err?.code === 8 || err?.message?.includes("RESOURCE_EXHAUSTED") || err?.message?.includes("Quota exceeded")) {
+          // Cooldown for 60 seconds to prevent blocking requests
+          globalAny.__SUTRA_FIRESTORE_QUOTA_EXHAUSTED_UNTIL__ = now + 60000;
+          console.warn("[OrdersStore] Firestore quota reached. Serving seamlessly from fast local vault cache.");
+        } else {
+          console.warn("[OrdersStore] syncFromFirestore warning:", err?.message || err);
+        }
       }
     }
 
