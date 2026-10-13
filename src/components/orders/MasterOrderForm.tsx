@@ -447,7 +447,10 @@ export function MasterOrderForm({
   // Calculate Order Amount — always canonical price × quantity (server re-validates)
   const orderAmount = React.useMemo(() => {
     if (orderMode === "packages") {
-      return activePackage.price;
+      // Monthly retainers are single subscriptions; one-time packs multiply by quantity.
+      return activePackage.billingCycle === "monthly"
+        ? activePackage.price
+        : activePackage.price * Math.max(1, quantity);
     }
     return activeService.basePrice * Math.max(1, quantity);
   }, [orderMode, activePackage, activeService, quantity]);
@@ -511,7 +514,9 @@ export function MasterOrderForm({
         price: orderAmount,
         billingCycle: isMonthlyRetainer ? ("monthly" as const) : ("project" as const),
       },
-      quantity: orderMode === "packages" ? 1 : Math.max(1, quantity),
+      quantity: orderMode === "packages"
+        ? (activePackage.billingCycle === "monthly" ? 1 : Math.max(1, quantity))
+        : Math.max(1, quantity),
       serviceDetails: {
         orderMode,
         ...(orderMode === "packages" && {
@@ -827,7 +832,10 @@ export function MasterOrderForm({
                     return (
                       <div
                         key={pkg.id}
-                        onClick={() => setSelectedPackageId(pkg.id)}
+                        onClick={() => {
+                          setSelectedPackageId(pkg.id);
+                          setQuantity(1);
+                        }}
                         className={`p-5 rounded-2xl border text-left cursor-pointer transition-all flex flex-col justify-between gap-4 relative ${
                           isSelected
                             ? "bg-[#FAF9F5] border-[#5C3A1E] ring-2 ring-[#5C3A1E] shadow-sm"
@@ -882,6 +890,53 @@ export function MasterOrderForm({
                     );
                   })}
                 </div>
+
+                {/* One-time pack quantity & live total (monthly retainers are single subscriptions) */}
+                {activePackage.billingCycle !== "monthly" && (
+                  <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <span className="font-serif font-bold text-sm text-[#0F172A] block">
+                        {activePackage.title}
+                      </span>
+                      <span className="text-xs text-[#64748B]">
+                        {formatCurrencyINR(activePackage.price)} per pack • {activePackage.turnaround}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="inline-flex items-center gap-1 rounded-xl border border-[#EADFCB] bg-white p-1">
+                        <button
+                          type="button"
+                          aria-label="Decrease pack quantity"
+                          onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                          disabled={quantity <= 1}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#4A3B22] hover:bg-[#F4EFE6] disabled:opacity-40"
+                        >
+                          <Minus className="w-4 h-4" />
+                        </button>
+                        <span className="min-w-8 text-center text-sm font-semibold text-[#171717]">
+                          {quantity}
+                        </span>
+                        <button
+                          type="button"
+                          aria-label="Increase pack quantity"
+                          onClick={() => setQuantity((q) => Math.min(100, q + 1))}
+                          disabled={quantity >= 100}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#4A3B22] hover:bg-[#F4EFE6] disabled:opacity-40"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">
+                          {quantity > 1 ? `Total (×${quantity})` : "Total"}
+                        </span>
+                        <span className="font-serif font-bold text-lg text-[#5C3A1E]">
+                          {formatCurrencyINR(orderAmount)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </>
             )}
 

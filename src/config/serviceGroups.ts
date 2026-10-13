@@ -230,7 +230,15 @@ export function findServiceGroupBySlug(
   if (!slug) return undefined;
   const clean = slug.toLowerCase().trim();
   return SERVICE_CATALOG_GROUPS.find((group) =>
-    group.entries.some((entry) => entry.slug === clean)
+    group.entries.some(
+      (entry) =>
+        entry.slug === clean ||
+        entry.item.id.toLowerCase() === clean ||
+        entry.options.some(
+          (option) =>
+            option.item.slug === clean || option.item.id.toLowerCase() === clean
+        )
+    )
   );
 }
 
@@ -245,7 +253,10 @@ export function findServiceCatalogEntry(
       (entry) =>
         entry.slug === clean ||
         entry.item.id.toLowerCase() === clean ||
-        entry.options.some((option) => option.item.id.toLowerCase() === clean)
+        entry.options.some(
+          (option) =>
+            option.item.slug === clean || option.item.id.toLowerCase() === clean
+        )
     ) || undefined
   );
 }

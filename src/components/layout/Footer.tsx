@@ -39,7 +39,7 @@ export function Footer() {
     { label: "Heritage & Philosophy", href: "/about" },
     { label: "Craft & Technology", href: "/studio" },
     { label: "Curated Projects", href: "/projects" },
-    { label: "Investment & Pricing", href: "/pricing" },
+    { label: "Verified Service Pricing", href: "/services" },
     { label: "Mobile App for iOS & Android", href: "/mobile-app" },
     { label: "Client Discovery Desk", href: "/contact" },
   ];

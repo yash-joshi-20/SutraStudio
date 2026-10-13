@@ -32,7 +32,13 @@ export function ServicePurchasePanel({
   revisionPolicy,
 }: ServicePurchasePanelProps) {
   const hasOptions = options.length > 1;
-  const [optionIndex, setOptionIndex] = useState(0);
+  // Default to the option matching the deep-linked SKU (e.g. /services/branded-image-pack-5).
+  const [optionIndex, setOptionIndex] = useState(() => {
+    const idx = options.findIndex(
+      (option) => option.item.slug === item.slug || option.item.id === item.id
+    );
+    return idx >= 0 ? idx : 0;
+  });
   const [quantity, setQuantity] = useState(1);
 
   const selectedOption = hasOptions ? options[optionIndex] : undefined;
