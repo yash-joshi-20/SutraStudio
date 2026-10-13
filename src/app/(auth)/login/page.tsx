@@ -178,7 +178,7 @@ function ClientLoginForm() {
         return;
       }
 
-      const { emailVerificationSent } = await register({
+      const regResult = await register({
         name: fullName.trim(),
         email: email.trim(),
         phone: phone.trim(),
@@ -192,18 +192,15 @@ function ClientLoginForm() {
       });
 
       soundSystem.play("welcome");
+      const isAdmin = regResult?.user?.role === "admin";
+      const destination = isAdmin ? "/admin" : safeReturnTo(rawParam, "client");
+
       setSuccessMsg(
-        emailVerificationSent
-          ? "Account created. Check your inbox to verify your email, then sign in."
-          : "Account created. Opening your workspace…"
+        isAdmin
+          ? "Administrator clearance granted. Opening executive terminal…"
+          : "Account created successfully. Opening your workspace…"
       );
-      if (emailVerificationSent) {
-        setMode("signin");
-        setPassword("");
-      } else {
-        const destination = safeReturnTo(rawParam, "client");
-        window.location.replace(destination);
-      }
+      window.location.replace(destination);
     } catch (err: any) {
       setErrorMsg(err instanceof Error ? err.message : "Sign-in failed. Please try again.");
     } finally {

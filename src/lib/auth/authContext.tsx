@@ -551,9 +551,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         verificationSent = false;
       }
 
+      const nextRole: UserRole = (data?.user as any)?.role === "admin" ? "admin" : "client";
       const next = toAuthUser({ ...cred.user, displayName: name });
+      next.role = nextRole;
       setUser(next);
-      setRole("client");
+      setRole(nextRole);
       void refreshProfile();
       return { user: next, emailVerificationSent: verificationSent, ...data };
     },

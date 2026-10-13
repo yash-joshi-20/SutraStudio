@@ -39,7 +39,7 @@ export function RouteGuard({
       } else if (requiredRole === "admin" && role !== "admin") {
         const timer = setTimeout(() => {
           router.push("/admin/login");
-        }, 150);
+        }, 600);
         return () => clearTimeout(timer);
       }
     }

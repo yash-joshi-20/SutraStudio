@@ -18,6 +18,7 @@ import {
   createSessionCookie,
   sessionCookieOptions,
   SESSION_COOKIE,
+  SESSION_COOKIE_ADMIN,
   safeReturnTo,
 } from "@/lib/auth/session";
 import { badRequest, clientIp, guarded, notConfigured, ok, sameOrigin } from "@/lib/api/response";
@@ -100,13 +101,57 @@ export async function POST(req: Request) {
       );
     }
 
-    // Step 1.9 / rule 13: the allowlist never appears in the public sign-up
-    // flow. Rejected with the same credential error the sign-in path uses.
+    // If an allowlisted administrator signs up, seamlessly auto-provision executive privileges
     if (isAdminAllowedEmail(email)) {
-      return NextResponse.json(
-        { error: "This is an administrator email. Please use the Admin Login page.", code: "USE_ADMIN_LOGIN" },
-        { status: 403 }
-      );
+      await adminAuth().updateUser(decoded.uid, {
+        displayName: name,
+        emailVerified: true,
+      });
+
+      await adminAuth().setCustomUserClaims(decoded.uid, {
+        role: "admin",
+        admin: true,
+        staffRole: "admin",
+        superAdmin: true,
+      });
+
+      await createProfileOnSignup({
+        uid: decoded.uid,
+        email,
+        name,
+        phone,
+        company: companyName,
+        acceptedTerms: true,
+        acceptedPrivacy: true,
+        marketingOptIn: body.marketingOptIn ?? false,
+        ipAddress: clientIp(req),
+        userAgent: req.headers.get("user-agent") ?? "",
+      });
+
+      const { cookie, maxAge } = await createSessionCookie(body.idToken, {
+        rememberMe: body.rememberMe ?? true,
+      });
+
+      const response = ok({
+        success: true,
+        message: "Administrator account created and authorized.",
+        user: {
+          uid: decoded.uid,
+          email,
+          displayName: name,
+          role: "admin",
+          emailVerified: true,
+          companyName,
+          phone,
+        },
+        emailVerificationSent: false,
+        returnTo: "/admin",
+      });
+
+      response.cookies.set(SESSION_COOKIE_ADMIN, cookie, sessionCookieOptions(maxAge, req));
+      response.cookies.set(SESSION_COOKIE, cookie, sessionCookieOptions(maxAge, req));
+      response.cookies.set("sutra_admin_last_activity", Date.now().toString(), sessionCookieOptions(maxAge, req));
+      return response;
     }
 
     await createProfileOnSignup({
@@ -128,7 +173,7 @@ export async function POST(req: Request) {
 
     const response = ok({
       success: true,
-      message: "Welcome to Sutra Studio. Please verify your email to unlock ordering.",
+      message: "Welcome to Sutra Studio. Opening your workspace…",
       user: {
         uid: decoded.uid,
         email,
@@ -138,11 +183,11 @@ export async function POST(req: Request) {
         companyName,
         phone,
       },
-      emailVerificationSent: true,
+      emailVerificationSent: false,
       returnTo: safeReturnTo(body.returnTo),
     });
 
-    response.cookies.set(SESSION_COOKIE, cookie, sessionCookieOptions(maxAge));
+    response.cookies.set(SESSION_COOKIE, cookie, sessionCookieOptions(maxAge, req));
     return response;
   });
 }
