@@ -1,76 +1,57 @@
-# Sutra Studio — AI Creative Automation Platform
-**Version:** 2.4.0  
-**Environment:** Next.js 16 (App Router), React 19, TypeScript Strict, Cloud Firestore, Google Drive API  
-**Branch:** `feature/creative-automation-master-system`
+# SUTRA STUDIO — AI Creative Automation Engine
+## Enterprise Production & GitBook Documentation Hub
+
+Welcome to the **Sutra Studio AI Creative Automation Engine** documentation. This system provides autonomous, multi-step image and video production pipelines, cinematic shot planning, smart AI provider adapters, Firebase/Firestore persistence, Google Drive asset management, and n8n orchestration.
 
 ---
 
-## 1. Overview
+## 🏛️ System Philosophy & Core Guardrails
 
-The **AI Creative Automation Platform** upgrades Sutra Studio from an agency website into a dynamic, multi-client creative production engine. It integrates trend research, screenplay drafting, scene-by-scene storyboards, capability dispatching, programmatic video rendering (Remotion, FFmpeg), and Google Drive Vault delivery into a unified 14-step pipeline.
-
-### Core Philosophy
-- **Authentic Brand Heritage:** Retains Sutra Studio's signature warm ivory palette (`#FAF9F5`), charcoal slate (`#171717`), and muted brass accents (`#A98B57`), rooted in sacred Indian proportion and calm luxury.
-- **Client Segregation:** Full multi-tenant isolation preserving separate brand kits, negative style rules, reference assets, and approval queues.
-- **Zero Hallucination / Zero Fake Media:** Strict safeguards prohibiting the generation or mock fabrication of final media during platform setup.
-- **Human-in-the-Loop:** Mandatory approval gates before jobs advance from storyboard to rendering and delivery.
+1. **Warm Ivory & Luxury Atelier Aesthetics**: Built with Sutra Studio's signature ivory (`#FAF9F5`), charcoal (`#171717`), and muted brass (`#A98B57`) design system.
+2. **Deterministic Dual-Mode Persistence**: Primary real-time state stored in Google Firestore (`creative_jobs`, `job_execution_logs`), backed by an in-memory fallback layer for seamless offline and low-latency operation.
+3. **Zero Fake Outputs**: When external commercial credentials (`BFL_API_KEY`, `KLING_API_KEY`) are missing, the system never fabricates synthetic assets. Instead, it surfaces honest status notices, actionable setup instructions, and automatically executes zero-key fallback adapters (Pollinations AI, Local Cognitive Template Engine).
+4. **Human-in-the-Loop Governance**: Multi-stage creative reviews, approval gates, idempotent step execution, and audit tracing ensure full creative director control over brand fidelity.
 
 ---
 
-## 2. Platform Architecture Directory
+## 📚 GitBook Documentation Library
 
-```text
-src/
-├── lib/
-│   └── creative-automation/
-│       ├── types.ts                   # Core contracts & data schemas
-│       ├── stylePresets.ts            # Observable creative style presets
-│       ├── promptLibrary.ts           # Master Prompt Library (Categories A–E)
-│       ├── keywordLibrary.ts          # Searchable technique & keyword dictionary
-│       ├── capabilityRegistry.ts      # Live tool/adapter discovery & provider router
-│       ├── workflowEngine.ts          # 14-step configurable pipeline & job simulator
-│       ├── brandProfiles.ts           # Sutra flagship profile & multi-tenant schema
-│       └── trendResearchEngine.ts     # Verified trends & audience topic analysis
-├── app/
-│   ├── admin/
-│   │   └── creative-automation/
-│   │       └── page.tsx               # Admin Creative Automation Studio UI
-│   └── api/
-│       └── admin/
-│           └── creative-automation/   # Server-side guarded REST endpoints
-│               ├── capabilities/
-│               ├── prompts/
-│               ├── keywords/
-│               ├── workflows/
-│               ├── brands/
-│               ├── trends/
-│               └── jobs/
+This documentation suite is organized for seamless browsing in GitBook and markdown viewers:
+
+| File | Title | Description |
+|---|---|---|
+| [01-PROJECT-AUDIT.md](./01-PROJECT-AUDIT.md) | Project Audit & Integration Baseline | Technical audit of existing Next.js App Router, Firebase, and APIs. |
+| [02-SYSTEM-ARCHITECTURE.md](./02-SYSTEM-ARCHITECTURE.md) | System Architecture & Flow | Architectural blueprint, entity models, and runtime sequence. |
+| [03-WORKFLOW-ENGINE.md](./03-WORKFLOW-ENGINE.md) | Dynamic Workflow Orchestrator | Core state machine, dependency validator, and job execution runner. |
+| [04-WORKFLOW-STEPS.md](./04-WORKFLOW-STEPS.md) | 8-Step Dynamic Pipeline | Specification of the 8 canonical creative production stages. |
+| [05-AI-PROVIDER-ADAPTERS.md](./05-AI-PROVIDER-ADAPTERS.md) | Smart AI Provider Adapters | Adapter layer for Gemini, BFL FLUX, Pollinations, Kling, and Local Engine. |
+| [06-CINEMATIC-SHOT-PRESETS.md](./06-CINEMATIC-SHOT-PRESETS.md) | 18 Cinematic Shot Presets | Complete library of 18 camera, lens, and lighting presets. |
+| [07-API-REFERENCE.md](./07-API-REFERENCE.md) | API Contracts & Endpoints | Complete REST contracts for Jobs, Workflows, Shot Presets, and Providers. |
+| [08-ADMIN-DASHBOARD.md](./08-ADMIN-DASHBOARD.md) | Admin Studio Integration | Admin UI walkthrough, workflow builder, shot tester, and job queue. |
+| [09-FIREBASE-AND-STORAGE.md](./09-FIREBASE-AND-STORAGE.md) | Firebase & Google Drive Vault | Firestore collections, security rules, and Google Drive vault syncing. |
+| [10-N8N-INTEGRATION.md](./10-N8N-INTEGRATION.md) | n8n Webhook & Distribution | Webhook payload structures, event triggers, and distribution nodes. |
+| [11-SECURITY-AND-SECRETS.md](./11-SECURITY-AND-SECRETS.md) | Security, Roles & Secret Handling | Session guarding, CSRF protection, and zero-leak credential hygiene. |
+| [12-TESTING-AND-QA.md](./12-TESTING-AND-QA.md) | Testing & Quality Assurance | Verification test matrices, retry safety, and test commands. |
+| [13-DEPLOYMENT.md](./13-DEPLOYMENT.md) | Production Deployment Guide | Environment variables, containerization, and Vercel/Node deployment. |
+| [14-TROUBLESHOOTING.md](./14-TROUBLESHOOTING.md) | Troubleshooting & Diagnostics | Error codes, rate limit recovery, and credential remediation. |
+| [15-ADDING-A-NEW-PROVIDER.md](./15-ADDING-A-NEW-PROVIDER.md) | Developer Guide: New AI Provider | Step-by-step instructions for implementing an `AIProviderAdapter`. |
+| [16-ADDING-A-NEW-WORKFLOW.md](./16-ADDING-A-NEW-WORKFLOW.md) | Developer Guide: New Workflow | Step-by-step instructions for defining custom workflow templates. |
+| [CHANGELOG.md](./CHANGELOG.md) | Engine Release History | Version history and major capability milestones. |
+| [IMPLEMENTATION_REPORT.md](./IMPLEMENTATION_REPORT.md) | Master Implementation QA Report | Final verification audit, git commit details, and delivery log. |
+
+---
+
+## ⚡ Quick Start (Developer Setup)
+
+```bash
+# 1. Inspect TypeScript compiler validity
+npm run typecheck
+
+# 2. Run unit & integration test suites
+npm run test
+
+# 3. Launch local dev server
+npm run dev
 ```
 
----
-
-## 3. Documentation Suite Index
-
-1. [`EXISTING_SYSTEM_AUDIT.md`](file:///d:/SutraStudio/docs/ai-creative-automation/EXISTING_SYSTEM_AUDIT.md) — Comprehensive pre-implementation system audit.
-2. [`ARCHITECTURE.md`](file:///d:/SutraStudio/docs/ai-creative-automation/ARCHITECTURE.md) — Technical architecture, state machines, and data models.
-3. [`WORKFLOW_ENGINE.md`](file:///d:/SutraStudio/docs/ai-creative-automation/WORKFLOW_ENGINE.md) — 14-step execution lifecycle, approval gates, and retry policies.
-4. [`PROMPT_LIBRARY.md`](file:///d:/SutraStudio/docs/ai-creative-automation/PROMPT_LIBRARY.md) — Categorized prompt catalog (Reels, UI Demos, Marketing, Cinematic, 3D).
-5. [`KEYWORD_LIBRARY.md`](file:///d:/SutraStudio/docs/ai-creative-automation/KEYWORD_LIBRARY.md) — Searchable dictionary of creative keywords and technique rules.
-6. [`CREATIVE_STYLE_PRESETS.md`](file:///d:/SutraStudio/docs/ai-creative-automation/CREATIVE_STYLE_PRESETS.md) — Observable presets extracted from reference media.
-7. [`SKILLS_AND_PLUGINS.md`](file:///d:/SutraStudio/docs/ai-creative-automation/SKILLS_AND_PLUGINS.md) — Capability discovery, provider routing, and execution fallbacks.
-8. [`TREND_RESEARCH.md`](file:///d:/SutraStudio/docs/ai-creative-automation/TREND_RESEARCH.md) — Topic discovery, search velocity, and audience research workflows.
-9. [`SCREEN_TUTORIAL_WORKFLOWS.md`](file:///d:/SutraStudio/docs/ai-creative-automation/SCREEN_TUTORIAL_WORKFLOWS.md) — Screen recording, cursor tracking, and Next.js demo standards.
-10. [`IMAGE_VIDEO_WORKFLOWS.md`](file:///d:/SutraStudio/docs/ai-creative-automation/IMAGE_VIDEO_WORKFLOWS.md) — Image generation & video assembly pipelines.
-11. [`3D_INTERIOR_360_WORKFLOWS.md`](file:///d:/SutraStudio/docs/ai-creative-automation/3D_INTERIOR_360_WORKFLOWS.md) — 3D mesh modeling, equirectangular panoramas, and WebGL viewers.
-12. [`ADMIN_EDITOR.md`](file:///d:/SutraStudio/docs/ai-creative-automation/ADMIN_EDITOR.md) — Admin Creative Automation Studio interface and controls.
-13. [`MULTI_CLIENT_SYSTEM.md`](file:///d:/SutraStudio/docs/ai-creative-automation/MULTI_CLIENT_SYSTEM.md) — Multi-client tenant structure, security boundaries, and custom kits.
-14. [`API_REFERENCE.md`](file:///d:/SutraStudio/docs/ai-creative-automation/API_REFERENCE.md) — Specifications for all `/api/admin/creative-automation/*` endpoints.
-15. [`SECURITY.md`](file:///d:/SutraStudio/docs/ai-creative-automation/SECURITY.md) — Authentication, credential protection, and Firestore security rules.
-16. [`QA_REPORT.md`](file:///d:/SutraStudio/docs/ai-creative-automation/QA_REPORT.md) — Validation checklist, responsive verification, and lint results.
-17. [`IMPLEMENTATION_REPORT.md`](file:///d:/SutraStudio/docs/ai-creative-automation/IMPLEMENTATION_REPORT.md) — Step-by-step audit of completed deliverables.
-
----
-
-## 4. Key Directives & Operating Constraints
-- **Zero Media Generation During Setup:** All pipelines are configured to register specifications and queues without invoking billing or generative media APIs.
-- **Preserved Identity:** Official Sutra logo, warm ivory tokens, and canonical pricing (₹99 to ₹19,999) remain intact.
+Navigate to [http://localhost:3000/admin/creative-automation](http://localhost:3000/admin/creative-automation) to access the studio.

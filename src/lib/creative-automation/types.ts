@@ -188,6 +188,7 @@ export interface WorkflowStepConfig {
   fallbackCapabilityId?: string;
   isEnabled: boolean;
   requiresHumanApproval: boolean;
+  dependsOnSteps?: number[];
   retryPolicy: {
     maxRetries: number;
     backoffMs: number;
@@ -235,9 +236,10 @@ export interface CreativeJob {
   workflowId: string;
   title: string;
   category: CreativeCategory;
-  status: "queued" | "in_progress" | "paused_for_approval" | "completed" | "failed" | "cancelled";
+  status: JobStatus;
   currentStepIndex: number;
   steps: JobStepRecord[];
+
   targetDeliverables: {
     aspectRatio: AspectRatio;
     format: string;
@@ -346,3 +348,95 @@ export interface TrendObservation {
   targetKeywords: string[];
   proposedPublishingWindow: string;
 }
+
+// ---------------------------------------------------------------------------
+// 9. Standard Creative Job States & Entity Aliases (Step 02)
+// ---------------------------------------------------------------------------
+
+export type JobStatus =
+  | "draft"
+  | "queued"
+  | "processing"
+  | "quality_check"
+  | "completed"
+  | "failed"
+  | "cancelled"
+  | "in_progress"
+  | "paused_for_approval";
+
+// ---------------------------------------------------------------------------
+// 10. Professional Cinematic Shot Presets (Step 04)
+// ---------------------------------------------------------------------------
+
+export interface ShotPreset {
+  id: string;
+  name: string;
+  category?: string;
+  purpose: string;
+  promptTemplate: string;
+  cameraMovement: string;
+  subjectMovement: string;
+  lightingAtmosphere: string;
+  lightingAndAtmosphere?: string;
+  composition: string;
+  lensStyleGuidance: string;
+  durationTargetSeconds: number;
+  aspectRatio: AspectRatio;
+  transitionRecommendation: string;
+  continuityRequirements: string;
+  providerRequirements: string[];
+  negativePrompt: string;
+  tags: string[];
+}
+
+
+// ---------------------------------------------------------------------------
+// 11. Media Asset Specification
+// ---------------------------------------------------------------------------
+
+export interface MediaAsset {
+  id: string;
+  jobId: string;
+  stepIndex: number;
+  stepId: string;
+  name: string;
+  type: "image" | "video" | "audio" | "3d_model" | "storyboard" | "manifest";
+  url: string;
+  thumbnailUrl?: string;
+  driveFileId?: string;
+  driveFolderId?: string;
+  driveViewLink?: string;
+  dimensions?: { width: number; height: number; aspectRatio: string };
+  durationSeconds?: number;
+  mimeType: string;
+  sizeBytes?: number;
+  qualityScore?: number;
+  status: "draft" | "approved" | "rejected";
+  createdAt: string;
+}
+
+// ---------------------------------------------------------------------------
+// 12. Job Execution Log & Audit Trail
+// ---------------------------------------------------------------------------
+
+export interface JobExecutionLog {
+  id: string;
+  jobId: string;
+  stepIndex: number;
+  stepId: string;
+  provider: string;
+  action: string;
+  status: "started" | "success" | "retry" | "failed" | "cancelled";
+  durationMs: number;
+  costUsd: number;
+  inputPayload: Record<string, any>;
+  outputPayload?: Record<string, any>;
+  error?: string;
+  timestamp: string;
+}
+
+// Canonical Aliases matching PRD naming
+export type CreativeWorkflow = WorkflowDefinition;
+export type WorkflowStep = WorkflowStepConfig;
+export type ProviderConfiguration = CapabilityItem;
+export type PromptTemplate = MasterPromptTemplate;
