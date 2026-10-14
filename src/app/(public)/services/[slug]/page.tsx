@@ -158,6 +158,12 @@ export default async function ServiceDetailPage({
             <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#0F172A] leading-tight">
               {service.name}
             </h1>
+            <p className="text-xs text-[#64748B] mb-2">
+              Studio Sample
+            </p>
+            <p className="text-xs text-[#64748B] mb-2">
+              Exclusions
+            </p>
             <p className="text-base lg:text-lg text-[#64748B] leading-relaxed max-w-2xl">
               {service.tagline || service.description}
             </p>
@@ -645,12 +651,14 @@ export default async function ServiceDetailPage({
                 >
                   <Package className="w-4 h-4 text-[#A98B57]" />
                   View Packages
+                  <span className="text-[10px] text-[#64748B]">Studio Sample</span>
                 </Link>
                 <Link
                   href="/pricing"
                   className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#EADFCB] bg-[#FFFDF9] px-6 py-3.5 text-sm font-semibold text-[#4A3B22] transition-colors hover:border-[#D4A35A]"
                 >
                   Explore Pricing
+                  <span className="text-[10px] text-[#64748B]">Exclusions</span>
                 </Link>
               </div>
             </>

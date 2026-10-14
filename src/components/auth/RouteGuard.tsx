@@ -7,6 +7,19 @@ import { useAuth } from "@/lib/auth/authContext";
 import { Button } from "@/components/ui/Button";
 import { ShieldAlert, Lock, ArrowRight } from "lucide-react";
 
+// Public routes that do not require authentication
+const PUBLIC_PATHS = [
+  "/",
+  "/packages",
+  "/pricing",
+  "/services",
+  "/contact",
+  "/about",
+  "/mobile-app",
+  "/studio",
+  "/projects",
+];
+
 interface RouteGuardProps {
   children: React.ReactNode;
   requiredRole?: "client" | "admin";
@@ -23,6 +36,10 @@ export function RouteGuard({
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated) {
+        // Allow public routes without authentication
+        if (PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(path + "/"))) {
+          return;
+        }
         const targetLogin = requiredRole === "admin" ? "/admin/login" : "/login";
         const currentPath = pathname || (requiredRole === "admin" ? "/admin" : "/dashboard");
         if (currentPath === "/login" || currentPath === "/register" || currentPath === "/admin/login") {
@@ -55,6 +72,10 @@ export function RouteGuard({
 
   // Not authenticated fallback
   if (!isAuthenticated) {
+    // If on a public path, render children directly (navbar, etc.) without the protected message
+    if (PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(path + "/"))) {
+      return <>{children}</>;
+    }
     const loginHref = requiredRole === "admin" ? "/admin/login" : "/login";
     const targetLink = pathname && pathname !== "/dashboard" && pathname !== "/admin" && pathname !== "/"
       ? `${loginHref}?returnTo=${encodeURIComponent(pathname)}`
