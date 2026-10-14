@@ -8,6 +8,7 @@
  *  3. Are covered by the /services/[slug] generateStaticParams source configs
  *  4. Contain no pricing fields in the shared configuration
  *  5. Are consumed by the Home page, Services page, Footer and Chat widget
+ *  6. Render a price-free detail experience with Start Order + Packages links
  */
 
 import assert from "assert";
@@ -197,6 +198,65 @@ check("Chat concierge lists the eight services price-free", () => {
   assert(
     chatContent.includes("/services/${svc.slug}"),
     "chat service items must link to detail routes"
+  );
+});
+
+console.log("\n--> 4. Detail pages: price-free main-service experience (STEP 3)...");
+
+const detailPageContent = fs.readFileSync(
+  path.join(ROOT, "src", "app", "(public)", "services", "[slug]", "page.tsx"),
+  "utf8"
+);
+const normalizedDetail = detailPageContent.replace(/\s+/g, " ");
+
+check("Detail route detects the eight main services", () => {
+  assert(
+    detailPageContent.includes("findMainServiceBySlug"),
+    "must resolve main services via findMainServiceBySlug"
+  );
+  assert(
+    detailPageContent.includes("getMainServices"),
+    "must resolve related main services via getMainServices"
+  );
+});
+
+check("Main-service detail pages include Start Order, View Packages and Explore Pricing", () => {
+  assert(detailPageContent.includes("Start Order"), "must have Start Order CTA");
+  assert(detailPageContent.includes('href="/packages"'), "must link to /packages");
+  assert(detailPageContent.includes('href="/pricing"'), "must link to /pricing");
+});
+
+check("Main-service detail pages show scope, not pricing", () => {
+  assert(
+    detailPageContent.includes("What This Service Includes"),
+    "must list what the service includes"
+  );
+  assert(
+    detailPageContent.includes("Typical Use Cases"),
+    "must present use cases"
+  );
+  assert(
+    detailPageContent.includes("Studio Samples"),
+    "must present clearly labeled studio samples"
+  );
+  assert(
+    detailPageContent.includes("not client project claims"),
+    "samples must be clearly identified as non-client content"
+  );
+  assert(
+    detailPageContent.includes("Exclusions"),
+    "must disclose scope limitations"
+  );
+});
+
+check("Purchase panel with prices is gated to non-main catalog routes only", () => {
+  assert(
+    normalizedDetail.includes(") : ( <ServicePurchasePanel"),
+    "ServicePurchasePanel must live in the non-main branch of a mainService conditional"
+  );
+  assert(
+    normalizedDetail.includes(") : ( <div> <span className=\"text-[10px] uppercase font-mono text-[#94A3B8] block\"> {getPriceBadge(service)}"),
+    "price badge cell must live in the non-main branch of a mainService conditional"
   );
 });
 

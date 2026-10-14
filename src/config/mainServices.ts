@@ -238,3 +238,21 @@ export function getMainServiceCategories(): string[] {
   }
   return categories;
 }
+
+/**
+ * Resolves a canonical slug (or main-service id) to its enriched main-service
+ * definition. Returns `undefined` for catalog SKUs and disciplines that are
+ * not part of the eight main services — callers use this to render the
+ * price-free main-service experience only where it applies.
+ */
+export function findMainServiceBySlug(
+  slugOrId: string | null | undefined
+): MainService | undefined {
+  if (!slugOrId) return undefined;
+  const normalized = slugOrId.toLowerCase().trim();
+  return getMainServices().find(
+    (service) =>
+      service.slug.toLowerCase() === normalized ||
+      service.id.toLowerCase() === normalized
+  );
+}
