@@ -24,6 +24,8 @@ function NewOrderContent() {
   const serviceParam = searchParams.get("service") || undefined;
   const packageParam = searchParams.get("package") || undefined;
   const qtyParam = searchParams.get("qty") ? Number(searchParams.get("qty")) : undefined;
+  // Display-only catalogue deliverable context (never submitted to the API).
+  const deliverableParam = searchParams.get("deliverable") || undefined;
 
   const handleOrderSuccess = (order: any) => {
     // Dispatch event so any open widgets or listeners sync
@@ -100,6 +102,7 @@ function NewOrderContent() {
             initialServiceId={serviceParam}
             initialTierId={packageParam}
             initialQty={qtyParam}
+            initialDeliverableId={deliverableParam}
             onOrderSuccess={handleOrderSuccess}
           />
         </div>

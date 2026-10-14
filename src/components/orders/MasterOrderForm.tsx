@@ -12,7 +12,12 @@ import {
   formatCurrencyINR,
 } from "@/config/pricing";
 import { findServiceBySlug, type CanonicalServiceItem } from "@/config/services";
-import { findPackageById } from "@/config/packages";
+import { findPackageById, type RetainerPackage } from "@/config/packages";
+import {
+  DISPLAY_FIXED_PRICE_ITEMS,
+  DISPLAY_MONTHLY_PACKAGES,
+  type FixedDisplayPriceItem,
+} from "@/config/displayPricing";
 import {
   Sparkles,
   CheckCircle2,
@@ -50,6 +55,13 @@ export interface MasterOrderFormProps {
   initialTierId?: string;
   /** Quantity deep-linked from /orders?...&qty=N (server-validated 1–100). */
   initialQty?: number;
+  /**
+   * Optional display-only deliverable identifier deep-linked from the
+   * Packages & Pricing catalogue (/new-order?service=...&deliverable=...).
+   * Frontend context only — it is NEVER submitted to the order API and never
+   * affects the charged amount (see docs/ai/PHASE2-ORDER-PRICING-MAPPING.md).
+   */
+  initialDeliverableId?: string;
   onOrderSuccess?: (order: any) => void;
   className?: string;
 }
@@ -331,62 +343,159 @@ const CATEGORY_BY_CANONICAL: Partial<
   Automation: "Automation",
 };
 
-export function MasterOrderForm({
-  initialServiceId,
-  initialTierId,
-  initialQty,
-  onOrderSuccess,
-  className = "",
-}: MasterOrderFormProps) {
-  // Navigation Steps: 1: Service & Tier, 2: Client & Brand Info, 3: Service Parameters, 4: Review & Payment
-  const [currentStep, setCurrentStep] = useState(1);
+interface DeepLinkSelection {
+  mode: "services" | "packages";
+  serviceId: string;
+  packageId: string;
+  tierId: string;
+  /** Visible notice when a deep-linked selection cannot be resolved. */
+  notice: string | null;
+}
 
-  // If user navigated for packages/retainer or package query, default to packages
-  const isPackagesPreferred =
+/**
+ * Resolves URL deep links (/new-order?service=…, ?package=…) into step-1
+ * selections. A customer-selected package or service is NEVER silently
+ * replaced with another: if the identifier cannot be resolved, nothing is
+ * pre-selected and a visible notice asks the customer to choose (STEP 5).
+ */
+function resolveInitialSelection(
+  initialServiceId?: string,
+  initialTierId?: string
+): DeepLinkSelection {
+  // Package/retainer deep links switch the picker to packages mode.
+  const packagesPreferred =
     initialServiceId === "monthly-retainer" ||
     initialServiceId === "daily-trend-creator" ||
     initialServiceId === "growth-trend" ||
     initialServiceId === "starter-trend" ||
     Boolean(initialTierId);
 
-  // Step 1: Mode Switcher & Selection
-  const [orderMode, setOrderMode] = useState<"services" | "packages">(
-    isPackagesPreferred ? "packages" : "services"
-  );
-  const [selectedServiceId, setSelectedServiceId] = useState<string>(() => {
-    if (!initialServiceId) return "img-creation";
-    const clean = initialServiceId.toLowerCase().trim();
+  const defaults: DeepLinkSelection = {
+    mode: "services",
+    serviceId: "img-creation",
+    packageId: "daily-trend-creator",
+    tierId: "daily-trend-creator",
+    notice: null,
+  };
 
+  if (packagesPreferred) {
+    const clean = (initialTierId || initialServiceId || "").toLowerCase().trim();
+    let known: string | undefined;
+    if (
+      clean === "daily-trend-creator" ||
+      clean === "scale" ||
+      clean === "autonomous-growth-retainer"
+    ) {
+      known = "daily-trend-creator";
+    } else if (clean === "growth-trend" || clean === "growth" || clean === "studio-growth") {
+      known = "growth-trend";
+    } else if (clean === "starter-trend" || clean === "starter" || clean === "studio-starter") {
+      known = "starter-trend";
+    } else {
+      known = INTAKE_PACKAGES.find((p) => p.id === clean)?.id;
+    }
+    if (known) {
+      return { ...defaults, mode: "packages", packageId: known, tierId: known };
+    }
+    return {
+      mode: "packages",
+      serviceId: defaults.serviceId,
+      packageId: "",
+      tierId: "",
+      notice: `We couldn't find the package you selected ("${clean}"). Nothing has been substituted — please choose a package from the list below.`,
+    };
+  }
+
+  if (initialServiceId) {
+    const clean = initialServiceId.toLowerCase().trim();
     // 1. Canonical catalog slug/ID or alias — resolves to the canonical item so
     //    the price shown in the form equals the server-validated price.
     const canonical = findServiceBySlug(clean);
-    if (canonical && canonical.active !== false) return canonical.id;
-
+    if (canonical && canonical.active !== false) {
+      return { ...defaults, serviceId: canonical.id };
+    }
     // 2. Historical intake IDs → canonical equivalents.
     const mapped = LEGACY_INTAKE_TO_CANONICAL[clean];
-    if (mapped) return mapped;
-
+    if (mapped) return { ...defaults, serviceId: mapped };
     // 3. Historical deep-link prefixes → nearest canonical discipline.
     for (const [pattern, target] of LEGACY_PREFIX_TO_CANONICAL) {
-      if (pattern.test(clean)) return target;
+      if (pattern.test(clean)) return { ...defaults, serviceId: target };
     }
+    return {
+      mode: "services",
+      serviceId: "",
+      packageId: defaults.packageId,
+      tierId: defaults.tierId,
+      notice: `We couldn't find the service you selected ("${clean}"). Nothing has been substituted — please choose a service from the list below.`,
+    };
+  }
 
-    // 4. Unparseable input falls back to the base discipline so the form and
-    //    the server still agree on what is being ordered.
-    return "img-creation";
-  });
-  const [selectedPackageId, setSelectedPackageId] = useState<string>(() => {
-    if (!initialTierId && !initialServiceId) return "daily-trend-creator";
-    const clean = (initialTierId || initialServiceId || "").toLowerCase().trim();
-    if (clean === "daily-trend-creator" || clean === "scale" || clean === "autonomous-growth-retainer") return "daily-trend-creator";
-    if (clean === "growth-trend" || clean === "growth" || clean === "studio-growth") return "growth-trend";
-    if (clean === "starter-trend" || clean === "starter" || clean === "studio-starter") return "starter-trend";
-    const found = INTAKE_PACKAGES.find((p) => p.id === clean);
-    return found ? found.id : "daily-trend-creator";
-  });
-  const [selectedTierId, setSelectedTierId] = useState<string>(() => {
-    return initialTierId || "daily-trend-creator";
-  });
+  return defaults;
+}
+
+/**
+ * Video duration limit for a monthly retainer — derived from the canonical
+ * package feature copy (e.g. "up to 15s", "15–30s"), falling back to the
+ * centralized display catalogue, then to the confirmed scope wording.
+ */
+function resolveMonthlyVideoDurationLimit(
+  canonical: RetainerPackage | undefined
+): string {
+  if (!canonical) return "As specified in your confirmed scope";
+  for (const feature of canonical.features) {
+    const match = feature.match(/(?:up to )?\d+(?:[–-]\d+)?\s?(?:s\b|second)/i);
+    if (match) return `up to ${match[0].replace(/^up to /i, "up to ")}`;
+  }
+  const display = DISPLAY_MONTHLY_PACKAGES.find(
+    (pkg) => pkg.canonicalSlug === canonical.id || pkg.canonicalSlug === canonical.slug
+  );
+  return display?.videoDurationLimit ?? "As specified in your confirmed scope";
+}
+
+export function MasterOrderForm({
+  initialServiceId,
+  initialTierId,
+  initialQty,
+  initialDeliverableId,
+  onOrderSuccess,
+  className = "",
+}: MasterOrderFormProps) {
+  // Navigation Steps: 1: Service & Tier, 2: Client & Brand Info, 3: Service Parameters, 4: Review & Payment
+  const [currentStep, setCurrentStep] = useState(1);
+
+  // Deep-linked selections — resolved once; unresolved selections are never
+  // silently replaced, they surface a visible notice instead (STEP 5).
+  const deepLinkSelection = React.useMemo(
+    () => resolveInitialSelection(initialServiceId, initialTierId),
+    [initialServiceId, initialTierId]
+  );
+
+  // Step 1: Mode Switcher & Selection
+  const [orderMode, setOrderMode] = useState<"services" | "packages">(
+    deepLinkSelection.mode
+  );
+  const [selectedServiceId, setSelectedServiceId] = useState<string>(
+    deepLinkSelection.serviceId
+  );
+  const [selectedPackageId, setSelectedPackageId] = useState<string>(
+    deepLinkSelection.packageId
+  );
+  const [selectedTierId, setSelectedTierId] = useState<string>(
+    deepLinkSelection.tierId
+  );
+  // Visible notice when a deep-linked selection could not be resolved — the
+  // notice never changes after mount, so no setter is needed.
+  const [deepLinkNotice] = useState<string | null>(deepLinkSelection.notice);
+
+  // Display-only deliverable context from the Packages & Pricing catalogue —
+  // never submitted to the API, never affects the charged amount.
+  const selectedDeliverable = React.useMemo<FixedDisplayPriceItem | undefined>(
+    () =>
+      initialDeliverableId
+        ? DISPLAY_FIXED_PRICE_ITEMS.find((item) => item.id === initialDeliverableId)
+        : undefined,
+    [initialDeliverableId]
+  );
 
   // Quantity for per-unit / pack service orders (validated server-side 1–100)
   const [quantity, setQuantity] = useState<number>(() => {
@@ -456,13 +565,36 @@ export function MasterOrderForm({
   const [formError, setFormError] = useState("");
 
   // Active Package & Service Details
-  const activePackage =
-    INTAKE_PACKAGES.find((p) => p.id === selectedPackageId) || INTAKE_PACKAGES[0];
+  /** Currently selected intake package — `undefined` when nothing is selected. */
+  const activePackage = selectedPackageId
+    ? INTAKE_PACKAGES.find((p) => p.id === selectedPackageId)
+    : undefined;
 
   /** Canonical catalog item behind the current service selection (if any). */
   const activeCanonical = findServiceBySlug(selectedServiceId);
 
+  /** Canonical retainer behind the selected monthly plan (billing details). */
+  const activeCanonicalMonthly = React.useMemo<RetainerPackage | undefined>(() => {
+    if (!activePackage || activePackage.billingCycle !== "monthly") return undefined;
+    const canonical = findPackageById(activePackage.id);
+    if (!canonical || !("billingCycle" in canonical)) return undefined;
+    return canonical as RetainerPackage;
+  }, [activePackage]);
+
   const activeService = React.useMemo<IntakeServiceOption>(() => {
+    // Deep-linked selection could not be resolved — show a neutral placeholder
+    // instead of silently substituting another service (STEP 5).
+    if (!selectedServiceId) {
+      return {
+        id: "",
+        title: "No service selected yet",
+        category: "Creative & Brand",
+        basePrice: 0,
+        turnaround: "Select a service above",
+        description: "",
+        iconName: "sparkles",
+      };
+    }
     const intakeMatch = INTAKE_SERVICES.find((s) => s.id === selectedServiceId);
     if (intakeMatch) return intakeMatch;
     // Deep-linked canonical service (e.g. /orders?service=branded-image-pack-5):
@@ -484,7 +616,7 @@ export function MasterOrderForm({
 
   const isMonthlyRetainer =
     orderMode === "packages"
-      ? activePackage.billingCycle === "monthly"
+      ? activePackage?.billingCycle === "monthly"
       : selectedTierId === "retainer";
   const isMetaAds =
     activeService.id === "meta-ads" ||
@@ -514,6 +646,7 @@ export function MasterOrderForm({
   // Calculate Order Amount — always canonical price × quantity (server re-validates)
   const orderAmount = React.useMemo(() => {
     if (orderMode === "packages") {
+      if (!activePackage) return 0;
       // Monthly retainers are single subscriptions; one-time packs multiply by quantity.
       return activePackage.billingCycle === "monthly"
         ? activePackage.price
@@ -525,6 +658,18 @@ export function MasterOrderForm({
   // Validation before proceeding
   const handleNextStep = () => {
     setFormError("");
+    if (currentStep === 1) {
+      // A customer-selected item is never silently replaced — if a deep-linked
+      // selection could not be resolved, the customer must choose explicitly.
+      if (orderMode === "services" && !selectedServiceId) {
+        setFormError("Please select a studio service to continue.");
+        return;
+      }
+      if (orderMode === "packages" && !selectedPackageId) {
+        setFormError("Please select a package to continue.");
+        return;
+      }
+    }
     if (currentStep === 2) {
       if (!fullName.trim()) {
         setFormError("Full Name is required");
@@ -557,11 +702,14 @@ export function MasterOrderForm({
 
     const hasUtr = Boolean(utrNumber.trim());
     const paymentStatus = hasUtr ? "pending_verification" : "pending";
-    const resolvedTitle = orderMode === "packages" ? activePackage.title : activeService.title;
+    const resolvedTitle =
+      orderMode === "packages" ? activePackage?.title ?? "" : activeService.title;
     // The server resolves `package.tierId` first — it must point at exactly the
     // item being purchased (canonical service ID or canonical package ID).
-    const resolvedTierId = orderMode === "packages" ? activePackage.id : activeService.id;
-    const canonicalServiceId = orderMode === "packages" ? activePackage.id : activeService.id;
+    const resolvedTierId =
+      orderMode === "packages" ? activePackage?.id ?? "" : activeService.id;
+    const canonicalServiceId =
+      orderMode === "packages" ? activePackage?.id ?? "" : activeService.id;
 
     const idempotencyKey = `idemp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
@@ -582,12 +730,12 @@ export function MasterOrderForm({
         billingCycle: isMonthlyRetainer ? ("monthly" as const) : ("project" as const),
       },
       quantity: orderMode === "packages"
-        ? (activePackage.billingCycle === "monthly" ? 1 : Math.max(1, quantity))
+        ? (activePackage?.billingCycle === "monthly" ? 1 : Math.max(1, quantity))
         : Math.max(1, quantity),
       serviceDetails: {
         orderMode,
         ...(orderMode === "packages" && {
-          packageFeatures: activePackage.features,
+          packageFeatures: activePackage?.features ?? [],
         }),
         ...(isMetaAds && {
           metaAds: {
@@ -642,7 +790,7 @@ export function MasterOrderForm({
       brandName: brandName.trim(),
       industry,
       brandUrl: brandUrl.trim(),
-      serviceId: orderMode === "packages" ? activePackage.id : activeService.id,
+      serviceId: orderMode === "packages" ? activePackage?.id ?? "" : activeService.id,
       serviceTitle: resolvedTitle,
       tierId: resolvedTierId,
       amount: orderAmount,
@@ -767,6 +915,14 @@ export function MasterOrderForm({
               </button>
             </div>
 
+            {/* Deep-link resolution notice — never silently substitute a selection */}
+            {deepLinkNotice && (
+              <div className="p-4 rounded-2xl bg-[#FFFBEB] border border-[#FDE68A] text-xs text-[#92400E] flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-[#D97706] shrink-0 mt-0.5" />
+                <span>{deepLinkNotice}</span>
+              </div>
+            )}
+
             {orderMode === "services" ? (
               <>
                 <div>
@@ -837,49 +993,96 @@ export function MasterOrderForm({
                   })}
                 </div>
 
-                {/* Service Selection Summary, Quantity & Live Total */}
-                <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <span className="font-serif font-bold text-sm text-[#0F172A] block">
-                      {activeService.title}
-                    </span>
-                    <span className="text-xs text-[#64748B]">
-                      {activeService.turnaround} • {formatCurrencyINR(activeService.basePrice)} per unit • Standard studio production workflow
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="inline-flex items-center gap-1 rounded-xl border border-[#EADFCB] bg-white p-1">
-                      <button
-                        type="button"
-                        aria-label="Decrease quantity"
-                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                        disabled={quantity <= 1}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-[#4A3B22] hover:bg-[#F4EFE6] disabled:opacity-40"
-                      >
-                        <Minus className="w-4 h-4" />
-                      </button>
-                      <span className="min-w-8 text-center text-sm font-semibold text-[#171717]">
-                        {quantity}
+                {/* Service Selection Summary, Quantity & Live Subtotal */}
+                <div className="space-y-3">
+                  <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <span className="text-[10px] uppercase font-mono tracking-wider text-[#94A3B8] block mb-0.5">
+                        Selected deliverable
                       </span>
-                      <button
-                        type="button"
-                        aria-label="Increase quantity"
-                        onClick={() => setQuantity((q) => Math.min(100, q + 1))}
-                        disabled={quantity >= 100}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-[#4A3B22] hover:bg-[#F4EFE6] disabled:opacity-40"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">
-                        {quantity > 1 ? `Total (×${quantity})` : "Total"}
+                      <span className="font-serif font-bold text-sm text-[#0F172A] block">
+                        {activeService.title}
                       </span>
-                      <span className="font-serif font-bold text-lg text-[#5C3A1E]">
-                        {formatCurrencyINR(orderAmount)}
+                      <span className="text-xs text-[#64748B]">
+                        {activeService.turnaround} • {formatCurrencyINR(activeService.basePrice)} per unit • Standard studio production workflow
                       </span>
                     </div>
+                    <div className="flex items-center gap-4">
+                      <div className="inline-flex items-center gap-1 rounded-xl border border-[#EADFCB] bg-white p-1">
+                        <button
+                          type="button"
+                          aria-label="Decrease quantity"
+                          onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                          disabled={quantity <= 1}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#4A3B22] hover:bg-[#F4EFE6] disabled:opacity-40"
+                        >
+                          <Minus className="w-4 h-4" />
+                        </button>
+                        <span className="min-w-8 text-center text-sm font-semibold text-[#171717]">
+                          {quantity}
+                        </span>
+                        <button
+                          type="button"
+                          aria-label="Increase quantity"
+                          onClick={() => setQuantity((q) => Math.min(100, q + 1))}
+                          disabled={quantity >= 100}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#4A3B22] hover:bg-[#F4EFE6] disabled:opacity-40"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">
+                          Subtotal {quantity > 1 ? `(×${quantity})` : ""}
+                        </span>
+                        <span className="font-serif font-bold text-lg text-[#5C3A1E]">
+                          {formatCurrencyINR(orderAmount)}
+                        </span>
+                        {quantity > 1 && (
+                          <span className="text-[10px] font-mono text-[#94A3B8] block">
+                            {formatCurrencyINR(activeService.basePrice)} × {quantity}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Display-only deliverable context from the Packages & Pricing
+                      catalogue — indicative, never the authoritative charge (STEP 5) */}
+                  {selectedDeliverable && (
+                    <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#D4A35A]/60 space-y-1.5">
+                      <span className="inline-flex items-center gap-1.5 text-[9px] font-mono font-bold uppercase tracking-wider text-[#5C3A1E] bg-[#F8F5EF] border border-[#EADFCB] rounded-full px-2.5 py-1">
+                        <Sparkles className="w-3 h-3 text-[#D4A35A]" />
+                        Selected from Packages &amp; Pricing
+                      </span>
+                      <div className="flex items-center justify-between gap-3 text-xs">
+                        <span className="text-[#64748B]">Catalogue deliverable</span>
+                        <span className="font-semibold text-[#0F172A]">
+                          {selectedDeliverable.item}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3 text-xs">
+                        <span className="text-[#64748B]">Catalogue display price</span>
+                        <span className="font-mono font-semibold text-[#5C3A1E]">
+                          {formatCurrencyINR(selectedDeliverable.price)}{" "}
+                          <span className="text-[10px] text-[#94A3B8] font-sans font-normal">
+                            {selectedDeliverable.unit}
+                          </span>
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#64748B] leading-relaxed pt-1 border-t border-[#EADFCB]/60">
+                        Indicative catalogue price for comparison — this order is
+                        placed for <strong className="text-[#5C3A1E]">{activeService.title}</strong> at
+                        the studio&apos;s validated catalogue rate shown above, which the
+                        server re-validates at submission. Per-deliverable SKU
+                        checkout is documented for Phase 2.
+                      </p>
+                    </div>
+                  )}
+
+                  <p className="text-[10px] font-mono text-[#94A3B8] text-right">
+                    Charged amount is re-validated against the studio catalogue when the order is submitted.
+                  </p>
                 </div>
               </>
             ) : (
@@ -958,8 +1161,77 @@ export function MasterOrderForm({
                   })}
                 </div>
 
-                {/* One-time pack quantity & live total (monthly retainers are single subscriptions) */}
-                {activePackage.billingCycle !== "monthly" && (
+                {/* Monthly plan details — name, price, quotas, revisions,
+                    exclusions & billing frequency (STEP 5, requirement 3) */}
+                {activePackage?.billingCycle === "monthly" && (
+                  <div className="p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h4 className="font-serif text-base font-bold text-[#0F172A]">
+                        {activePackage.title}
+                      </h4>
+                      <span className="inline-flex items-center gap-1.5 text-[9px] font-mono font-bold uppercase tracking-wider text-[#5C3A1E] bg-[#FFFDF9] border border-[#EADFCB] rounded-full px-2.5 py-1">
+                        <Calendar className="w-3 h-3 text-[#D4A35A]" />
+                        Billed every 30 days
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-xs">
+                      <div className="flex items-center justify-between gap-3 sm:border-r sm:border-[#EADFCB]/60 sm:pr-6">
+                        <span className="text-[#64748B]">Monthly price</span>
+                        <span className="font-serif font-bold text-base text-[#5C3A1E]">
+                          {formatCurrencyINR(activePackage.price)}
+                          <span className="text-[10px] font-sans font-normal text-[#64748B]"> / month</span>
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-[#64748B]">Included images</span>
+                        <span className="font-semibold text-[#0F172A]">
+                          {activeCanonicalMonthly?.includedServices.images ?? "—"} images per 30-day cycle
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3 sm:border-r sm:border-[#EADFCB]/60 sm:pr-6">
+                        <span className="text-[#64748B]">Included videos</span>
+                        <span className="font-semibold text-[#0F172A] text-right">
+                          {activeCanonicalMonthly?.includedServices.videos ?? "—"} videos,{" "}
+                          {resolveMonthlyVideoDurationLimit(activeCanonicalMonthly)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-[#64748B]">Billing frequency</span>
+                        <span className="font-semibold text-[#0F172A]">
+                          Monthly · {activeCanonicalMonthly?.duration ?? "30 days"} billing cycle
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-[#EADFCB]/60 space-y-1.5 text-xs">
+                      <p className="text-[#475569]">
+                        <strong className="text-[#0F172A]">Revisions:</strong>{" "}
+                        {activeCanonicalMonthly?.revisionPolicy ??
+                          "1 consolidated revision round per deliverable"}
+                      </p>
+                      <div className="text-[#475569]">
+                        <strong className="text-[#0F172A]">Not included:</strong>
+                        <ul className="mt-0.5 space-y-0.5">
+                          {(activeCanonicalMonthly?.exclusions ?? [
+                            "Paid ad media spend excluded",
+                            "Raw project/source files excluded",
+                          ]).map((exclusion) => (
+                            <li key={exclusion} className="text-[#64748B]">
+                              • {exclusion}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <p className="text-[10px] font-mono text-[#94A3B8] pt-1">
+                        Charged amount is re-validated against the studio catalogue when the order is submitted.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* One-time pack quantity & live subtotal (monthly retainers are single subscriptions) */}
+                {activePackage && activePackage.billingCycle !== "monthly" && (
                   <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <span className="font-serif font-bold text-sm text-[#0F172A] block">
@@ -995,14 +1267,26 @@ export function MasterOrderForm({
                       </div>
                       <div className="text-right">
                         <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">
-                          {quantity > 1 ? `Total (×${quantity})` : "Total"}
+                          Subtotal {quantity > 1 ? `(×${quantity})` : ""}
                         </span>
                         <span className="font-serif font-bold text-lg text-[#5C3A1E]">
                           {formatCurrencyINR(orderAmount)}
                         </span>
+                        {quantity > 1 && (
+                          <span className="text-[10px] font-mono text-[#94A3B8] block">
+                            {formatCurrencyINR(activePackage.price)} × {quantity}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
+                )}
+
+                {/* Nothing selected — visible prompt, never a silent substitution */}
+                {orderMode === "packages" && !activePackage && (
+                  <p className="text-center text-xs text-[#92400E] bg-[#FFFBEB] border border-[#FDE68A] rounded-2xl p-4">
+                    Select a package above to see its monthly price, inclusions and billing details.
+                  </p>
                 )}
               </>
             )}
@@ -1658,7 +1942,7 @@ export function MasterOrderForm({
                   <div className="flex justify-between items-center text-[#64748B]">
                     <span>Service / Package:</span>
                     <span className="font-semibold text-[#0F172A]">
-                      {createdOrder.title || (orderMode === "packages" ? activePackage.title : activeService.title)}
+                      {createdOrder.title || (orderMode === "packages" ? activePackage?.title ?? "" : activeService.title)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-[#64748B]">
@@ -1713,14 +1997,14 @@ export function MasterOrderForm({
                       {orderMode === "packages" ? "Selected Package:" : "Commission Service:"}
                     </span>
                     <span className="font-serif font-bold text-sm text-[#0F172A]">
-                      {orderMode === "packages" ? activePackage.title : activeService.title}
+                      {orderMode === "packages" ? activePackage?.title ?? "" : activeService.title}
                     </span>
                   </div>
 
                   <div className="flex justify-between items-center">
                     <span className="text-[#64748B]">Delivery SLA:</span>
                     <span className="font-semibold text-[#5C3A1E]">
-                      {orderMode === "packages" ? activePackage.turnaround : activeService.turnaround}
+                      {orderMode === "packages" ? activePackage?.turnaround ?? "To be confirmed" : activeService.turnaround}
                     </span>
                   </div>
 
@@ -1740,7 +2024,12 @@ export function MasterOrderForm({
                     <span className="font-semibold text-[#0F172A]">Total Investment:</span>
                     <span className="font-serif font-bold text-xl text-[#5C3A1E]">
                       ₹{orderAmount.toLocaleString("en-IN")}
-                      {isMonthlyRetainer && <span className="text-xs font-normal text-[#64748B]"> / month</span>}
+                      {isMonthlyRetainer && (
+                        <span className="text-xs font-normal text-[#64748B]">
+                          {" "}
+                          / month · billed every 30 days
+                        </span>
+                      )}
                     </span>
                   </div>
                 </div>

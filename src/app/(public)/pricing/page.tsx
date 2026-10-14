@@ -336,23 +336,33 @@ export default function PricingPage() {
                         {group.items.map((item) => (
                           <li
                             key={item.id}
-                            className="flex items-center justify-between gap-4 px-5 sm:px-6 py-3"
+                            className="flex items-center justify-between gap-3 px-5 sm:px-6 py-3"
                           >
                             <span className="text-sm text-[#475569]">
                               {item.item}
                             </span>
-                            <span className="font-mono text-sm font-semibold text-[#5C3A1E] whitespace-nowrap">
-                              {formatCurrencyINR(item.price)}
-                              <span className="text-[10px] text-[#94A3B8] font-sans font-normal ml-1.5">
-                                {item.unit}
+                            <span className="flex items-center gap-3 sm:gap-4 shrink-0">
+                              <span className="font-mono text-sm font-semibold text-[#5C3A1E] whitespace-nowrap">
+                                {formatCurrencyINR(item.price)}
+                                <span className="text-[10px] text-[#94A3B8] font-sans font-normal ml-1.5">
+                                  {item.unit}
+                                </span>
                               </span>
+                              <Link
+                                href={`/new-order?service=${group.serviceSlug}&deliverable=${item.id}`}
+                                className="text-[11px] font-semibold text-[#5C3A1E] hover:underline inline-flex items-center gap-1 whitespace-nowrap"
+                                title={`Start an order for ${item.item} (${group.serviceName})`}
+                              >
+                                Start Order
+                                <ArrowUpRight className="w-3 h-3" />
+                              </Link>
                             </span>
                           </li>
                         ))}
                       </ul>
                       <div className="px-5 sm:px-6 py-4 border-t border-[#EADFCB] bg-[#FAF9F5]">
                         <Link
-                          href={`/orders?service=${group.serviceSlug}`}
+                          href={`/new-order?service=${group.serviceSlug}`}
                           className="inline-flex items-center justify-center gap-2 w-full rounded-xl bg-[#171717] px-5 py-2.5 text-xs font-semibold text-[#FAF9F5] transition-colors hover:bg-[#2C2C2C]"
                         >
                           Start Order

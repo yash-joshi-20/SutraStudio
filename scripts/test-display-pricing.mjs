@@ -277,8 +277,14 @@ check("Package CTAs use existing checkout routes (no new order flow)", () => {
     "Choose Package must deep-link the existing /packages detail route"
   );
   assert(
-    pricingPageContent.includes("`/orders?service=${group.serviceSlug}`"),
-    "fixed services must deep-link the existing /orders service flow"
+    pricingPageContent.includes("`/new-order?service=${group.serviceSlug}`"),
+    "fixed services must deep-link the existing /new-order service flow"
+  );
+  assert(
+    pricingPageContent.includes(
+      "`/new-order?service=${group.serviceSlug}&deliverable=${item.id}`"
+    ),
+    "fixed items must carry the selected deliverable into /new-order"
   );
 });
 

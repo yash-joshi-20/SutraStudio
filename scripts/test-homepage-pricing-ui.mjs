@@ -142,8 +142,8 @@ assert(
   "Monthly package CTAs pass the canonical package ID (/new-order?package=...)"
 );
 assert(
-  pricingPageSrc.includes('href={`/orders?service=${group.serviceSlug}`}'),
-  "Fixed one-time service CTAs pass the service slug (/orders?service=...)"
+  pricingPageSrc.includes('href={`/new-order?service=${group.serviceSlug}`}'),
+  "Fixed one-time service CTAs pass the service slug (/new-order?service=...)"
 );
 assert(
   pricingPageSrc.includes('href="/contact"'),
