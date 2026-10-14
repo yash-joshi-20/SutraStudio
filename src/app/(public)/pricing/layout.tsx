@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Transparent Pricing & Investment Plans",
+  title: "Packages & Pricing — One-Time Services & Monthly Retainers",
   description:
-    "Honest studio commissions with zero hidden fees. Single deliverables from ₹99, bundled creative packs, and monthly creative retainers.",
+    "Compare one-time single-service prices and monthly creative packages in INR. Two clearly separated sections with category filters, scope ranges and package details.",
   alternates: {
     canonical: "/pricing",
   },
   openGraph: {
-    title: "Transparent Pricing & Investment Plans | Sutra Studios",
+    title: "Packages & Pricing | Sutra Studios",
     description:
-      "Honest studio commissions with zero hidden fees. Single deliverables from ₹99, bundled creative packs, and monthly creative retainers.",
+      "Compare one-time single-service prices and monthly creative packages in INR — clearly separated, filterable and quote-backed.",
     url: "/pricing",
   },
 };

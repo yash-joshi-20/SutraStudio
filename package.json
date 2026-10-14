@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test:catalog": "npx tsx scripts/test-canonical-catalog.ts",
     "test:main-services": "npx tsx scripts/test-main-services-navigation.mjs",
+    "test:pricing": "npx tsx scripts/test-display-pricing.mjs && node scripts/test-homepage-pricing-ui.mjs",
     "test:services": "npx tsx scripts/test-service-detail-routes.mjs",
     "test:responsive": "node scripts/test-responsive-viewports.mjs",
     "test:client-ownership": "node scripts/test-client-ownership-isolation.mjs",
