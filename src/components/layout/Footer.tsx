@@ -12,6 +12,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getMainServices } from "@/config/mainServices";
 
 export function Footer() {
   const [openSection, setOpenSection] = useState<string | null>(null);
@@ -20,26 +21,18 @@ export function Footer() {
     setOpenSection(openSection === section ? null : section);
   };
 
-  const serviceLinks = [
-    { label: "Image Creation", href: "/services#image-creation" },
-    { label: "Video Creation", href: "/services#video-creation" },
-    { label: "3D Modeling", href: "/services#3d-modeling" },
-    { label: "360 View", href: "/services#360-view" },
-    { label: "Interior Design", href: "/services#interior-design" },
-    { label: "Window Design", href: "/services#window-design" },
-    { label: "Digital Marketing", href: "/services#digital-marketing" },
-    { label: "Meta Ads Launcher", href: "/services#meta-ads-launcher" },
-    { label: "Website Development", href: "/services#website-development" },
-    { label: "Web App Development", href: "/services#web-app-development" },
-    { label: "Mobile App Setup", href: "/services#mobile-app-setup" },
-    { label: "Trending Topic Research", href: "/services#trending-topic-research" },
-  ];
+  // Eight main studio services — derived from the unified configuration so
+  // the footer always matches the home page, services page and chat concierge.
+  const serviceLinks = getMainServices().map((service) => ({
+    label: service.title,
+    href: service.detailHref,
+  }));
 
   const studioLinks = [
     { label: "Heritage & Philosophy", href: "/about" },
     { label: "Craft & Technology", href: "/studio" },
     { label: "Curated Projects", href: "/projects" },
-    { label: "Verified Service Pricing", href: "/services" },
+    { label: "All Studio Services", href: "/services" },
     { label: "Production Packages", href: "/packages" },
     { label: "Mobile App for iOS & Android", href: "/mobile-app" },
     { label: "Client Discovery Desk", href: "/contact" },

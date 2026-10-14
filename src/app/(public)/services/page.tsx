@@ -12,14 +12,7 @@ import {
   getServiceDetailSpec,
   type CanonicalServiceItem,
 } from "@/config/services";
-import {
-  SERVICE_CATALOG_GROUPS,
-  type ServiceCatalogGroup,
-  type ServiceCatalogEntry,
-  getPriceBadge,
-  formatCurrencyINR,
-  computeItemTotal,
-} from "@/config/serviceGroups";
+import { getMainServices } from "@/config/mainServices";
 import { LotusSymbol } from "@/components/brand/SutraLogo";
 import { CustomDropdown } from "@/components/ui/CustomDropdown";
 import { Interactive3DViewer } from "@/components/spatial/Interactive3DViewer";
@@ -27,9 +20,6 @@ import { PanoramicTourViewer } from "@/components/spatial/PanoramicTourViewer";
 import { DeviceMockupShowcase } from "@/components/showcase/DeviceMockupShowcase";
 import { MetaAdCreativeMockup } from "@/components/showcase/MetaAdCreativeMockup";
 import {
-  Image as ImageIcon,
-  Box,
-  Compass,
   ArrowUpRight,
   CheckCircle2,
   Clock,
@@ -37,262 +27,219 @@ import {
   Search,
   Sparkles,
   Bot,
-  Play,
   FileText,
   AlertCircle,
   HelpCircle,
   Layers,
-  Minus,
-  Plus,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 /**
  * Public disciplines used for deep-link resolution (?service= / #hash) only —
- * the purchasable catalog itself is rendered from SERVICE_CATALOG_GROUPS.
+ * the main service catalogue itself is rendered from the unified
+ * `MAIN_SERVICES` configuration (src/config/mainServices.ts).
  */
 const publicServices = SUTRA_SERVICES.filter((s) => s.active !== false);
 
-/** Customer-facing catalog filters — 8 distinct creative and engineering disciplines. */
-const CATEGORIES = [
-  { value: "All", label: "All Services" },
-  { value: "image-design", label: "Image & Creative" },
-  { value: "video-advertising", label: "Video & Reels" },
-  { value: "logo-branding", label: "Logo & Branding" },
-  { value: "spatial-3d", label: "3D & 360°" },
-  { value: "interior-design", label: "Interior Design" },
-  { value: "digital-marketing", label: "Digital Marketing" },
-  { value: "web-development", label: "Web Development" },
-  { value: "app-development", label: "App Development" },
-];
+/** Friendly labels for the canonical catalog categories of the main services. */
+const CATEGORY_LABELS: Record<string, string> = {
+  Creative: "Image & Video",
+  Design: "3D & Spatial",
+  Marketing: "Marketing",
+  Development: "Web & Apps",
+};
 
-function matchesSearch(entry: ServiceCatalogEntry, query: string): boolean {
+/** The eight main services joined with their canonical catalog entries. */
+const MAIN_SERVICE_ENTRIES = getMainServices().map((main) => {
+  const catalogItem = findServiceBySlug(main.slug);
+  return { main, service: catalogItem as CanonicalServiceItem };
+});
+
+function matchesSearch(
+  entry: (typeof MAIN_SERVICE_ENTRIES)[number],
+  query: string
+): boolean {
   if (!query) return true;
   const needle = query.toLowerCase();
+  const { main, service } = entry;
   return (
-    entry.item.name.toLowerCase().includes(needle) ||
-    entry.item.tagline.toLowerCase().includes(needle) ||
-    entry.item.description.toLowerCase().includes(needle) ||
-    entry.item.deliverables.some((d) => d.toLowerCase().includes(needle))
+    main.title.toLowerCase().includes(needle) ||
+    main.shortDescription.toLowerCase().includes(needle) ||
+    main.description.toLowerCase().includes(needle) ||
+    main.examples.some((example) => example.toLowerCase().includes(needle)) ||
+    (service?.name?.toLowerCase().includes(needle) ?? false) ||
+    (service?.tagline?.toLowerCase().includes(needle) ?? false) ||
+    (service?.deliverables ?? []).some((d) => d.toLowerCase().includes(needle))
   );
 }
 
 /* ============================================================================
-   SERVICE CARD — minimal editorial card with verified price + quantity options
+   MAIN SERVICE CARD — price-free editorial card for the eight main services
    ============================================================================ */
-function ServiceCatalogCard({
-  entry,
+function MainServiceCatalogCard({
+  main,
+  service,
   onOpenDetail,
 }: {
-  entry: ServiceCatalogEntry;
+  main: (typeof MAIN_SERVICE_ENTRIES)[number]["main"];
+  service: CanonicalServiceItem | undefined;
   onOpenDetail: (service: CanonicalServiceItem) => void;
 }) {
-  const [optionIndex, setOptionIndex] = useState(0);
-  const [quantity, setQuantity] = useState(1);
-
-  const selectedOption = entry.options[optionIndex];
-  const service = selectedOption ? selectedOption.item : entry.item;
-
-  const hasOptions = entry.options.length > 1;
-  const allowQuantity = !hasOptions && service.pricingType === "per_unit";
-  const qty = allowQuantity ? Math.max(1, quantity) : 1;
-  const total = computeItemTotal(service, qty);
-
-  const rawHref = service.ctaHref || `/orders?service=${service.slug}`;
-  const orderHref =
-    qty > 1
-      ? `${rawHref}${rawHref.includes("?") ? "&" : "?"}qty=${qty}`
-      : rawHref;
-
   return (
-    <motion.div
+    <motion.article
       layout
+      id={main.slug}
       initial={{ opacity: 0, scale: 0.97 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.97 }}
       transition={{ duration: 0.2 }}
-      className="group flex flex-col rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] overflow-hidden transition-all duration-300 hover:border-[#D4A35A] hover:shadow-warm-hover"
+      className="group flex flex-col rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] overflow-hidden transition-all duration-300 hover:border-[#D4A35A] hover:shadow-warm-hover scroll-mt-24"
     >
-      {/* Media */}
-      <div
-        onClick={() => onOpenDetail(service)}
-        className="relative aspect-[16/10] w-full overflow-hidden bg-[#F4EFE6] cursor-pointer"
-      >
-        <Image
-          src={service.thumbnail}
-          alt={service.name}
-          fill
-          className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        />
+      {/* Media — links to the full service detail page */}
+      {service && (
+        <Link
+          href={`/services/${main.slug}`}
+          aria-label={`View ${main.title} service details`}
+          className="relative block aspect-[16/10] w-full overflow-hidden bg-[#F4EFE6] cursor-pointer"
+        >
+          <Image
+            src={service.thumbnail}
+            alt={`${main.title} — studio sample work`}
+            fill
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
 
-        {/* Clear sample watermark */}
-        <div className="absolute top-3.5 left-3.5 z-10">
-          <span className="rounded-md bg-black/60 backdrop-blur-xs px-2 py-0.5 text-[9px] font-mono font-medium text-white/90 tracking-wider uppercase border border-white/10">
-            Studio Sample
-          </span>
-        </div>
-
-        {/* Turnaround */}
-        <div className="absolute top-3.5 right-3.5 z-10">
-          <span className="rounded-full bg-white/90 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-mono font-medium text-[#5C3A1E] border border-[#EADFCB] shadow-xs flex items-center gap-1">
-            <Clock className="w-2.5 h-2.5 text-[#A98B57]" />
-            {service.turnaround.split(" ")[0]}
-          </span>
-        </div>
-
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/70 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
-
-        <div className="absolute bottom-2.5 left-3.5 right-3.5 z-10 flex items-center justify-between gap-2 text-[10px] text-[#F8F5EF]/90">
-          <span className="truncate">{service.mediaFormat || service.duration}</span>
-          <span className="text-[#D4A35A] font-semibold shrink-0 whitespace-nowrap">
-            {service.badge}
-          </span>
-        </div>
-      </div>
-
-      {/* Title, price & scope */}
-      <div className="p-5 pb-3 space-y-3 flex-1 flex flex-col">
-        <div className="flex items-start justify-between gap-3">
-          <h3
-            onClick={() => onOpenDetail(service)}
-            className="font-serif text-lg font-semibold text-[#0F172A] tracking-tight group-hover:text-[#5C3A1E] transition-colors leading-snug cursor-pointer"
-          >
-            {service.name}
-          </h3>
-          <button
-            type="button"
-            onClick={() => onOpenDetail(service)}
-            title="Inspect Scope & Specifications"
-            className="inline-flex items-center justify-center whitespace-nowrap min-h-[32px] px-3 py-1 rounded-xl bg-[#F8F5EF] text-[#5C3A1E] border border-[#EADFCB] hover:border-[#D4A35A] transition-colors cursor-pointer text-xs font-medium shrink-0"
-          >
-            Details
-          </button>
-        </div>
-
-        {/* Verified price — single pricing block per card */}
-        <div className="flex items-end justify-between gap-3">
-          <div className="min-w-0">
-            <span className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-mono block">
-              {getPriceBadge(service)}
-            </span>
-            <span className="font-serif text-xl font-bold text-[#5C3A1E] block leading-tight">
-              {service.priceDisplay}
+          {/* Clear sample watermark */}
+          <div className="absolute top-3.5 left-3.5 z-10">
+            <span className="rounded-md bg-black/60 backdrop-blur-xs px-2 py-0.5 text-[9px] font-mono font-medium text-white/90 tracking-wider uppercase border border-white/10">
+              Studio Sample
             </span>
           </div>
 
-          {allowQuantity && (
-            <div className="flex items-center gap-1 rounded-xl border border-[#EADFCB] bg-[#FAF9F5] p-1 shrink-0">
-              <button
-                type="button"
-                aria-label="Decrease quantity"
-                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                disabled={qty <= 1}
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-[#5C3A1E] hover:bg-[#F4EFE6] disabled:opacity-35 disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-not-allowed"
-              >
-                <Minus className="w-3.5 h-3.5" />
-              </button>
-              <span className="w-6 text-center text-xs font-mono font-bold text-[#0F172A]">
-                {qty}
+          {/* Turnaround */}
+          {service.turnaround && (
+            <div className="absolute top-3.5 right-3.5 z-10">
+              <span className="rounded-full bg-white/90 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-mono font-medium text-[#5C3A1E] border border-[#EADFCB] shadow-xs flex items-center gap-1">
+                <Clock className="w-2.5 h-2.5 text-[#A98B57]" />
+                {service.turnaround.split(" ")[0]}
               </span>
-              <button
-                type="button"
-                aria-label="Increase quantity"
-                onClick={() => setQuantity((q) => Math.min(20, q + 1))}
-                disabled={qty >= 20}
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-[#5C3A1E] hover:bg-[#F4EFE6] disabled:opacity-35 disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-not-allowed"
-              >
-                <Plus className="w-3.5 h-3.5" />
-              </button>
             </div>
+          )}
+
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/70 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+
+          <div className="absolute bottom-2.5 left-3.5 right-3.5 z-10 flex items-center justify-between gap-2 text-[10px] text-[#F8F5EF]/90">
+            <span className="rounded-full bg-[#171717]/80 backdrop-blur-md px-2.5 py-0.5 text-[9px] font-semibold text-white border border-white/10 uppercase tracking-wider">
+              {service.category}
+            </span>
+            <span className="text-[#D4A35A] font-semibold shrink-0 whitespace-nowrap drop-shadow-sm">
+              {service.badge}
+            </span>
+          </div>
+        </Link>
+      )}
+
+      {/* Title, description & scope */}
+      <div className="p-5 pb-3 space-y-3 flex-1 flex flex-col">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="font-serif text-lg font-semibold text-[#0F172A] tracking-tight group-hover:text-[#5C3A1E] transition-colors leading-snug">
+            <Link
+              href={`/services/${main.slug}`}
+              className="hover:text-[#5C3A1E] transition-colors"
+            >
+              {main.title}
+            </Link>
+          </h3>
+          {service && (
+            <button
+              type="button"
+              onClick={() => onOpenDetail(service)}
+              title="Inspect Scope & Specifications"
+              className="inline-flex items-center justify-center whitespace-nowrap min-h-[32px] px-3 py-1 rounded-xl bg-[#F8F5EF] text-[#5C3A1E] border border-[#EADFCB] hover:border-[#D4A35A] transition-colors cursor-pointer text-xs font-medium shrink-0"
+            >
+              Details
+            </button>
           )}
         </div>
 
-        <p className="text-xs text-[#64748B] leading-relaxed line-clamp-2">
-          {service.description}
+        <p className="text-xs text-[#64748B] leading-relaxed">
+          {main.description}
         </p>
 
-        {/* What's included */}
-        <div className="space-y-1.5 pt-3 border-t border-[#EADFCB]/50">
-          {service.deliverables.slice(0, 3).map((item, idx) => (
-            <div
-              key={idx}
-              className="flex items-center gap-2 text-[11px] text-[#475569]"
-            >
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#2E7D4F] shrink-0" />
-              <span className="truncate">{item}</span>
-            </div>
-          ))}
+        {/* Relevant examples */}
+        <div className="space-y-1.5">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-[#A98B57]">
+            Examples
+          </span>
+          <ul className="flex flex-wrap gap-1.5">
+            {main.examples.map((example) => (
+              <li
+                key={example}
+                className="inline-flex items-center gap-1 rounded-full bg-[#F8F5EF] border border-[#EADFCB] px-2 py-0.5 text-[10px] font-medium text-[#5C3A1E]"
+              >
+                {example}
+              </li>
+            ))}
+          </ul>
         </div>
 
-        {/* Quantity / pack options (real canonical SKUs) */}
-        {hasOptions && (
-          <div className="pt-3 border-t border-[#EADFCB]/50 space-y-1.5">
+        {/* What's included */}
+        {main.deliverables.length > 0 && (
+          <div className="space-y-1.5 pt-3 border-t border-[#EADFCB]/50">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-[#A98B57]">
-              Choose quantity
+              Key deliverables
             </span>
-            <div className="flex flex-wrap gap-1.5">
-              {entry.options.map((option, idx) => {
-                const isActive = optionIndex === idx;
-                return (
-                  <button
-                    key={option.item.slug}
-                    type="button"
-                    onClick={() => setOptionIndex(idx)}
-                    className={`px-2.5 py-1.5 rounded-xl text-[11px] font-semibold transition-all border cursor-pointer ${
-                      isActive
-                        ? "bg-[#5C3A1E] text-white border-[#5C3A1E] shadow-xs"
-                        : "bg-[#FFFFFF] text-[#475569] border-[#EADFCB] hover:border-[#D4A35A]"
-                    }`}
-                  >
-                    {option.label}
-                    <span
-                      className={`block text-[10px] font-mono ${
-                        isActive ? "text-[#D4A35A]" : "text-[#94A3B8]"
-                      }`}
-                    >
-                      {formatCurrencyINR(option.item.numericPrice)}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+            {main.deliverables.map((item, idx) => (
+              <div
+                key={idx}
+                className="flex items-center gap-2 text-[11px] text-[#475569]"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#2E7D4F] shrink-0" />
+                <span className="truncate">{item}</span>
+              </div>
+            ))}
           </div>
         )}
 
-        <div className="text-[11px] text-[#94A3B8] font-mono pt-1 mt-auto">
-          {service.turnaround} • {service.revisionPolicy}
-        </div>
+        {service && (
+          <div className="pt-2 text-[11px] font-mono text-[#94A3B8]">
+            <Link
+              href={service.ctaHref || `/orders?service=${service.slug}`}
+              className="text-[#5C3A1E] font-sans font-semibold hover:underline inline-flex items-center gap-1"
+            >
+              Start an Order
+              <ArrowUpRight className="w-3 h-3" />
+            </Link>
+          </div>
+        )}
       </div>
 
-      {/* Footer: live total + order CTA */}
+      {/* Footer: navigate to the full detail route (no pricing on this page) */}
       <div className="p-4 pt-3 border-t border-[#EADFCB]/60 bg-[#FAF9F5]/70 flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <span className="text-[10px] text-[#94A3B8] uppercase block tracking-wider font-mono">
-            {qty > 1 ? `Total (${qty} units)` : "Total"}
-          </span>
-          <span className="font-serif text-lg font-bold text-[#5C3A1E] whitespace-nowrap">
-            {formatCurrencyINR(total)}
-          </span>
-        </div>
+        <span className="text-[10px] text-[#94A3B8] font-mono truncate">
+          {service?.turnaround ?? "Studio craft"}
+          {service?.revisionPolicy ? ` • ${service.revisionPolicy}` : ""}
+        </span>
 
         <Link
-          href={orderHref}
+          href={`/services/${main.slug}`}
           className="shrink-0"
-          title="Commission Service"
+          title={`View ${main.title} Service Page`}
+          aria-label={`View Service: ${main.title}`}
         >
           <span className="inline-flex items-center justify-center whitespace-nowrap min-h-[40px] px-4 py-2 rounded-xl bg-[#5C3A1E] text-white hover:bg-[#4A2E17] text-xs font-semibold gap-1 transition-all shadow-xs cursor-pointer">
-            <span>Order Service</span>
+            <span>View Service</span>
             <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
           </span>
         </Link>
       </div>
-    </motion.div>
+    </motion.article>
   );
 }
 
 /* ============================================================================
-   SERVICES CATALOG PAGE
+   SERVICES CATALOG PAGE — eight main services, price-free
    ============================================================================ */
 export default function ServicesPage() {
   const [activeCategory, setActiveCategory] = useState("All");
@@ -300,21 +247,36 @@ export default function ServicesPage() {
   const [selectedService, setSelectedService] =
     useState<CanonicalServiceItem | null>(null);
 
-  // Groups → entries, filtered by selected group and free-text search.
-  const visibleGroups: ServiceCatalogGroup[] = useMemo(() => {
-    return SERVICE_CATALOG_GROUPS.map((group) => ({
-      ...group,
-      entries:
-        activeCategory === "All" || activeCategory === group.id
-          ? group.entries.filter((entry) => matchesSearch(entry, searchQuery))
-          : [],
-    })).filter((group) => group.entries.length > 0);
+  // Category filter pills — derived from the main services' canonical categories.
+  const categoryOptions = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const entry of MAIN_SERVICE_ENTRIES) {
+      counts.set(
+        entry.service?.category ?? "Creative",
+        (counts.get(entry.service?.category ?? "Creative") ?? 0) + 1
+      );
+    }
+    return [
+      { value: "All", label: "All Services", count: MAIN_SERVICE_ENTRIES.length },
+      ...Array.from(counts.entries()).map(([value, count]) => ({
+        value,
+        label: CATEGORY_LABELS[value] ?? value,
+        count,
+      })),
+    ];
+  }, []);
+
+  // Eight main services, filtered by selected category and free-text search.
+  const visibleEntries = useMemo(() => {
+    return MAIN_SERVICE_ENTRIES.filter((entry) => {
+      const matchesCategory =
+        activeCategory === "All" ||
+        (entry.service?.category ?? "Creative") === activeCategory;
+      return matchesCategory && matchesSearch(entry, searchQuery);
+    });
   }, [activeCategory, searchQuery]);
 
-  const resultCount = visibleGroups.reduce(
-    (acc, group) => acc + group.entries.length,
-    0
-  );
+  const resultCount = visibleEntries.length;
 
   // URL state synchronization: supports direct navigation, reload, back/forward
   const syncFromUrl = useCallback(() => {
@@ -408,18 +370,20 @@ export default function ServicesPage() {
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] shadow-xs">
               <span className="text-[#D4A35A] text-xs">◆</span>
               <span className="text-[10px] md:text-xs font-semibold tracking-[0.22em] text-[#5C3A1E] uppercase">
-                Service Catalog &amp; Transparent Pricing
+                Eight Core Studio Services
               </span>
             </div>
 
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold leading-[1.1] text-[#0F172A]">
               What Would You Like to{" "}
-              <span className="text-gold-gradient">Buy Today?</span>
+              <span className="text-gold-gradient">Create Today?</span>
             </h1>
 
             <p className="text-base sm:text-lg text-[#64748B] leading-relaxed font-sans">
-              Every service listed with its real scope, verified price and a
-              clear order button — no packages to decode, no hidden tiers.
+              Every service below opens a full detail page with scope,
+              deliverables and process — no packages to decode, no hidden
+              tiers. Looking for pricing? Browse our Packages and Pricing
+              pages.
             </p>
 
             {/* Filter Controls: Search & Responsive Filter System */}
@@ -429,9 +393,10 @@ export default function ServicesPage() {
                 <Search className="w-4 h-4 text-[#94A3B8] absolute left-4 pointer-events-none" />
                 <input
                   type="text"
-                  placeholder="Search service, deliverable or keyword..."
+                  placeholder="Search service, example or keyword..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  aria-label="Search services"
                   className="w-full pl-11 pr-4 py-2.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30 transition-all shadow-xs"
                 />
                 {searchQuery && (
@@ -447,18 +412,10 @@ export default function ServicesPage() {
               {/* Mobile View: Clean Custom Dropdown Filter */}
               <div className="w-full md:hidden">
                 <CustomDropdown
-                  options={CATEGORIES.map((cat) => ({
+                  options={categoryOptions.map((cat) => ({
                     label: cat.label,
                     value: cat.value,
-                    badge: `${
-                      cat.value === "All"
-                        ? SERVICE_CATALOG_GROUPS.reduce(
-                            (acc, g) => acc + g.entries.length,
-                            0
-                          )
-                        : SERVICE_CATALOG_GROUPS.find((g) => g.id === cat.value)
-                            ?.entries.length ?? 0
-                    }`,
+                    badge: `${cat.count}`,
                   }))}
                   value={activeCategory}
                   onChange={(val) => setActiveCategory(val)}
@@ -469,16 +426,8 @@ export default function ServicesPage() {
 
               {/* Desktop View: Tab Pills System */}
               <div className="hidden md:flex flex-wrap items-center justify-center gap-2 pt-1">
-                {CATEGORIES.map((cat) => {
+                {categoryOptions.map((cat) => {
                   const isActive = activeCategory === cat.value;
-                  const count =
-                    cat.value === "All"
-                      ? SERVICE_CATALOG_GROUPS.reduce(
-                          (acc, g) => acc + g.entries.length,
-                          0
-                        )
-                      : SERVICE_CATALOG_GROUPS.find((g) => g.id === cat.value)
-                          ?.entries.length ?? 0;
 
                   return (
                     <button
@@ -498,7 +447,7 @@ export default function ServicesPage() {
                             : "bg-[#F8F5EF] text-[#64748B]"
                         }`}
                       >
-                        {count}
+                        {cat.count}
                       </span>
                     </button>
                   );
@@ -509,7 +458,7 @@ export default function ServicesPage() {
         </section>
 
         {/* ===================================================
-            2. GROUPED SERVICE CATALOG
+            2. EIGHT MAIN SERVICES CATALOG (price-free)
             =================================================== */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-14">
           {resultCount === 0 ? (
@@ -535,107 +484,100 @@ export default function ServicesPage() {
             </div>
           ) : (
             <AnimatePresence initial={false}>
-              {visibleGroups.map((group) => (
-                <motion.section
-                  key={group.id}
-                  id={group.id}
-                  layout
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="space-y-6 scroll-mt-24"
-                >
-                  {/* Group header */}
-                  <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b border-[#EADFCB] pb-3">
-                    <div className="space-y-1.5 max-w-3xl">
-                      <span className="inline-flex items-center gap-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-[#A98B57]">
-                        <span className="font-serif text-sm text-[#5C3A1E]">
-                          {group.index}.
-                        </span>
-                        <span>{group.title}</span>
+              <motion.section
+                layout
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-6 scroll-mt-24"
+              >
+                {/* Section header */}
+                <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b border-[#EADFCB] pb-3">
+                  <div className="space-y-1.5 max-w-3xl">
+                    <span className="inline-flex items-center gap-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-[#A98B57]">
+                      <span className="font-serif text-sm text-[#5C3A1E]">
+                        ◆
                       </span>
-                      <p className="text-sm text-[#64748B]">{group.blurb}</p>
-                    </div>
-                    <span className="text-[11px] font-mono text-[#94A3B8] shrink-0">
-                      {group.entries.length} service
-                      {group.entries.length === 1 ? "" : "s"}
+                      <span>MAIN STUDIO DISCIPLINES</span>
                     </span>
+                    <p className="text-sm text-[#64748B]">
+                      Eight core services, each with a dedicated detail page
+                      covering scope, deliverables and the production process.
+                    </p>
                   </div>
+                  <span className="text-[11px] font-mono text-[#94A3B8] shrink-0">
+                    {resultCount} service
+                    {resultCount === 1 ? "" : "s"}
+                  </span>
+                </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {group.entries.map((entry) => (
-                      <ServiceCatalogCard
-                        key={entry.slug}
-                        entry={entry}
-                        onOpenDetail={handleOpenDetail}
-                      />
-                    ))}
-                  </div>
-                </motion.section>
-              ))}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {visibleEntries.map((entry) => (
+                    <MainServiceCatalogCard
+                      key={entry.main.id}
+                      main={entry.main}
+                      service={entry.service}
+                      onOpenDetail={handleOpenDetail}
+                    />
+                  ))}
+                </div>
+              </motion.section>
             </AnimatePresence>
           )}
         </section>
 
         {/* ===================================================
-            3. PRICING TRANSPARENCY NOTES
+            3. PACKAGES & PRICING NAVIGATION (no prices shown here)
             =================================================== */}
         <section className="py-12 bg-[#FAF9F5] border-y border-[#EADFCB] mt-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             <div className="text-center space-y-2">
               <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#A98B57]">
-                How Our Pricing Works
+                Packages &amp; Pricing
               </span>
               <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-[#0F172A]">
-                Simple, Honest &amp; Final Before You Pay
+                Ready to Compare Scopes &amp; Rates?
               </h2>
+              <p className="text-sm text-[#64748B] max-w-xl mx-auto leading-relaxed">
+                This page shows what each service delivers. Exact prices,
+                package inclusions and monthly retainer details live on our
+                dedicated Packages and Pricing pages.
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="p-6 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] shadow-xs space-y-2">
-                <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-[#A98B57]" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+              <Link
+                href="/packages"
+                className="group p-6 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] shadow-xs hover:border-[#D4A35A] transition-all flex items-start justify-between gap-4"
+              >
+                <div className="space-y-1.5">
+                  <h4 className="font-serif text-base font-semibold text-[#0F172A] group-hover:text-[#5C3A1E] transition-colors">
+                    Production Packages
+                  </h4>
+                  <p className="text-xs text-[#64748B] leading-relaxed">
+                    Curated deliverable packs, project bundles and monthly
+                    retainer packages for ongoing creative work.
+                  </p>
                 </div>
-                <h4 className="font-serif text-base font-semibold text-[#0F172A]">
-                  Starting Price vs Final Price
-                </h4>
-                <p className="text-xs text-[#64748B] leading-relaxed">
-                  Cards marked <strong className="text-[#5C3A1E]">Starting at</strong>{" "}
-                  show the lowest price for the simplest scope — the exact total
-                  for your brief is confirmed before production. Everything else
-                  is a fixed, final price.
-                </p>
-              </div>
+                <ArrowUpRight className="w-5 h-5 text-[#A98B57] shrink-0 group-hover:text-[#5C3A1E] transition-colors" />
+              </Link>
 
-              <div className="p-6 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] shadow-xs space-y-2">
-                <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center">
-                  <Layers className="w-5 h-5 text-[#5C3A1E]" />
+              <Link
+                href="/pricing"
+                className="group p-6 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] shadow-xs hover:border-[#D4A35A] transition-all flex items-start justify-between gap-4"
+              >
+                <div className="space-y-1.5">
+                  <h4 className="font-serif text-base font-semibold text-[#0F172A] group-hover:text-[#5C3A1E] transition-colors">
+                    Full Pricing Overview
+                  </h4>
+                  <p className="text-xs text-[#64748B] leading-relaxed">
+                    Complete pricing tables for monthly retainers, individual
+                    services and standalone packs.
+                  </p>
                 </div>
-                <h4 className="font-serif text-base font-semibold text-[#0F172A]">
-                  Quantity &amp; Packs
-                </h4>
-                <p className="text-xs text-[#64748B] leading-relaxed">
-                  Choose 1, 3 or 5 image packs (and reel packs) directly on the
-                  card. The calculated total updates instantly and the same
-                  figure is re-validated on our servers before checkout.
-                </p>
-              </div>
-
-              <div className="p-6 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] shadow-xs space-y-2">
-                <div className="w-10 h-10 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] flex items-center justify-center">
-                  <AlertCircle className="w-5 h-5 text-[#C2761A]" />
-                </div>
-                <h4 className="font-serif text-base font-semibold text-[#0F172A]">
-                  Revisions &amp; Custom Scope
-                </h4>
-                <p className="text-xs text-[#64748B] leading-relaxed">
-                  Every card lists its included revision rounds and turnaround.
-                  Extra revisions, complex requirements or additional
-                  deliverables are quoted and agreed with you{" "}
-                  <strong className="text-[#5C3A1E]">before</strong> you pay.
-                </p>
-              </div>
+                <ArrowUpRight className="w-5 h-5 text-[#A98B57] shrink-0 group-hover:text-[#5C3A1E] transition-colors" />
+              </Link>
             </div>
           </div>
         </section>
@@ -739,7 +681,7 @@ export default function ServicesPage() {
       </main>
 
       {/* ===================================================
-          6. SERVICE DETAIL SPECIFICATION MODAL / DRAWER
+          6. SERVICE DETAIL SPECIFICATION MODAL / DRAWER (price-free)
           =================================================== */}
       <Modal
         isOpen={!!selectedService}
@@ -822,17 +764,17 @@ export default function ServicesPage() {
               )}
             </div>
 
-            {/* Core Commercial Scope & Metadata Grid */}
+            {/* Core Scope & Metadata Grid (no pricing shown) */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] text-xs">
               <div>
                 <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">
-                  {getPriceBadge(selectedService)}
+                  Category
                 </span>
                 <span className="font-serif text-lg font-bold text-[#5C3A1E] block">
-                  {selectedService.startingPrice}
+                  {selectedService.category}
                 </span>
                 <span className="text-[10px] text-[#64748B] block">
-                  {selectedSpec.pricingUnit}
+                  Core studio discipline
                 </span>
               </div>
               <div>
@@ -872,14 +814,6 @@ export default function ServicesPage() {
                 </span>
               </div>
             </div>
-
-            {/* Standalone Pricing Callout */}
-            {selectedService.priceDisplay && (
-              <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#D4A35A]/40 text-xs font-semibold text-[#8C6D32] flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-[#A98B57] shrink-0" />
-                <span>{selectedService.priceDisplay}</span>
-              </div>
-            )}
 
             {/* Service Purpose & Target Audience */}
             <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] space-y-2">
@@ -991,6 +925,22 @@ export default function ServicesPage() {
               </p>
             </div>
 
+            {/* Pricing pointer — exact rates live on the dedicated pricing page */}
+            <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#D4A35A]/40 text-xs font-semibold text-[#8C6D32] flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#A98B57] shrink-0" />
+              <span>
+                Viewing scope only —{" "}
+                <Link href="/pricing" className="underline hover:text-[#5C3A1E]">
+                  see full pricing
+                </Link>{" "}
+                or{" "}
+                <Link href="/packages" className="underline hover:text-[#5C3A1E]">
+                  browse packages
+                </Link>
+                .
+              </span>
+            </div>
+
             {/* Direct Order & Inquiry Action Buttons */}
             <div className="pt-4 border-t border-[#EADFCB] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 order-2 sm:order-1">
@@ -1030,7 +980,7 @@ export default function ServicesPage() {
                   >
                     {selectedService.isCustomQuote
                       ? "Inquire Custom Scope"
-                      : `Order ${selectedService.name} (${selectedService.startingPrice})`}
+                      : `Order ${selectedService.name}`}
                   </Button>
                 </Link>
               </div>

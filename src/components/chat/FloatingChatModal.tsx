@@ -24,6 +24,7 @@ import {
   Volume2,
   VolumeX,
   QrCode,
+  ArrowUpRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -31,6 +32,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { PaymentModal } from "@/components/checkout/PaymentModal";
 import { useAuth } from "@/lib/auth/authContext";
 import { usePathname, useRouter } from "next/navigation";
+import { MAIN_SERVICES } from "@/config/mainServices";
+import { MAIN_SERVICE_ICONS } from "@/components/services/MainServiceCard";
 
 declare global {
   interface Window {
@@ -54,6 +57,8 @@ interface ChatMessage {
   attachments?: ChatAttachment[];
   sources?: Array<{ title: string; category: string }>;
   isLeadPrompt?: boolean;
+  /** Renders the eight main services as an interactive selection panel. */
+  serviceCatalog?: boolean;
   orderDraft?: {
     orderId: string;
     orderNumber: string;
@@ -64,12 +69,40 @@ interface ChatMessage {
   };
 }
 
-const QUICK_ACTIONS = [
-  { label: "Our Services", query: "What services do you offer and what are their features?" },
+const QUICK_ACTIONS: Array<{
+  label: string;
+  query: string;
+  showServices?: boolean;
+}> = [
+  { label: "Our Services", query: "What services do you offer?", showServices: true },
   { label: "Pricing & Plans", query: "What are your pricing plans and rates?" },
   { label: "About Studio", query: "Tell me about Sutra Studio background and expertise" },
   { label: "Office & Contact", query: "Where is your office located and how can I contact you?" },
 ];
+
+/**
+ * Client-side detection for general "what services do you offer" inquiries.
+ * These are answered locally from the unified MAIN_SERVICES configuration
+ * (eight services, names + short descriptions, no pricing) instead of the AI
+ * backend, so service suggestions stay consistent and price-free. All other
+ * messages continue through the existing /api/chat → /api/chatbot pipeline.
+ */
+const SERVICE_INTENT_PATTERNS: RegExp[] = [
+  /what (do you (offer|provide|sell|do)|are your services|services? (do you|are|is))/i,
+  /(list|show|tell me|share|give me).*(services?|capabilities|offerings|solutions)/i,
+  /(services?|capabilities|offerings|solutions).*(list|overview|offer|available|provide|include)/i,
+  /what can you (do|help with|offer|create|make|build)/i,
+  /which services? (do you|are|is)/i,
+  /your (main |core |studio )?services/i,
+  /services? chahiye|services? batao|kya kya (karte|service)/i,
+  /તમે શું (કરો|સેવા|સર્વિસ)/u,
+];
+
+function isServiceCatalogQuery(text: string): boolean {
+  if (!text) return false;
+  const normalized = text.trim();
+  return SERVICE_INTENT_PATTERNS.some((pattern) => pattern.test(normalized));
+}
 
 /**
  * Parses inline markdown tokens: bold **text**, code `text`, and links [text](url)
@@ -218,7 +251,7 @@ export function FloatingChatModal() {
       gujaratiTime = "શુભ સંધ્યા";
     }
 
-    const text = `${greetingTime} (${gujaratiTime})! 🙏 Welcome to **Sutra Studio**.\n\nI am your dedicated Studio Concierge. You can speak or type to inquire about our 12 creative capabilities, review pricing, share reference files, or commission direct orders. How may we assist your creative vision today?`;
+    const text = `${greetingTime} (${gujaratiTime})! 🙏 Welcome to **Sutra Studio**.\n\nI am your dedicated Studio Concierge. You can speak or type to ask about our eight core studio services, review pricing, share reference files, or commission direct orders. How may we assist your creative vision today?`;
     const spoken = `${greetingTime}! Welcome to Sutra Studio Atelier. How may I assist your creative vision today?`;
     return { text, spoken };
   };
@@ -538,6 +571,25 @@ export function FloatingChatModal() {
   };
 
 
+  /** Local price-free answer listing the eight main services (no API call). */
+  const buildServiceCatalogMessage = (): ChatMessage => ({
+    id: `bot_services_${Date.now()}`,
+    sender: "bot",
+    text: "Here are our **eight core studio services** — select any service to open its full detail page:",
+    serviceCatalog: true,
+    time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+  });
+
+  const handleShowServices = () => {
+    const userMsg: ChatMessage = {
+      id: `usr_${Date.now()}`,
+      sender: "user",
+      text: "What services do you offer?",
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    };
+    setMessages((prev) => [...prev, userMsg, buildServiceCatalogMessage()]);
+  };
+
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend || input).trim();
     if ((!text && attachments.length === 0) || isLoading) return;
@@ -554,6 +606,15 @@ export function FloatingChatModal() {
     setMessages((prev) => [...prev, userMsg]);
     if (!textToSend) setInput("");
     setAttachments([]);
+
+    // General service inquiries are answered locally from the unified
+    // main-services configuration (eight services, no pricing). Everything
+    // else keeps the existing backend pipeline untouched.
+    if (isServiceCatalogQuery(text)) {
+      setMessages((prev) => [...prev, buildServiceCatalogMessage()]);
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -748,7 +809,11 @@ export function FloatingChatModal() {
               {QUICK_ACTIONS.map((action, idx) => (
                 <button
                   key={idx}
-                  onClick={() => handleSendMessage(action.query)}
+                  onClick={() =>
+                    action.showServices
+                      ? handleShowServices()
+                      : handleSendMessage(action.query)
+                  }
                   className="px-2.5 py-1 rounded-full bg-white border border-[#E5E1D8] hover:border-[#A98B57] hover:bg-[#FAF9F5] text-[11px] text-[#5C3A1E] font-medium whitespace-nowrap transition-all shadow-2xs cursor-pointer shrink-0"
                 >
                   {action.label}
@@ -814,6 +879,52 @@ export function FloatingChatModal() {
                       )}
 
                       <FormattedMessageContent text={msg.text} isUser={!isBot} />
+
+                      {/* Eight Main Services Selection Panel (price-free) */}
+                      {msg.serviceCatalog && (
+                        <div
+                          className="mt-3 space-y-1.5"
+                          role="list"
+                          aria-label="Sutra Studio main services"
+                        >
+                          {MAIN_SERVICES.map((svc) => {
+                            const Icon = MAIN_SERVICE_ICONS[svc.icon] ?? Sparkles;
+                            return (
+                              <button
+                                key={svc.id}
+                                type="button"
+                                role="listitem"
+                                onClick={() => {
+                                  setIsOpen(false);
+                                  router.push(`/services/${svc.slug}`);
+                                }}
+                                aria-label={`View ${svc.title} service details`}
+                                className="w-full text-left flex items-start gap-2.5 p-2 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] hover:border-[#A98B57] hover:bg-white transition-colors cursor-pointer"
+                              >
+                                <span className="mt-0.5 w-6 h-6 rounded-lg bg-[#171717] flex items-center justify-center shrink-0">
+                                  <Icon className="w-3 h-3 text-[#D4A35A]" aria-hidden="true" />
+                                </span>
+                                <span className="flex-1 min-w-0">
+                                  <span className="block text-[11px] font-bold text-[#171717]">
+                                    {svc.title}
+                                  </span>
+                                  <span className="block text-[10px] leading-snug text-[#64748B]">
+                                    {svc.shortDescription}
+                                  </span>
+                                </span>
+                                <ArrowUpRight
+                                  className="w-3.5 h-3.5 text-[#A98B57] shrink-0 mt-1"
+                                  aria-hidden="true"
+                                />
+                              </button>
+                            );
+                          })}
+                          <p className="text-[10px] text-[#94A3B8] pt-1">
+                            Select a service to view its full scope, or ask about
+                            pricing plans and custom commissions.
+                          </p>
+                        </div>
+                      )}
 
                       {/* Order Draft Interactive Checkout Card */}
                       {msg.orderDraft && (

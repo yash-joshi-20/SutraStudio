@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "12 Creative Disciplines & Production Services",
+  title: "Eight Core Studio Services & Production Disciplines",
   description:
-    "Explore our 12 specialized disciplines from 4K image creation and cinematic reels to 3D spatial design, web engineering, and workflow automation.",
+    "Explore the eight core Sutra Studio services — image creation, video creation, 3D modeling, 360° views, web design, digital marketing, web development and app development.",
   alternates: {
     canonical: "/services",
   },
   openGraph: {
-    title: "12 Creative Disciplines & Production Services | Sutra Studios",
+    title: "Eight Core Studio Services & Production Disciplines | Sutra Studios",
     description:
-      "Explore our 12 specialized disciplines from 4K image creation and cinematic reels to 3D spatial design, web engineering, and workflow automation.",
+      "Explore the eight core Sutra Studio services — image creation, video creation, 3D modeling, 360° views, web design, digital marketing, web development and app development.",
     url: "/services",
   },
 };

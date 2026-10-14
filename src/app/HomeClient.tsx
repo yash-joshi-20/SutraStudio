@@ -6,7 +6,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Modal } from "@/components/ui/Modal";
-import { ServiceCard } from "@/components/services/ServiceCard";
 import { ProjectCard } from "@/components/portfolio/ProjectCard";
 import { FeaturedSpotlightDuo } from "@/components/portfolio/FeaturedSpotlightDuo";
 import { HeroAnimation } from "@/components/motion/HeroAnimation";
@@ -16,7 +15,8 @@ import { SutraParticleWings } from "@/components/canvas/SutraParticleWings";
 import { LotusSymbol } from "@/components/brand/SutraLogo";
 import { SutraStudioIntroLanding } from "@/components/motion/SutraStudioIntroLanding";
 import { CustomDropdown } from "@/components/ui/CustomDropdown";
-import { SUTRA_SERVICES } from "@/data/servicesData";
+import { MainServiceCard } from "@/components/services/MainServiceCard";
+import { MAIN_SERVICES, getMainServices } from "@/config/mainServices";
 import { SUTRA_PROJECTS } from "@/data/projectsData";
 
 import {
@@ -44,16 +44,18 @@ const FILTER_CATEGORIES = [
   "Marketing",
 ];
 
-const HERO_DISCIPLINES = [
-  { id: "image-creation", label: "Product & Brand Imagery", output: "4K UHD Photorealistic Visuals", href: "/services#image-creation" },
-  { id: "video-creation", label: "Promotional Reels & Shorts", output: "Commercial Video Cuts & Voiceover", href: "/services#video-creation" },
-  { id: "3d-modeling", label: "3D Product Modeling", output: "Interactive CAD & WebGL Assets", href: "/services#3d-modeling" },
-  { id: "360-view", label: "360° Virtual Tours", output: "Digital & On-Site Virtual Spaces", href: "/services#360-view" },
-  { id: "interior-design", label: "Interior 3D Visualization", output: "Photorealistic Room & Spatial CGI", href: "/services#interior-design" },
-  { id: "meta-ads-launcher", label: "Meta Ads Campaign", output: "Direct-Response Ad Creative Architecture", href: "/services#meta-ads-launcher" },
-  { id: "digital-marketing", label: "Digital Marketing & Strategy", output: "Editorial Content Calendars & Trends", href: "/services#digital-marketing" },
-  { id: "website-development", label: "Website Design & Development", output: "High-Performance Next.js Web Platforms", href: "/services#website-development" },
-];
+/**
+ * Eight main studio services (hero spotlight) — derived from the unified
+ * `MAIN_SERVICES` configuration so the hero, catalogue grid, services page,
+ * footer and chat concierge always agree. Links open the existing
+ * `/services/[slug]` detail routes.
+ */
+const HERO_DISCIPLINES = MAIN_SERVICES.map((service) => ({
+  id: service.slug,
+  label: service.heroLabel,
+  output: service.heroOutput,
+  href: `/services/${service.slug}`,
+}));
 
 export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -130,7 +132,7 @@ export default function HomePage() {
                       Fixed Scope Directives
                     </span>
                     <span className="text-[#EADFCB]">•</span>
-                    <span className="font-medium">Transparent Rates from ₹99</span>
+                    <span className="font-medium">Transparent Fixed Rates</span>
                     <span className="text-[#EADFCB]">•</span>
                     <span className="font-medium">Private Drive Delivery</span>
                   </div>
@@ -344,20 +346,20 @@ export default function HomePage() {
               <div className="space-y-3 max-w-2xl">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-[11px] font-semibold text-[#A98B57] uppercase tracking-widest shadow-2xs">
                   <span>◆</span>
-                  <span>FEATURED DISCIPLINES</span>
+                  <span>CORE STUDIO DISCIPLINES</span>
                 </div>
                 <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#0F172A] tracking-tight">
-                  Curated Studio Solutions
+                  Eight Core Studio Services
                 </h2>
                 <p className="text-sm sm:text-base text-[#64748B] leading-relaxed">
-                  From 4K commercial visual imagery and cinematic motion reels to 3D spatial models and virtual tours. Explore our primary demo capabilities below.
+                  From commercial imagery and cinematic reels to 3D models, virtual tours, digital marketing, web design and full-stack development. Explore our eight main creative disciplines below.
                 </p>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
                 <Link href="/services">
                   <Button variant="secondary" size="md" withArrow className="shadow-xs text-xs font-semibold">
-                    View All Services (15+)
+                    Explore All Services
                   </Button>
                 </Link>
                 <Link href="/contact">
@@ -368,10 +370,10 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Curated 3-Column Demo Grid (Spacious 3 Columns, Elegant & Readable) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {SUTRA_SERVICES.filter((s) => ["img-creation", "vid-creation", "3d-modeling"].includes(s.id)).map((service) => (
-                <ServiceCard key={service.id} service={service} />
+            {/* Eight Main Service Cards — one shared configuration, no pricing shown */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {getMainServices().map((service) => (
+                <MainServiceCard key={service.id} service={service} />
               ))}
             </div>
 
@@ -383,14 +385,14 @@ export default function HomePage() {
                   <span>Looking for specialized packages or monthly retainers?</span>
                 </div>
                 <p className="text-xs text-[#64748B] max-w-xl">
-                  We offer 15+ specialized creative services including WebGL 3D, Interior CGI, 360° Tours, Meta Ads, and full Next.js development with transparent rates from ₹99 to ₹19,999.
+                  Explore curated deliverable packs, project bundles and monthly retainer packages — or browse full pricing details on our Packages and Pricing pages.
                 </p>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                <Link href="/services">
+                <Link href="/packages">
                   <Button variant="primary" size="md" withArrow className="shadow-warm text-xs font-medium">
-                    Read More: Full Services Catalog
+                    Browse Packages
                   </Button>
                 </Link>
                 <Link href="/contact">
@@ -536,7 +538,7 @@ export default function HomePage() {
                     <ul className="space-y-3 text-xs text-[#171717]">
                       <li className="flex items-start gap-2.5">
                         <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
-                        <span><strong>Transparent fixed rates</strong> (₹99 to ₹19,999) with zero hidden fees</span>
+                        <span><strong>Transparent fixed rates</strong> agreed upfront with zero hidden fees</span>
                       </li>
                       <li className="flex items-start gap-2.5">
                         <Check className="w-4 h-4 text-[#2E7D4F] shrink-0 mt-0.5" />
@@ -562,7 +564,7 @@ export default function HomePage() {
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">Option 1</span>
-                      <span className="text-xs font-bold text-[#64748B] bg-[#E5E1D8]/60 px-2.5 py-0.5 rounded-full">Free / ₹1.5k/mo</span>
+                      <span className="text-xs font-bold text-[#64748B] bg-[#E5E1D8]/60 px-2.5 py-0.5 rounded-full">Free / Low-Cost Tools</span>
                     </div>
                     <h4 className="font-serif text-lg font-bold text-[#0F172A] mb-2">Generic Online Generators</h4>
                     <p className="text-xs text-[#64748B] mb-5 leading-relaxed">Uncalibrated consumer-grade generators.</p>
@@ -597,7 +599,7 @@ export default function HomePage() {
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">Option 2</span>
-                      <span className="text-xs font-bold text-[#64748B] bg-[#E5E1D8]/60 px-2.5 py-0.5 rounded-full">₹15k – ₹40k</span>
+                      <span className="text-xs font-bold text-[#64748B] bg-[#E5E1D8]/60 px-2.5 py-0.5 rounded-full">Per-Project Fees</span>
                     </div>
                     <h4 className="font-serif text-lg font-bold text-[#0F172A] mb-2">Freelancers</h4>
                     <p className="text-xs text-[#64748B] mb-5 leading-relaxed">Solo designers on Upwork, Fiverr, or WhatsApp.</p>
@@ -632,7 +634,7 @@ export default function HomePage() {
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">Option 3</span>
-                      <span className="text-xs font-bold text-[#64748B] bg-[#E5E1D8]/60 px-2.5 py-0.5 rounded-full">₹1L – ₹5L/mo</span>
+                      <span className="text-xs font-bold text-[#64748B] bg-[#E5E1D8]/60 px-2.5 py-0.5 rounded-full">Monthly Retainers</span>
                     </div>
                     <h4 className="font-serif text-lg font-bold text-[#0F172A] mb-2">Traditional Agencies</h4>
                     <p className="text-xs text-[#64748B] mb-5 leading-relaxed">Big marketing agencies with account managers.</p>
@@ -640,7 +642,7 @@ export default function HomePage() {
                     <ul className="space-y-3 text-xs text-[#64748B]">
                       <li className="flex items-start gap-2">
                         <XIcon className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" />
-                        <span>Bloated retainers (₹1L – ₹5L/month)</span>
+                        <span>Bloated long-term monthly retainers</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <XIcon className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" />
@@ -670,7 +672,7 @@ export default function HomePage() {
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-xs font-semibold uppercase tracking-wider text-[#A98B57]">Sutra Studio</span>
-                      <span className="text-xs font-bold text-[#5C3A1E] bg-[#D4A35A]/20 px-2.5 py-0.5 rounded-full">From ₹99</span>
+                      <span className="text-xs font-bold text-[#5C3A1E] bg-[#D4A35A]/20 px-2.5 py-0.5 rounded-full">Fixed Scoped Rates</span>
                     </div>
                     <h4 className="font-serif text-lg font-bold text-[#0F172A] mb-2">Sutra Studio Atelier</h4>
                     <p className="text-xs text-[#64748B] mb-5 leading-relaxed">High-Precision Production + Senior Art Director Polish + Client Vault.</p>
@@ -713,20 +715,20 @@ export default function HomePage() {
         </section>
 
         {/* ===================================================
-            4. SERVICES CTA BAND (replaces homepage pricing section)
+            4. SERVICES CTA BAND (routes to services & packages)
             =================================================== */}
         <section className="py-12 bg-[#FAF9F5] border-t border-[#EADFCB]">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-6 p-6 sm:p-8 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-xs">
               <div className="text-center sm:text-left space-y-1.5">
                 <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#A98B57]">
-                  Services &amp; Pricing
+                  Services &amp; Packages
                 </span>
                 <h2 className="font-serif text-xl sm:text-2xl font-semibold text-[#0F172A]">
-                  Browse our full service catalog &amp; transparent pricing
+                  Browse our full service catalog &amp; curated packages
                 </h2>
                 <p className="text-sm text-[#64748B]">
-                  From ₹99 per image to full website builds — all prices listed upfront.
+                  From single creative deliverables to complete website builds and monthly retainers — every scope is listed upfront.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
@@ -735,9 +737,9 @@ export default function HomePage() {
                     View All Services
                   </Button>
                 </Link>
-                <Link href="/contact">
+                <Link href="/packages">
                   <Button variant="secondary" size="md" className="whitespace-nowrap">
-                    Get a Custom Quote
+                    Browse Packages
                   </Button>
                 </Link>
               </div>
