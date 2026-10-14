@@ -427,14 +427,14 @@ export class PaymentsStore {
     let updatedOrder = order;
 
     if (order) {
-      updatedOrder = OrdersStore.markAsPaid({
+      updatedOrder = await OrdersStore.markAsPaidAsync({
         orderId: order.id,
         amountPaid: payment.amountINR,
         paymentMethod: "UPI_QR",
         source: "admin_portal",
       });
 
-      OrdersStore.update(order.id, {
+      await OrdersStore.updateAsync(order.id, {
         status: "in_production",
         statusLabel: "Payment Verified — In Studio Production Queue",
         updatedAt: now,
@@ -446,6 +446,9 @@ export class PaymentsStore {
         changedAt: now,
         changedBy: params.adminActor.name || "admin",
         note: `UPI QR payment (UTR: ${payment.utrNumber || "Verified"}) confirmed by Studio Administrator (${params.adminActor.email}). Order moved to active production.`,
+      });
+      await OrdersStore.updateAsync(order.id, {
+        statusHistory: order.statusHistory,
       });
 
       OrdersStore.logPaymentEvent({

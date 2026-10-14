@@ -487,7 +487,13 @@ export default function OrdersPage() {
     setOrdersError(null);
     try {
       const clientUid = user?.uid || (user?.email ? user.email : "");
-      const res = await fetch(clientUid ? `/api/orders?clientUid=${encodeURIComponent(clientUid)}` : "/api/orders");
+      const res = await fetch(clientUid ? `/api/orders?clientUid=${encodeURIComponent(clientUid)}` : "/api/orders", {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+      });
       if (!res.ok) {
         throw new Error("Failed to load orders");
       }
@@ -564,8 +570,15 @@ export default function OrdersPage() {
             },
           ],
         }));
-        setOrders(mapped);
-        SyncManager.setCachedOrders(mapped);
+        setOrders((prev) => {
+          // Safeguard: on silent background polls, do not wipe an existing populated order list
+          // if the backend response was transiently empty (e.g. during worker container reload)
+          if (mapped.length === 0 && silent && prev.length > 0) {
+            return prev;
+          }
+          SyncManager.setCachedOrders(mapped);
+          return mapped;
+        });
       }
     } catch {
       const cached = SyncManager.getCachedOrders();

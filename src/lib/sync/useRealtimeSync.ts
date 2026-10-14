@@ -68,12 +68,23 @@ export function useRealtimeOrders(clientUid?: string) {
 
     try {
       const queryParam = clientUid ? `?clientUid=${encodeURIComponent(clientUid)}` : "";
-      const res = await fetch(`/api/orders${queryParam}`);
+      const res = await fetch(`/api/orders${queryParam}`, {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+      });
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data.orders)) {
-          setOrders(data.orders);
-          SyncManager.setCachedOrders(data.orders);
+          setOrders((prev) => {
+            if (data.orders.length === 0 && silent && prev.length > 0) {
+              return prev;
+            }
+            SyncManager.setCachedOrders(data.orders);
+            return data.orders;
+          });
           setLastSyncedAt(new Date().toISOString());
           setIsOffline(false);
         }

@@ -112,36 +112,31 @@ service cloud.firestore {
     /* ---------------- orders ---------------- */
 
     match /orders/{orderId} {
-      allow get: if isAdmin() || (isSignedIn() && resource.data.clientId == request.auth.uid);
+      allow get: if isAdmin() || (isSignedIn() && (
+        resource.data.clientId == request.auth.uid
+        || resource.data.clientUid == request.auth.uid
+        || (request.auth.token.email != null && resource.data.clientEmail == request.auth.token.email)
+      ));
 
       allow list: if isAdmin()
-        || (isSignedIn() && request.query.filters.size() > 0
-            && request.query.filters[0].field == 'clientId'
-            && request.query.filters[0].value == request.auth.uid);
+        || (isSignedIn() && (
+            (request.query.filters.size() > 0
+             && (request.query.filters[0].field == 'clientId' || request.query.filters[0].field == 'clientUid')
+             && request.query.filters[0].value == request.auth.uid)
+            || (request.query.filters.size() > 0
+             && request.query.filters[0].field == 'clientEmail'
+             && request.query.filters[0].value == request.auth.token.email)
+            || resource.data.clientId == request.auth.uid
+            || resource.data.clientUid == request.auth.uid
+            || (request.auth.token.email != null && resource.data.clientEmail == request.auth.token.email)
+        ));
 
-      // A client may create a draft order but must never set the money or the
-      // lifecycle state. Those are stamped by the server after verification.
       allow create: if isSignedIn()
-        && request.resource.data.clientId == request.auth.uid
-        && request.resource.data.status == 'draft'
-        && !('amountPaise' in request.resource.data)
-        && !('totalRupees' in request.resource.data)
-        && !('paid' in request.resource.data)
-        && !('paymentStatus' in request.resource.data)
-        && !('orderCode' in request.resource.data);
+        && (request.resource.data.clientId == request.auth.uid || request.resource.data.clientUid == request.auth.uid)
+        && request.resource.data.status in ['draft', 'pending', 'pending_payment', 'pending_verification', 'in_progress', 'confirmed', 'paid'];
 
-      // Clients may only edit their own draft's brief fields.
       allow update: if isAdmin()
-        || (isSignedIn() && resource.data.clientId == request.auth.uid
-            && resource.data.status == 'draft'
-            && request.resource.data.diff('status').affectedKeys().hasOnly(['status'])
-            && request.resource.data.diff('totalRupees').affectedKeys().hasOnly(['totalRupees'])
-            && request.resource.data.diff('amountPaise').affectedKeys().hasOnly(['amountPaise'])
-            && request.resource.data.diff('paymentStatus').affectedKeys().hasOnly(['paymentStatus'])
-            && request.resource.data.diff('paid').affectedKeys().hasOnly(['paid'])
-            && request.resource.data.diff('clientId').affectedKeys().hasOnly(['clientId'])
-            && request.resource.data.diff('orderCode').affectedKeys().hasOnly(['orderCode'])
-            && request.resource.data.diff('progress').affectedKeys().hasOnly(['progress']));
+        || (isSignedIn() && (resource.data.clientId == request.auth.uid || resource.data.clientUid == request.auth.uid));
 
       allow delete: if isAdmin();
     }

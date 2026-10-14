@@ -144,11 +144,23 @@ export default function AdminOrdersPage() {
   const fetchOrders = useCallback(async (quiet = false) => {
     if (!quiet) setIsRefreshing(true);
     try {
-      const res = await fetch("/api/orders?limit=100");
+      const res = await fetch("/api/orders?limit=100", {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+      });
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data.orders)) {
-          setOrders(data.orders);
+          setOrders((prev) => {
+            // Safeguard: on background quiet polls, avoid overwriting populated list with transient empty array
+            if (data.orders.length === 0 && quiet && prev.length > 0) {
+              return prev;
+            }
+            return data.orders;
+          });
         }
       }
     } catch (e) {

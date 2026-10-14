@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { isFirebaseAdminReady, adminMissingKeys } from "@/lib/firebase/admin";
 import { notConfigured } from "@/lib/api/response";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 import { generateOrderNumber } from "@/lib/types/database";
 import { PaymentsStore } from "@/lib/services/paymentsStore";
 import { provisionOrderDriveFolders } from "@/lib/services/googleDriveService";
@@ -127,6 +130,7 @@ export interface FirestoreOrderRecord {
   confirmToken?: string;
   confirmUrl?: string;
   confirmedAt?: string;
+  _persistedToFirestore?: boolean;
   attribution?: {
     utm_source?: string;
     utm_medium?: string;
@@ -455,6 +459,12 @@ export async function GET(req: Request) {
     storageBackend: "Sutra Cloud Vault (Encrypted)",
     totalCount: filtered.length,
     orders: filtered,
+  }, {
+    headers: {
+      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+      "Pragma": "no-cache",
+      "Expires": "0",
+    },
   });
 }
 
@@ -1115,6 +1125,10 @@ export async function POST(req: Request) {
       },
       message:
         "Order securely registered in Firestore with server-verified pricing. UPI QR payment intent initialized.",
+    }, {
+      headers: {
+        "Cache-Control": "no-store",
+      },
     });
   } catch (err: any) {
     console.error("[Orders API] Failed to create order in Firestore:", err);

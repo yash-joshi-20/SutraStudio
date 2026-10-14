@@ -159,7 +159,7 @@ function cleanForFirestore<T>(data: T): T {
 /**
  * Persists an order directly to local disk and Firestore
  */
-async function persistOrder(order: FirestoreOrderRecord): Promise<void> {
+async function persistOrder(order: FirestoreOrderRecord, options: { silent?: boolean } = {}): Promise<boolean> {
   // 1. Save to local disk immediately
   saveOrdersToDisk(globalAny.__SUTRA_STORED_ORDERS__);
 
@@ -169,9 +169,17 @@ async function persistOrder(order: FirestoreOrderRecord): Promise<void> {
       const db = adminDb();
       const sanitized = cleanForFirestore(order);
       await db.collection("orders").doc(order.id).set(sanitized, { merge: true });
-    } catch (err) {
-      console.warn(`[OrdersStore] Failed to persist order ${order.id} to Firestore:`, err);
+      (order as any)._persistedToFirestore = true;
+      return true;
+    } catch (err: any) {
+      console.error(`[OrdersStore] Failed to persist order ${order.id} to Firestore:`, err?.message || err);
+      return false;
     }
+  } else {
+    if (!options.silent) {
+      console.warn(`[OrdersStore] Firebase Admin is not ready. Order ${order.id} stored in local vault.`);
+    }
+    return false;
   }
 }
 
@@ -194,7 +202,7 @@ export class OrdersStore {
       if (ord && ord.id) map.set(ord.id, ord);
     }
 
-    // 2. Keep any in-memory orders
+    // 2. Keep any in-memory orders (ensures newly placed orders never vanish)
     for (const ord of globalAny.__SUTRA_STORED_ORDERS__ || []) {
       if (ord && ord.id) map.set(ord.id, { ...(map.get(ord.id) || {}), ...ord });
     }
@@ -207,11 +215,11 @@ export class OrdersStore {
     if (isFirebaseAdminReady() && (!isQuotaCooling || force)) {
       try {
         const db = adminDb();
-        const snapshot = await db.collection("orders").limit(100).get();
+        const snapshot = await db.collection("orders").limit(200).get();
         snapshot.forEach((doc) => {
           const data = doc.data() as FirestoreOrderRecord;
           if (data && data.id) {
-            map.set(data.id, { ...(map.get(data.id) || {}), ...data });
+            map.set(data.id, { ...(map.get(data.id) || {}), ...data, _persistedToFirestore: true });
           }
         });
       } catch (err: any) {
@@ -336,12 +344,14 @@ export class OrdersStore {
     } else {
       globalAny.__SUTRA_STORED_ORDERS__.unshift(order);
     }
-    persistOrder(order).catch(() => {});
+    persistOrder(order).catch((err) => {
+      console.error(`[OrdersStore.add] Background persist failed for order ${order.id}:`, err);
+    });
   }
 
-  public static async addAsync(order: FirestoreOrderRecord): Promise<void> {
+  public static async addAsync(order: FirestoreOrderRecord): Promise<boolean> {
     this.add(order);
-    await persistOrder(order);
+    return await persistOrder(order);
   }
 
   public static update(
@@ -355,7 +365,9 @@ export class OrdersStore {
       updatedAt: new Date().toISOString(),
     });
 
-    persistOrder(order).catch(() => {});
+    persistOrder(order).catch((err) => {
+      console.error(`[OrdersStore.update] Background persist failed for order ${order.id}:`, err);
+    });
     return order;
   }
 
@@ -403,7 +415,9 @@ export class OrdersStore {
       note: `Payment verified (${refCode}) via ${params.source || "upi_qr"}.`,
     });
 
-    persistOrder(order).catch(() => {});
+    persistOrder(order).catch((err) => {
+      console.error(`[OrdersStore.markAsPaid] Background persist failed for order ${order.id}:`, err);
+    });
 
     this.logPaymentEvent({
       orderId: order.id,
@@ -444,6 +458,24 @@ export class OrdersStore {
       }
     }, 100);
 
+    return order;
+  }
+
+  public static async markAsPaidAsync(params: {
+    orderId: string;
+    paymentId?: string;
+    utrNumber?: string;
+    amountPaid?: number;
+    paymentMethod?: string;
+    source?: "checkout" | "webhook" | "refund" | "admin" | "client_portal" | "admin_portal";
+    razorpayPaymentId?: string;
+    razorpayOrderId?: string;
+    razorpaySignature?: string;
+  }): Promise<FirestoreOrderRecord | undefined> {
+    const order = this.markAsPaid(params);
+    if (order) {
+      await persistOrder(order);
+    }
     return order;
   }
 
