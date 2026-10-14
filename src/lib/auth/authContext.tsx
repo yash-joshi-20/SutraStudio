@@ -95,6 +95,7 @@ interface AuthContextType {
   isSessionStale: boolean;
   configurationError: string;
   loginWithEmail: (email: string, password: string, rememberMe?: boolean) => Promise<AuthUser>;
+  loginAdmin: (email: string, password: string, rememberMe?: boolean) => Promise<AuthUser>;
   loginWithGoogle: (rememberMe?: boolean) => Promise<AuthUser>;
   register: (input: RegisterInput) => Promise<{ user: AuthUser; emailVerificationSent: boolean }>;
   logout: () => Promise<void>;
@@ -308,11 +309,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const resolvedRole: UserRole = isStaff ? "admin" : "client";
           const idToken = await fbUser.getIdToken();
 
+          let effectiveRole: UserRole = resolvedRole;
           try {
             if (isStaff) {
               await postJson("/api/auth/admin-login", { idToken, rememberMe: true });
+              effectiveRole = "admin";
             } else {
-              await establishServerSession(idToken, true);
+              try {
+                await establishServerSession(idToken, true);
+              } catch (clientErr: any) {
+                if (clientErr?.code === "USE_ADMIN_LOGIN") {
+                  await postJson("/api/auth/admin-login", { idToken, rememberMe: true });
+                  effectiveRole = "admin";
+                } else {
+                  throw clientErr;
+                }
+              }
             }
 
             const retry = await fetch("/api/auth/session", { cache: "no-store", credentials: "same-origin" });
@@ -324,12 +336,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 email: retryData.user.email ?? fbUser.email ?? "",
                 displayName: retryData.user.name ?? fbUser.displayName ?? "",
                 photoURL: retryData.user.picture ?? fbUser.photoURL ?? "",
-                role: retryData.user.role ?? resolvedRole,
+                role: retryData.user.role ?? effectiveRole,
                 emailVerified: Boolean(retryData.user.emailVerified ?? fbUser.emailVerified),
                 phone: retryData.profile?.phone ?? fbUser.phoneNumber ?? "",
               };
               setUser(authUser);
-              setRole(retryData.user.role ?? resolvedRole);
+              setRole(retryData.user.role ?? effectiveRole);
               setProfile(retryData.profile ?? null);
               setIsSessionStale(false);
               setIsLoading(false);
@@ -524,6 +536,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [configurationError, establishServerSession, refreshProfile]
   );
 
+  const loginAdmin = useCallback(
+    async (email: string, password: string, rememberMe = true): Promise<AuthUser> => {
+      if (configurationError) throw new Error(configurationError);
+      try {
+        await applyPersistence(rememberMe);
+      } catch (pErr) {
+        console.warn("[Auth] Could not apply persistence:", pErr);
+      }
+      setIsLoading(true);
+      try {
+        const cred = await signInWithEmailAndPassword(getFirebaseAuth(), email.trim(), password);
+        const token = await cred.user.getIdToken(true);
+        const res = await postJson("/api/auth/admin-login", { idToken: token, rememberMe });
+        const serverUser = (res?.user as any) || {};
+        const adminUser: AuthUser = {
+          uid: cred.user.uid,
+          email: cred.user.email ?? email.trim(),
+          displayName: serverUser.displayName || cred.user.displayName || "Studio Administrator",
+          photoURL: cred.user.photoURL ?? "",
+          role: "admin",
+          emailVerified: true,
+          phone: cred.user.phoneNumber ?? "",
+        };
+        setUser(adminUser);
+        setRole("admin");
+        setIsSessionStale(false);
+        setIsLoading(false);
+        void refreshProfile();
+        return adminUser;
+      } catch (err: any) {
+        setIsLoading(false);
+        throw createAuthError(err);
+      }
+    },
+    [configurationError, refreshProfile]
+  );
+
   const register = useCallback(
     async (input: RegisterInput) => {
       if (configurationError) throw new Error(configurationError);
@@ -706,6 +755,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isSessionStale,
       configurationError,
       loginWithEmail,
+      loginAdmin,
       loginWithGoogle,
       register,
       logout,
@@ -724,6 +774,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isSessionStale,
       configurationError,
       loginWithEmail,
+      loginAdmin,
       loginWithGoogle,
       register,
       logout,

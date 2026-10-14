@@ -38,32 +38,27 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/service-plans",
-        destination: "/orders",
-        permanent: false,
-      },
-      {
-        source: "/packages",
-        destination: "/orders",
+        destination: "/pricing",
         permanent: false,
       },
       {
         source: "/plans",
-        destination: "/orders",
+        destination: "/pricing",
         permanent: false,
       },
       {
         source: "/order-plans",
-        destination: "/orders",
+        destination: "/pricing",
         permanent: false,
       },
       {
         source: "/pricing-plans",
-        destination: "/orders",
+        destination: "/pricing",
         permanent: false,
       },
       {
         source: "/client-plans",
-        destination: "/orders",
+        destination: "/pricing",
         permanent: false,
       },
       {

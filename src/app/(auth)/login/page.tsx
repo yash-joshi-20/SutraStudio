@@ -117,8 +117,7 @@ function ClientLoginForm() {
   useEffect(() => {
     if (isAuthenticated && !authLoading && !loading) {
       const destination = safeReturnTo(rawParam, role);
-      router.replace(destination);
-      router.refresh();
+      window.location.assign(destination);
     }
   }, [isAuthenticated, authLoading, loading, rawParam, role]);
 
@@ -175,8 +174,7 @@ function ClientLoginForm() {
         soundSystem.play("welcome");
         setSuccessMsg("Welcome back. Opening your workspace…");
         const destination = safeReturnTo(rawParam, loggedIn.role);
-        router.replace(destination);
-      router.refresh();
+        window.location.assign(destination);
         return;
       }
 
@@ -202,8 +200,8 @@ function ClientLoginForm() {
           ? "Administrator clearance granted. Opening executive terminal…"
           : "Account created successfully. Opening your workspace…"
       );
-      router.replace(destination);
-      router.refresh();
+      window.location.assign(destination);
+      return;
     } catch (err: any) {
       setErrorMsg(err instanceof Error ? err.message : "Sign-in failed. Please try again.");
     } finally {
@@ -220,8 +218,8 @@ function ClientLoginForm() {
       const loggedIn = await loginWithGoogle(true);
       soundSystem.play("welcome");
       const destination = safeReturnTo(rawParam, loggedIn.role);
-      router.replace(destination);
-      router.refresh();
+      window.location.assign(destination);
+      return;
     } catch (err: any) {
       console.warn("[Google Auth Error]", err);
       const message =

@@ -51,12 +51,12 @@ export function RouteGuard({
           } else {
             router.push(`${targetLogin}?returnTo=${encodeURIComponent(currentPath)}`);
           }
-        }, 150);
+        }, 1200);
         return () => clearTimeout(timer);
       } else if (requiredRole === "admin" && role !== "admin") {
         const timer = setTimeout(() => {
           router.push("/admin/login");
-        }, 600);
+        }, 1200);
         return () => clearTimeout(timer);
       }
     }

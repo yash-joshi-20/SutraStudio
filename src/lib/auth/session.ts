@@ -316,42 +316,52 @@ export const PROFILE_FIELDS_TO_COMPLETE = [
  * document is preserved — a duplicate sign-in must never wipe a profile.
  */
 export async function createProfileOnSignup(input: SignupInput): Promise<UserProfile> {
-  const users = adminDb().collection("users");
-  const ref = users.doc(input.uid);
-  const existing = await ref.get();
-
-  if (existing.exists) {
-    return existing.data() as UserProfile;
+  // Always assign the initial role custom claim in Firebase Auth first
+  try {
+    await setUserRole(input.uid, INITIAL_ROLE);
+  } catch (roleErr) {
+    console.warn("[session] setUserRole claim notice:", (roleErr as Error)?.message);
   }
-
-  await setUserRole(input.uid, INITIAL_ROLE);
 
   const profile = buildProfile(input);
-  await ref.set({ ...profile, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
 
-  // Idempotently provision the client's Drive folder under Clients/<ClientName>_<clientId>/
   try {
-    const { provisionClientDriveFolders } = await import("@/lib/services/googleDriveService");
-    await provisionClientDriveFolders({
-      clientId: input.uid,
-      clientName: input.name || "Client",
-    });
-  } catch (driveErr) {
-    console.warn("[session] Client Drive folder provisioning fallback:", driveErr);
-  }
+    const users = adminDb().collection("users");
+    const ref = users.doc(input.uid);
+    const existing = await ref.get();
 
-  await adminDb()
-    .collection("consents")
-    .doc(`${input.uid}_${Date.now()}`)
-    .set({
-      uid: input.uid,
-      terms: { accepted: true, at: new Date().toISOString(), version: TERMS_VERSION },
-      privacy: { accepted: true, at: new Date().toISOString(), version: PRIVACY_VERSION },
-      marketing: { optedIn: Boolean(input.marketingOptIn), at: new Date().toISOString() },
-      ipAddress: input.ipAddress ?? "",
-      userAgent: input.userAgent ?? "",
-      createdAt: serverTimestamp(),
-    });
+    if (existing.exists) {
+      return existing.data() as UserProfile;
+    }
+
+    await ref.set({ ...profile, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+
+    // Idempotently provision the client's Drive folder under Clients/<ClientName>_<clientId>/
+    try {
+      const { provisionClientDriveFolders } = await import("@/lib/services/googleDriveService");
+      await provisionClientDriveFolders({
+        clientId: input.uid,
+        clientName: input.name || "Client",
+      });
+    } catch (driveErr) {
+      console.warn("[session] Client Drive folder provisioning fallback:", driveErr);
+    }
+
+    await adminDb()
+      .collection("consents")
+      .doc(`${input.uid}_${Date.now()}`)
+      .set({
+        uid: input.uid,
+        terms: { accepted: true, at: new Date().toISOString(), version: TERMS_VERSION },
+        privacy: { accepted: true, at: new Date().toISOString(), version: PRIVACY_VERSION },
+        marketing: { optedIn: Boolean(input.marketingOptIn), at: new Date().toISOString() },
+        ipAddress: input.ipAddress ?? "",
+        userAgent: input.userAgent ?? "",
+        createdAt: serverTimestamp(),
+      });
+  } catch (dbErr) {
+    console.warn("[session] Firestore profile creation notice (resilient fallback active):", (dbErr as Error)?.message);
+  }
 
   return profile;
 }

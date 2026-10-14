@@ -65,8 +65,10 @@ export async function POST(req: Request) {
 
     /** Rejection with explicit reason once token is verified */
     const reject = async (email: string, reason: string, uid?: string) => {
-      await recordAdminLoginFailure(email, ip);
-      await auditAdminLogin({ email, ip, outcome: "failure", reason, uid, userAgent });
+      Promise.allSettled([
+        recordAdminLoginFailure(email, ip),
+        auditAdminLogin({ email, ip, outcome: "failure", reason, uid, userAgent }),
+      ]).catch(() => {});
 
       let message = GENERIC_AUTH_FAILURE;
       let code = GENERIC_AUTH_FAILURE_CODE;

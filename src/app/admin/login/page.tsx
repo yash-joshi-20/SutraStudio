@@ -59,7 +59,7 @@ function AdminLoginForm() {
     null;
   const returnTo = safeReturnTo(rawParam);
 
-  const { isAuthenticated, role, isLoading: authLoading, requestPasswordReset } = useAuth();
+  const { isAuthenticated, role, isLoading: authLoading, requestPasswordReset, loginAdmin } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -80,8 +80,9 @@ function AdminLoginForm() {
   // Already signed in as admin - redirect immediately
   useEffect(() => {
     if (isAuthenticated && !authLoading && role === "admin" && !loading) {
-      router.replace(returnTo);
-      router.refresh();
+      // Preserve query params like /admin?tab=approvals by passing them through
+      const safeDest = returnTo || "/admin";
+      window.location.assign(safeDest);
     }
   }, [isAuthenticated, authLoading, role, returnTo, loading]);
 
@@ -97,44 +98,16 @@ function AdminLoginForm() {
 
     setLoading(true);
     try {
-      // 1. Prove the password with Firebase.
-      const cred = await signInWithEmailAndPassword(getFirebaseAuth(), cleanEmail, cleanPassword);
-
-      // 2. Hand the freshly-verified ID token to the server
-      const res = await fetch("/api/auth/admin-login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({
-          idToken: await cred.user.getIdToken(),
-          rememberMe: true,
-          returnTo,
-        }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        // Sign out locally so a rejected admin does not keep a live Firebase session
-        await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(
-          () => undefined
-        );
-        setErrorMsg(
-          typeof data.error === "string" && data.error
-            ? data.error
-            : "Administrative clearance required. This account does not possess admin privileges."
-        );
-        setLoading(false);
-        return;
-      }
+      await loginAdmin(cleanEmail, cleanPassword, true);
 
       // Play welcome chime upon successful admin authorization
       soundSystem.play("welcome");
 
-      // The server set an httpOnly session cookie carrying the admin role claim.
-      router.replace(returnTo);
-      router.refresh();
+      // Seamlessly navigate to Admin Dashboard preserving deep links like /admin?tab=approvals
+      const safeDest = returnTo || "/admin";
+      window.location.assign(safeDest);
     } catch (err: any) {
+      setLoading(false);
       console.error("[Admin Login Error]", err);
       const code =
         (err as { code?: string })?.code ??
@@ -152,7 +125,6 @@ function AdminLoginForm() {
                   ? err.message.replace(/^Firebase:\s*(Error\s*)?(\(auth\/[a-z0-9-]+\)\.?\s*)?/i, "").trim() || err.message
                   : "Access denied: administrative clearance required."
       );
-      setLoading(false);
     }
   }
 
