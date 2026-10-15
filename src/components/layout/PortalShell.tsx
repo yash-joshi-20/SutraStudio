@@ -57,13 +57,22 @@ export function PortalShell({
 }: PortalShellProps) {
   const pathname = usePathname();
   const isAdmin = variant === "admin";
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
 
   return (
     <div className="min-h-dvh flex flex-col bg-[var(--background)]">
       <div className="flex flex-1 min-h-0 w-full">
         {/* ---------------- Desktop sidebar (≥1024px) ---------------- */}
-        <div className="hidden lg:block w-[264px] xl:w-[280px] shrink-0 border-r border-[#EADFCB] bg-[#FFFDF9] sticky top-0 h-dvh overflow-y-auto">
-          <PortalSidebar contained />
+        <div
+          className={`hidden lg:block ${
+            isSidebarCollapsed ? "w-20" : "w-[264px] xl:w-[280px]"
+          } transition-all duration-300 ease-in-out shrink-0 border-r border-[#EADFCB] bg-[#FFFDF9] sticky top-0 h-dvh overflow-y-auto`}
+        >
+          <PortalSidebar
+            contained
+            collapsed={isSidebarCollapsed}
+            onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          />
         </div>
 
         {/* ---------------- Main column ---------------- */}
@@ -71,44 +80,46 @@ export function PortalShell({
           {/* Header */}
           <header className="sticky top-0 z-[var(--z-dropdown)] bg-[#FFFDF9]/92 backdrop-blur-md border-b border-[#EADFCB] pt-safe">
             <div className="app-container-cap px-4 sm:px-6 lg:px-8">
-              <div className="flex items-start gap-3 py-4 sm:py-5">
+              <div className="flex flex-wrap sm:flex-nowrap items-start sm:items-center justify-between gap-3 py-4 sm:py-5">
                 {/* Mobile: sidebar trigger */}
-                <button
-                  type="button"
-                  onClick={() => window.dispatchEvent(new CustomEvent("sutra:toggle-drawer"))}
-                  className="lg:hidden shrink-0 w-11 h-11 -ml-1 rounded-xl text-[#5C3A1E] hover:bg-[#F4EFE6] flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4A35A]"
-                  aria-label={`Open ${isAdmin ? "admin" : "workspace"} navigation`}
-                >
-                  <Menu className="w-5 h-5" aria-hidden="true" />
-                </button>
+                <div className="flex items-start gap-3 flex-1 min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => window.dispatchEvent(new CustomEvent("sutra:toggle-drawer"))}
+                    className="lg:hidden shrink-0 w-11 h-11 -ml-1 rounded-xl text-[#5C3A1E] hover:bg-[#F4EFE6] flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4A35A]"
+                    aria-label={`Open ${isAdmin ? "admin" : "workspace"} navigation`}
+                  >
+                    <Menu className="w-5 h-5" aria-hidden="true" />
+                  </button>
 
-                <div className="flex-1 min-w-0">
-                  {backTo && (
-                    <Link
-                      href={backTo.href}
-                      className="inline-flex items-center gap-1 text-[11px] font-medium text-[#64748B] hover:text-[#5C3A1E] mb-1.5 min-h-[28px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4A35A] rounded"
-                    >
-                      <ChevronLeft className="w-3.5 h-3.5" aria-hidden="true" />
-                      {backTo.label}
-                    </Link>
-                  )}
-                  <h1 className="text-lg sm:text-xl font-semibold text-[#0F172A] leading-tight break-anywhere">
-                    {title}
-                  </h1>
-                  {subtitle && (
-                    <p className="text-xs text-[#64748B] mt-1 leading-relaxed break-anywhere">{subtitle}</p>
-                  )}
+                  <div className="flex-1 min-w-0">
+                    {backTo && (
+                      <Link
+                        href={backTo.href}
+                        className="inline-flex items-center gap-1 text-[11px] font-medium text-[#64748B] hover:text-[#5C3A1E] mb-1.5 min-h-[28px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4A35A] rounded"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" aria-hidden="true" />
+                        {backTo.label}
+                      </Link>
+                    )}
+                    <h1 className="text-lg sm:text-xl font-semibold text-[#0F172A] leading-tight break-anywhere">
+                      {title}
+                    </h1>
+                    {subtitle && (
+                      <p className="text-xs text-[#64748B] mt-1 leading-relaxed break-anywhere">{subtitle}</p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Right-hand cluster */}
-                <div className="shrink-0 flex items-center gap-1.5 sm:gap-2">
+                <div className="shrink-0 flex items-center gap-1.5 sm:gap-2 self-start sm:self-center">
                   {action}
                   {!hideBell && <NotificationBell />}
                 </div>
               </div>
 
               {tabs && (
-                <div className="pb-2 -mx-1 px-1 overflow-x-auto no-scrollbar">
+                <div className="pb-2.5 -mx-1 px-1 overflow-x-auto no-scrollbar scroll-smooth">
                   <div className="flex items-center gap-1.5 min-w-max">{tabs}</div>
                 </div>
               )}

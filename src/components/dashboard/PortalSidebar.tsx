@@ -82,7 +82,17 @@ export const ADMIN_NAV_ITEMS: PortalNavItem[] = [
   { name: "Security Audit Log", href: "/admin?tab=audit", tabKey: "audit", icon: ShieldCheck },
 ];
 
-export function PortalSidebarInner({ contained = false }: { contained?: boolean }) {
+export interface PortalSidebarProps {
+  contained?: boolean;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
+}
+
+export function PortalSidebarInner({
+  contained = false,
+  collapsed: externalCollapsed,
+  onToggleCollapse,
+}: PortalSidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentTab = searchParams ? searchParams.get("tab") || "overview" : "overview";
@@ -90,12 +100,21 @@ export function PortalSidebarInner({ contained = false }: { contained?: boolean 
   const isAdmin = role === "admin";
   const navItems = isAdmin ? ADMIN_NAV_ITEMS : CLIENT_NAV_ITEMS;
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [internalCollapsed, setInternalCollapsed] = useState(false);
+
+  const isCollapsed = externalCollapsed !== undefined ? externalCollapsed : internalCollapsed;
+  const handleToggleCollapse = () => {
+    if (onToggleCollapse) {
+      onToggleCollapse();
+    } else {
+      setInternalCollapsed(!internalCollapsed);
+    }
+  };
 
   // Responsive desktop classes with collapsible width toggle
   const desktopWidthClass = isCollapsed ? "w-20" : "w-64";
   const desktopClass = contained
-    ? "flex flex-col h-full p-4"
+    ? "flex flex-col h-full p-4 transition-all duration-300 ease-in-out"
     : `${desktopWidthClass} shrink-0 border-r border-[#E5E1D8] bg-[#FAF9F5] min-h-screen p-4 flex flex-col justify-between hidden md:flex transition-all duration-300 ease-in-out`;
 
   return (
@@ -225,7 +244,7 @@ export function PortalSidebarInner({ contained = false }: { contained?: boolean 
                 {!contained && !isCollapsed && <NotificationBell align="left" />}
                 <button
                   type="button"
-                  onClick={() => setIsCollapsed(!isCollapsed)}
+                  onClick={handleToggleCollapse}
                   title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
                   className="p-1.5 rounded-lg text-[#737373] hover:text-[#171717] hover:bg-[#F0ECE1] transition-colors cursor-pointer"
                   aria-label={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
@@ -340,7 +359,7 @@ export function PortalSidebarInner({ contained = false }: { contained?: boolean 
   );
 }
 
-export function PortalSidebar({ contained = false }: { contained?: boolean } = {}) {
+export function PortalSidebar(props: PortalSidebarProps = {}) {
   return (
     <React.Suspense
       fallback={
@@ -353,7 +372,7 @@ export function PortalSidebar({ contained = false }: { contained?: boolean } = {
         </div>
       }
     >
-      <PortalSidebarInner contained={contained} />
+      <PortalSidebarInner {...props} />
     </React.Suspense>
   );
 }

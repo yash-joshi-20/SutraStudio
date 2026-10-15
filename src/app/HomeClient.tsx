@@ -340,26 +340,26 @@ export default function HomePage() {
         {/* ===================================================
             2. STUDIO SERVICES CATALOG (Curated Demo Showcase)
             =================================================== */}
-        <section id="services" className="py-20 bg-[#FAF9F5] border-t border-[#EADFCB]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+        <section id="services" className="py-20 md:py-28 bg-[#FAF9F5] border-t border-[#EADFCB]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
               <div className="space-y-3 max-w-2xl">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-[11px] font-semibold text-[#A98B57] uppercase tracking-widest shadow-2xs">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-[11px] font-semibold text-[#A98B57] uppercase tracking-widest shadow-2xs">
                   <span>◆</span>
-                  <span>CORE STUDIO DISCIPLINES</span>
+                  <span>FLAGSHIP STUDIO DISCIPLINES</span>
                 </div>
                 <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#0F172A] tracking-tight">
-                  Eight Core Studio Services
+                  Three Core Studio Services
                 </h2>
                 <p className="text-sm sm:text-base text-[#64748B] leading-relaxed">
-                  From commercial imagery and cinematic reels to 3D models, virtual tours, digital marketing, web design and full-stack development. Explore our eight main creative disciplines below.
+                  Engineered with senior creative direction, computational precision, and transparent milestone delivery. Explore our three primary disciplines below or view our complete catalog.
                 </p>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
                 <Link href="/services">
                   <Button variant="secondary" size="md" withArrow className="shadow-xs text-xs font-semibold">
-                    Explore All Services
+                    Explore All 8 Services
                   </Button>
                 </Link>
                 <Link href="/contact">
@@ -370,34 +370,42 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Eight Main Service Cards — one shared configuration, no pricing shown */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {getMainServices().map((service) => (
-                <MainServiceCard key={service.id} service={service} />
-              ))}
+            {/* Exactly 3 Primary Service Cards: Digital Marketing, Web Development, App Development */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
+              {[
+                getMainServices().find((s) => s.slug === "digital-marketing"),
+                getMainServices().find((s) => s.slug === "web-app-development"),
+                getMainServices().find((s) => s.slug === "mobile-app-setup"),
+              ]
+                .filter((s): s is NonNullable<typeof s> => Boolean(s))
+                .map((service) => (
+                  <div key={service.id} className="transition-transform duration-300 hover:-translate-y-1">
+                    <MainServiceCard service={service} />
+                  </div>
+                ))}
             </div>
 
-            {/* Read More / Explore Full Catalog Navigation Strip */}
-            <div className="p-8 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-xs flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="space-y-1.5 text-center md:text-left">
+            {/* Explore All Services Banner & Retainer Strip */}
+            <div className="mt-8 p-8 sm:p-10 rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-warm flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="space-y-2 text-center md:text-left">
                 <div className="flex items-center justify-center md:justify-start gap-2 text-xs font-bold text-[#5C3A1E] uppercase tracking-wider">
                   <Sparkles className="w-4 h-4 text-[#D4A35A]" />
-                  <span>Looking for specialized packages or monthly retainers?</span>
+                  <span>Looking for 3D Modeling, 360° Tours, or Product Imagery?</span>
                 </div>
-                <p className="text-xs text-[#64748B] max-w-xl">
-                  Explore curated deliverable packs, project bundles and monthly retainer packages — or browse full pricing details on our Packages and Pricing pages.
+                <p className="text-xs sm:text-sm text-[#64748B] max-w-2xl leading-relaxed">
+                  We also deliver precision 3D CAD modeling, 360° virtual spaces, commercial photography renders, and curated monthly growth retainers.
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <Link href="/packages">
-                  <Button variant="primary" size="md" withArrow className="shadow-warm text-xs font-medium">
-                    Browse Packages
+              <div className="flex flex-wrap items-center gap-3 shrink-0">
+                <Link href="/services">
+                  <Button variant="primary" size="md" withArrow className="shadow-warm text-xs font-semibold">
+                    Explore All Services
                   </Button>
                 </Link>
-                <Link href="/contact">
+                <Link href="/packages">
                   <Button variant="secondary" size="md" className="text-xs font-medium">
-                    Talk to the Studio
+                    Browse Packages
                   </Button>
                 </Link>
               </div>

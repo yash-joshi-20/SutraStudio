@@ -18,6 +18,10 @@ const PUBLIC_PATHS = [
   "/mobile-app",
   "/studio",
   "/projects",
+  "/faq",
+  "/terms",
+  "/privacy",
+  "/offline",
 ];
 
 interface RouteGuardProps {
@@ -33,11 +37,15 @@ export function RouteGuard({
   const pathname = usePathname();
   const { isAuthenticated, role, isLoading } = useAuth();
 
+  const isPublicPath = PUBLIC_PATHS.some(
+    (path) => pathname === path || (pathname && pathname.startsWith(path + "/"))
+  );
+
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated) {
         // Allow public routes without authentication
-        if (PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(path + "/"))) {
+        if (isPublicPath) {
           return;
         }
         const targetLogin = requiredRole === "admin" ? "/admin/login" : "/login";
@@ -60,9 +68,12 @@ export function RouteGuard({
         return () => clearTimeout(timer);
       }
     }
-  }, [isLoading, isAuthenticated, role, requiredRole, pathname, router]);
+  }, [isLoading, isAuthenticated, role, requiredRole, pathname, isPublicPath, router]);
 
   if (isLoading) {
+    if (isPublicPath) {
+      return <>{children}</>;
+    }
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8F5EF]">
         <div className="w-8 h-8 rounded-full border-2 border-[#D4A35A] border-t-transparent animate-spin" />

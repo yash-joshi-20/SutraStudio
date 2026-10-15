@@ -8553,22 +8553,22 @@ const [adminDataError, setAdminDataError] = useState("");
             onClose={() => setIsRecordExternalModalOpen(false)}
             title="➕ Record External / Multi-Channel Commission"
             description="Log orders received via WhatsApp, Email, Contact Page, Phone, or Direct QR Code UPI scan."
-            maxWidth="lg"
+            maxWidth="2xl"
           >
-            <form onSubmit={handleRecordExternalOrder} className="space-y-4 text-xs">
-              <div className="p-3 rounded-2xl bg-[#FFFBEB] border border-[#FDE68A] text-[#92400E] space-y-1">
-                <span className="font-bold flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-[#D97706]" />
-                  Multi-Channel Ingestion & Automatic Vault Provisioning
+            <form onSubmit={handleRecordExternalOrder} className="space-y-6 text-xs sm:text-sm pt-1">
+              <div className="p-4 rounded-2xl bg-[#FFFBEB] border border-[#FDE68A] text-[#92400E] space-y-1.5">
+                <span className="font-bold flex items-center gap-2 text-xs sm:text-sm">
+                  <Sparkles className="w-4 h-4 text-[#D97706]" />
+                  Multi-Channel Ingestion &amp; Automatic Vault Provisioning
                 </span>
-                <p className="text-[11px] text-[#B45309]">
+                <p className="text-xs text-[#B45309] leading-relaxed">
                   Saving this order will generate a unique Order ID, provision a Google Drive folder, record payment status, and dispatch sync notifications to client and admin.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-[#0F172A] block">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-[#0F172A] block">
                     Client Full Name *
                   </label>
                   <input
@@ -8579,12 +8579,12 @@ const [adminDataError, setAdminDataError] = useState("");
                     onChange={(e) =>
                       setExternalOrderForm({ ...externalOrderForm, clientName: e.target.value })
                     }
-                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white border border-[#EADFCB] text-xs sm:text-sm text-[#0F172A] focus:outline-none focus:border-[#D4A35A] shadow-2xs"
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-[#0F172A] block">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-[#0F172A] block">
                     Client Email Address *
                   </label>
                   <input
@@ -8595,14 +8595,14 @@ const [adminDataError, setAdminDataError] = useState("");
                     onChange={(e) =>
                       setExternalOrderForm({ ...externalOrderForm, clientEmail: e.target.value })
                     }
-                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white border border-[#EADFCB] text-xs sm:text-sm text-[#0F172A] focus:outline-none focus:border-[#D4A35A] shadow-2xs"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-[#0F172A] block">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-[#0F172A] block">
                     Phone / WhatsApp #
                   </label>
                   <input
@@ -8612,12 +8612,12 @@ const [adminDataError, setAdminDataError] = useState("");
                     onChange={(e) =>
                       setExternalOrderForm({ ...externalOrderForm, clientPhone: e.target.value })
                     }
-                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white border border-[#EADFCB] text-xs sm:text-sm text-[#0F172A] focus:outline-none focus:border-[#D4A35A] shadow-2xs"
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-[#0F172A] block">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-[#0F172A] block">
                     Channel Source *
                   </label>
                   <select
@@ -8625,7 +8625,7 @@ const [adminDataError, setAdminDataError] = useState("");
                     onChange={(e) =>
                       setExternalOrderForm({ ...externalOrderForm, source: e.target.value })
                     }
-                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] cursor-pointer"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white border border-[#EADFCB] text-xs sm:text-sm text-[#0F172A] focus:outline-none focus:border-[#D4A35A] cursor-pointer shadow-2xs"
                   >
                     <option value="whatsapp">WhatsApp Business</option>
                     <option value="email">Direct Email / RFP</option>
@@ -8635,8 +8635,8 @@ const [adminDataError, setAdminDataError] = useState("");
                   </select>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-[#0F172A] block">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-[#0F172A] block">
                     Total Amount (₹ INR) *
                   </label>
                   <input
@@ -8648,14 +8648,14 @@ const [adminDataError, setAdminDataError] = useState("");
                     onChange={(e) =>
                       setExternalOrderForm({ ...externalOrderForm, amount: e.target.value })
                     }
-                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs font-bold text-[#5C3A1E] focus:outline-none focus:border-[#D4A35A]"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white border border-[#EADFCB] text-xs sm:text-sm font-bold text-[#5C3A1E] focus:outline-none focus:border-[#D4A35A] shadow-2xs"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-[#0F172A] block">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-[#0F172A] block">
                     Service / Deliverable Type
                   </label>
                   <select
@@ -8663,24 +8663,24 @@ const [adminDataError, setAdminDataError] = useState("");
                     onChange={(e) =>
                       setExternalOrderForm({ ...externalOrderForm, service: e.target.value })
                     }
-                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] cursor-pointer"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white border border-[#EADFCB] text-xs sm:text-sm text-[#0F172A] focus:outline-none focus:border-[#D4A35A] cursor-pointer shadow-2xs"
                   >
-                    <option value="Image Creation (Photorealistic AI & Art)">Image Creation (Photorealistic AI & Art)</option>
-                    <option value="Video Creation (Cinematic AI & Motion)">Video Creation (Cinematic AI & Motion)</option>
-                    <option value="3D Modeling & Spatial Assets">3D Modeling & Spatial Assets</option>
+                    <option value="Image Creation (Photorealistic AI & Art)">Image Creation (Photorealistic AI &amp; Art)</option>
+                    <option value="Video Creation (Cinematic AI & Motion)">Video Creation (Cinematic AI &amp; Motion)</option>
+                    <option value="3D Modeling & Spatial Assets">3D Modeling &amp; Spatial Assets</option>
                     <option value="360° Interactive Architectural View">360° Interactive Architectural View</option>
-                    <option value="Interior & Spatial Design">Interior & Spatial Design</option>
-                    <option value="Window & Retail Experience Design">Window & Retail Experience Design</option>
-                    <option value="Digital Marketing & Brand Strategy">Digital Marketing & Brand Strategy</option>
-                    <option value="Meta & Google Ads Campaign Pipeline">Meta & Google Ads Campaign Pipeline</option>
-                    <option value="Website Architecture & Development">Website Architecture & Development</option>
+                    <option value="Interior & Spatial Design">Interior &amp; Spatial Design</option>
+                    <option value="Window & Retail Experience Design">Window &amp; Retail Experience Design</option>
+                    <option value="Digital Marketing & Brand Strategy">Digital Marketing &amp; Brand Strategy</option>
+                    <option value="Meta & Google Ads Campaign Pipeline">Meta &amp; Google Ads Campaign Pipeline</option>
+                    <option value="Website Architecture & Development">Website Architecture &amp; Development</option>
                     <option value="Custom">Custom Bespoke Service...</option>
                   </select>
                 </div>
 
                 {externalOrderForm.service === "Custom" ? (
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-[#0F172A] block">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-[#0F172A] block">
                       Custom Service Title *
                     </label>
                     <input
@@ -8690,12 +8690,12 @@ const [adminDataError, setAdminDataError] = useState("");
                       onChange={(e) =>
                         setExternalOrderForm({ ...externalOrderForm, customService: e.target.value })
                       }
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                      className="w-full px-4 py-2.5 rounded-xl bg-white border border-[#EADFCB] text-xs sm:text-sm text-[#0F172A] focus:outline-none focus:border-[#D4A35A] shadow-2xs"
                     />
                   </div>
                 ) : (
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-[#0F172A] block">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-[#0F172A] block">
                       Payment Settlement Status *
                     </label>
                     <select
@@ -8703,7 +8703,7 @@ const [adminDataError, setAdminDataError] = useState("");
                       onChange={(e) =>
                         setExternalOrderForm({ ...externalOrderForm, paymentStatus: e.target.value })
                       }
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] cursor-pointer"
+                      className="w-full px-4 py-2.5 rounded-xl bg-white border border-[#EADFCB] text-xs sm:text-sm text-[#0F172A] focus:outline-none focus:border-[#D4A35A] cursor-pointer shadow-2xs"
                     >
                       <option value="paid">Paid (Payment Verified via QR / Bank / Cash)</option>
                       <option value="unpaid">Pending Invoice (Unpaid / In Progress)</option>
@@ -8713,9 +8713,9 @@ const [adminDataError, setAdminDataError] = useState("");
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-[#0F172A] block">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-[#0F172A] block">
                     Payment Method
                   </label>
                   <select
@@ -8723,7 +8723,7 @@ const [adminDataError, setAdminDataError] = useState("");
                     onChange={(e) =>
                       setExternalOrderForm({ ...externalOrderForm, paymentMethod: e.target.value })
                     }
-                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] cursor-pointer"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white border border-[#EADFCB] text-xs sm:text-sm text-[#0F172A] focus:outline-none focus:border-[#D4A35A] cursor-pointer shadow-2xs"
                   >
                     <option value="upi_qr">UPI QR Code Scan (GPay / PhonePe / Paytm)</option>
                     <option value="bank_transfer">Direct IMPS / NEFT Bank Transfer</option>
@@ -8732,8 +8732,8 @@ const [adminDataError, setAdminDataError] = useState("");
                   </select>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-[#0F172A] block">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-[#0F172A] block">
                     Transaction Ref / UTR / Note
                   </label>
                   <input
@@ -8743,31 +8743,31 @@ const [adminDataError, setAdminDataError] = useState("");
                     onChange={(e) =>
                       setExternalOrderForm({ ...externalOrderForm, paymentReference: e.target.value })
                     }
-                    className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white border border-[#EADFCB] text-xs sm:text-sm text-[#0F172A] focus:outline-none focus:border-[#D4A35A] shadow-2xs"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[11px] font-bold text-[#0F172A] block">
-                  Project Scope & Client Requirements
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#0F172A] block">
+                  Project Scope &amp; Client Requirements
                 </label>
                 <textarea
-                  rows={3}
+                  rows={4}
                   placeholder="Describe client brief, specifications, dimensions, color palette, or milestone notes..."
                   value={externalOrderForm.requirements}
                   onChange={(e) =>
                     setExternalOrderForm({ ...externalOrderForm, requirements: e.target.value })
                   }
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white border border-[#EADFCB] text-xs sm:text-sm text-[#0F172A] focus:outline-none focus:border-[#D4A35A] shadow-2xs"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#EADFCB]/60">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#EADFCB]/60">
                 <Button
                   type="button"
                   variant="secondary"
-                  size="sm"
+                  size="md"
                   onClick={() => setIsRecordExternalModalOpen(false)}
                 >
                   Cancel
@@ -8775,7 +8775,7 @@ const [adminDataError, setAdminDataError] = useState("");
                 <Button
                   type="submit"
                   variant="primary"
-                  size="sm"
+                  size="md"
                   isLoading={isSubmittingExternalOrder}
                   disabled={isSubmittingExternalOrder}
                   leftIcon={<Save className="w-3.5 h-3.5" />}

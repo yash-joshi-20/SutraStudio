@@ -59,8 +59,12 @@ export function Panorama360Viewer({
     textureLoader.setCrossOrigin("anonymous");
 
     const texture = textureLoader.load(imageUrl, (tex) => {
+      tex.colorSpace = THREE.SRGBColorSpace;
       tex.wrapS = THREE.RepeatWrapping;
       tex.repeat.x = 1;
+      tex.generateMipmaps = false;
+      tex.minFilter = THREE.LinearFilter;
+      tex.magFilter = THREE.LinearFilter;
       const img = tex.image as HTMLImageElement;
       if (img && img.width && img.height) {
         const ratio = img.width / img.height;
@@ -162,18 +166,23 @@ export function Panorama360Viewer({
     };
     animate();
 
-    // 7. Resize handling
+    // 7. Responsive ResizeObserver (Maintains strict aspect ratio & eliminates distortion)
     const handleResize = () => {
       if (!container || !renderer) return;
-      camera.aspect = container.clientWidth / container.clientHeight;
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      if (w === 0 || h === 0) return;
+      camera.aspect = w / h;
       camera.updateProjectionMatrix();
-      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setSize(w, h);
     };
-    window.addEventListener("resize", handleResize);
+
+    const resizeObserver = new ResizeObserver(handleResize);
+    resizeObserver.observe(container);
 
     return () => {
       cancelAnimationFrame(animId);
-      window.removeEventListener("resize", handleResize);
+      resizeObserver.disconnect();
       window.removeEventListener("mousemove", onPointerMove);
       window.removeEventListener("mouseup", onPointerUp);
       dom.removeEventListener("mousedown", onPointerDown);
@@ -181,6 +190,8 @@ export function Panorama360Viewer({
       dom.removeEventListener("touchstart", onTouchStart);
       dom.removeEventListener("touchmove", onTouchMove);
       dom.removeEventListener("touchend", onTouchEnd);
+      sphereGeometry.dispose();
+      sphereMaterial.dispose();
       renderer.dispose();
     };
   }, [imageUrl, autoRotate]);

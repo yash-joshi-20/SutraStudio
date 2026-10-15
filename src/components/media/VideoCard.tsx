@@ -40,6 +40,8 @@ export function VideoCard({
   const [showTranscript, setShowTranscript] = useState<boolean>(false);
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [hasStarted, setHasStarted] = useState<boolean>(false);
+  const [isBuffering, setIsBuffering] = useState<boolean>(false);
+  const [hasError, setHasError] = useState<boolean>(false);
 
   const handlePlayToggle = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -50,10 +52,15 @@ export function VideoCard({
       setIsPlaying(false);
     } else {
       setHasStarted(true);
+      setHasError(false);
+      setIsBuffering(true);
       videoRef.current.play().then(() => {
         setIsPlaying(true);
+        setIsBuffering(false);
       }).catch((err) => {
         console.warn("Video playback error:", err);
+        setIsBuffering(false);
+        setHasError(true);
       });
     }
   };
@@ -82,9 +89,13 @@ export function VideoCard({
     e.stopPropagation();
     if (!videoRef.current) return;
     videoRef.current.currentTime = 0;
+    setIsBuffering(true);
     videoRef.current.play().then(() => {
       setIsPlaying(true);
       setHasStarted(true);
+      setIsBuffering(false);
+    }).catch(() => {
+      setIsBuffering(false);
     });
   };
 
@@ -113,8 +124,8 @@ export function VideoCard({
           src={config.poster.webp}
           alt={config.title}
           fill
-          className={`object-cover transition-opacity duration-500 ${
-            hasStarted ? "opacity-0 pointer-events-none" : "opacity-100"
+          className={`object-cover transition-opacity duration-700 ${
+            hasStarted && isPlaying && !hasError ? "opacity-0 pointer-events-none" : "opacity-100"
           }`}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
@@ -125,9 +136,19 @@ export function VideoCard({
           muted={isMuted}
           playsInline
           preload="metadata"
+          onWaiting={() => setIsBuffering(true)}
+          onPlaying={() => setIsBuffering(false)}
+          onCanPlay={() => setIsBuffering(false)}
+          onError={() => {
+            setHasError(true);
+            setIsBuffering(false);
+            setIsPlaying(false);
+          }}
           onTimeUpdate={handleTimeUpdate}
           onEnded={handleEnded}
-          className={`w-full h-full object-cover ${hasStarted ? "opacity-100" : "opacity-0"}`}
+          className={`w-full h-full object-cover transition-opacity duration-500 ${
+            hasStarted && !hasError ? "opacity-100" : "opacity-0"
+          }`}
         >
           <source src={config.desktop.webm} type="video/webm" />
           <source src={config.desktop.mp4} type="video/mp4" />
@@ -147,14 +168,45 @@ export function VideoCard({
           </span>
         </div>
 
-        {/* Center Big Play Button (When paused/not started) */}
-        {!isPlaying && (
+        {/* Buffering Loading Spinner Overlay */}
+        {isBuffering && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-xs z-20 pointer-events-none transition-opacity duration-200">
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-10 h-10 rounded-full border-3 border-[#D4A35A] border-t-transparent animate-spin" />
+              <span className="text-[10px] font-mono font-medium text-white/90 uppercase tracking-wider">
+                Buffering Reel...
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Error Fallback Banner */}
+        {hasError && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0F172A]/90 p-4 text-center z-20 space-y-2">
+            <p className="text-xs font-semibold text-[#FFFDF9]">
+              Reel Stream Temporarily Unavailable
+            </p>
+            <p className="text-[11px] text-[#94A3B8] max-w-xs">
+              4K master video file is securely staged in the client Google Drive vault.
+            </p>
+            <button
+              type="button"
+              onClick={handleRestart}
+              className="mt-1 px-3 py-1 rounded-full bg-[#D4A35A] text-[#0F172A] text-[11px] font-bold hover:bg-[#C28F42] transition-colors"
+            >
+              Retry Playback
+            </button>
+          </div>
+        )}
+
+        {/* Center Big Play Button (When paused/not started and no error) */}
+        {!isPlaying && !hasError && !isBuffering && (
           <div className="absolute inset-0 flex items-center justify-center z-10">
             <button
               onClick={handlePlayToggle}
               type="button"
               aria-label={`Play ${config.title}`}
-              className="w-14 h-14 rounded-full bg-[#D4A35A] hover:bg-[#C28F42] text-[#0F172A] shadow-xl flex items-center justify-center transition-transform duration-300 hover:scale-110 cursor-pointer touch-target"
+              className="w-14 h-14 rounded-full bg-[#D4A35A] hover:bg-[#C28F42] text-[#0F172A] shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer touch-target"
             >
               <Play className="w-6 h-6 fill-current ml-0.5" />
             </button>

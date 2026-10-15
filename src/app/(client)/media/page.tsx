@@ -3,11 +3,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { PortalSidebar } from "@/components/dashboard/PortalSidebar";
-import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { PortalShell } from "@/components/layout/PortalShell";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
+import { CustomDropdown } from "@/components/ui/CustomDropdown";
 import { useAuth } from "@/lib/auth/authContext";
 import {
   Download,
@@ -401,54 +401,41 @@ export default function MediaLibraryPage() {
 
   return (
     <RouteGuard requiredRole="client">
-      <div className="min-h-screen flex bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
-        <PortalSidebar />
+      <PortalShell
+        variant="client"
+        title="Deliverables & Production Assets"
+        subtitle="Browse, preview, and download your high-resolution renders, master videos, 3D spatial models, and brand assets."
+        action={
+          <div className="flex items-center gap-2">
+            <Link
+              href="/orders"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#F4EFE6] transition-all shadow-xs"
+              title="View Active Orders & Deliverables"
+            >
+              <Layers className="w-3.5 h-3.5 text-[#D4A35A]" />
+              <span className="hidden sm:inline">My Orders</span>
+            </Link>
 
-        <main id="main-content" className="flex-1 p-4 sm:p-8 lg:p-10 max-w-7xl pb-24 md:pb-12 space-y-8">
-          {/* =========================================================
-              HEADER BAR
-              ========================================================= */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-[#EADFCB] gap-4">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[10px] font-semibold uppercase tracking-wider text-[#5C3A1E] mb-2">
-                <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
-                <span>STUDIO MEDIA & DELIVERABLES VAULT</span>
-              </div>
-              <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-[#0F172A]">
-                Deliverables & Production Assets
-              </h1>
-              <p className="text-xs text-[#64748B] mt-0.5">
-                Browse, preview, and download your high-resolution renders, master videos, 3D spatial models, and brand assets.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2.5">
-              <Link
-                href="/orders"
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#F4EFE6] transition-all shadow-xs"
-                title="View Active Orders & Deliverables"
-              >
-                <Layers className="w-3.5 h-3.5 text-[#D4A35A]" />
-                <span>My Orders</span>
-              </Link>
-
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleRefreshVault}
-                disabled={isLoading}
-                leftIcon={
-                  <RefreshCw
-                    className={`w-3.5 h-3.5 text-[#5C3A1E] ${
-                      isLoading ? "animate-spin" : ""
-                    }`}
-                  />
-                }
-              >
-                Sync Deliverables
-              </Button>
-            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleRefreshVault}
+              disabled={isLoading}
+              leftIcon={
+                <RefreshCw
+                  className={`w-3.5 h-3.5 text-[#5C3A1E] ${
+                    isLoading ? "animate-spin" : ""
+                  }`}
+                />
+              }
+            >
+              <span className="hidden sm:inline">Sync Deliverables</span>
+              <span className="sm:hidden">Sync</span>
+            </Button>
           </div>
+        }
+      >
+        <div className="space-y-6 sm:space-y-8 max-w-7xl">
 
           {/* =========================================================
               DELIVERABLES CATEGORIES SELECTOR
@@ -547,35 +534,62 @@ export default function MediaLibraryPage() {
           {/* =========================================================
               SEARCH, FILTERS & VIEW MODE TOOLBAR
               ========================================================= */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            {/* Filter Pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-              {["All", "Image", "Video", "3D", "360", "Marketing", "Document"].map((type) => (
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            {/* Filter Pills on Desktop */}
+            <div className="hidden md:flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              {[
+                { label: "All Formats", value: "All" },
+                { label: "Images", value: "Image" },
+                { label: "Videos", value: "Video" },
+                { label: "3D Models", value: "3D" },
+                { label: "360 Panoramas", value: "360" },
+                { label: "Marketing", value: "Marketing" },
+                { label: "Documents", value: "Document" },
+              ].map((opt) => (
                 <button
-                  key={type}
+                  key={opt.value}
                   type="button"
-                  onClick={() => setActiveFilter(type)}
+                  onClick={() => setActiveFilter(opt.value)}
                   className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all shrink-0 cursor-pointer ${
-                    activeFilter === type
+                    activeFilter === opt.value
                       ? "bg-[#5C3A1E] text-white shadow-xs"
                       : "bg-[#FFFDF9] text-[#64748B] border border-[#EADFCB] hover:border-[#D4A35A]"
                   }`}
                 >
-                  {type === "All" ? "All Formats" : `${type}s`}
+                  {opt.label}
                 </button>
               ))}
             </div>
 
-            <div className="flex items-center gap-3">
+            {/* Accessible Custom Dropdown on Mobile */}
+            <div className="md:hidden w-full sm:w-56">
+              <CustomDropdown
+                options={[
+                  { label: "All Formats", value: "All" },
+                  { label: "Images", value: "Image" },
+                  { label: "Videos", value: "Video" },
+                  { label: "3D Models", value: "3D" },
+                  { label: "360 Panoramas", value: "360" },
+                  { label: "Marketing", value: "Marketing" },
+                  { label: "Documents", value: "Document" },
+                ]}
+                value={activeFilter}
+                onChange={setActiveFilter}
+                placeholder="Filter by format"
+                buttonClassName="!rounded-full !bg-[#FFFDF9] !border-[#EADFCB] py-2 shadow-xs text-xs font-medium text-[#5C3A1E]"
+              />
+            </div>
+
+            <div className="flex items-center gap-3 w-full md:w-auto">
               {/* Search Input */}
-              <div className="relative flex items-center w-full sm:w-64">
+              <div className="relative flex items-center flex-1 sm:w-64">
                 <Search className="w-4 h-4 text-[#94A3B8] absolute left-3 pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Search files, orders, tags..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#D4A35A]"
+                  className="w-full pl-9 pr-3 py-2 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#D4A35A]"
                 />
               </div>
 
@@ -742,39 +756,39 @@ export default function MediaLibraryPage() {
                     </div>
                   </div>
 
-                  {/* Actions Bar - Strictly 3 Triggers */}
-                  <div className="px-3.5 pb-3.5 pt-2 border-t border-[#EADFCB]/60 grid grid-cols-3 gap-1.5">
+                  {/* Actions Bar - Responsive, Non-Clipping Triggers */}
+                  <div className="px-3 pb-3 pt-2 border-t border-[#EADFCB]/60 flex items-center justify-between gap-1.5">
                     <button
                       type="button"
                       onClick={() => setSelectedAsset(asset)}
-                      className="px-2 py-1.5 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] text-[#0F172A] hover:border-[#D4A35A] hover:bg-[#FAF9F5] transition-colors text-[11px] font-medium flex items-center justify-center gap-1 cursor-pointer"
+                      className="flex-1 min-w-0 px-2 py-1.5 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] text-[#0F172A] hover:border-[#D4A35A] hover:bg-[#FAF9F5] transition-colors text-[11px] font-medium flex items-center justify-center gap-1 cursor-pointer"
                       title="Preview 4K Master"
                     >
                       <Eye className="w-3.5 h-3.5 text-[#5C3A1E] shrink-0" />
-                      <span className="truncate">Preview 4K</span>
+                      <span className="truncate">Preview</span>
                     </button>
 
                     <button
                       type="button"
                       disabled={downloadingId === asset.id}
                       onClick={() => handleDownload(asset)}
-                      className="px-2 py-1.5 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] text-[#0F172A] hover:border-[#D4A35A] hover:bg-[#FAF9F5] transition-colors text-[11px] font-medium flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
+                      className="flex-1 min-w-0 px-2 py-1.5 rounded-xl bg-[#5C3A1E] text-white hover:bg-[#432A16] transition-colors text-[11px] font-medium flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
                       title="Download Master"
                     >
                       {downloadingId === asset.id ? (
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#5C3A1E] shrink-0" />
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin text-white shrink-0" />
                       ) : (
-                        <Download className="w-3.5 h-3.5 text-[#5C3A1E] shrink-0" />
+                        <Download className="w-3.5 h-3.5 text-white shrink-0" />
                       )}
                       <span className="truncate">
-                        {downloadingId === asset.id ? `${downloadProgress}%` : "Download Master"}
+                        {downloadingId === asset.id ? `${downloadProgress}%` : "Download"}
                       </span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleShareLink(asset)}
-                      className="px-2 py-1.5 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] text-[#0F172A] hover:border-[#D4A35A] hover:bg-[#FAF9F5] transition-colors text-[11px] font-medium flex items-center justify-center gap-1 cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-xl bg-[#F8F5EF] border border-[#EADFCB] text-[#0F172A] hover:border-[#D4A35A] hover:bg-[#FAF9F5] transition-colors text-[11px] font-medium flex items-center justify-center gap-1 cursor-pointer shrink-0"
                       title="Share Link"
                     >
                       {copiedAssetId === asset.id ? (
@@ -782,8 +796,8 @@ export default function MediaLibraryPage() {
                       ) : (
                         <Share2 className="w-3.5 h-3.5 text-[#5C3A1E] shrink-0" />
                       )}
-                      <span className="truncate">
-                        {copiedAssetId === asset.id ? "Copied" : "Share Link"}
+                      <span className="hidden sm:inline text-[11px]">
+                        {copiedAssetId === asset.id ? "Copied" : "Share"}
                       </span>
                     </button>
                   </div>
@@ -872,9 +886,7 @@ export default function MediaLibraryPage() {
               ))}
             </div>
           )}
-        </main>
-
-        <MobileBottomNav />
+        </div>
 
         {/* =========================================================
             VISUAL MEDIA PREVIEW MODAL
@@ -998,7 +1010,7 @@ export default function MediaLibraryPage() {
             </div>
           )}
         </Modal>
-      </div>
+      </PortalShell>
     </RouteGuard>
   );
 }

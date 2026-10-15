@@ -6,6 +6,9 @@ import { ToastProvider } from "@/components/ui/Toast";
 import { FloatingChatModal } from "@/components/chat/FloatingChatModal";
 import { OfflineBanner } from "@/components/sync/OfflineBanner";
 
+import { RouteProgressIndicator } from "@/components/motion/RouteProgressIndicator";
+import { Suspense } from "react";
+
 export function AppProviders({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
@@ -23,6 +26,9 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
       <ToastProvider>
+        <Suspense fallback={null}>
+          <RouteProgressIndicator />
+        </Suspense>
         {children}
         <FloatingChatModal />
         <OfflineBanner />

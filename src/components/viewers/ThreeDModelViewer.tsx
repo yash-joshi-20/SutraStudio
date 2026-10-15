@@ -51,37 +51,81 @@ export function ThreeDModelViewer({
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // 4. Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+    // 4. Lighting — Luxury warm studio atmosphere
+    const ambientLight = new THREE.AmbientLight(0xfffdf9, 1.5); // Warm ambient light
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xfff5e6, 2.0); // Warm studio keylight
-    dirLight.position.set(5, 8, 5);
+    const dirLight = new THREE.DirectionalLight(0xfff5e6, 2.2); // Warm studio keylight
+    dirLight.position.set(4, 7, 5);
     dirLight.castShadow = true;
     scene.add(dirLight);
 
-    const rimLight = new THREE.DirectionalLight(0xd4af37, 1.5); // Brass rim accent
-    rimLight.position.set(-5, 2, -3);
+    const fillLight = new THREE.DirectionalLight(0xf8f5ef, 1.2); // Soft fill light
+    fillLight.position.set(-4, 3, 3);
+    scene.add(fillLight);
+
+    const rimLight = new THREE.DirectionalLight(0xd4a35a, 1.8); // Antique brass rim accent
+    rimLight.position.set(0, 4, -5);
     scene.add(rimLight);
 
     // 5. Studio Floor Grid
     const grid = new THREE.GridHelper(10, 20, 0xa98b57, 0xe5e1d8);
-    grid.position.y = -1;
+    grid.position.y = -1.2;
     scene.add(grid);
 
-    // 6. Geometry: Architectural Sculpture representation
-    const geometry = new THREE.DodecahedronGeometry(1.2, 0);
-    const material = new THREE.MeshStandardMaterial({
-      color: 0xa98b57, // Muted studio brass
-      metalness: 0.8,
-      roughness: 0.25,
-      wireframe: false,
+    // 6. Centered Transparent Brand Emblem Group
+    const emblemGroup = new THREE.Group();
+    emblemGroup.position.set(0, 0, 0);
+
+    // A. Luxury Ivory Pedestal Base
+    const pedestalGeo = new THREE.CylinderGeometry(1.6, 1.7, 0.15, 64);
+    const pedestalMat = new THREE.MeshStandardMaterial({
+      color: 0xf4efe6,
+      roughness: 0.35,
+      metalness: 0.1,
     });
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.y = 0.2;
-    mesh.castShadow = true;
-    scene.add(mesh);
-    meshRef.current = mesh;
+    const pedestal = new THREE.Mesh(pedestalGeo, pedestalMat);
+    pedestal.position.y = -1.1;
+    pedestal.receiveShadow = true;
+    emblemGroup.add(pedestal);
+
+    // B. Outer Antique Brass Concentric Ring
+    const ringGeo = new THREE.TorusGeometry(1.4, 0.035, 24, 100);
+    const ringMat = new THREE.MeshStandardMaterial({
+      color: 0xd4a35a,
+      metalness: 0.85,
+      roughness: 0.2,
+    });
+    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+    ringMesh.position.y = 0;
+    ringMesh.castShadow = true;
+    emblemGroup.add(ringMesh);
+
+    // C. Center Transparent Brand Emblem Medallion
+    const loader = new THREE.TextureLoader();
+    loader.setCrossOrigin("anonymous");
+    const emblemTexture = loader.load("/brand/sutra-symbol.png", () => {
+      setIsLoading(false);
+    });
+    emblemTexture.colorSpace = THREE.SRGBColorSpace;
+
+    const emblemPlaneGeo = new THREE.PlaneGeometry(1.9, 1.9);
+    const emblemPlaneMat = new THREE.MeshStandardMaterial({
+      map: emblemTexture,
+      transparent: true,
+      alphaTest: 0.05,
+      side: THREE.DoubleSide,
+      metalness: 0.7,
+      roughness: 0.25,
+      color: 0xd4a35a,
+    });
+    const emblemPlane = new THREE.Mesh(emblemPlaneGeo, emblemPlaneMat);
+    emblemPlane.position.set(0, 0, 0);
+    emblemPlane.castShadow = true;
+    emblemGroup.add(emblemPlane);
+
+    scene.add(emblemGroup);
+    meshRef.current = emblemGroup as unknown as THREE.Mesh;
 
     setIsLoading(false);
 
