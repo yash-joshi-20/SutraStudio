@@ -306,26 +306,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             idTokenResult.claims.role === "admin" ||
             idTokenResult.claims.role === "superAdmin" ||
             Boolean(idTokenResult.claims.admin);
-          const resolvedRole: UserRole = isStaff ? "admin" : "client";
-          const idToken = await fbUser.getIdToken();
 
-          let effectiveRole: UserRole = resolvedRole;
+          // For administrative identities, the server-minted `sutra_admin_session` cookie
+          // is strictly required. Never attempt background silent logins to /api/auth/admin-login
+          // because it enforces fresh auth_time (<= 5 min) and brute-force lockout counters.
+          // An admin without a valid server session must explicitly authenticate via /admin/login.
+          if (isStaff) {
+            setUser(null);
+            setProfile(null);
+            setRole("guest");
+            setIsSessionStale(true);
+            setIsLoading(false);
+            return;
+          }
+
+          // For regular client accounts, attempt to establish the standard client session (__session)
           try {
-            if (isStaff) {
-              await postJson("/api/auth/admin-login", { idToken, rememberMe: true });
-              effectiveRole = "admin";
-            } else {
-              try {
-                await establishServerSession(idToken, true);
-              } catch (clientErr: any) {
-                if (clientErr?.code === "USE_ADMIN_LOGIN") {
-                  await postJson("/api/auth/admin-login", { idToken, rememberMe: true });
-                  effectiveRole = "admin";
-                } else {
-                  throw clientErr;
-                }
-              }
-            }
+            const idToken = await fbUser.getIdToken();
+            await establishServerSession(idToken, true);
 
             const retry = await fetch("/api/auth/session", { cache: "no-store", credentials: "same-origin" });
             const retryData = await retry.json().catch(() => ({}));
@@ -336,34 +334,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 email: retryData.user.email ?? fbUser.email ?? "",
                 displayName: retryData.user.name ?? fbUser.displayName ?? "",
                 photoURL: retryData.user.picture ?? fbUser.photoURL ?? "",
-                role: retryData.user.role ?? effectiveRole,
+                role: retryData.user.role ?? "client",
                 emailVerified: Boolean(retryData.user.emailVerified ?? fbUser.emailVerified),
                 phone: retryData.profile?.phone ?? fbUser.phoneNumber ?? "",
               };
               setUser(authUser);
-              setRole(retryData.user.role ?? effectiveRole);
+              setRole(retryData.user.role ?? "client");
               setProfile(retryData.profile ?? null);
               setIsSessionStale(false);
               setIsLoading(false);
               return;
             }
           } catch (restoreErr) {
-            console.warn("[AuthContext] session sync restore failed:", restoreErr);
+            console.warn("[AuthContext] client session restore notice:", restoreErr);
           }
 
-          // Resilient fallback: Preserve verified Firebase client user so they are not wrongly kicked out
-          const fallbackUser: AuthUser = {
-            uid: fbUser.uid,
-            email: fbUser.email ?? "",
-            displayName: fbUser.displayName ?? (fbUser.email ?? "").split("@")[0],
-            photoURL: fbUser.photoURL ?? "",
-            role: resolvedRole,
-            emailVerified: Boolean(fbUser.emailVerified),
-            phone: fbUser.phoneNumber ?? "",
-          };
-          setUser(fallbackUser);
-          setRole(resolvedRole);
-          setIsSessionStale(false);
+          // If server session could not be established, treat as unauthenticated guest
+          setUser(null);
+          setProfile(null);
+          setRole("guest");
+          setIsSessionStale(true);
           setIsLoading(false);
           return;
         }

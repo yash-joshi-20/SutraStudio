@@ -22,6 +22,7 @@ import { readEnv } from "@/lib/config/env";
 import {
   createSessionCookie,
   sessionCookieOptions,
+  SESSION_COOKIE,
   SESSION_COOKIE_ADMIN,
   ADMIN_SESSION_TTL_MS,
 } from "@/lib/auth/session";
@@ -65,8 +66,14 @@ export async function POST(req: Request) {
 
     /** Rejection with explicit reason once token is verified */
     const reject = async (email: string, reason: string, uid?: string) => {
+      // Stale auth time or an existing lockout is NOT a brute-force password guess.
+      // Do not record a failure for those, as doing so would cause self-locking cascading loops.
+      if (reason !== "stale_auth_time" && reason !== "locked_out") {
+        Promise.allSettled([
+          recordAdminLoginFailure(email, ip),
+        ]).catch(() => {});
+      }
       Promise.allSettled([
-        recordAdminLoginFailure(email, ip),
         auditAdminLogin({ email, ip, outcome: "failure", reason, uid, userAgent }),
       ]).catch(() => {});
 
@@ -212,7 +219,12 @@ export async function POST(req: Request) {
     });
 
     response.cookies.set(SESSION_COOKIE_ADMIN, cookie, {
-      ...sessionCookieOptions(maxAge),
+      ...sessionCookieOptions(maxAge, req),
+      secure: isSecure,
+      maxAge: Math.floor(ADMIN_SESSION_TTL_MS / 1000),
+    });
+    response.cookies.set(SESSION_COOKIE, cookie, {
+      ...sessionCookieOptions(maxAge, req),
       secure: isSecure,
       maxAge: Math.floor(ADMIN_SESSION_TTL_MS / 1000),
     });

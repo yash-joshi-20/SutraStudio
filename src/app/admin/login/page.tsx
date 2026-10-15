@@ -77,9 +77,19 @@ function AdminLoginForm() {
     if (configured) void applyPersistence(true);
   }, [configured]);
 
-  // Already signed in as admin - redirect immediately
+  // Already signed in as admin - redirect immediately with loop protection circuit breaker
   useEffect(() => {
     if (isAuthenticated && !authLoading && role === "admin" && !loading) {
+      if (typeof window !== "undefined") {
+        const lastRedir = sessionStorage.getItem("sutra_admin_redir_timestamp");
+        const now = Date.now();
+        if (lastRedir && now - parseInt(lastRedir, 10) < 5000) {
+          console.warn("[AdminLogin] Redirect loop detected within 5s window. Halting automatic redirect.");
+          sessionStorage.removeItem("sutra_admin_redir_timestamp");
+          return;
+        }
+        sessionStorage.setItem("sutra_admin_redir_timestamp", now.toString());
+      }
       // Preserve query params like /admin?tab=approvals by passing them through
       const safeDest = returnTo || "/admin";
       window.location.assign(safeDest);
@@ -102,6 +112,10 @@ function AdminLoginForm() {
 
       // Play welcome chime upon successful admin authorization
       soundSystem.play("welcome");
+
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("sutra_admin_redir_timestamp");
+      }
 
       // Seamlessly navigate to Admin Dashboard preserving deep links like /admin?tab=approvals
       const safeDest = returnTo || "/admin";
