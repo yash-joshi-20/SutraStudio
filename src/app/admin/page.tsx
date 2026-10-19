@@ -1,7 +1,7 @@
-import AdminHubPage from "./AdminClient";
+import { AdminDashboardClient } from "./AdminDashboardClient";
 
 export const dynamic = "force-dynamic";
 
 export default function AdminPage() {
-  return <AdminHubPage />;
+  return <AdminDashboardClient />;
 }

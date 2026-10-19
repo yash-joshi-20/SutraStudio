@@ -14,21 +14,10 @@ import {
   ShieldCheck,
   LogOut,
   Sparkles,
-  DollarSign,
-  Globe,
-  MessageSquare,
-  Bell,
-  Sliders,
   Menu,
   X,
-  CreditCard,
-  Calendar,
-  Layers,
   Activity,
-  Tag,
-  Megaphone,
-  BookOpen,
-  Cpu,
+  Globe,
   type LucideIcon,
 } from "lucide-react";
 
@@ -60,26 +49,8 @@ export const CLIENT_NAV_ITEMS: PortalNavItem[] = [
 ];
 
 export const ADMIN_NAV_ITEMS: PortalNavItem[] = [
-  { name: "Dashboard (KPIs)", href: "/admin", tabKey: "overview", icon: Activity },
-  { name: "Brand Profile Guide", href: "/admin/brand-guide", icon: BookOpen },
-  { name: "Ad Copy Desk", href: "/admin/ad-desk", icon: Megaphone },
-  { name: "Agency Guidelines", href: "/admin/guidelines", icon: FileText },
-  { name: "Meta Ads & Marketing", href: "/admin/marketing", icon: Megaphone },
-  { name: "Creative Automation Studio", href: "/admin/creative-automation", icon: Sparkles },
-  { name: "Orders Ledger", href: "/admin?tab=approvals", tabKey: "approvals", icon: ShoppingBag },
-  { name: "Client Directory", href: "/admin?tab=clients", tabKey: "clients", icon: User },
-  { name: "Monthly Retainers", href: "/admin?tab=plans", tabKey: "plans", icon: Calendar },
-  { name: "Services & Pricing", href: "/admin?tab=services", tabKey: "services", icon: Layers },
-  { name: "Payments & Refunds", href: "/admin?tab=payments", tabKey: "payments", icon: CreditCard },
-  { name: "Deliveries & Drive", href: "/admin?tab=deliveries", tabKey: "deliveries", icon: FolderOpen },
-  { name: "Chats & AI Knowledge", href: "/admin?tab=conversations", tabKey: "conversations", icon: MessageSquare },
-  { name: "Brand Prompts", href: "/admin?tab=prompts", tabKey: "prompts", icon: Sparkles },
-  { name: "Notifications Settings", href: "/admin?tab=notifications", tabKey: "notifications", icon: Bell },
-  { name: "Workflows (n8n)", href: "/admin?tab=workflows", tabKey: "workflows", icon: FolderGit2 },
-  { name: "Studio Settings & GST", href: "/admin?tab=settings", tabKey: "settings", icon: Sliders },
-  { name: "Integrations & Keys", href: "/admin/integrations", icon: Sliders },
-  { name: "Provider Router & Quotas", href: "/admin/provider-router", icon: Cpu },
-  { name: "Security Audit Log", href: "/admin?tab=audit", tabKey: "audit", icon: ShieldCheck },
+  { name: "Dashboard", href: "/admin", tabKey: "overview", icon: Activity },
+  { name: "Orders & Verification", href: "/admin/orders", tabKey: "orders", icon: ShoppingBag },
 ];
 
 export interface PortalSidebarProps {

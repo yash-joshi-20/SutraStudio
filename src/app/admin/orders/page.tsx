@@ -300,14 +300,9 @@ export default function AdminOrdersPage() {
             </div>
 
             <div className="flex items-center gap-2.5">
-              <Link href="/admin/outreach">
-                <Button variant="secondary" size="sm" leftIcon={<MessageSquare className="w-3.5 h-3.5 text-[#5C3A1E]" />}>
-                  Outreach Desk
-                </Button>
-              </Link>
-              <Link href="/admin/reviews">
-                <Button variant="secondary" size="sm" leftIcon={<Sparkles className="w-3.5 h-3.5 text-[#A98B57]" />}>
-                  Deliverable Reviews
+              <Link href="/admin">
+                <Button variant="secondary" size="sm" leftIcon={<ArrowLeft className="w-3.5 h-3.5 text-[#5C3A1E]" />}>
+                  Dashboard
                 </Button>
               </Link>
               <Button
@@ -653,18 +648,7 @@ export default function AdminOrdersPage() {
                     </div>
                   )}
 
-                  {/* Outreach Desk Quick Jump */}
-                  <div className="pt-2 border-t border-[#EADFCB]/60 flex items-center justify-between">
-                    <span className="text-[11px] text-[#64748B]">Studio Outreach:</span>
-                    <Link
-                      href={`/admin/outreach`}
-                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#5C3A1E] hover:text-[#8B6508] transition-colors"
-                    >
-                      <MessageSquare className="w-3 h-3" />
-                      <span>Open Outreach Desk</span>
-                      <ExternalLink className="w-2.5 h-2.5" />
-                    </Link>
-                  </div>
+                  {/* Order Details Footer */}
                 </div>
 
                 {/* Single Conversation History Thread */}
