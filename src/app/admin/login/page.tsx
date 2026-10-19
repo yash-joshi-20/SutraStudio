@@ -61,7 +61,7 @@ function AdminLoginForm() {
 
   const { isAuthenticated, role, isLoading: authLoading, requestPasswordReset, loginAdmin } = useAuth();
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState("yashjoshi20@zohomail.in");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -128,7 +128,7 @@ function AdminLoginForm() {
         (typeof err?.message === "string" ? err.message.match(/auth\/[a-z0-9-]+/i)?.[0]?.toLowerCase() : "");
       setErrorMsg(
         code === "auth/unauthorized-domain"
-          ? "Domain authorization notice: If developing locally, ensure you open via http://localhost:3000 (not 127.0.0.1). Otherwise, add your current domain to Firebase Console > Authentication > Settings > Authorized Domains."
+          ? "Domain authorization notice: Ensure you are accessing via https://sutrastudios.in. Otherwise, add your current domain to Firebase Console > Authentication > Settings > Authorized Domains."
           : code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found"
             ? "Those sign-in details were not recognised. Please verify your administrator email and passkey."
             : code === "auth/too-many-requests"

@@ -12,7 +12,7 @@ import { chromium } from "playwright";
 import fs from "fs";
 import path from "path";
 
-const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
+const BASE_URL = process.env.BASE_URL || "https://sutrastudios.in";
 const ROOT = process.cwd();
 const SHOT_DIR = path.join(ROOT, "docs", "qa", "step6", "screenshots");
 fs.mkdirSync(SHOT_DIR, { recursive: true });

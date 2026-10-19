@@ -14,7 +14,7 @@ envContent.split(/\r?\n/).forEach((line) => {
   }
 });
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = 'https://sutrastudios.in';
 const apiKey = envVars['NEXT_PUBLIC_FIREBASE_API_KEY'];
 const projectId = envVars['NEXT_PUBLIC_FIREBASE_PROJECT_ID'];
 const clientEmail = envVars['FIREBASE_CLIENT_EMAIL'];

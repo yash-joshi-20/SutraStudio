@@ -1,6 +1,6 @@
 /**
  * SUTRA STUDIO — Automated Headless Browser Capture Pipeline
- * Captures authentic production assets from http://localhost:3000
+ * Captures authentic production assets from https://sutrastudios.in
  *
  * Deliverables:
  * 1. Desktop Full-Page: public/assets/showcase/live-home-desktop.png (1920x1080 @ 2x)
@@ -16,7 +16,7 @@ import { promisify } from "util";
 
 const execAsync = promisify(exec);
 
-const TARGET_URL = process.env.CAPTURE_URL || "http://localhost:3000";
+const TARGET_URL = process.env.CAPTURE_URL || "https://sutrastudios.in";
 const OUTPUT_DIR = path.join(process.cwd(), "public", "assets", "showcase");
 
 async function ensureDir(dir: string) {

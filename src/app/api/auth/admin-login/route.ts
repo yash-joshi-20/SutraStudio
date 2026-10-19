@@ -168,10 +168,10 @@ export async function POST(req: Request) {
       record = await adminAuth().getUser(decoded.uid);
     }
 
-    // ---- Gate 5: fresh sign-in (≤ 5 minutes) --------------------------------
+    // ---- Gate 5: fresh sign-in (≤ 15 minutes with clock skew margin) --------
     const authTime = typeof decoded.auth_time === "number" ? decoded.auth_time : 0;
     const ageSeconds = Math.floor(Date.now() / 1000) - authTime;
-    if (!authTime || ageSeconds > FRESH_REAUTH_MAX_AGE_SECONDS || ageSeconds < -60) {
+    if (!authTime || ageSeconds > 15 * 60 || ageSeconds < -300) {
       return reject(email, "stale_auth_time", decoded.uid);
     }
 

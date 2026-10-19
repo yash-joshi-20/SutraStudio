@@ -24,7 +24,7 @@ Module._load = function (request, parent, isMain) {
   return origLoad.apply(this, arguments);
 };
 
-const BASE_URL = process.env.TEST_BASE_URL || "http://localhost:3000";
+const BASE_URL = process.env.TEST_BASE_URL || "https://sutrastudios.in";
 
 let totalTests = 0;
 let passedTests = 0;

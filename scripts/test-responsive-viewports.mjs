@@ -8,7 +8,7 @@ import { chromium } from "playwright";
 import assert from "assert";
 
 const VIEWPORT_WIDTHS = [320, 360, 390, 430, 768, 1024, 1280, 1440];
-const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
+const BASE_URL = process.env.BASE_URL || "https://sutrastudios.in";
 
 const PAGES_TO_TEST = [
   { name: "Homepage", path: "/" },

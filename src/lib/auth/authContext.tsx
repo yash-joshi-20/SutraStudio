@@ -156,7 +156,7 @@ function friendlyAuthError(code?: string, fallbackMessage?: string): string {
       case "auth/operation-not-allowed":
         return "Google Sign-In is not enabled yet in your Firebase Project. Please enable Google provider in Firebase Console > Authentication > Sign-in method, or sign in using your email and password.";
       case "auth/unauthorized-domain":
-        return "Domain authorization notice: If developing locally, ensure you open http://localhost:3000 (not 127.0.0.1). Otherwise, add your current domain to Firebase Console > Authentication > Settings > Authorized Domains.";
+        return "Domain authorization notice: Ensure you are accessing via https://sutrastudios.in. Otherwise, add your current domain to Firebase Console > Authentication > Settings > Authorized Domains.";
       case "auth/popup-blocked":
         return "The Google sign-in popup was blocked by your browser. Please allow popups for this site or sign in using email and password.";
       case "auth/popup-closed-by-user":

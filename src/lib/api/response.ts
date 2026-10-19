@@ -104,6 +104,8 @@ export function sameOrigin(req: Request): boolean {
     if (!host) return false;
     const originHost = new URL(origin).host;
     if (originHost === host) return true;
+    if (originHost.replace(/^www\./, "") === host.replace(/^www\./, "")) return true;
+    if (originHost.includes("sutrastudios.in") && host.includes("sutrastudios.in")) return true;
     if (process.env.NODE_ENV !== "production") {
       const devHosts = (process.env.DEV_ALLOWED_HOSTS || "").split(",").map((s) => s.trim()).filter(Boolean);
       if (devHosts.length > 0 && devHosts.some((dh) => originHost.includes(dh) && host.includes(dh))) return true;

@@ -9,7 +9,7 @@
  * 6. Live vs Static Distinctions (Google Drive, Firebase Emulator, Third-party APIs)
  */
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = 'https://sutrastudios.in';
 
 async function fetchRoute(path, cookie = '') {
   try {

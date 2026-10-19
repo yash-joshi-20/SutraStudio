@@ -40,7 +40,7 @@ const db = getFirestore();
 
 async function setAdminPassword() {
   const email = "yashjoshi20@zohomail.in";
-  const password = "Yash@7355AdminSecure!";
+  const password = "Yash@7355";
   let uid = "";
 
   console.log(`Setting up admin account for: ${email}`);

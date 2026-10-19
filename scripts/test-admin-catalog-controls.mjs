@@ -14,7 +14,7 @@
 import assert from "node:assert";
 
 async function runTests() {
-  const baseUrl = "http://localhost:3000";
+  const baseUrl = "https://sutrastudios.in";
   let passed = 0;
   let failed = 0;
 

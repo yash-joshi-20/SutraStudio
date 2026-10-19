@@ -14,7 +14,7 @@
  * 10. Non-auto-renewing monthly retainer distinction.
  */
 
-const BASE_URL = process.env.TEST_BASE_URL || "http://localhost:3000";
+const BASE_URL = process.env.TEST_BASE_URL || "https://sutrastudios.in";
 
 let passedCount = 0;
 let failedCount = 0;
