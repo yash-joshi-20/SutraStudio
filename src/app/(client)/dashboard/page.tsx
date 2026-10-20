@@ -16,6 +16,7 @@ import { RouteGuard } from "@/components/auth/RouteGuard";
 import { useAuth } from "@/lib/auth/authContext";
 import { SUTRA_SERVICES } from "@/data/servicesData";
 import { formatCurrencyINR } from "@/config/services";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import {
   Plus,
   ArrowRight,
@@ -45,6 +46,7 @@ import {
   Download,
   AlertCircle,
   Loader2,
+  RefreshCw,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -375,10 +377,58 @@ export default function ClientDashboardPage() {
 
   return (
     <RouteGuard requiredRole="client">
-      <div className="min-h-screen flex bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
+      <div className="min-h-screen bg-[#FAF9F5] text-[#171717] font-sans antialiased flex flex-col md:flex-row">
         <PortalSidebar />
 
-        <main id="main-content" className="flex-1 p-4 sm:p-8 lg:p-10 max-w-7xl mx-auto pb-24 md:pb-12 space-y-8">
+        <div className="flex-1 flex flex-col min-w-0 w-full overflow-x-hidden">
+          {/* Top Desktop Breadcrumb & Action Bar - Matching Admin 1:1 */}
+          <header className="hidden md:flex sticky top-0 z-20 items-center justify-between px-4 sm:px-6 lg:px-8 py-3.5 bg-[#FFFDF9]/95 backdrop-blur-md border-b border-[#E5E1D8] gap-4">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <span className="text-xs font-mono uppercase font-bold text-[#A98B57] tracking-wider shrink-0">
+                Studio Client Sanctum
+              </span>
+              <span className="text-[#E5E1D8] shrink-0">/</span>
+              <span className="text-xs sm:text-sm font-serif font-bold text-[#171717] capitalize truncate">
+                {viewMode === "commission"
+                  ? "Orders, Approvals & Revisions"
+                  : "Workspace Dashboard"}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+              <NotificationBell align="right" />
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
+                }}
+                isLoading={isLoadingOrders}
+                leftIcon={<RefreshCw className="w-3.5 h-3.5 text-[#5C3A1E]" />}
+                className="text-xs text-[#5C3A1E]"
+                title="Sync Live Orders"
+              >
+                Sync Data
+              </Button>
+
+              <div className="h-4 w-px bg-[#E5E1D8]" />
+
+              <Link href="/" target="_blank">
+                <Button variant="outline" size="sm" leftIcon={<Globe className="w-3.5 h-3.5 text-[#A98B57]" />} className="text-xs">
+                  Public Website ↗
+                </Button>
+              </Link>
+
+              <Link href="/orders">
+                <Button variant="primary" size="sm" leftIcon={<Plus className="w-3.5 h-3.5" />} className="text-xs">
+                  New Order
+                </Button>
+              </Link>
+            </div>
+          </header>
+
+          <main id="main-content" className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto pb-24 md:pb-12 space-y-6">
           {user && user.emailVerified === false && (
             <div className="bg-[#FFF8E6] border border-[#F2D696] rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex gap-3">
@@ -1419,8 +1469,9 @@ export default function ClientDashboardPage() {
             )}
           </AnimatePresence>
         </main>
+      </div>
 
-        <MobileBottomNav />
+      <MobileBottomNav />
 
         {/* ========================================================
             ORDER INSPECTION, APPROVAL & REVISION MODAL

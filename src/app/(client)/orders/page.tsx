@@ -20,6 +20,7 @@ import {
   Clock,
   Eye,
   RotateCcw,
+  RefreshCw,
   Download,
   HardDrive,
   FileCheck,
@@ -1338,10 +1339,57 @@ export default function OrdersPage() {
 
   return (
     <RouteGuard requiredRole="client">
-      <div className="min-h-screen flex bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
+      <div className="min-h-screen bg-[#FAF9F5] text-[#171717] font-sans antialiased flex flex-col md:flex-row">
         <PortalSidebar />
 
-        <main id="main-content" className="flex-1 p-4 sm:p-8 lg:p-10 max-w-6xl pb-24 md:pb-12 space-y-8">
+        <div className="flex-1 flex flex-col min-w-0 w-full overflow-x-hidden">
+          {/* Top Desktop Breadcrumb & Action Bar - Matching Admin 1:1 */}
+          <header className="hidden md:flex sticky top-0 z-20 items-center justify-between px-4 sm:px-6 lg:px-8 py-3.5 bg-[#FFFDF9]/95 backdrop-blur-md border-b border-[#E5E1D8] gap-4">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <span className="text-xs font-mono uppercase font-bold text-[#A98B57] tracking-wider shrink-0">
+                Studio Client Sanctum
+              </span>
+              <span className="text-[#E5E1D8] shrink-0">/</span>
+              <span className="text-xs sm:text-sm font-serif font-bold text-[#171717] capitalize truncate">
+                Orders &amp; Revisions Ledger
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+              <NotificationBell align="right" />
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => loadOrders()}
+                isLoading={isLoadingOrders}
+                leftIcon={<RefreshCw className="w-3.5 h-3.5 text-[#5C3A1E]" />}
+                className="text-xs text-[#5C3A1E]"
+                title="Sync Live Orders"
+              >
+                Sync Data
+              </Button>
+
+              <div className="h-4 w-px bg-[#E5E1D8]" />
+
+              <Link href="/" target="_blank">
+                <Button variant="outline" size="sm" leftIcon={<Globe className="w-3.5 h-3.5 text-[#A98B57]" />} className="text-xs">
+                  Public Website ↗
+                </Button>
+              </Link>
+
+              <button
+                type="button"
+                onClick={handleOpenNewOrder}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#171717] text-white text-xs font-semibold shadow-xs hover:bg-[#262626] transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5 text-[#A98B57]" />
+                <span>New Commission</span>
+              </button>
+            </div>
+          </header>
+
+          <main id="main-content" className="flex-1 p-4 sm:p-6 lg:p-8 max-w-6xl w-full mx-auto pb-24 md:pb-12 space-y-6">
           {/* Header & Tab Selector */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-[#EADFCB] gap-4">
             <div>
@@ -1848,8 +1896,9 @@ export default function OrdersPage() {
             )}
           </div>
         </main>
+      </div>
 
-        <MobileBottomNav />
+      <MobileBottomNav />
 
         {/* ========================================================
             NEW ORDER COMMISSION FLOW (MODAL / MOBILE BOTTOM-SHEET)

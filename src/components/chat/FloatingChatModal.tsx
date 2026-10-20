@@ -655,7 +655,12 @@ export function FloatingChatModal() {
         const fallbackRes = await fetch("/api/chatbot", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: text, client_id: user?.uid || "client_sutra" }),
+          body: JSON.stringify({
+            message: text,
+            client_id: user?.uid || "client_sutra",
+            client_email: user?.email || undefined,
+            client_name: profile?.displayName || user?.displayName || undefined,
+          }),
         });
         const fallbackData = await fallbackRes.json();
         const fallbackMsg: ChatMessage = {

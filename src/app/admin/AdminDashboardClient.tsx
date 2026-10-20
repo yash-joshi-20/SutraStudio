@@ -378,19 +378,20 @@ function SectionVisualControls({
   );
 }
 
-export function AdminDashboardClient() {
+export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTab?: CrmTab } = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, logout } = useAuth();
 
   // Tab State synced with URL query (?tab=...)
-  const initialTab = (searchParams.get("tab") as CrmTab) || "overview";
+  const initialTab = propInitialTab || (searchParams.get("tab") as CrmTab) || "overview";
   const [activeTab, setActiveTab] = useState<CrmTab>(initialTab);
 
   // Sidebar Layout State
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [cmsSidebarExpanded, setCmsSidebarExpanded] = useState<boolean>(true);
+  const [clientsSidebarExpanded, setClientsSidebarExpanded] = useState<boolean>(true);
 
   // Orders State
   const [orders, setOrders] = useState<AdminOrderRecord[]>([]);
@@ -571,9 +572,27 @@ export function AdminDashboardClient() {
     if (tab === "cms") {
       setCmsSidebarExpanded(true);
     }
+    if (tab === "clients") {
+      setClientsSidebarExpanded(true);
+    }
     setMobileDrawerOpen(false);
     const params = new URLSearchParams(window.location.search);
     params.set("tab", tab);
+    router.replace(`/admin?${params.toString()}`, { scroll: false });
+  };
+
+  const selectClientSubView = (subView: "all" | "orders" | "chats", clientKey?: string) => {
+    setActiveTab("clients");
+    setClientDetailTab(subView);
+    setClientsSidebarExpanded(true);
+    if (clientKey !== undefined) {
+      setSelectedClientDropdownKey(clientKey);
+    }
+    setMobileDrawerOpen(false);
+    const params = new URLSearchParams(window.location.search);
+    params.set("tab", "clients");
+    if (clientKey) params.set("client", clientKey);
+    else params.delete("client");
     router.replace(`/admin?${params.toString()}`, { scroll: false });
   };
 
@@ -1415,6 +1434,143 @@ export function AdminDashboardClient() {
                     );
                   }
 
+                  if (item.id === "clients") {
+                    return (
+                      <div key={item.id} className="space-y-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (activeTab === "clients") {
+                              setClientsSidebarExpanded(!clientsSidebarExpanded);
+                            } else {
+                              switchTab("clients");
+                              setClientsSidebarExpanded(true);
+                            }
+                          }}
+                          className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                            isActive
+                              ? "bg-[#171717] text-[#FAF9F5] font-semibold shadow-xs"
+                              : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717]"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Icon className={`w-4 h-4 ${isActive ? "text-[#A98B57]" : "text-[#737373]"}`} />
+                            <span>{item.label}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            {item.badge !== null && (
+                              <span
+                                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                  isActive ? "bg-[#A98B57] text-white" : "bg-[#F0ECE1] text-[#5C3A1E]"
+                                }`}
+                              >
+                                {item.badge}
+                              </span>
+                            )}
+                            <ChevronDown
+                              className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                                clientsSidebarExpanded ? "rotate-180 text-[#A98B57]" : "text-[#737373]"
+                              }`}
+                            />
+                          </div>
+                        </button>
+
+                        {/* Mobile Dropdown Sub-Items for Clients */}
+                        {clientsSidebarExpanded && (
+                          <div className="my-1.5 ml-2 pl-2.5 border-l-2 border-[#A98B57]/40 bg-[#FFFDF9] rounded-r-2xl py-2 pr-1 space-y-1 shadow-2xs">
+                            <div className="px-2 py-0.5 flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-[#8C827A] font-bold">
+                              <span>Directory &amp; Chats ({clientsList.length})</span>
+                              <span className="text-[#A98B57]">Active</span>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => selectClientSubView("all", "")}
+                              className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+                                activeTab === "clients" && clientDetailTab === "all" && !selectedClientDropdownKey
+                                  ? "bg-[#171717] text-[#FAF9F5] font-bold shadow-xs border border-[#171717]"
+                                  : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717] font-medium"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <Users className="w-3.5 h-3.5 text-[#A98B57] shrink-0" />
+                                <span className="truncate">All Clients Directory</span>
+                              </div>
+                              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-[#FAF9F5] text-[#8C827A] border border-[#E5E1D8]">
+                                {clientsList.length}
+                              </span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => selectClientSubView("orders")}
+                              className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+                                activeTab === "clients" && clientDetailTab === "orders"
+                                  ? "bg-[#171717] text-[#FAF9F5] font-bold shadow-xs border border-[#171717]"
+                                  : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717] font-medium"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <ShoppingBag className="w-3.5 h-3.5 text-[#A98B57] shrink-0" />
+                                <span className="truncate">Client Orders Ledger</span>
+                              </div>
+                              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-[#FAF9F5] text-[#8C827A] border border-[#E5E1D8]">
+                                {orders.length}
+                              </span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => selectClientSubView("chats")}
+                              className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+                                activeTab === "clients" && clientDetailTab === "chats"
+                                  ? "bg-[#171717] text-[#FAF9F5] font-bold shadow-xs border border-[#171717]"
+                                  : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717] font-medium"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <MessageSquare className="w-3.5 h-3.5 text-[#A98B57] shrink-0" />
+                                <span className="truncate">AI Chat Logs</span>
+                              </div>
+                              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-[#FAF9F5] text-[#8C827A] border border-[#E5E1D8]">
+                                {clientConversations.length}
+                              </span>
+                            </button>
+
+                            {/* Recent Clients Quick List */}
+                            {clientsList.length > 0 && (
+                              <div className="pt-1.5 mt-1 border-t border-[#E5E1D8]/70 space-y-0.5">
+                                <div className="px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider text-[#A98B57] font-bold">
+                                  Recent Active Clients:
+                                </div>
+                                {clientsList.slice(0, 4).map((c) => {
+                                  const isSelected = selectedClientDropdownKey === c.key;
+                                  return (
+                                    <button
+                                      key={c.key}
+                                      type="button"
+                                      onClick={() => selectClientSubView("all", c.key)}
+                                      className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-[11px] transition-all cursor-pointer ${
+                                        isSelected
+                                          ? "bg-[#171717] text-white font-bold"
+                                          : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717]"
+                                      }`}
+                                    >
+                                      <span className="truncate max-w-[140px]">{c.name}</span>
+                                      <span className="text-[9px] font-mono text-[#8C827A]">
+                                        {c.orders.length} ord • {c.chatMessages.length} chat
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
                   return (
                     <button
                       key={item.id}
@@ -1645,6 +1801,156 @@ export function AdminDashboardClient() {
                               </button>
                             );
                           })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                if (item.id === "clients") {
+                  return (
+                    <div key={item.id} className="space-y-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (sidebarCollapsed) setSidebarCollapsed(false);
+                          if (activeTab === "clients") {
+                            setClientsSidebarExpanded(!clientsSidebarExpanded);
+                          } else {
+                            switchTab("clients");
+                            setClientsSidebarExpanded(true);
+                          }
+                        }}
+                        title={sidebarCollapsed ? item.label : undefined}
+                        className={`w-full flex items-center ${
+                          sidebarCollapsed
+                            ? "justify-center h-11 w-11 mx-auto rounded-xl"
+                            : "justify-between px-3 py-2.5 rounded-xl"
+                        } text-xs font-medium transition-all cursor-pointer ${
+                          isActive
+                            ? "bg-[#171717] text-[#FAF9F5] font-semibold shadow-xs"
+                            : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717]"
+                        }`}
+                      >
+                        <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-3"} min-w-0`}>
+                          <Icon
+                            className={`w-4 h-4 shrink-0 ${
+                              isActive ? "text-[#A98B57]" : "text-[#737373]"
+                            }`}
+                          />
+                          {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
+                        </div>
+
+                        {!sidebarCollapsed && (
+                          <div className="flex items-center gap-1.5">
+                            {item.badge !== null && (
+                              <span
+                                className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                                  isActive ? "bg-[#A98B57] text-white" : "bg-[#F0ECE1] text-[#5C3A1E]"
+                                }`}
+                              >
+                                {item.badge}
+                              </span>
+                            )}
+                            <ChevronDown
+                              className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                                clientsSidebarExpanded ? "rotate-180 text-[#A98B57]" : "text-[#737373]"
+                              }`}
+                            />
+                          </div>
+                        )}
+                      </button>
+
+                      {/* Desktop Custom Dropdown Sub-Items for Clients */}
+                      {!sidebarCollapsed && clientsSidebarExpanded && (
+                        <div className="my-1.5 ml-2 pl-2.5 border-l-2 border-[#A98B57]/40 bg-[#FFFDF9] rounded-r-2xl py-2 pr-1 space-y-1 shadow-2xs">
+                          <div className="px-2 py-0.5 flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-[#8C827A] font-bold">
+                            <span>Clients &amp; Chats ({clientsList.length})</span>
+                            <span className="text-[#A98B57]">Active</span>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => selectClientSubView("all", "")}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] transition-all cursor-pointer ${
+                              activeTab === "clients" && clientDetailTab === "all" && !selectedClientDropdownKey
+                                ? "bg-[#171717] text-[#FAF9F5] font-bold shadow-xs border border-[#171717]"
+                                : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717] font-medium"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <Users className="w-3.5 h-3.5 text-[#A98B57] shrink-0" />
+                              <span className="truncate">All Clients Directory</span>
+                            </div>
+                            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-[#FAF9F5] text-[#8C827A] border border-[#E5E1D8]">
+                              {clientsList.length}
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => selectClientSubView("orders")}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] transition-all cursor-pointer ${
+                              activeTab === "clients" && clientDetailTab === "orders"
+                                ? "bg-[#171717] text-[#FAF9F5] font-bold shadow-xs border border-[#171717]"
+                                : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717] font-medium"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <ShoppingBag className="w-3.5 h-3.5 text-[#A98B57] shrink-0" />
+                              <span className="truncate">Client Orders Ledger</span>
+                            </div>
+                            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-[#FAF9F5] text-[#8C827A] border border-[#E5E1D8]">
+                              {orders.length}
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => selectClientSubView("chats")}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] transition-all cursor-pointer ${
+                              activeTab === "clients" && clientDetailTab === "chats"
+                                ? "bg-[#171717] text-[#FAF9F5] font-bold shadow-xs border border-[#171717]"
+                                : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717] font-medium"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <MessageSquare className="w-3.5 h-3.5 text-[#A98B57] shrink-0" />
+                              <span className="truncate">AI Chat Logs</span>
+                            </div>
+                            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-[#FAF9F5] text-[#8C827A] border border-[#E5E1D8]">
+                              {clientConversations.length}
+                            </span>
+                          </button>
+
+                          {/* Quick client direct selector */}
+                          {clientsList.length > 0 && (
+                            <div className="pt-1.5 mt-1 border-t border-[#E5E1D8]/70 space-y-0.5">
+                              <div className="px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider text-[#A98B57] font-bold">
+                                Quick Select Client:
+                              </div>
+                              {clientsList.slice(0, 4).map((c) => {
+                                const isSelected = selectedClientDropdownKey === c.key;
+                                return (
+                                  <button
+                                    key={c.key}
+                                    type="button"
+                                    onClick={() => selectClientSubView("all", c.key)}
+                                    className={`w-full flex items-center justify-between px-2 py-1 rounded-lg text-[11px] transition-all cursor-pointer ${
+                                      isSelected
+                                        ? "bg-[#171717] text-white font-bold"
+                                        : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717]"
+                                    }`}
+                                  >
+                                    <span className="truncate max-w-[120px]">{c.name}</span>
+                                    <span className="text-[9px] font-mono text-[#8C827A]">
+                                      {c.orders.length} ord
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

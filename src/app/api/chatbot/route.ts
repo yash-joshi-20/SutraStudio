@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { RagLlmEngine, MASTER_SYSTEM_PROMPT, MASTER_RAG_KNOWLEDGE_STORE } from "@/lib/services/ragLlmService";
 import { KnowledgeRecord } from "@/lib/types/knowledge";
+import { ClientChatStore } from "@/lib/services/clientChatStore";
 
 declare global {
   var __sutra_knowledge_base: KnowledgeRecord[] | undefined;
@@ -15,7 +16,7 @@ function getKnowledgeBase(): KnowledgeRecord[] {
 
 export async function POST(req: Request) {
   try {
-    const { message, client_id, preview_mode } = await req.json();
+    const { message, client_id, client_email, client_name, preview_mode } = await req.json();
 
     if (!message || typeof message !== "string") {
       return NextResponse.json({ error: "Message content is required" }, { status: 400 });
@@ -23,6 +24,17 @@ export async function POST(req: Request) {
 
     const kbStore = getKnowledgeBase();
     const targetClientId = client_id || "client_sutra";
+
+    // Persist incoming client query for Admin CRM visibility
+    await ClientChatStore.addMessage({
+      clientId: targetClientId,
+      clientKey: client_email || targetClientId,
+      clientEmail: client_email,
+      clientName: client_name,
+      sender: "client",
+      text: message,
+      channel: "ai_chat",
+    }).catch(() => {});
 
     const eligibleRecords = kbStore.filter((k) => {
       const matchesClient =
@@ -41,6 +53,19 @@ export async function POST(req: Request) {
     });
 
     const ragResult = await RagLlmEngine.answerQuery(message, eligibleRecords);
+
+    // Persist bot answer for Admin CRM visibility
+    if (ragResult?.answer) {
+      await ClientChatStore.addMessage({
+        clientId: targetClientId,
+        clientKey: client_email || targetClientId,
+        clientEmail: client_email,
+        clientName: client_name,
+        sender: "assistant",
+        text: ragResult.answer,
+        channel: "ai_chat",
+      }).catch(() => {});
+    }
 
     return NextResponse.json(ragResult, { status: 200 });
   } catch {

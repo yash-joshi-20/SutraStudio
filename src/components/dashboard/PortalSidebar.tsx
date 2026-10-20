@@ -245,18 +245,15 @@ export function PortalSidebarInner({
             <div className="pb-4 border-b border-[#E5E1D8] flex flex-col gap-2.5">
               <div className="flex items-center justify-between">
                 <SutraLogo variant="horizontal" size="md" href={isAdmin ? "/admin" : "/dashboard"} />
-                <div className="flex items-center gap-1">
-                  {!contained && <NotificationBell align="left" />}
-                  <button
-                    type="button"
-                    onClick={handleToggleCollapse}
-                    title="Collapse Sidebar"
-                    className="p-1.5 rounded-xl text-[#737373] hover:text-[#171717] hover:bg-[#F0ECE1] transition-colors cursor-pointer"
-                    aria-label="Collapse Sidebar"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleToggleCollapse}
+                  title="Collapse Sidebar"
+                  className="p-1.5 rounded-xl text-[#737373] hover:text-[#171717] hover:bg-[#F0ECE1] transition-colors cursor-pointer"
+                  aria-label="Collapse Sidebar"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
               </div>
 
               {/* Scope Indicator Card */}
@@ -307,7 +304,6 @@ export function PortalSidebarInner({
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
-              {!contained && <NotificationBell align="left" />}
             </div>
           )}
 
