@@ -69,10 +69,10 @@ export default function NotFound() {
                 <ArrowRight className="w-3 h-3 text-[#94A3B8]" />
               </Link>
               <Link
-                href="/contact"
+                href="/about"
                 className="flex items-center justify-between p-3 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/60 text-xs font-medium text-[#0F172A] hover:bg-[#F4EFE6] transition-colors"
               >
-                <span>Client Desk</span>
+                <span>About Studio</span>
                 <ArrowRight className="w-3 h-3 text-[#94A3B8]" />
               </Link>
             </div>

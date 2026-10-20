@@ -374,13 +374,8 @@ export default function HomePage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                <Link href="/services">
-                  <Button variant="secondary" size="md" withArrow className="shadow-xs text-xs font-semibold">
-                    Explore All 8 Services
-                  </Button>
-                </Link>
                 <Link href="/contact">
-                  <Button variant="outline" size="md" className="shadow-xs text-xs font-semibold bg-[#FFFDF9] hover:bg-[#F8F5EF] text-[#5C3A1E] border-[#EADFCB]">
+                  <Button variant="secondary" size="md" withArrow className="shadow-xs text-xs font-semibold">
                     Request a Quote
                   </Button>
                 </Link>
