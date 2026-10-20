@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
   Bell,
@@ -61,6 +62,30 @@ export function NotificationBell({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const prevUnreadCountRef = useRef<number>(cachedNotifs.unreadCount);
   const hasInitializedRef = useRef<boolean>(false);
+  const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    if (typeof window !== "undefined") {
+      const mql = window.matchMedia("(max-width: 639px)");
+      const updateMobile = () => setIsMobile(mql.matches);
+      updateMobile();
+      mql.addEventListener("change", updateMobile);
+      return () => mql.removeEventListener("change", updateMobile);
+    }
+  }, []);
+
+  // Lock background body scroll when mobile bottom sheet is active
+  useEffect(() => {
+    if (isOpen && isMobile && typeof document !== "undefined") {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen, isMobile]);
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -144,6 +169,7 @@ export function NotificationBell({
   // Close dropdown on click outside or escape key
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
+      if (isMobile) return;
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
@@ -273,6 +299,187 @@ export function NotificationBell({
     }
   };
 
+  const renderPanelContent = (isMobileSheet: boolean) => (
+    <>
+      {/* Mobile Drag Indicator Handle */}
+      {isMobileSheet && (
+        <div className="pt-2.5 pb-1 flex justify-center cursor-grab active:cursor-grabbing shrink-0 bg-[#171717]">
+          <div className="w-10 h-1 rounded-full bg-[#A98B57]/60" />
+        </div>
+      )}
+
+      {/* Panel Header */}
+      <div className="p-4 bg-[#171717] text-white border-b border-white/10 space-y-3 shrink-0">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#A98B57] block">
+              SUTRA REAL-TIME FEED
+            </span>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="font-serif font-bold text-sm text-white">
+                Studio Notifications
+              </span>
+              {unreadCount > 0 && (
+                <span className="px-2 py-0.5 rounded-full bg-[#A98B57] text-white text-[10px] font-mono font-bold">
+                  {unreadCount} new
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Audio Sound Mute / Unmute Toggle */}
+            <button
+              type="button"
+              onClick={() => {
+                const newMuted = soundSystem.toggleMute();
+                setIsMuted(newMuted);
+                if (!newMuted) {
+                  soundSystem.play("notification");
+                }
+              }}
+              className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              title={isMuted ? "Unmute Studio Sounds" : "Mute Studio Sounds"}
+              aria-label={isMuted ? "Unmute audio" : "Mute audio"}
+            >
+              {isMuted ? <VolumeX className="w-3.5 h-3.5 text-white/40" /> : <Volume2 className="w-3.5 h-3.5 text-[#A98B57]" />}
+            </button>
+
+            {unreadCount > 0 && (
+              <button
+                type="button"
+                onClick={handleMarkAllAsRead}
+                disabled={isLoading}
+                className="text-[11px] font-semibold text-[#D4AF37] hover:underline transition-colors cursor-pointer flex items-center gap-1"
+                title="Mark all as read"
+              >
+                <CheckCheck className="w-3.5 h-3.5" />
+                <span>Mark All Read</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              aria-label="Close notifications"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Filter Tabs */}
+        <div className="flex items-center gap-1 bg-white/10 p-0.5 rounded-xl border border-white/15 text-xs">
+          <button
+            type="button"
+            onClick={() => setTab("unread")}
+            className={`flex-1 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+              tab === "unread"
+                ? "bg-white text-[#171717] shadow-xs font-bold"
+                : "text-white/70 hover:text-white"
+            }`}
+          >
+            Unread ({unreadCount})
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("all")}
+            className={`flex-1 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+              tab === "all"
+                ? "bg-white text-[#171717] shadow-xs font-bold"
+                : "text-white/70 hover:text-white"
+            }`}
+          >
+            All Archive ({notifications.length})
+          </button>
+        </div>
+      </div>
+
+      {/* Notification List Body */}
+      <div className="flex-1 overflow-y-auto divide-y divide-[#EADFCB]/60 overscroll-contain">
+        {displayedNotifications.length === 0 ? (
+          <div className="p-8 text-center text-[#94A3B8] space-y-2">
+            <Bell className="w-7 h-7 mx-auto opacity-30 text-[#A98B57]" />
+            <p className="font-semibold text-xs text-[#0F172A]">
+              {tab === "unread" ? "No unread notifications" : "No notifications"}
+            </p>
+            <p className="text-[11px] max-w-[240px] mx-auto text-[#64748B]">
+              {tab === "unread"
+                ? "You are all caught up. Check 'All Archive' for historical logs."
+                : "You have zero studio dispatches at this time."}
+            </p>
+          </div>
+        ) : (
+          displayedNotifications.map((item) => (
+            <div
+              key={item.id}
+              onClick={() => !item.read && handleMarkAsRead(item.id)}
+              className={`p-3.5 transition-colors cursor-pointer flex items-start gap-3 ${
+                !item.read ? "bg-[#FFF9EE]/70 hover:bg-[#FFF9EE]" : "hover:bg-[#FAF9F5]"
+              }`}
+            >
+              <div className="p-2 rounded-xl bg-white border border-[#EADFCB] mt-0.5 shrink-0 shadow-2xs">
+                {getIcon(item.type)}
+              </div>
+
+              <div className="flex-1 space-y-1">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="font-semibold text-xs text-[#0F172A] leading-tight">
+                    {item.title}
+                  </span>
+                  <span className="text-[10px] font-mono text-[#94A3B8] shrink-0">
+                    {formatRelativeTime(item.createdAt)}
+                  </span>
+                </div>
+
+                <p className="text-[11px] text-[#64748B] leading-relaxed break-words">
+                  {item.message}
+                </p>
+
+                <div className="flex items-center justify-between pt-1 gap-2 flex-wrap">
+                  {item.orderNumber ? (
+                    <span className="font-mono text-[10px] text-[#5C3A1E] bg-[#F8F5EF] px-1.5 py-0.5 rounded border border-[#EADFCB]">
+                      #{item.orderNumber}
+                    </span>
+                  ) : (
+                    <span />
+                  )}
+
+                  {item.actionUrl && (
+                    <Link
+                      href={item.actionUrl}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!item.read) handleMarkAsRead(item.id);
+                        setIsOpen(false);
+                      }}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#5C3A1E] hover:text-[#D4A35A] transition-colors"
+                    >
+                      <span>{item.actionLabel || "View Action"}</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </Link>
+                  )}
+                </div>
+              </div>
+
+              {!item.read && (
+                <button
+                  type="button"
+                  onClick={(e) => handleMarkAsRead(item.id, e)}
+                  title="Mark as read"
+                  className="text-[#D4A35A] hover:text-[#5C3A1E] p-1 rounded transition-colors"
+                >
+                  <span className="w-2 h-2 rounded-full bg-[#D4A35A] block" />
+                </button>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    </>
+  );
+
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       {/* Bell Trigger Button with subtle luxury micro-animation */}
@@ -291,211 +498,67 @@ export function NotificationBell({
         )}
       </button>
 
-      <AnimatePresence>
-        {isOpen && (
-          <>
-            {/* Mobile Backdrop Overlay (<sm screens) */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsOpen(false)}
-              className="sm:hidden fixed inset-0 bg-black/40 backdrop-blur-xs z-[var(--z-drawer)]"
-              aria-hidden="true"
-            />
+      {/* Mobile Bottom Sheet: Rendered via React Portal to escape sticky/blur header containing blocks */}
+      {mounted && isMobile && typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {isOpen && (
+              <div className="fixed inset-0 z-[9999]">
+                {/* Mobile Backdrop Overlay */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  onClick={() => setIsOpen(false)}
+                  className="fixed inset-0 bg-[#0F172A]/50 backdrop-blur-xs"
+                  aria-hidden="true"
+                />
 
-            {/* Notification Panel Surface: Desktop Popover / Mobile Bottom Sheet */}
-            <motion.div
-              drag="y"
-              dragConstraints={{ top: 0, bottom: 0 }}
-              dragElastic={{ top: 0.05, bottom: 0.5 }}
-              onDragEnd={handleDragEnd}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ duration: 0.18 }}
-              role="dialog"
-              aria-label="Notifications"
-              className={`fixed inset-x-0 bottom-0 sm:bottom-auto sm:inset-x-auto sm:absolute ${
-                align === "left" ? "sm:left-0 sm:right-auto" : "sm:right-0 sm:left-auto"
-              } sm:top-full sm:mt-2 w-full sm:w-96 max-w-[calc(100vw-1.5rem)] rounded-t-3xl sm:rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xl z-50 overflow-hidden text-xs text-[#171717] flex flex-col max-h-[85dvh] sm:max-h-[520px] pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:pb-0`}
-            >
-              {/* Mobile Drag Indicator Handle */}
-              <div className="sm:hidden pt-2.5 pb-1 flex justify-center cursor-grab active:cursor-grabbing">
-                <div className="w-10 h-1 rounded-full bg-[#A98B57]/50" />
+                {/* Mobile Bottom Sheet Surface */}
+                <motion.div
+                  drag="y"
+                  dragConstraints={{ top: 0, bottom: 0 }}
+                  dragElastic={{ top: 0.05, bottom: 0.6 }}
+                  onDragEnd={handleDragEnd}
+                  initial={{ y: "100%" }}
+                  animate={{ y: 0 }}
+                  exit={{ y: "100%" }}
+                  transition={{ type: "spring", damping: 28, stiffness: 320 }}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Studio Notifications"
+                  className="fixed inset-x-0 bottom-0 z-[10000] w-full rounded-t-3xl bg-[#FFFDF9] border-t border-[#E5E1D8] shadow-2xl overflow-hidden text-xs text-[#171717] flex flex-col max-h-[85dvh] pb-[calc(1rem+env(safe-area-inset-bottom,0px))]"
+                >
+                  {renderPanelContent(true)}
+                </motion.div>
               </div>
-
-              {/* Panel Header */}
-              <div className="p-4 bg-[#171717] text-white border-b border-white/10 space-y-3 shrink-0">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#A98B57] block">
-                      SUTRA REAL-TIME FEED
-                    </span>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="font-serif font-bold text-sm text-white">
-                        Studio Notifications
-                      </span>
-                      {unreadCount > 0 && (
-                        <span className="px-2 py-0.5 rounded-full bg-[#A98B57] text-white text-[10px] font-mono font-bold">
-                          {unreadCount} new
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {/* Audio Sound Mute / Unmute Toggle */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newMuted = soundSystem.toggleMute();
-                        setIsMuted(newMuted);
-                        if (!newMuted) {
-                          soundSystem.play("notification");
-                        }
-                      }}
-                      className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-                      title={isMuted ? "Unmute Studio Sounds" : "Mute Studio Sounds"}
-                      aria-label={isMuted ? "Unmute audio" : "Mute audio"}
-                    >
-                      {isMuted ? <VolumeX className="w-3.5 h-3.5 text-white/40" /> : <Volume2 className="w-3.5 h-3.5 text-[#A98B57]" />}
-                    </button>
-
-                    {unreadCount > 0 && (
-                      <button
-                        type="button"
-                        onClick={handleMarkAllAsRead}
-                        disabled={isLoading}
-                        className="text-[11px] font-semibold text-[#D4AF37] hover:underline transition-colors cursor-pointer flex items-center gap-1"
-                      >
-                        <CheckCheck className="w-3.5 h-3.5" />
-                        <span>Mark all read</span>
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => setIsOpen(false)}
-                      className="sm:hidden p-1 rounded-full text-white/70 hover:text-white"
-                      aria-label="Close notifications"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Filter Tabs */}
-                <div className="flex items-center gap-1 bg-white/10 p-0.5 rounded-xl border border-white/15 text-xs">
-                  <button
-                    type="button"
-                    onClick={() => setTab("unread")}
-                    className={`flex-1 py-1 rounded-lg font-medium transition-all cursor-pointer ${
-                      tab === "unread"
-                        ? "bg-white text-[#171717] shadow-xs font-bold"
-                        : "text-white/70 hover:text-white"
-                    }`}
-                  >
-                    Unread ({unreadCount})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTab("all")}
-                    className={`flex-1 py-1 rounded-lg font-medium transition-all cursor-pointer ${
-                      tab === "all"
-                        ? "bg-white text-[#171717] shadow-xs font-bold"
-                        : "text-white/70 hover:text-white"
-                    }`}
-                  >
-                    All Archive ({notifications.length})
-                  </button>
-                </div>
-              </div>
-
-              {/* Notification List Body */}
-              <div className="flex-1 overflow-y-auto divide-y divide-[#EADFCB]/60 overscroll-contain">
-                {displayedNotifications.length === 0 ? (
-                  <div className="p-8 text-center text-[#94A3B8] space-y-2">
-                    <Bell className="w-7 h-7 mx-auto opacity-30 text-[#A98B57]" />
-                    <p className="font-semibold text-xs text-[#0F172A]">
-                      {tab === "unread" ? "No unread notifications" : "No notifications"}
-                    </p>
-                    <p className="text-[11px] max-w-[240px] mx-auto text-[#64748B]">
-                      {tab === "unread"
-                        ? "You are all caught up. Check 'All Archive' for historical logs."
-                        : "You have zero studio dispatches at this time."}
-                    </p>
-                  </div>
-                ) : (
-                  displayedNotifications.map((item) => (
-                    <div
-                      key={item.id}
-                      onClick={() => !item.read && handleMarkAsRead(item.id)}
-                      className={`p-3.5 transition-colors cursor-pointer flex items-start gap-3 ${
-                        !item.read ? "bg-[#FFF9EE]/70 hover:bg-[#FFF9EE]" : "hover:bg-[#FAF9F5]"
-                      }`}
-                    >
-                      <div className="p-2 rounded-xl bg-white border border-[#EADFCB] mt-0.5 shrink-0 shadow-2xs">
-                        {getIcon(item.type)}
-                      </div>
-
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center justify-between gap-1">
-                          <span className="font-semibold text-xs text-[#0F172A] leading-tight">
-                            {item.title}
-                          </span>
-                          <span className="text-[10px] font-mono text-[#94A3B8] shrink-0">
-                            {formatRelativeTime(item.createdAt)}
-                          </span>
-                        </div>
-
-                        <p className="text-[11px] text-[#64748B] leading-relaxed break-words">
-                          {item.message}
-                        </p>
-
-                        <div className="flex items-center justify-between pt-1 gap-2 flex-wrap">
-                          {item.orderNumber ? (
-                            <span className="font-mono text-[10px] text-[#5C3A1E] bg-[#F8F5EF] px-1.5 py-0.5 rounded border border-[#EADFCB]">
-                              #{item.orderNumber}
-                            </span>
-                          ) : (
-                            <span />
-                          )}
-
-                          {item.actionUrl && (
-                            <Link
-                              href={item.actionUrl}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (!item.read) handleMarkAsRead(item.id);
-                                setIsOpen(false);
-                              }}
-                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#5C3A1E] hover:text-[#D4A35A] transition-colors"
-                            >
-                              <span>{item.actionLabel || "View Action"}</span>
-                              <ExternalLink className="w-3 h-3" />
-                            </Link>
-                          )}
-                        </div>
-                      </div>
-
-                      {!item.read && (
-                        <button
-                          type="button"
-                          onClick={(e) => handleMarkAsRead(item.id, e)}
-                          title="Mark as read"
-                          className="text-[#D4A35A] hover:text-[#5C3A1E] p-1 rounded transition-colors"
-                        >
-                          <span className="w-2 h-2 rounded-full bg-[#D4A35A] block" />
-                        </button>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
-            </motion.div>
-          </>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
+
+      {/* Desktop Popover Dropdown */}
+      {!isMobile && (
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.98 }}
+              transition={{ duration: 0.15 }}
+              role="dialog"
+              aria-label="Studio Notifications"
+              className={`absolute ${
+                align === "left" ? "left-0" : "right-0"
+              } top-full mt-2 w-96 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xl z-50 overflow-hidden text-xs text-[#171717] flex flex-col max-h-[520px]`}
+            >
+              {renderPanelContent(false)}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
+
     </div>
   );
 }
