@@ -12,6 +12,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Avatar } from "@/components/ui/Avatar";
 import { useAuth } from "@/lib/auth/authContext";
 import { SyncManager } from "@/lib/sync/syncService";
+import { MetaPromotionStudio } from "@/components/crm/MetaPromotionStudio";
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -69,7 +70,7 @@ import {
   Layers,
 } from "lucide-react";
 
-export type CrmTab = "overview" | "orders" | "cms" | "clients" | "settings";
+export type CrmTab = "overview" | "orders" | "leads" | "clients" | "promotions" | "cms" | "settings";
 export type CmsSubPage = "home" | "about" | "services" | "pricing" | "contact" | "header" | "footer" | "theme";
 
 export interface StudioNotificationRecord {
@@ -550,7 +551,7 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
   // Sync tab with URL search parameter
   useEffect(() => {
     const tabParam = searchParams.get("tab") as CrmTab;
-    if (tabParam && ["overview", "orders", "cms", "clients", "settings"].includes(tabParam)) {
+    if (tabParam && ["overview", "orders", "leads", "clients", "promotions", "cms", "settings"].includes(tabParam)) {
       setActiveTab(tabParam);
       if (tabParam === "cms") {
         setCmsSidebarExpanded(true);
@@ -751,11 +752,9 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
       notif.title.toLowerCase().includes("chat") ||
       notif.title.toLowerCase().includes("inquiry")
     ) {
-      switchTab("orders");
-      setOrdersSubTab("leads");
+      switchTab("leads");
     } else {
       switchTab("orders");
-      setOrdersSubTab("orders");
       if (notif.orderId) {
         const match = orders.find(
           (o) => o.id === notif.orderId || o.orderNumber === notif.orderNumber
@@ -881,7 +880,7 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
       });
       if (res.ok) {
         await fetchOrders(true);
-        setOrdersSubTab("orders");
+        switchTab("orders");
         setActionMessage(`✓ Converted lead to Order (₹${details.estimatedPrice.toLocaleString("en-IN")})!`);
         setTimeout(() => setActionMessage(null), 3000);
       }
@@ -1226,7 +1225,7 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
     }));
   };
 
-  // CRM Navigation Item Definitions
+  // CRM Navigation Item Definitions (Clean & Deduplicated)
   const CRM_NAV = [
     {
       id: "overview" as CrmTab,
@@ -1236,21 +1235,33 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
     },
     {
       id: "orders" as CrmTab,
-      label: "Orders & Leads",
+      label: "Orders Ledger",
       icon: ShoppingBag,
       badge: metrics.pendingVerification > 0 ? metrics.pendingVerification : null,
     },
     {
-      id: "cms" as CrmTab,
-      label: "Website Pages CMS",
-      icon: Globe,
-      badge: "Live",
+      id: "leads" as CrmTab,
+      label: "AI Inbound Leads",
+      icon: MessageSquare,
+      badge: aiChatLeads.length > 0 ? aiChatLeads.length : null,
     },
     {
       id: "clients" as CrmTab,
       label: "Clients Directory",
       icon: Users,
       badge: clientsList.length > 0 ? clientsList.length : null,
+    },
+    {
+      id: "promotions" as CrmTab,
+      label: "Meta AI & Promotion",
+      icon: Sparkles,
+      badge: "AI",
+    },
+    {
+      id: "cms" as CrmTab,
+      label: "Website Pages CMS",
+      icon: Globe,
+      badge: "Live",
     },
     {
       id: "settings" as CrmTab,
@@ -1434,142 +1445,7 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
                     );
                   }
 
-                  if (item.id === "clients") {
-                    return (
-                      <div key={item.id} className="space-y-1">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (activeTab === "clients") {
-                              setClientsSidebarExpanded(!clientsSidebarExpanded);
-                            } else {
-                              switchTab("clients");
-                              setClientsSidebarExpanded(true);
-                            }
-                          }}
-                          className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                            isActive
-                              ? "bg-[#171717] text-[#FAF9F5] font-semibold shadow-xs"
-                              : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717]"
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <Icon className={`w-4 h-4 ${isActive ? "text-[#A98B57]" : "text-[#737373]"}`} />
-                            <span>{item.label}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            {item.badge !== null && (
-                              <span
-                                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                                  isActive ? "bg-[#A98B57] text-white" : "bg-[#F0ECE1] text-[#5C3A1E]"
-                                }`}
-                              >
-                                {item.badge}
-                              </span>
-                            )}
-                            <ChevronDown
-                              className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                                clientsSidebarExpanded ? "rotate-180 text-[#A98B57]" : "text-[#737373]"
-                              }`}
-                            />
-                          </div>
-                        </button>
 
-                        {/* Mobile Dropdown Sub-Items for Clients */}
-                        {clientsSidebarExpanded && (
-                          <div className="my-1.5 ml-2 pl-2.5 border-l-2 border-[#A98B57]/40 bg-[#FFFDF9] rounded-r-2xl py-2 pr-1 space-y-1 shadow-2xs">
-                            <div className="px-2 py-0.5 flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-[#8C827A] font-bold">
-                              <span>Directory &amp; Chats ({clientsList.length})</span>
-                              <span className="text-[#A98B57]">Active</span>
-                            </div>
-
-                            <button
-                              type="button"
-                              onClick={() => selectClientSubView("all", "")}
-                              className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-all cursor-pointer ${
-                                activeTab === "clients" && clientDetailTab === "all" && !selectedClientDropdownKey
-                                  ? "bg-[#171717] text-[#FAF9F5] font-bold shadow-xs border border-[#171717]"
-                                  : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717] font-medium"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2.5 min-w-0">
-                                <Users className="w-3.5 h-3.5 text-[#A98B57] shrink-0" />
-                                <span className="truncate">All Clients Directory</span>
-                              </div>
-                              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-[#FAF9F5] text-[#8C827A] border border-[#E5E1D8]">
-                                {clientsList.length}
-                              </span>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => selectClientSubView("orders")}
-                              className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-all cursor-pointer ${
-                                activeTab === "clients" && clientDetailTab === "orders"
-                                  ? "bg-[#171717] text-[#FAF9F5] font-bold shadow-xs border border-[#171717]"
-                                  : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717] font-medium"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2.5 min-w-0">
-                                <ShoppingBag className="w-3.5 h-3.5 text-[#A98B57] shrink-0" />
-                                <span className="truncate">Client Orders Ledger</span>
-                              </div>
-                              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-[#FAF9F5] text-[#8C827A] border border-[#E5E1D8]">
-                                {orders.length}
-                              </span>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => selectClientSubView("chats")}
-                              className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-all cursor-pointer ${
-                                activeTab === "clients" && clientDetailTab === "chats"
-                                  ? "bg-[#171717] text-[#FAF9F5] font-bold shadow-xs border border-[#171717]"
-                                  : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717] font-medium"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2.5 min-w-0">
-                                <MessageSquare className="w-3.5 h-3.5 text-[#A98B57] shrink-0" />
-                                <span className="truncate">AI Chat Logs</span>
-                              </div>
-                              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-[#FAF9F5] text-[#8C827A] border border-[#E5E1D8]">
-                                {clientConversations.length}
-                              </span>
-                            </button>
-
-                            {/* Recent Clients Quick List */}
-                            {clientsList.length > 0 && (
-                              <div className="pt-1.5 mt-1 border-t border-[#E5E1D8]/70 space-y-0.5">
-                                <div className="px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider text-[#A98B57] font-bold">
-                                  Recent Active Clients:
-                                </div>
-                                {clientsList.slice(0, 4).map((c) => {
-                                  const isSelected = selectedClientDropdownKey === c.key;
-                                  return (
-                                    <button
-                                      key={c.key}
-                                      type="button"
-                                      onClick={() => selectClientSubView("all", c.key)}
-                                      className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-[11px] transition-all cursor-pointer ${
-                                        isSelected
-                                          ? "bg-[#171717] text-white font-bold"
-                                          : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717]"
-                                      }`}
-                                    >
-                                      <span className="truncate max-w-[140px]">{c.name}</span>
-                                      <span className="text-[9px] font-mono text-[#8C827A]">
-                                        {c.orders.length} ord • {c.chatMessages.length} chat
-                                      </span>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  }
 
                   return (
                     <button
@@ -1802,157 +1678,7 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
                             );
                           })}
                         </div>
-                      )}
-                    </div>
-                  );
-                }
-
-                if (item.id === "clients") {
-                  return (
-                    <div key={item.id} className="space-y-1">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (sidebarCollapsed) setSidebarCollapsed(false);
-                          if (activeTab === "clients") {
-                            setClientsSidebarExpanded(!clientsSidebarExpanded);
-                          } else {
-                            switchTab("clients");
-                            setClientsSidebarExpanded(true);
-                          }
-                        }}
-                        title={sidebarCollapsed ? item.label : undefined}
-                        className={`w-full flex items-center ${
-                          sidebarCollapsed
-                            ? "justify-center h-11 w-11 mx-auto rounded-xl"
-                            : "justify-between px-3 py-2.5 rounded-xl"
-                        } text-xs font-medium transition-all cursor-pointer ${
-                          isActive
-                            ? "bg-[#171717] text-[#FAF9F5] font-semibold shadow-xs"
-                            : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717]"
-                        }`}
-                      >
-                        <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-3"} min-w-0`}>
-                          <Icon
-                            className={`w-4 h-4 shrink-0 ${
-                              isActive ? "text-[#A98B57]" : "text-[#737373]"
-                            }`}
-                          />
-                          {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
-                        </div>
-
-                        {!sidebarCollapsed && (
-                          <div className="flex items-center gap-1.5">
-                            {item.badge !== null && (
-                              <span
-                                className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                                  isActive ? "bg-[#A98B57] text-white" : "bg-[#F0ECE1] text-[#5C3A1E]"
-                                }`}
-                              >
-                                {item.badge}
-                              </span>
-                            )}
-                            <ChevronDown
-                              className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                                clientsSidebarExpanded ? "rotate-180 text-[#A98B57]" : "text-[#737373]"
-                              }`}
-                            />
-                          </div>
-                        )}
-                      </button>
-
-                      {/* Desktop Custom Dropdown Sub-Items for Clients */}
-                      {!sidebarCollapsed && clientsSidebarExpanded && (
-                        <div className="my-1.5 ml-2 pl-2.5 border-l-2 border-[#A98B57]/40 bg-[#FFFDF9] rounded-r-2xl py-2 pr-1 space-y-1 shadow-2xs">
-                          <div className="px-2 py-0.5 flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-[#8C827A] font-bold">
-                            <span>Clients &amp; Chats ({clientsList.length})</span>
-                            <span className="text-[#A98B57]">Active</span>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => selectClientSubView("all", "")}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] transition-all cursor-pointer ${
-                              activeTab === "clients" && clientDetailTab === "all" && !selectedClientDropdownKey
-                                ? "bg-[#171717] text-[#FAF9F5] font-bold shadow-xs border border-[#171717]"
-                                : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717] font-medium"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <Users className="w-3.5 h-3.5 text-[#A98B57] shrink-0" />
-                              <span className="truncate">All Clients Directory</span>
-                            </div>
-                            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-[#FAF9F5] text-[#8C827A] border border-[#E5E1D8]">
-                              {clientsList.length}
-                            </span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => selectClientSubView("orders")}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] transition-all cursor-pointer ${
-                              activeTab === "clients" && clientDetailTab === "orders"
-                                ? "bg-[#171717] text-[#FAF9F5] font-bold shadow-xs border border-[#171717]"
-                                : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717] font-medium"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <ShoppingBag className="w-3.5 h-3.5 text-[#A98B57] shrink-0" />
-                              <span className="truncate">Client Orders Ledger</span>
-                            </div>
-                            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-[#FAF9F5] text-[#8C827A] border border-[#E5E1D8]">
-                              {orders.length}
-                            </span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => selectClientSubView("chats")}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] transition-all cursor-pointer ${
-                              activeTab === "clients" && clientDetailTab === "chats"
-                                ? "bg-[#171717] text-[#FAF9F5] font-bold shadow-xs border border-[#171717]"
-                                : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717] font-medium"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <MessageSquare className="w-3.5 h-3.5 text-[#A98B57] shrink-0" />
-                              <span className="truncate">AI Chat Logs</span>
-                            </div>
-                            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-[#FAF9F5] text-[#8C827A] border border-[#E5E1D8]">
-                              {clientConversations.length}
-                            </span>
-                          </button>
-
-                          {/* Quick client direct selector */}
-                          {clientsList.length > 0 && (
-                            <div className="pt-1.5 mt-1 border-t border-[#E5E1D8]/70 space-y-0.5">
-                              <div className="px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider text-[#A98B57] font-bold">
-                                Quick Select Client:
-                              </div>
-                              {clientsList.slice(0, 4).map((c) => {
-                                const isSelected = selectedClientDropdownKey === c.key;
-                                return (
-                                  <button
-                                    key={c.key}
-                                    type="button"
-                                    onClick={() => selectClientSubView("all", c.key)}
-                                    className={`w-full flex items-center justify-between px-2 py-1 rounded-lg text-[11px] transition-all cursor-pointer ${
-                                      isSelected
-                                        ? "bg-[#171717] text-white font-bold"
-                                        : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717]"
-                                    }`}
-                                  >
-                                    <span className="truncate max-w-[120px]">{c.name}</span>
-                                    <span className="text-[9px] font-mono text-[#8C827A]">
-                                      {c.orders.length} ord
-                                    </span>
-                                  </button>
-                                );
-                              })}
-                            </div>
                           )}
-                        </div>
-                      )}
                     </div>
                   );
                 }
@@ -2076,10 +1802,14 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
                   ? "Studio Dashboard"
                   : activeTab === "orders"
                   ? "Orders & Commissions Ledger"
-                  : activeTab === "cms"
-                  ? "Website Pages CMS & Editor"
+                  : activeTab === "leads"
+                  ? "AI Chat Inquiries & Inbound Leads"
                   : activeTab === "clients"
                   ? "Clients Directory"
+                  : activeTab === "promotions"
+                  ? "Meta AI Self-Promotion Studio"
+                  : activeTab === "cms"
+                  ? "Website Pages CMS & Editor"
                   : "Studio & Payment Settings"}
               </span>
             </div>
@@ -2482,207 +2212,7 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
                   </div>
                 </div>
 
-                {/* Orders / AI Chat Leads View Switcher */}
-                <div className="flex items-center gap-2 p-1 bg-[#FAF9F5] rounded-2xl border border-[#E5E1D8] w-fit">
-                  <button
-                    type="button"
-                    onClick={() => setOrdersSubTab("orders")}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
-                      ordersSubTab === "orders"
-                        ? "bg-[#171717] text-white shadow-xs"
-                        : "text-[#64748B] hover:text-[#171717]"
-                    }`}
-                  >
-                    <ShoppingBag className="w-3.5 h-3.5" />
-                    <span>Client Orders Ledger</span>
-                    <span
-                      className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                        ordersSubTab === "orders"
-                          ? "bg-white/20 text-white"
-                          : "bg-[#E5E1D8] text-[#5C3A1E]"
-                      }`}
-                    >
-                      {orders.length}
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setOrdersSubTab("leads")}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
-                      ordersSubTab === "leads"
-                        ? "bg-[#171717] text-white shadow-xs"
-                        : "text-[#64748B] hover:text-[#171717]"
-                    }`}
-                  >
-                    <MessageSquare className="w-3.5 h-3.5" />
-                    <span>AI Chat Inquiries &amp; Leads</span>
-                    <span
-                      className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        ordersSubTab === "leads"
-                          ? "bg-amber-400 text-stone-900"
-                          : "bg-amber-100 text-amber-900"
-                      }`}
-                    >
-                      {aiChatLeads.length}
-                    </span>
-                  </button>
-                </div>
-
-                {ordersSubTab === "leads" ? (
-                  /* ============================================================ */
-                  /* AI CHAT INQUIRIES & LEADS VIEW (ORDER NI JEM)                */
-                  /* ============================================================ */
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between gap-3 flex-wrap">
-                      <div className="relative flex-1 max-w-md w-full">
-                        <Search className="w-4 h-4 text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2" />
-                        <input
-                          type="text"
-                          placeholder="Search chat leads by client name, email, or question..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#FFFDF9] border border-[#E5E1D8] text-xs text-[#171717] focus:outline-none focus:border-[#A98B57]"
-                        />
-                      </div>
-                      <div className="text-xs text-[#64748B]">
-                        Showing <strong className="text-[#171717]">{aiChatLeads.length}</strong> active client inquiry lead(s)
-                      </div>
-                    </div>
-
-                    {isChatsLoading && clientConversations.length === 0 ? (
-                      <div className="p-12 text-center text-xs text-[#64748B] bg-[#FFFDF9] rounded-2xl border border-[#E5E1D8]">
-                        <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#A98B57] mb-2" />
-                        Loading AI chat inquiries &amp; conversation history...
-                      </div>
-                    ) : aiChatLeads.length === 0 ? (
-                      <div className="p-12 text-center text-xs text-[#64748B] bg-[#FFFDF9] rounded-2xl border border-[#E5E1D8] space-y-2">
-                        <MessageSquare className="w-8 h-8 text-[#94A3B8] mx-auto opacity-50" />
-                        <p className="font-semibold text-sm text-[#171717]">No AI chat inquiries found</p>
-                        <p>When clients interact with the Studio AI Assistant, their inquiries will appear here formatted as orders.</p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
-                        {aiChatLeads.map((conv) => {
-                          const lead = deriveLeadDetails(conv);
-                          return (
-                            <div
-                              key={conv.clientKey}
-                              className="p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-warm space-y-3 flex flex-col justify-between hover:border-[#A98B57]/60 transition-all"
-                            >
-                              <div className="space-y-3">
-                                <div className="flex items-center justify-between gap-2">
-                                  <span className="font-mono font-bold text-xs text-[#5C3A1E]">
-                                    INQ-{conv.clientKey.slice(-6).toUpperCase()}
-                                  </span>
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-50 text-purple-800 border border-purple-200">
-                                      AI Chat Lead
-                                    </span>
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                                      {lead.totalMessages} Msg
-                                    </span>
-                                  </div>
-                                </div>
-
-                                <div>
-                                  <h3 className="font-serif font-bold text-base text-[#171717]">
-                                    {conv.clientName || "Studio Client"}
-                                  </h3>
-                                  <p className="text-xs text-[#64748B]">{conv.clientEmail}</p>
-                                  {conv.clientPhone && (
-                                    <p className="text-[11px] text-[#A98B57] font-medium mt-0.5">
-                                      {conv.clientPhone}
-                                    </p>
-                                  )}
-                                </div>
-
-                                <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] flex items-center justify-between text-xs">
-                                  <div>
-                                    <span className="text-[#64748B] text-[10px] block">Service Intent:</span>
-                                    <span className="font-semibold text-[#171717]">{lead.intent}</span>
-                                  </div>
-                                  <div className="text-right">
-                                    <span className="text-[#64748B] text-[10px] block">Target Package:</span>
-                                    <span className="font-serif font-bold text-base text-[#5C3A1E]">
-                                      ₹{lead.estimatedPrice.toLocaleString("en-IN")}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                <div className="p-3 rounded-xl bg-white border border-[#E5E1D8] space-y-2 text-xs">
-                                  <div className="space-y-1">
-                                    <span className="text-[10px] font-bold text-[#A98B57] uppercase tracking-wider block">
-                                      Client Question / Brief:
-                                    </span>
-                                    <p className="text-[#171717] font-medium line-clamp-2 italic bg-[#FAF9F5] p-2 rounded-lg border border-[#E5E1D8]">
-                                      &ldquo;{lead.latestQuestion}&rdquo;
-                                    </p>
-                                  </div>
-
-                                  {lead.latestAnswer && (
-                                    <div className="space-y-1 pt-1 border-t border-[#E5E1D8]/60">
-                                      <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider block">
-                                        AI Studio Reply:
-                                      </span>
-                                      <p className="text-[#64748B] line-clamp-2 text-[11px]">
-                                        {lead.latestAnswer}
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-
-                              <div className="space-y-2 pt-3 border-t border-[#E5E1D8]">
-                                <div className="grid grid-cols-2 gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => setInspectingLead(conv)}
-                                    className="w-full py-2.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] flex items-center justify-center gap-1.5 hover:bg-[#F0ECE1] transition-colors cursor-pointer"
-                                  >
-                                    <Eye className="w-3.5 h-3.5" />
-                                    <span>Inspect Q&amp;A</span>
-                                  </button>
-
-                                  <Button
-                                    variant="primary"
-                                    size="sm"
-                                    className="w-full justify-center text-xs"
-                                    onClick={() =>
-                                      handleDispatchN8n({
-                                        id: `INQ-${conv.clientKey.slice(-6).toUpperCase()}`,
-                                        name: conv.clientName || "Studio Client",
-                                        email: conv.clientEmail || conv.clientKey,
-                                        phone: conv.clientPhone,
-                                        service: lead.intent,
-                                        brief: lead.latestQuestion,
-                                        price: lead.estimatedPrice,
-                                        outputType: lead.outputType,
-                                      })
-                                    }
-                                    leftIcon={<Play className="w-3 h-3" />}
-                                  >
-                                    Dispatch n8n
-                                  </Button>
-                                </div>
-
-                                <button
-                                  type="button"
-                                  onClick={() => handleConvertLeadToOrder(conv)}
-                                  className="w-full py-2 rounded-xl bg-white border border-[#E5E1D8] text-[11px] font-semibold text-[#171717] hover:bg-[#FAF9F5] hover:border-[#A98B57] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                                >
-                                  <Sparkles className="w-3 h-3 text-[#A98B57]" />
-                                  <span>Convert to Studio Order</span>
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
+                <div className="space-y-4">
                     {/* Search & Filter Toolbar */}
                 <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3.5">
                   <div className="relative flex-1 max-w-md w-full">
@@ -3015,8 +2545,198 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
                   </div>
                 )}
                   </div>
-                )}
               </div>
+            )}
+
+            {/* ============================================================ */}
+            {/* TAB: AI INBOUND LEADS & CHAT INQUIRIES                       */}
+            {/* ============================================================ */}
+            {activeTab === "leads" && (
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E5E1D8]">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="w-5 h-5 text-[#A98B57]" />
+                      <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#171717]">
+                        AI Chat Inquiries &amp; Inbound Leads
+                      </h1>
+                    </div>
+                    <p className="text-xs text-[#64748B] mt-1">
+                      Real-time client inquiries and prospective commission leads captured by the studio AI assistant.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#FAF9F5] border border-[#E5E1D8] text-[#5C3A1E]">
+                      {aiChatLeads.length} Active Leads
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => fetchClientChats()}
+                      disabled={isChatsLoading}
+                      className="px-3 py-1 rounded-full text-xs font-bold bg-[#171717] text-white flex items-center gap-1.5 hover:bg-[#262626] transition-colors cursor-pointer"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${isChatsLoading ? "animate-spin" : ""}`} />
+                      <span>Sync Leads</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div className="relative flex-1 max-w-md w-full">
+                      <Search className="w-4 h-4 text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder="Search chat leads by client name, email, or question..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#FFFDF9] border border-[#E5E1D8] text-xs text-[#171717] focus:outline-none focus:border-[#A98B57]"
+                      />
+                    </div>
+                    <div className="text-xs text-[#64748B]">
+                      Showing <strong className="text-[#171717]">{aiChatLeads.length}</strong> active client inquiry lead(s)
+                    </div>
+                  </div>
+
+                  {isChatsLoading && clientConversations.length === 0 ? (
+                    <div className="p-12 text-center text-xs text-[#64748B] bg-[#FFFDF9] rounded-2xl border border-[#E5E1D8]">
+                      <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#A98B57] mb-2" />
+                      Loading AI chat inquiries &amp; conversation history...
+                    </div>
+                  ) : aiChatLeads.length === 0 ? (
+                    <div className="p-12 text-center text-xs text-[#64748B] bg-[#FFFDF9] rounded-2xl border border-[#E5E1D8] space-y-2">
+                      <MessageSquare className="w-8 h-8 text-[#94A3B8] mx-auto opacity-50" />
+                      <p className="font-semibold text-sm text-[#171717]">No AI chat inquiries found</p>
+                      <p>When clients interact with the Studio AI Assistant, their inquiries will appear here formatted as orders.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+                      {aiChatLeads.map((conv) => {
+                        const lead = deriveLeadDetails(conv);
+                        return (
+                          <div
+                            key={conv.clientKey}
+                            className="p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-warm space-y-3 flex flex-col justify-between hover:border-[#A98B57]/60 transition-all"
+                          >
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="font-mono font-bold text-xs text-[#5C3A1E]">
+                                  INQ-{conv.clientKey.slice(-6).toUpperCase()}
+                                </span>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-50 text-purple-800 border border-purple-200">
+                                    AI Chat Lead
+                                  </span>
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                    {lead.totalMessages} Msg
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div>
+                                <h3 className="font-serif font-bold text-base text-[#171717]">
+                                  {conv.clientName || "Studio Client"}
+                                </h3>
+                                <p className="text-xs text-[#64748B]">{conv.clientEmail}</p>
+                                {conv.clientPhone && (
+                                  <p className="text-[11px] text-[#A98B57] font-medium mt-0.5">
+                                    {conv.clientPhone}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] flex items-center justify-between text-xs">
+                                <div>
+                                  <span className="text-[#64748B] text-[10px] block">Service Intent:</span>
+                                  <span className="font-semibold text-[#171717]">{lead.intent}</span>
+                                </div>
+                                <div className="text-right">
+                                  <span className="text-[#64748B] text-[10px] block">Target Package:</span>
+                                  <span className="font-serif font-bold text-base text-[#5C3A1E]">
+                                    ₹{lead.estimatedPrice.toLocaleString("en-IN")}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="p-3 rounded-xl bg-white border border-[#E5E1D8] space-y-2 text-xs">
+                                <div className="space-y-1">
+                                  <span className="text-[10px] font-bold text-[#A98B57] uppercase tracking-wider block">
+                                    Client Question / Brief:
+                                  </span>
+                                  <p className="text-[#171717] font-medium line-clamp-2 italic bg-[#FAF9F5] p-2 rounded-lg border border-[#E5E1D8]">
+                                    &ldquo;{lead.latestQuestion}&rdquo;
+                                  </p>
+                                </div>
+
+                                {lead.latestAnswer && (
+                                  <div className="space-y-1 pt-1 border-t border-[#E5E1D8]/60">
+                                    <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider block">
+                                      AI Studio Reply:
+                                    </span>
+                                    <p className="text-[#64748B] line-clamp-2 text-[11px]">
+                                      {lead.latestAnswer}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="space-y-2 pt-3 border-t border-[#E5E1D8]">
+                              <div className="grid grid-cols-2 gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setInspectingLead(conv)}
+                                  className="w-full py-2.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] flex items-center justify-center gap-1.5 hover:bg-[#F0ECE1] transition-colors cursor-pointer"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                  <span>Inspect Q&amp;A</span>
+                                </button>
+
+                                <Button
+                                  variant="primary"
+                                  size="sm"
+                                  className="w-full justify-center text-xs"
+                                  onClick={() =>
+                                    handleDispatchN8n({
+                                      id: `INQ-${conv.clientKey.slice(-6).toUpperCase()}`,
+                                      name: conv.clientName || "Studio Client",
+                                      email: conv.clientEmail || conv.clientKey,
+                                      phone: conv.clientPhone,
+                                      service: lead.intent,
+                                      brief: lead.latestQuestion,
+                                      price: lead.estimatedPrice,
+                                      outputType: lead.outputType,
+                                    })
+                                  }
+                                  leftIcon={<Play className="w-3 h-3" />}
+                                >
+                                  Dispatch n8n
+                                </Button>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => handleConvertLeadToOrder(conv)}
+                                className="w-full py-2 rounded-xl bg-white border border-[#E5E1D8] text-[11px] font-semibold text-[#171717] hover:bg-[#FAF9F5] hover:border-[#A98B57] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                              >
+                                <Sparkles className="w-3 h-3 text-[#A98B57]" />
+                                <span>Convert to Studio Order</span>
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ============================================================ */}
+            {/* TAB: META AI & STUDIO SELF-PROMOTION ENGINE                  */}
+            {/* ============================================================ */}
+            {activeTab === "promotions" && (
+              <MetaPromotionStudio />
             )}
 
             {/* ============================================================ */}
@@ -4029,11 +3749,11 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
                     <div className="flex items-center gap-2">
                       <Users className="w-5 h-5 text-[#A98B57]" />
                       <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#171717]">
-                        CRM Clients Directory &amp; AI Chats
+                        CRM Clients Directory
                       </h1>
                     </div>
                     <p className="text-xs text-[#64748B] mt-1">
-                      Authentic client profiles, real verified orders, and full AI chatbot conversation histories.
+                      Authentic client profiles, verified lifetime value (LTV), and individual commission history.
                     </p>
                   </div>
 
@@ -4057,7 +3777,7 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
                 </div>
 
                 {/* ============================================================ */}
-                {/* CLIENT SELECTOR DROPDOWN (Direct Client + Orders + AI Chat) */}
+                {/* CLIENT SELECTOR DROPDOWN (Direct Client Profile & Orders)    */}
                 {/* ============================================================ */}
                 <div className="p-4 sm:p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-warm space-y-3">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -4067,10 +3787,10 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
                       </div>
                       <div>
                         <label htmlFor="client-selector" className="text-xs font-bold text-[#171717] block">
-                          Client Selector (Orders &amp; AI Chat Logs):
+                          Client Selector:
                         </label>
                         <p className="text-[11px] text-[#64748B]">
-                          Choose a client from the dropdown to inspect their profile, original orders, and live AI chatbot messages.
+                          Choose a client from the dropdown to inspect their profile and commission history.
                         </p>
                       </div>
                     </div>
