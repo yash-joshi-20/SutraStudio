@@ -2,28 +2,8 @@
 
 import React, { createContext, useContext, useEffect, useState, useTransition } from "react";
 
-export interface CmsContent {
-  theme?: {
-    accentColor?: string;
-    bodyBgColor?: string;
-    bodyBgImage?: string;
-    bodyFont?: string;
-    headingFont?: string;
-    texturePattern?: "none" | "subtle-dots" | "warm-grain" | "grid";
-    navbarBgColor?: string;
-    footerBgColor?: string;
-  };
-  hero?: any;
-  about?: any;
-  services?: any;
-  pricing?: any;
-  contact?: any;
-  header?: any;
-  footer?: any;
-  branding?: any;
-  payment?: any;
-  [key: string]: any;
-}
+import { DEFAULT_SITE_CONTENT, type CmsContent } from "@/config/siteContent";
+export type { CmsContent };
 
 interface CmsContextValue {
   cmsData: CmsContent | null;
@@ -33,8 +13,8 @@ interface CmsContextValue {
 }
 
 const CmsContext = createContext<CmsContextValue>({
-  cmsData: null,
-  loading: true,
+  cmsData: DEFAULT_SITE_CONTENT,
+  loading: false,
   applyLiveCms: () => {},
   refreshCms: async () => {},
 });
@@ -42,8 +22,8 @@ const CmsContext = createContext<CmsContextValue>({
 export const useCms = () => useContext(CmsContext);
 
 export function CmsThemeProvider({ children }: { children: React.ReactNode }) {
-  const [cmsData, setCmsData] = useState<CmsContent | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [cmsData, setCmsData] = useState<CmsContent | null>(DEFAULT_SITE_CONTENT);
+  const [loading, setLoading] = useState(false);
   const [, startTransition] = useTransition();
 
   const applyThemeVariables = (data: CmsContent) => {
@@ -63,13 +43,13 @@ export function CmsThemeProvider({ children }: { children: React.ReactNode }) {
       document.body.style.backgroundColor = theme.bodyBgColor;
     }
 
-    // Dynamic Google Fonts Loading if needed
+    // Dynamic Google Fonts Loading if needed (Inter and Playfair are already loaded locally)
     const fontsToLoad: string[] = [];
     if (theme.bodyFont && !["Inter", "Arial", "sans-serif"].includes(theme.bodyFont)) {
       fontsToLoad.push(theme.bodyFont);
       root.style.setProperty("--font-body-family", `"${theme.bodyFont}", sans-serif`);
     }
-    if (theme.headingFont && !["Playfair Display", "Times New Roman", "serif"].includes(theme.headingFont)) {
+    if (theme.headingFont && !["Inter", "Playfair Display", "Times New Roman", "serif"].includes(theme.headingFont)) {
       fontsToLoad.push(theme.headingFont);
       root.style.setProperty("--font-heading-family", `"${theme.headingFont}", serif`);
     }

@@ -13,7 +13,6 @@ import { BackgroundVideo } from "@/components/media/BackgroundVideo";
 import { VideoCard } from "@/components/media/VideoCard";
 import { SutraParticleWings } from "@/components/canvas/SutraParticleWings";
 import { LotusSymbol } from "@/components/brand/SutraLogo";
-import { SutraStudioIntroLanding } from "@/components/motion/SutraStudioIntroLanding";
 import { CustomDropdown } from "@/components/ui/CustomDropdown";
 import { MainServiceCard } from "@/components/services/MainServiceCard";
 import { PricingCatalogSection } from "@/components/pricing/PricingCatalogSection";
@@ -59,6 +58,38 @@ const HERO_DISCIPLINES = MAIN_SERVICES.map((service) => ({
   href: `/services/${service.slug}`,
 }));
 
+/**
+ * Renders the hero display headline with the SUTRA STUDIO signature
+ * golden gradient applied to the anchor word ("Tradition" or leading word).
+ * Prevents FOUC or collapsing to a single solid color on hydration or CMS updates.
+ */
+function renderHeroHeadline(title?: string) {
+  const canonicalTitle = "Tradition Meets Modern Creative Technology";
+  const raw = title && title.trim() ? title.trim() : canonicalTitle;
+
+  if (raw.startsWith("Tradition")) {
+    const remainder = raw.slice("Tradition".length);
+    return (
+      <>
+        <span className="text-gold-gradient font-bold">Tradition</span>
+        {remainder}
+      </>
+    );
+  }
+
+  const parts = raw.split(" ");
+  if (parts.length > 1) {
+    return (
+      <>
+        <span className="text-gold-gradient font-bold">{parts[0]}</span>{" "}
+        {parts.slice(1).join(" ")}
+      </>
+    );
+  }
+
+  return <span className="text-gold-gradient font-bold">{raw}</span>;
+}
+
 export default function HomePage() {
   const { cmsData } = useCms();
   const heroData = cmsData?.hero;
@@ -77,9 +108,6 @@ export default function HomePage() {
 
   return (
     <div className="flex-1 flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
-      {/* First-Visit Atelier Cinematic Landing Splash with Animated 'S' Emblem */}
-      <SutraStudioIntroLanding />
-
       <main id="main-content" className="flex-1 pb-28 md:pb-0 overflow-x-hidden">
         {/* ===================================================
             1. HERO SECTION (Clean White / Warm Ivory Luxury Atelier)
@@ -113,13 +141,7 @@ export default function HomePage() {
 
                   {/* Main Display Headline */}
                   <h1 className="hero-heading font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold leading-[1.06] tracking-tight text-[#0F172A]">
-                    {heroData?.title ? (
-                      heroData.title
-                    ) : (
-                      <>
-                        <span className="text-gold-gradient font-bold">Tradition</span> Meets Modern Creative Technology
-                      </>
-                    )}
+                    {renderHeroHeadline(heroData?.title)}
                   </h1>
 
                   {/* Subtitle */}
