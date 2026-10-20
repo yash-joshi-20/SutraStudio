@@ -74,14 +74,15 @@ export const MAIN_SERVICES: readonly MainServiceDefinition[] = [
     slug: "video-creation",
     title: "Video Creation",
     shortDescription:
-      "AI videos, promotional advertisements, Instagram Reels and short-form video editing.",
+      "Brand films, commercial reels, promotional advertisements, and short-form video editing.",
     description:
-      "Cinematic short-form video built for attention — AI-generated product videos, promotional advertisements, Instagram Reels, and tightly edited shorts with motion typography, colour grading and sound design.",
+      "Cinematic short-form video engineered for high audience retention — commercial product reels, brand advertisements, Instagram Reels, and studio-edited shorts with motion typography, cinematic color grading, and bespoke sound design.",
     examples: [
-      "AI videos",
+      "Commercial product reels",
       "Promotional advertisements",
-      "Instagram Reels",
+      "Instagram Reels & Shorts",
       "Short-form video editing",
+      "Brand films & teasers",
     ],
     icon: "video",
     heroLabel: "Promotional Reels & Shorts",

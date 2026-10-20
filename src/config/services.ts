@@ -188,7 +188,7 @@ export const CANONICAL_SERVICES: CanonicalServiceItem[] = [
     exclusions: ["Physical product studio photography excluded"],
     icon: "Image",
     thumbnail: "/images/services/image-creation.webp",
-    badge: "AI Product Staging",
+    badge: "Product Staging",
     mediaType: "image",
     mediaFormat: "4K UHD PNG (3840×2160)",
     pipelineEngine: "Commercial Visual Production",
@@ -560,10 +560,10 @@ export const CANONICAL_SERVICES: CanonicalServiceItem[] = [
   {
     id: "vid-ai-product-reel",
     slug: "ai-product-reel-30s",
-    name: "AI-Assisted Product Reel (15–30s)",
+    name: "Cinematic Product Showcase Reel (15–30s)",
     category: "Video",
     tagline: "Cinematic 3D Product Ad Reel",
-    description: "Cinematic product showcase featuring AI camera motion, realistic 3D staging, and voiceover.",
+    description: "Cinematic product showcase featuring dynamic camera motion, realistic 3D staging, and voiceover.",
     numericPrice: 799,
     pricingType: "per_unit",
     startingPrice: "₹799",
@@ -574,10 +574,10 @@ export const CANONICAL_SERVICES: CanonicalServiceItem[] = [
     ctaTarget: "/orders?service=ai-product-reel-30s",
     deliverables: [
       "1x 15–30s Cinematic Product Reel",
-      "AI camera motion & dynamic perspective passes",
+      "Dynamic multi-angle camera motion & perspective passes",
       "Natural voiceover narration sync & sound mastering",
     ],
-    subBullets: ["1x 15–30s Product Reel", "Dynamic AI camera motion", "Voiceover sync"],
+    subBullets: ["1x 15–30s Product Reel", "Dynamic 3D camera staging", "Voiceover sync"],
     quantity: 1,
     duration: "One-time delivery",
     revisionPolicy: "1 revision round",
@@ -586,7 +586,7 @@ export const CANONICAL_SERVICES: CanonicalServiceItem[] = [
     exclusions: ["On-location live video shoot excluded"],
     icon: "Video",
     thumbnail: "/images/services/video-creation.webp",
-    badge: "AI Product Reel",
+    badge: "Cinematic Reel",
     mediaType: "video",
     mediaFormat: "4K MP4 (9:16 & 16:9)",
     pipelineEngine: "Cinematic Motion Production",
@@ -2108,10 +2108,10 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
   ) {
     return {
       intendedAudience:
-        "D2C Brands, E-Commerce Stores, Marketing Agencies, and Retail Brands requiring high-converting visual creative.",
+        "D2C Brands, E-Commerce Retailers, Creative Agencies, and Consumer Brands requiring high-converting visual creative.",
       pricingUnit: slug.includes("pack") ? "per bundle" : "per graphic",
       dimensionsSpecs:
-        "1080×1080 (1:1 Feed Square), 1080×1350 (4:5 Portrait), 3840×2160 (4K UHD) | PNG & WebP (RGB, 300 DPI)",
+        "Multi-Ratio Production Suite: 1:1 Square Feed, 4:5 Mobile Portrait & Ultra-HD 4K Staging | Master PNG & WebP (300 DPI Print & Digital Quality)",
       clientInputs: [
         "Brand logo in vector (SVG) or transparent high-res PNG format",
         "Raw product packshots or reference imagery (if product-specific)",
@@ -2121,18 +2121,18 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
       productionSteps: [
         {
           step: 1,
-          title: "Brief & Demographic Research",
-          desc: "Analyze brand visual guidelines, audience demographics, and high-converting visual trends.",
+          title: "Creative Brief & Market Research",
+          desc: "Analyze brand visual guidelines, target customer demographics, and category visual trends.",
         },
         {
           step: 2,
-          title: "Prompt Architecture & Creative Direction",
-          desc: "Structure tailored visual direction, studio lighting setups, and composition parameters.",
+          title: "Art Direction & Composition",
+          desc: "Establish tailored creative direction, studio lighting setups, color palettes, and framing rules.",
         },
         {
           step: 3,
-          title: "High-Fidelity 4K Production",
-          desc: "Produce photorealistic multi-angle visuals and lifestyle ambient staging in ultra-high resolution.",
+          title: "Ultra-HD Visual Production",
+          desc: "Produce photorealistic multi-angle visuals and ambient lifestyle staging in high resolution.",
         },
         {
           step: 4,
@@ -2141,14 +2141,14 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         },
         {
           step: 5,
-          title: "Cloud Deliverables Vault Delivery",
+          title: "Private Vault Delivery",
           desc: "Sync final master assets and web-optimized exports directly to your private Google Drive vault.",
         },
       ],
       customQuoteConditions:
-        "Bulk product catalogs exceeding 20 SKUs, multi-model lifestyle sets, or physical product staging require a custom studio quote.",
+        "Bulk product catalogs exceeding 20 SKUs, multi-model lifestyle sets, or physical on-site staging require a custom studio quote.",
       sampleDisclaimer:
-        "✦ STUDIO SAMPLE / SPECULATIVE PROTOTYPE — Visual demonstration of studio technical capability; not a client-contracted endorsement.",
+        "✦ SUTRA STUDIO QUALITY GUARANTEE — Every visual asset is delivered with dedicated art direction, color calibration, and commercial usage rights.",
     };
   }
 
@@ -2166,12 +2166,12 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         "Content Creators, D2C Founders, Social Media Marketers, and Performance Advertising Teams.",
       pricingUnit: slug.includes("pack") ? "per bundle" : "per video edit / reel",
       dimensionsSpecs:
-        "9:16 Vertical (1080×1920 Reels/TikTok/Shorts) & 16:9 Landscape (1920×1080 / 4K UHD) | MP4 / ProRes 422 (60fps)",
+        "High-Definition Multi-Format Suite: 9:16 Vertical Reels & Shorts + 16:9 Landscape 4K Master | Studio MP4 & Apple ProRes 422 Mastering (60 FPS)",
       clientInputs: [
         "Raw video clips, unboxing footage, or product still images",
         "Script draft, talking points, or key value propositions",
         "Brand logo, preferred font styles, and brand guidelines",
-        "Voiceover preference (AI studio narrator, human voiceover, or instrumental only)",
+        "Voiceover preference (Studio narration, professional voice talent, or cinematic instrumental only)",
       ],
       productionSteps: [
         {
@@ -2187,7 +2187,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         {
           step: 3,
           title: "Multi-Track Motion Assembly",
-          desc: "Fast-paced video cutting, kinetic typography, b-roll insertions, and color grading.",
+          desc: "Dynamic video cutting, kinetic typography, b-roll insertions, and color grading.",
         },
         {
           step: 4,
@@ -2196,14 +2196,14 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         },
         {
           step: 5,
-          title: "Cloud Deliverables Vault Delivery",
-          desc: "Sync vertical reels and landscape cuts to your private Google Drive deliverables vault.",
+          title: "Private Vault Delivery",
+          desc: "Sync vertical reels and landscape cuts directly to your private Google Drive deliverables vault.",
         },
       ],
       customQuoteConditions:
         "Multi-location physical shoots, on-camera actor hiring, and full-length documentary/podcast edits are quoted on custom request.",
       sampleDisclaimer:
-        "✦ STUDIO SAMPLE / SPECULATIVE PROTOTYPE — Demonstration of video pacing, audio grading, and motion graphics; presented for aesthetic reference.",
+        "✦ SUTRA STUDIO QUALITY GUARANTEE — Commercial video deliverables undergo professional pacing review, loudness compliance, and high-fidelity rendering.",
     };
   }
 
@@ -2219,7 +2219,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         "Hardware Tech Startups, Luxury Goods Brands, Consumer Packaged Goods, and Industrial Product Designers.",
       pricingUnit: slug.includes("animation") ? "per 10s animation" : "per 3D model / render",
       dimensionsSpecs:
-        "glTF 2.0, USDZ, OBJ, FBX | 4K PBR Textures (Albedo, Normal, Roughness, Metalness) | Web-optimized mesh budget (<25MB)",
+        "Universal Spatial 3D Suite: glTF 2.0, USDZ (Apple AR), FBX & OBJ | 4K Physically Based Rendering (PBR) Texture Suite & Web-Optimized Mesh Topology",
       clientInputs: [
         "Orthographic product dimension drawings or engineering blueprints (.step or .dwg if available)",
         "Reference photographs from front, side, top, and perspective angles",
@@ -2230,7 +2230,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         {
           step: 1,
           title: "Topology & Mesh Construction",
-          desc: "Construct clean low/mid-poly polygonal geometry with proper edge-flow.",
+          desc: "Construct clean low/mid-poly polygonal geometry with proper edge-flow and quad topology.",
         },
         {
           step: 2,
@@ -2240,7 +2240,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         {
           step: 3,
           title: "Studio Lighting & Turntable Staging",
-          desc: "Configure multi-light studio environment, HDRI reflections, and camera framing.",
+          desc: "Configure multi-light studio environment, HDRI reflections, and cinematic camera framing.",
         },
         {
           step: 4,
@@ -2249,14 +2249,14 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         },
         {
           step: 5,
-          title: "Drive Vault Handover",
+          title: "Private Vault Handover",
           desc: "Deliver 3D model packages, texture maps, and rendered stills to your private cloud storage.",
         },
       ],
       customQuoteConditions:
         "Complex organic character sculpting, mechanical simulations with >100 sub-parts, or rigged character animations require custom quote.",
       sampleDisclaimer:
-        "✦ STUDIO SAMPLE / SPECULATIVE PROTOTYPE — Interactive WebGL PBR model demonstration; presented for aesthetic reference.",
+        "✦ SUTRA STUDIO QUALITY GUARANTEE — Production 3D assets undergo mesh verification, clean topology checks, and cross-platform AR/Web testing.",
     };
   }
 
@@ -2271,7 +2271,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         "Real Estate Developers, Boutique Hotels & Resorts, Luxury Interior Showrooms, and Architecture Studios.",
       pricingUnit: "per interactive tour",
       dimensionsSpecs:
-        "8K Equirectangular Spherical Panoramas (8192×4096 HDR) | WebXR HTML5 Responsive Embed",
+        "Ultra-High-Definition 8K Equirectangular Spatial Panoramas (8192×4096 HDR) | WebXR HTML5 Responsive Spatial Engine & Standalone Embed Suite",
       clientInputs: [
         "Supplied 360° camera panoramas (or on-site access within local studio perimeter)",
         "Architectural floor plan schematic for spatial navigation map",
@@ -2308,7 +2308,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
       customQuoteConditions:
         "Travel outside local radius, massive multi-building campuses (>15 nodes), or drone aerial 360 captures quoted on request.",
       sampleDisclaimer:
-        "✦ STUDIO SAMPLE / SPECULATIVE PROTOTYPE — Interactive equirectangular spatial sample; demonstration only.",
+        "✦ SUTRA STUDIO QUALITY GUARANTEE — Spatial tours include multi-node walkthrough linking, mobile gyroscope calibration, and custom interactive markers.",
     };
   }
 
@@ -2326,7 +2326,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         "Architects, Interior Designers, Real Estate Developers, and Furniture/Fitout Manufacturers.",
       pricingUnit: slug.includes("single-room") ? "per room" : "per render view",
       dimensionsSpecs:
-        "3840×2160 (4K UHD) & 5120×2880 (5K) | PNG / TIFF Suite (300 DPI Print-Ready)",
+        "Architectural Presentation Suite: 4K UHD (3840×2160) & 5K Resolution Renders | Master TIFF & PNG Suite (300 DPI Architectural Print-Ready)",
       clientInputs: [
         "2D Floor plans or CAD elevations with ceiling heights (.dwg, .pdf, or annotated sketches)",
         "Mood board or visual references for furniture style, materials, and color palette",
@@ -2363,7 +2363,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
       customQuoteConditions:
         "Large commercial developments, high-rise exterior facades, or animated architectural walkthroughs quoted on request.",
       sampleDisclaimer:
-        "✦ STUDIO SAMPLE / SPECULATIVE PROTOTYPE — 4K Interior CGI visualization sample; demonstration only.",
+        "✦ SUTRA STUDIO QUALITY GUARANTEE — Architectural renders feature calibrated photometric lighting, physical material mapping, and art-directed framing.",
     };
   }
 
@@ -2378,10 +2378,10 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
   ) {
     return {
       intendedAudience:
-        "E-Commerce Founders, Performance Marketers, Direct-to-Consumer Brands, and Local Service Providers.",
+        "E-Commerce Founders, Performance Marketers, Direct-to-Consumer Brands, and Commercial Service Providers.",
       pricingUnit: slug.includes("management") ? "per month" : "per campaign pack",
       dimensionsSpecs:
-        "1:1 Square (1080×1080), 9:16 Story/Reel (1080×1920), 4:5 Feed (1080×1350) | Copywriting Markdown & PDF",
+        "Campaign Asset Suite: Multi-Placement Ad Creatives (1:1 Feed, 9:16 Stories/Reels, 4:5 Mobile) | Strategic Copy Matrix, Hooks & Implementation Guide",
       clientInputs: [
         "Meta Business Manager or ad account ID (for setup/pixel checks)",
         "Core offer details, pricing, discount codes, and landing page URLs",
@@ -2391,8 +2391,8 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
       productionSteps: [
         {
           step: 1,
-          title: "Competitor & Angle Research",
-          desc: "Analyze Meta Ad Library for top competitor creatives, hooks, and audience resonance.",
+          title: "Market Analysis & Creative Angle Strategy",
+          desc: "Analyze industry benchmarks for high-performing hooks, value propositions, and audience resonance.",
         },
         {
           step: 2,
@@ -2407,18 +2407,18 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         {
           step: 4,
           title: "Policy Compliance & Tracking Verification",
-          desc: "Verify Meta advertising policies, text-to-image ratios, CTA clarity, and UTM attribution.",
+          desc: "Verify platform advertising policies, text-to-image ratios, CTA clarity, and UTM attribution.",
         },
         {
           step: 5,
-          title: "Campaign Launch / Vault Delivery",
+          title: "Campaign Delivery Vault Handover",
           desc: "Deliver production ad creative packages and copy matrices directly to your workspace.",
         },
       ],
       customQuoteConditions:
         "Direct media spend paid to Meta is strictly excluded; enterprise multi-channel ad management (>₹2L monthly spend) quoted on request.",
       sampleDisclaimer:
-        "✦ STUDIO SAMPLE / SPECULATIVE PROTOTYPE — Meta ad creative showcase; demonstration only.",
+        "✦ SUTRA STUDIO QUALITY GUARANTEE — Ad creative packages comply with platform guidelines, conversion-focused design standards, and verified UTM tagging.",
     };
   }
 
@@ -2431,15 +2431,15 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
   ) {
     return {
       intendedAudience:
-        "Growing Startups, D2C Brands, Professional Practices, and Premium Creative Agencies.",
+        "Growing Startups, D2C Brands, Professional Practices, and Premium Creative Studios.",
       pricingUnit: "per website project",
       dimensionsSpecs:
-        "Responsive Web (Mobile 360px to Ultrawide 2560px) | Next.js 16 App Router / TypeScript / Tailwind CSS",
+        "Modern Responsive Web Platform: Engineered for Mobile (360px) through Ultrawide Displays (4K) | Next.js App Router, TypeScript & Tailwind Architecture",
       clientInputs: [
         "Domain registrar login or DNS management access (Cloudflare, GoDaddy, Namecheap)",
         "Brand logo, color palette, and high-resolution media assets",
         "Written page copy (or outline for our team to refine)",
-        "Product catalog details and payment gateway keys (Razorpay/Stripe) if e-commerce",
+        "Product catalog details and payment gateway configuration requirements (Razorpay, Stripe, or Cashfree) if e-commerce",
       ],
       productionSteps: [
         {
@@ -2471,23 +2471,23 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
       customQuoteConditions:
         "Custom multi-vendor marketplaces, legacy database migrations, and complex headless CMS architectures require custom quote.",
       sampleDisclaimer:
-        "✦ STUDIO SAMPLE / SPECULATIVE PROTOTYPE — Next.js responsive website showcase; demonstration only.",
+        "✦ SUTRA STUDIO QUALITY GUARANTEE — Websites are delivered with clean modular source code, technical SEO configuration, and responsive cross-browser testing.",
     };
   }
 
-  // 8. Web App Prototype
+  // 8. Web App Development
   if (slug === "web-app-development" || slug === "web-app-prototype") {
     return {
       intendedAudience:
         "Tech Entrepreneurs, SaaS Founders, Operations Teams, and Digital Product Studios.",
-      pricingUnit: "per application MVP / prototype",
+      pricingUnit: "per application MVP / release",
       dimensionsSpecs:
-        "Full-Stack Web App | Next.js 16 / TypeScript / Firebase Auth / Cloud Firestore / Cloud Functions",
+        "Production-Grade Full-Stack Architecture: Next.js App Router, TypeScript, Cloud Authentication, Real-Time Database & Serverless Functions",
       clientInputs: [
         "Product feature brief, user story document, or wireframe concept",
         "User roles and permission hierarchy requirements (Client, Admin, Member)",
-        "Data structure and field specifications",
-        "Required business service accounts (Payment gateways, transactional email, SMS)",
+        "Data structure and business workflow specifications",
+        "Required business service integrations (Payment gateways, transactional email, SMS notifications)",
       ],
       productionSteps: [
         {
@@ -2519,20 +2519,20 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
       customQuoteConditions:
         "Multi-tenant enterprise SaaS with dedicated isolated databases or high-throughput microservices require bespoke quote.",
       sampleDisclaimer:
-        "✦ STUDIO SAMPLE / SPECULATIVE PROTOTYPE — SaaS client portal prototype sample; demonstration only.",
+        "✦ SUTRA STUDIO QUALITY GUARANTEE — Application platforms feature authenticated workflows, database schema validation, and secure cloud deployment.",
     };
   }
 
-  // 9. Mobile App UI Prototype
+  // 9. Mobile App UI Architecture
   if (slug === "mobile-app-setup" || slug === "mobile-app-prototype") {
     return {
       intendedAudience:
         "Mobile Startups, App Creators, E-Commerce Brands, and Service Businesses launching iOS & Android apps.",
-      pricingUnit: "per mobile UI prototype",
+      pricingUnit: "per mobile application system",
       dimensionsSpecs:
-        "Mobile Viewports (iOS 393×852, Android 360×800) | React Native Expo / TypeScript Component Tokens",
+        "Native Cross-Platform Mobile Suite: Dual iOS & Android Viewports | React Native Expo Framework, Reusable TypeScript Component Library & Design Tokens",
       clientInputs: [
-        "App concept summary, target user personas, and core 3–6 user flow screens",
+        "App concept summary, target user personas, and core user flow screens",
         "Brand visual guidelines, preferred app icon ideas, and color palettes",
         "Design references of benchmark mobile apps you admire",
         "Expo / React Native preference and device test requirements",
@@ -2567,7 +2567,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
       customQuoteConditions:
         "Apple App Store & Google Play Store developer account management and third-party approval warranties excluded.",
       sampleDisclaimer:
-        "✦ STUDIO SAMPLE / SPECULATIVE PROTOTYPE — Mobile application UI prototype sample; demonstration only.",
+        "✦ SUTRA STUDIO QUALITY GUARANTEE — Mobile applications include responsive safe-area handling, intuitive touch navigation, and production component structure.",
     };
   }
 
@@ -2580,10 +2580,10 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
   ) {
     return {
       intendedAudience:
-        "Social Media Managers, Growth Agencies, Founders, and Content Creators seeking high viral leverage.",
+        "Social Media Directors, Growth Agencies, Founders, and Brands seeking consistent market engagement.",
       pricingUnit: slug.includes("calendar") ? "per 30-day calendar" : "per research dossier",
       dimensionsSpecs:
-        "Interactive Notion / Google Sheet Matrix & Executive Presentation PDF (1080×1350 for carousels)",
+        "Strategic Intelligence Dossier: Interactive Workspace Matrix (Spreadsheet / Notion) & Executive Presentation Brief (with Carousel Creative Blueprints)",
       clientInputs: [
         "Brand industry niche, primary social channels (Instagram, LinkedIn, X, YouTube)",
         "Current customer demographic profile and primary products/services",
@@ -2593,8 +2593,8 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
       productionSteps: [
         {
           step: 1,
-          title: "Real-Time Social Trend Mining",
-          desc: "Scan algorithmic velocity, trending audio tracks, viral hooks, and breaking search trends.",
+          title: "Market & Trend Intelligence",
+          desc: "Analyze industry velocity, trending audio patterns, high-performing hooks, and emerging search topics.",
         },
         {
           step: 2,
@@ -2620,7 +2620,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
       customQuoteConditions:
         "Content visual creative production excluded unless bundled with Daily Trend Creator (₹19,999) or standalone image/video packs.",
       sampleDisclaimer:
-        "✦ STUDIO SAMPLE / SPECULATIVE PROTOTYPE — Trend intelligence dossier sample; demonstration only.",
+        "✦ SUTRA STUDIO QUALITY GUARANTEE — Content strategies are rooted in verified market intelligence, structured copywriting frameworks, and actionable publishing schedules.",
     };
   }
 
@@ -2628,7 +2628,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
   return {
     intendedAudience: "Brands, Creators, and Businesses seeking premium studio deliverables.",
     pricingUnit: service.pricingType === "per_unit" ? "per item" : "per project",
-    dimensionsSpecs: service.mediaFormat || "Master 4K / High-Resolution Digital Deliverables",
+    dimensionsSpecs: service.mediaFormat || "Master High-Resolution Studio Deliverables & Production Assets",
     clientInputs: [
       "Brand logo and visual identity assets",
       "Project specifications, requirements, and reference links",
@@ -2644,6 +2644,6 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
     customQuoteConditions:
       "Scopes exceeding standard deliverable quotas or multi-team enterprise requirements require a bespoke quote.",
     sampleDisclaimer:
-      "✦ STUDIO PORTFOLIO SHOWCASE — Visual demonstration of studio creative capability; presented for aesthetic reference.",
+      "✦ SUTRA STUDIO QUALITY GUARANTEE — Studio deliverables undergo structured art direction, milestone reviews, and secure private vault delivery.",
   };
 }

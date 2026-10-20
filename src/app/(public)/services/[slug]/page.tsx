@@ -158,12 +158,6 @@ export default async function ServiceDetailPage({
             <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#0F172A] leading-tight">
               {service.name}
             </h1>
-            <p className="text-xs text-[#64748B] mb-2">
-              Studio Sample
-            </p>
-            <p className="text-xs text-[#64748B] mb-2">
-              Exclusions
-            </p>
             <p className="text-base lg:text-lg text-[#64748B] leading-relaxed max-w-2xl">
               {service.tagline || service.description}
             </p>
@@ -327,20 +321,18 @@ export default async function ServiceDetailPage({
         </div>
       </section>
 
-      {/* Studio Samples & Use Cases — main services only (clearly labeled samples) */}
+      {/* Studio Showcase & Use Cases — main services only */}
       {mainService && (
         <section className="py-12 border-b border-[#EADFCB]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
             <div className="space-y-4">
               <h2 className="text-xs font-bold uppercase tracking-wider text-[#A98B57] flex items-center gap-1.5">
                 <Sparkles className="w-4 h-4 text-[#D4A35A]" />
-                Studio Samples &amp; Typical Use Cases
+                Studio Production Showcase &amp; Typical Use Cases
               </h2>
               <p className="text-sm text-[#64748B] max-w-3xl leading-relaxed">
-                The previews below are clearly labeled studio samples that
-                demonstrate our production quality for{" "}
-                <strong className="text-[#5C3A1E]">{mainService.title}</strong> —
-                they are illustrative demonstrations, not client project claims.
+                Explore interactive production benchmarks and media prototypes crafted by Sutra Studio for{" "}
+                <strong className="text-[#5C3A1E]">{mainService.title}</strong> to review our composition, lighting fidelity, and motion craft.
               </p>
             </div>
 
@@ -350,33 +342,33 @@ export default async function ServiceDetailPage({
                 <Interactive3DViewer
                   height="380px"
                   title={`${service.name} • 3D Mesh`}
-                  subtitle="Interactive WebGL 2.0 PBR Orbit — Studio Sample"
+                  subtitle="Interactive WebGL 2.0 PBR Orbit — Studio Showcase"
                   allowPresetSwitch={true}
                 />
               ) : service.mediaType === "360" ? (
                 <PanoramicTourViewer
                   height="380px"
                   title={`${service.name} • 360° VR`}
-                  subtitle="Interactive Equirectangular Spatial Tour — Studio Sample"
+                  subtitle="Interactive Equirectangular Spatial Tour — Studio Showcase"
                 />
               ) : usesWebShowcase ? (
                 <DeviceMockupShowcase initialMode="laptop" />
               ) : service.mediaType === "video" ? (
                 <VideoCard
                   video="service-ai-video"
-                  badgeText={`${service.category.toUpperCase()} REEL SAMPLE`}
+                  badgeText={`${service.category.toUpperCase()} PRODUCTION SHOWCASE`}
                   allowExpand
                 />
               ) : (
                 <div className="relative aspect-video w-full">
                   <Image
                     src={service.thumbnail}
-                    alt={`${service.name} studio sample`}
+                    alt={`${service.name} studio showcase`}
                     fill
                     className="object-cover"
                   />
                   <span className="absolute top-4 left-4 rounded-md bg-black/60 backdrop-blur-sm px-2.5 py-1 text-[10px] font-mono font-medium text-white/90 tracking-wider uppercase border border-white/10">
-                    Studio Sample
+                    Studio Showcase
                   </span>
                 </div>
               )}
@@ -475,21 +467,31 @@ export default async function ServiceDetailPage({
             </ul>
           </div>
 
-          <div className="p-5 rounded-3xl bg-[#F8F5EF] border border-[#EADFCB] space-y-2">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-[#A98B57] flex items-center gap-1.5">
-              <Layers className="w-4 h-4 text-[#D4A35A]" />
-              Master Deliverable Formats &amp; Dimensions
-            </h2>
-            <p className="text-sm text-[#0F172A] font-mono leading-relaxed">
+          <div className="p-6 rounded-3xl bg-[#F8F5EF] border border-[#EADFCB] space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[#A98B57] flex items-center gap-1.5">
+                <Layers className="w-4 h-4 text-[#D4A35A]" />
+                Master Deliverable Specifications &amp; Quality Standards
+              </h2>
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-[#EADFCB]/60 px-2.5 py-0.5 text-[11px] font-semibold text-[#5C3A1E]">
+                  Studio Master Grade
+                </span>
+                <span className="rounded-full bg-[#EADFCB]/60 px-2.5 py-0.5 text-[11px] font-semibold text-[#5C3A1E]">
+                  Commercial Rights
+                </span>
+              </div>
+            </div>
+            <p className="text-sm font-medium text-[#0F172A] leading-relaxed">
               {spec.dimensionsSpecs}
             </p>
           </div>
 
           {service.exclusions.length > 0 && (
-            <div className="p-5 rounded-3xl bg-[#FAF9F5] border border-[#EADFCB] space-y-2">
+            <div className="p-6 rounded-3xl bg-[#FAF9F5] border border-[#EADFCB] space-y-3">
               <h2 className="text-xs font-bold uppercase tracking-wider text-[#C2761A] flex items-center gap-1.5">
                 <Clock className="w-4 h-4 text-[#C2761A]" />
-                Exclusions
+                Scope Boundaries &amp; Specific Exclusions
               </h2>
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-[#475569]">
                 {service.exclusions.map((item, idx) => (
@@ -509,8 +511,7 @@ export default async function ServiceDetailPage({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
           <h2 className="text-xs font-bold uppercase tracking-wider text-[#5C3A1E] flex items-center gap-1.5">
             <Sparkles className="w-4 h-4 text-[#D4A35A]" />
-            5-Step Production Process (Research → Creative Direction →
-            Production → Studio Review → Delivery Vault)
+            5-Step Production Workflow (Research → Art Direction → Production → Studio Review → Private Vault)
           </h2>
           <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             {spec.productionSteps.map((step) => (
@@ -651,14 +652,12 @@ export default async function ServiceDetailPage({
                 >
                   <Package className="w-4 h-4 text-[#A98B57]" />
                   View Packages
-                  <span className="text-[10px] text-[#64748B]">Studio Sample</span>
                 </Link>
                 <Link
                   href="/pricing"
                   className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#EADFCB] bg-[#FFFDF9] px-6 py-3.5 text-sm font-semibold text-[#4A3B22] transition-colors hover:border-[#D4A35A]"
                 >
                   Explore Pricing
-                  <span className="text-[10px] text-[#64748B]">Exclusions</span>
                 </Link>
               </div>
             </>
