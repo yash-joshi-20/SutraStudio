@@ -17,6 +17,7 @@ import {
   Clock,
   Shield,
 } from "lucide-react";
+import { soundSystem } from "@/lib/audio/soundSystem";
 
 const SERVICE_OPTIONS = [
   { label: "Image Creation (Photorealistic CGI & Key Visuals)", value: "Image Creation" },
@@ -70,7 +71,10 @@ export default function ContactPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {
+      soundSystem.play("warning");
+      return;
+    }
 
     setStatus("loading");
     try {
@@ -83,14 +87,17 @@ export default function ContactPage() {
       if (res.ok) {
         const data = await res.json().catch(() => ({}));
         setInquiryId(data.id || `SUTRA-${Math.floor(100000 + Math.random() * 900000)}`);
+        soundSystem.play("action_success");
         setStatus("success");
       } else {
         // Fallback successful simulation for robust UI demo
         setInquiryId(`SUTRA-${Math.floor(100000 + Math.random() * 900000)}`);
+        soundSystem.play("action_success");
         setStatus("success");
       }
     } catch {
       setInquiryId(`SUTRA-${Math.floor(100000 + Math.random() * 900000)}`);
+      soundSystem.play("action_success");
       setStatus("success");
     }
   };

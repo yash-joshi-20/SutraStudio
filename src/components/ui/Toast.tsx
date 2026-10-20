@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 
 import React, { createContext, useContext, useMemo, useState, useCallback } from "react";
 import { CheckCircle2, AlertCircle, Info, TriangleAlert, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { soundSystem } from "@/lib/audio/soundSystem";
 
 export interface ToastItem {
   id: string;
@@ -36,6 +37,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     ({ type, title, message, durationMs = 4500, action }: Omit<ToastItem, "id">): string => {
       const id = `toast_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
       setToasts((prev) => [...prev.slice(-3), { id, type, title, message, durationMs, action }]);
+
+      // Trigger crisp studio sound cue corresponding to toast type
+      try {
+        if (type === "success") {
+          soundSystem.play("action_success");
+        } else if (type === "error" || type === "warning") {
+          soundSystem.play("warning");
+        } else {
+          soundSystem.play("notification");
+        }
+      } catch {
+        // gracefully handle autoplay policies
+      }
+
       if (durationMs > 0) {
         setTimeout(() => dismiss(id), durationMs);
       }

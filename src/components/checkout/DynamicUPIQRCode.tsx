@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { STUDIO_PAYMENT_CONFIG } from "@/config/pricing";
 import { Copy, Check, ShieldCheck, Smartphone, Sparkles, RefreshCw } from "lucide-react";
+import { soundSystem } from "@/lib/audio/soundSystem";
 
 export interface DynamicUPIQRCodeProps {
   amount: number;
@@ -38,6 +39,7 @@ export function DynamicUPIQRCode({
   const handleCopyUpi = () => {
     if (typeof navigator !== "undefined" && navigator.clipboard) {
       navigator.clipboard.writeText(vpa);
+      soundSystem.play("action_success");
       setCopiedUpi(true);
       setTimeout(() => setCopiedUpi(false), 2500);
     }

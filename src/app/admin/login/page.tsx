@@ -102,6 +102,7 @@ function AdminLoginForm() {
     const cleanEmail = email.trim().replace(/[\u200B-\u200D\uFEFF]/g, "");
     const cleanPassword = password.trim().replace(/[\u200B-\u200D\uFEFF]/g, "");
     if (!cleanEmail || !cleanPassword) {
+      soundSystem.play("warning");
       setErrorMsg("Enter both your administrator email and passkey.");
       return;
     }
@@ -121,6 +122,7 @@ function AdminLoginForm() {
       const safeDest = returnTo || "/admin";
       window.location.assign(safeDest);
     } catch (err: any) {
+      soundSystem.play("warning");
       setLoading(false);
       console.error("[Admin Login Error]", err);
       const code =

@@ -165,7 +165,10 @@ function ClientLoginForm() {
     e.preventDefault();
     setErrorMsg("");
     setSuccessMsg("");
-    if (!validate()) return;
+    if (!validate()) {
+      soundSystem.play("warning");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -203,6 +206,7 @@ function ClientLoginForm() {
       window.location.assign(destination);
       return;
     } catch (err: any) {
+      soundSystem.play("warning");
       setErrorMsg(err instanceof Error ? err.message : "Sign-in failed. Please try again.");
     } finally {
       setLoading(false);
@@ -221,6 +225,7 @@ function ClientLoginForm() {
       window.location.assign(destination);
       return;
     } catch (err: any) {
+      soundSystem.play("warning");
       console.warn("[Google Auth Error]", err);
       const message =
         err instanceof Error && err.message

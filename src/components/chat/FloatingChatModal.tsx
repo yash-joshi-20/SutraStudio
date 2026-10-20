@@ -36,6 +36,7 @@ import { MAIN_SERVICES } from "@/config/mainServices";
 import { MAIN_SERVICE_ICONS } from "@/components/services/MainServiceCard";
 import { ChatPricingCatalog } from "@/components/chat/ChatPricingCatalog";
 import { formatCurrencyINR } from "@/config/pricing";
+import { soundSystem } from "@/lib/audio/soundSystem";
 
 declare global {
   interface Window {
@@ -644,6 +645,7 @@ export function FloatingChatModal() {
     };
 
     setMessages((prev) => [...prev, userConfirmMsg, botConfirmMsg]);
+    soundSystem.play("order_success");
     setSelectedChatOrder(draft);
     setIsPaymentModalOpen(true);
 
@@ -686,6 +688,7 @@ export function FloatingChatModal() {
     };
 
     setMessages((prev) => [...prev, userMsg]);
+    soundSystem.play("chat_sent");
     if (!textToSend) setInput("");
     setAttachments([]);
 
@@ -696,6 +699,7 @@ export function FloatingChatModal() {
         ? "અહીં અમારું **ઓફિશિયલ સ્ટુડિયો પ્રાઇસિંગ અને પેકેજ કેટલોગ** છે. તમે કોઈપણ સર્વિસ અથવા પેકેજ પસંદ કરીને સીધો **Order Now** પર ક્લિક કરી શકો છો:"
         : "Here is our **official studio pricing & package catalogue**. You can review transparent rates below or click **Order Now** / **Order Package** to instantly launch your commission via UPI QR:";
       setMessages((prev) => [...prev, buildPricingCatalogMessage(reply)]);
+      soundSystem.play("chat_received");
       return;
     }
 
@@ -729,6 +733,7 @@ export function FloatingChatModal() {
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setMessages((prev) => [...prev, botMsg]);
+      soundSystem.play("chat_received");
     } catch {
       try {
         const fallbackRes = await fetch("/api/chatbot", {
@@ -750,6 +755,7 @@ export function FloatingChatModal() {
           time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         };
         setMessages((prev) => [...prev, fallbackMsg]);
+        soundSystem.play("chat_received");
       } catch {
         const errMsg: ChatMessage = {
           id: `err_${Date.now()}`,
@@ -758,6 +764,7 @@ export function FloatingChatModal() {
           time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         };
         setMessages((prev) => [...prev, errMsg]);
+        soundSystem.play("warning");
       }
     } finally {
       setIsLoading(false);
@@ -822,7 +829,10 @@ export function FloatingChatModal() {
       {/* Launcher Button */}
       {!isOpen && (
         <button
-          onClick={() => setIsOpen(true)}
+          onClick={() => {
+            soundSystem.play("tap");
+            setIsOpen(true);
+          }}
           aria-label="Open Sutra Studio Concierge"
           className="fixed bottom-[4.25rem] right-2.5 sm:bottom-6 sm:right-6 z-40 w-12 h-12 min-[380px]:w-14 min-[380px]:h-14 sm:w-auto sm:h-auto rounded-full flex items-center justify-center p-0 sm:px-4 sm:py-2.5 sm:gap-3 bg-[#171717]/95 backdrop-blur-md text-[#FAF9F5] border border-[#A98B57]/60 shadow-2xl hover:bg-[#262626] hover:scale-105 active:scale-95 transition-all cursor-pointer group min-h-[44px] min-w-[44px]"
         >
@@ -878,7 +888,10 @@ export function FloatingChatModal() {
 
               <div className="flex items-center gap-1">
                 <button
-                  onClick={handleClearChat}
+                  onClick={() => {
+                    soundSystem.play("tap");
+                    handleClearChat();
+                  }}
                   title="Clear chat"
                   aria-label="Clear chat"
                   className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#FAF9F5] hover:bg-[#262626] transition-colors cursor-pointer"
@@ -886,7 +899,10 @@ export function FloatingChatModal() {
                   <RefreshCw className="w-3.5 h-3.5" />
                 </button>
                 <button
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => {
+                    soundSystem.play("tap");
+                    setIsOpen(false);
+                  }}
                   title="Close chat"
                   aria-label="Close chat"
                   className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#FAF9F5] hover:bg-[#262626] transition-colors cursor-pointer"
@@ -901,11 +917,12 @@ export function FloatingChatModal() {
               {QUICK_ACTIONS.map((action, idx) => (
                 <button
                   key={idx}
-                  onClick={() =>
+                  onClick={() => {
+                    soundSystem.play("tap");
                     action.showServices
                       ? handleShowServices()
-                      : handleSendMessage(action.query)
-                  }
+                      : handleSendMessage(action.query);
+                  }}
                   className="px-2.5 py-1 rounded-full bg-white border border-[#E5E1D8] hover:border-[#A98B57] hover:bg-[#FAF9F5] text-[11px] text-[#5C3A1E] font-medium whitespace-nowrap transition-all shadow-2xs cursor-pointer shrink-0"
                 >
                   {action.label}

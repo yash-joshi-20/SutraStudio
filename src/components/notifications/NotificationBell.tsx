@@ -192,6 +192,7 @@ export function NotificationBell({
 
   const handleMarkAsRead = async (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+    soundSystem.play("tap");
     // Optimistic local and broadcast
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
@@ -219,6 +220,7 @@ export function NotificationBell({
   };
 
   const handleMarkAllAsRead = async () => {
+    soundSystem.play("action_success");
     setIsLoading(true);
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     setUnreadCount(0);
@@ -485,7 +487,10 @@ export function NotificationBell({
       {/* Bell Trigger Button with subtle luxury micro-animation */}
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          soundSystem.play("tap");
+          setIsOpen(!isOpen);
+        }}
         aria-label="View Studio Notifications"
         aria-expanded={isOpen}
         className="relative p-2 rounded-xl text-[#171717] hover:bg-[#F0ECE1] border border-[#E5E1D8] bg-[#FFFDF9] transition-all cursor-pointer shadow-2xs focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A98B57] min-h-[44px] min-w-[44px] flex items-center justify-center"

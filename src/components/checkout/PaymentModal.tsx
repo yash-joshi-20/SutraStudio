@@ -18,6 +18,7 @@ import {
   Loader2,
   RefreshCw,
 } from "lucide-react";
+import { soundSystem } from "@/lib/audio/soundSystem";
 
 export interface PaymentModalProps {
   isOpen: boolean;
@@ -195,11 +196,13 @@ export function PaymentModal({
       const data = await res.json();
 
       if (!res.ok) {
+        soundSystem.play("warning");
         setUtrError(data.error || "Failed to submit UTR. Please check the reference number.");
         setIsSubmitting(false);
         return;
       }
 
+      soundSystem.play("payment_success");
       setSubmissionSuccess(true);
       if (onPaymentSuccess) {
         onPaymentSuccess({
@@ -217,6 +220,7 @@ export function PaymentModal({
         }
       }, 1500);
     } catch (err) {
+      soundSystem.play("warning");
       setUtrError(err instanceof Error ? err.message : "Network error. Please try again.");
       setIsSubmitting(false);
     }

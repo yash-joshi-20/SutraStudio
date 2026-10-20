@@ -9,15 +9,19 @@
  * upon the first user interaction.
  */
 
-type SoundType =
+export type SoundType =
   | "notification"
   | "order_success"
   | "thank_you"
   | "welcome"
+  | "login_success"
   | "payment_success"
   | "reminder"
   | "tap"
-  | "warning";
+  | "warning"
+  | "chat_sent"
+  | "chat_received"
+  | "action_success";
 
 class SoundSystem {
   private ctx: AudioContext | null = null;
@@ -108,6 +112,7 @@ class SoundSystem {
           break;
 
         case "welcome":
+        case "login_success":
           // Welcoming warm harp chime (A4: 440, C#5: 554.37, E5: 659.25, A5: 880)
           this.playChime([440, 554.37, 659.25, 880], [0, 0.12, 0.24, 0.38], 0.7, "sine", 0.25);
           break;
@@ -125,6 +130,21 @@ class SoundSystem {
         case "tap":
           // Ultra-subtle haptic tick
           this.playClick(now);
+          break;
+
+        case "chat_sent":
+          // Subtle upward acoustic bubble pop
+          this.playPop(now);
+          break;
+
+        case "chat_received":
+          // Gentle incoming dual-tone droplet (D5: 587.33Hz -> A5: 880Hz)
+          this.playChime([587.33, 880], [0, 0.08], 0.28, "sine", 0.22);
+          break;
+
+        case "action_success":
+          // Crisp single affirmative chime (C6: 1046.50Hz)
+          this.playChime([1046.5], [0], 0.25, "sine", 0.2);
           break;
 
         case "warning":
@@ -190,6 +210,26 @@ class SoundSystem {
 
     osc.start(startTime);
     osc.stop(startTime + 0.03);
+  }
+
+  private playPop(startTime: number) {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(440, startTime);
+    osc.frequency.exponentialRampToValueAtTime(880, startTime + 0.045);
+
+    gain.gain.setValueAtTime(0.001, startTime);
+    gain.gain.exponentialRampToValueAtTime(0.12, startTime + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.06);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.start(startTime);
+    osc.stop(startTime + 0.07);
   }
 }
 

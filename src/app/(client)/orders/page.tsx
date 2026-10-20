@@ -1110,6 +1110,7 @@ export default function OrdersPage() {
       soundSystem.play("order_success");
       window.dispatchEvent(new CustomEvent("sutra_orders_changed"));
     } catch (err: any) {
+      soundSystem.play("warning");
       setSubmitError(err.message || "An unexpected error occurred while placing your order.");
     } finally {
       setIsSubmittingOrder(false);
