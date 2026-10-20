@@ -1,7 +1,18 @@
+import React, { Suspense } from "react";
 import { AdminDashboardClient } from "./AdminDashboardClient";
 
 export const dynamic = "force-dynamic";
 
 export default function AdminPage() {
-  return <AdminDashboardClient />;
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#FAF9F5] flex items-center justify-center p-8 text-xs text-[#737373]">
+          Loading Sutra CRM Terminal...
+        </div>
+      }
+    >
+      <AdminDashboardClient />
+    </Suspense>
+  );
 }

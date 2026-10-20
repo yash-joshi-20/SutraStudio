@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { SutraLogo } from "@/components/brand/SutraLogo";
 import { Button } from "@/components/ui/Button";
@@ -27,7 +28,6 @@ import {
   Check,
   ExternalLink,
   LogOut,
-  Filter,
   Sparkles,
   Play,
   ArrowRight,
@@ -40,7 +40,26 @@ import {
   Image as ImageIcon,
   DollarSign,
   TrendingUp,
+  Globe,
+  Users,
+  Settings,
+  Save,
+  Menu,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Share2,
+  CheckCheck,
+  Sliders,
+  Compass,
+  MessageSquare,
+  HelpCircle,
+  AlertCircle,
+  Send,
 } from "lucide-react";
+
+export type CrmTab = "overview" | "orders" | "cms" | "clients" | "settings";
+export type CmsSubPage = "home" | "about" | "services" | "pricing" | "contact" | "header" | "footer";
 
 export interface AdminOrderRecord {
   id: string;
@@ -68,6 +87,14 @@ export interface AdminOrderRecord {
     utm_campaign?: string;
     referrer?: string;
   };
+  conversationHistory?: Array<{
+    id: string;
+    sender: "client" | "studio" | "assistant" | "system";
+    channel: string;
+    text: string;
+    timestamp: string;
+    authorName?: string;
+  }>;
   deliverables?: Array<{
     driveFileId?: string;
     filename?: string;
@@ -83,7 +110,7 @@ export interface AdminOrderRecord {
 function renderChannelBadge(source?: string, isDraft?: boolean) {
   const norm = (source || "wizard").toLowerCase();
   let label = "Web Wizard";
-  let bg = "bg-stone-100 text-stone-700 border-stone-200";
+  let bg = "bg-[#F0ECE1] text-[#171717] border-[#E5E1D8]";
 
   if (norm === "whatsapp") {
     label = "WhatsApp";
@@ -131,8 +158,19 @@ function getStatusBadgeVariant(status: string): BadgeVariant {
 }
 
 export function AdminDashboardClient() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState<"dashboard" | "orders">("dashboard");
+
+  // Tab State synced with URL query (?tab=...)
+  const initialTab = (searchParams.get("tab") as CrmTab) || "overview";
+  const [activeTab, setActiveTab] = useState<CrmTab>(initialTab);
+
+  // Sidebar Layout State
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+
+  // Orders State
   const [orders, setOrders] = useState<AdminOrderRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -144,6 +182,121 @@ export function AdminDashboardClient() {
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [copiedUtr, setCopiedUtr] = useState(false);
   const [zoomScreenshot, setZoomScreenshot] = useState(false);
+
+  // CMS State
+  const [activeCmsPage, setActiveCmsPage] = useState<CmsSubPage>("home");
+  const [cmsData, setCmsData] = useState<any>({
+    hero: {
+      tagline: "ENTERPRISE CREATIVE TECHNOLOGY & SPATIAL 3D STUDIO",
+      title: "Tradition Meets Computational Technology",
+      description:
+        "Sutra Studio delivers bespoke 3D architectural renders, cinematic commercial video reels, and autonomous creative pipelines engineered with timeless aesthetic rigor.",
+      primaryCtaText: "Commission Creative Pipeline",
+      secondaryCtaText: "Explore Studio Portfolio",
+      statsTurnaround: "48-72 Hours",
+      statsRating: "99.8% Precision",
+      statsProjects: "300+ Delivered",
+    },
+    about: {
+      title: "Rooted in Tradition, Engineered with Code",
+      subtitle: "We unite heritage Vedic aesthetics with high-performance computational rendering pipelines.",
+      story:
+        "Founded as an elite digital atelier, Sutra Studio crafts spatial 3D environments, commercial cinematic motion, and autonomous creative infrastructure. Every frame is guided by classical proportion (Pramana), emotional resonance (Rasa), and algorithmic precision (Yantra).",
+      valuesStatement: "Zero compromise on craft. Seamless 24/7 digital delivery vault. Direct founder-led engineering.",
+      location: "Ahmedabad, Gujarat, India • Serving Discerning Global Brands",
+    },
+    services: {
+      title: "Master Disciplines & Studio Capabilities",
+      subtitle: "Architectural visualization, cinematic CGI reels, and automated generative pipelines.",
+      service1Title: "3D Architectural & Spatial Visualization",
+      service1Desc: "Ultra-realistic 4K renders, interior lighting studies, and walkthrough simulations engineered with photorealistic realism.",
+      service2Title: "Cinematic Motion & Commercial Reels",
+      service2Desc: "Scroll-stopping commercial CGI reels engineered for social engagement, luxury campaigns, and brand storytelling.",
+      service3Title: "Autonomous Creative Retainers",
+      service3Desc: "End-to-end continuous creative pipeline delivering on-demand assets via secure Google Drive vaults.",
+      turnaroundSla: "Standard turnaround within 48–72 hours. Rush 24-hour delivery available on request.",
+    },
+    pricing: {
+      title: "Transparent Studio Investment",
+      subtitle: "Clear, zero-fee direct UPI or card retainers with full master asset delivery.",
+      starterName: "Standard Commission",
+      starterPrice: "3,499",
+      starterDelivery: "48-72 Hours Turnaround",
+      starterFeatures: "1 Dedicated 4K Architectural Render • 2 Minor Revisions • High-Res Master Asset • Direct UPI Checkout",
+      proName: "Commercial Pro Reel",
+      proPrice: "7,499",
+      proDelivery: "24-48 Hours Priority Turnaround",
+      proFeatures: "3 Dedicated 4K Renders • 1 Cinematic 4K Reel (15-30s) • Color Grading • Google Drive Vault Access",
+      retainerName: "Monthly Studio Retainer",
+      retainerPrice: "19,999",
+      retainerDelivery: "Continuous Dedicated Pipeline",
+      retainerFeatures: "Continuous Weekly Renders & Reels • Dedicated Senior Producer • Unlimited Revisions • Direct WhatsApp VIP Concierge",
+    },
+    contact: {
+      title: "Initiate a Studio Commission",
+      subtitle: "Direct access to our senior producer via WhatsApp, phone, or verified inquiry form.",
+      email: "yashjoshi20@zohomail.in",
+      phone: "+91 82001 92781",
+      whatsapp: "+91 82001 92781",
+      address: "Ahmedabad, Gujarat, India",
+      operatingHours: "Monday – Saturday: 9:00 AM – 8:00 PM IST",
+      responseSla: "All inquiries receive a response within 2 hours during studio business hours.",
+    },
+    header: {
+      announcementBarText: "Now Booking Q4 Autonomous Retainers • Instant Zero-Fee UPI Direct Checkout",
+      announcementActive: true,
+      navigationItems: [
+        { label: "Services", href: "/services" },
+        { label: "Pricing", href: "/pricing" },
+        { label: "Portfolio", href: "/#portfolio" },
+        { label: "Studio", href: "/studio" },
+      ],
+    },
+    footer: {
+      brandTagline: "High-precision computational design and luxury 3D visual engineering atelier.",
+      copyrightText: "© 2026 Sutra Studio. All rights reserved. Registered Creative Atelier.",
+      contactEmail: "yashjoshi20@zohomail.in",
+      contactPhone: "Studio WhatsApp Concierge",
+      socialLinks: {
+        instagram: "https://www.instagram.com/yashsutrastudio/",
+        facebookPage: "https://www.facebook.com/yashsutrastudio/",
+        facebookProfile: "https://www.facebook.com/yashjoshisutrastudio/",
+        whatsapp: "https://wa.me/918200192781?text=Hello%20Sutra%20Studio%2C%20I%20would%20like%20to%20discuss%20a%20project.",
+      },
+    },
+    branding: {
+      logoUrl: "/brand/sutra-logo-primary.png",
+      studioTitle: "Sutra Studio",
+      faviconUrl: "/favicon.ico",
+    },
+    payment: {
+      upiVpa: "yashjoshi7355@okaxis",
+      merchantName: "Sutra Studio / Yash Joshi",
+      accountHolder: "Yash Joshi",
+    },
+  });
+  const [isCmsLoading, setIsCmsLoading] = useState(false);
+  const [isCmsSaving, setIsCmsSaving] = useState(false);
+  const [cmsFeedback, setCmsFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  // Clients Directory Search State
+  const [clientSearchQuery, setClientSearchQuery] = useState("");
+
+  // Sync tab with URL search parameter
+  useEffect(() => {
+    const tabParam = searchParams.get("tab") as CrmTab;
+    if (tabParam && ["overview", "orders", "cms", "clients", "settings"].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
+  const switchTab = (tab: CrmTab) => {
+    setActiveTab(tab);
+    setMobileDrawerOpen(false);
+    const params = new URLSearchParams(window.location.search);
+    params.set("tab", tab);
+    router.replace(`/admin?${params.toString()}`, { scroll: false });
+  };
 
   // Fetch real-time orders from API
   const fetchOrders = useCallback(async (quiet = false) => {
@@ -175,14 +328,38 @@ export function AdminDashboardClient() {
     }
   }, []);
 
-  // Initial load and periodic 10-second polling
+  // Fetch live CMS content from API
+  const fetchCmsContent = useCallback(async () => {
+    setIsCmsLoading(true);
+    try {
+      const res = await fetch("/api/cms", {
+        cache: "no-store",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.content) {
+          setCmsData((prev: any) => ({
+            ...prev,
+            ...data.content,
+          }));
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to load CMS content:", e);
+    } finally {
+      setIsCmsLoading(false);
+    }
+  }, []);
+
+  // Initial load and periodic 10-second polling for orders
   useEffect(() => {
     fetchOrders();
+    fetchCmsContent();
     const interval = setInterval(() => {
       fetchOrders(true);
     }, 10000);
     return () => clearInterval(interval);
-  }, [fetchOrders]);
+  }, [fetchOrders, fetchCmsContent]);
 
   // Derived KPI metrics
   const metrics = useMemo(() => {
@@ -251,6 +428,62 @@ export function AdminDashboardClient() {
     });
   }, [orders, searchQuery, statusFilter]);
 
+  // Derived unique clients roster for CRM Clients Directory
+  const clientsList = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        email: string;
+        name: string;
+        phone?: string;
+        totalOrders: number;
+        totalLtv: number;
+        latestOrderDate: string;
+        latestStatus: string;
+        latestPackage: string;
+      }
+    >();
+
+    orders.forEach((o) => {
+      const key = (o.clientEmail || o.clientName || "Unknown Client").toLowerCase().trim();
+      const existing = map.get(key);
+      const amount = o.totalAmount || o.amountPaid || 3499;
+
+      if (!existing) {
+        map.set(key, {
+          email: o.clientEmail || "—",
+          name: o.clientName || "Private Client",
+          phone: o.clientPhone,
+          totalOrders: 1,
+          totalLtv: amount,
+          latestOrderDate: o.createdAt || "",
+          latestStatus: o.status,
+          latestPackage: o.packageName || o.service || "Creative Commission",
+        });
+      } else {
+        existing.totalOrders += 1;
+        existing.totalLtv += amount;
+        if (o.clientPhone && !existing.phone) existing.phone = o.clientPhone;
+        if (!existing.latestOrderDate || (o.createdAt && new Date(o.createdAt) > new Date(existing.latestOrderDate))) {
+          existing.latestOrderDate = o.createdAt;
+          existing.latestStatus = o.status;
+          existing.latestPackage = o.packageName || o.service || existing.latestPackage;
+        }
+      }
+    });
+
+    const list = Array.from(map.values());
+    const q = clientSearchQuery.toLowerCase().trim();
+    if (!q) return list;
+
+    return list.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.email.toLowerCase().includes(q) ||
+        (c.phone && c.phone.toLowerCase().includes(q))
+    );
+  }, [orders, clientSearchQuery]);
+
   // Verify UPI Payment & Dispatch
   const handleVerifyAndDispatch = async (order: AdminOrderRecord) => {
     setIsDispatching(true);
@@ -262,7 +495,7 @@ export function AdminDashboardClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           orderId: order.id,
-          notes: "Verified by Studio Administrator via Admin Dashboard",
+          notes: "Verified by Studio Administrator via Sutra CRM",
         }),
       });
 
@@ -271,7 +504,7 @@ export function AdminDashboardClient() {
         throw new Error(data.error || "Payment verification failed.");
       }
 
-      setActionMessage("✓ Payment verified! Order marked paid and dispatched.");
+      setActionMessage("✓ Payment verified! Order marked paid and dispatched to production pipeline.");
       SyncManager.broadcast("ORDER_STATUS_CHANGED", {
         orderId: order.id,
         status: "in_production",
@@ -331,87 +564,203 @@ export function AdminDashboardClient() {
     setTimeout(() => setCopiedUtr(false), 2000);
   };
 
+  // Save Website Pages CMS content to Firestore
+  const handleSaveCms = async () => {
+    setIsCmsSaving(true);
+    setCmsFeedback(null);
+    try {
+      const res = await fetch("/api/cms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(cmsData),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to save CMS changes.");
+      }
+
+      setCmsFeedback({
+        type: "success",
+        message: "✓ Website pages successfully updated and published to live Firestore!",
+      });
+      setTimeout(() => setCmsFeedback(null), 5000);
+    } catch (e: any) {
+      setCmsFeedback({
+        type: "error",
+        message: `Failed to save changes: ${e?.message || e}`,
+      });
+    } finally {
+      setIsCmsSaving(false);
+    }
+  };
+
+  // Helper for updating CMS nested data
+  const updateCmsField = (section: string, field: string, value: any) => {
+    setCmsData((prev: any) => ({
+      ...prev,
+      [section]: {
+        ...(prev[section] || {}),
+        [field]: value,
+      },
+    }));
+  };
+
+  // CRM Navigation Item Definitions
+  const CRM_NAV = [
+    {
+      id: "overview" as CrmTab,
+      label: "Dashboard",
+      icon: Activity,
+      badge: null,
+    },
+    {
+      id: "orders" as CrmTab,
+      label: "Orders & Leads",
+      icon: ShoppingBag,
+      badge: metrics.pendingVerification > 0 ? metrics.pendingVerification : null,
+    },
+    {
+      id: "cms" as CrmTab,
+      label: "Website Pages CMS",
+      icon: Globe,
+      badge: "Live",
+    },
+    {
+      id: "clients" as CrmTab,
+      label: "Clients Directory",
+      icon: Users,
+      badge: clientsList.length > 0 ? clientsList.length : null,
+    },
+    {
+      id: "settings" as CrmTab,
+      label: "Studio Settings",
+      icon: Settings,
+      badge: null,
+    },
+  ];
+
   return (
     <RouteGuard requiredRole="admin">
-      <div className="min-h-screen bg-[#FAF9F5] text-[#171717] font-sans antialiased">
-        {/* Top Executive Navigation Bar */}
-        <header className="sticky top-0 z-30 bg-[#FFFDF9]/95 backdrop-blur-md border-b border-[#E5E1D8]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16 sm:h-20 gap-4">
-              {/* Brand Logo & Studio Terminal Identity */}
-              <div className="flex items-center gap-3 sm:gap-4">
+      <div className="min-h-screen bg-[#FAF9F5] text-[#171717] font-sans antialiased flex flex-col md:flex-row">
+        {/* ============================================================ */}
+        {/* MOBILE TOP BAR (With Hamburger Drawer Toggle) */}
+        {/* ============================================================ */}
+        <div className="md:hidden sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-[#FFFDF9] border-b border-[#E5E1D8] backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setMobileDrawerOpen(true)}
+              className="p-2 rounded-xl text-[#171717] hover:bg-[#F0ECE1] transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#A98B57] cursor-pointer"
+              aria-label="Open Sutra CRM Menu"
+            >
+              <Menu className="w-5 h-5 text-[#171717]" />
+            </button>
+            <SutraLogo variant="horizontal" size="sm" href="/admin" />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#171717] text-[#FAF9F5] uppercase tracking-wider">
+              Sutra CRM
+            </span>
+            <Avatar name={user?.displayName || "Admin"} size="sm" status="online" />
+          </div>
+        </div>
+
+        {/* ============================================================ */}
+        {/* MOBILE SLIDE-OVER DRAWER */}
+        {/* ============================================================ */}
+        {mobileDrawerOpen && (
+          <div className="md:hidden fixed inset-0 z-50 flex">
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
+              onClick={() => setMobileDrawerOpen(false)}
+            />
+            <div className="relative flex-1 flex flex-col max-w-xs w-full bg-[#FAF9F5] border-r border-[#E5E1D8] p-6 z-10 shadow-2xl">
+              <div className="flex items-center justify-between pb-4 border-b border-[#E5E1D8]">
                 <SutraLogo variant="horizontal" size="md" href="/admin" />
-                <div className="hidden sm:block h-6 w-px bg-[#E5E1D8]" />
-                <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F4EFE6] border border-[#E5E1D8] text-[11px] font-semibold text-[#5C3A1E]">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#A98B57]" />
-                  <span>Executive Admin</span>
-                </div>
+                <button
+                  onClick={() => setMobileDrawerOpen(false)}
+                  className="p-1.5 rounded-lg text-[#737373] hover:text-[#171717] hover:bg-[#F0ECE1] cursor-pointer"
+                  aria-label="Close CRM Menu"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              {/* Navigation Tabs (Dashboard vs Orders) */}
-              <nav className="flex items-center gap-1.5 p-1 rounded-2xl bg-[#F0ECE1] border border-[#E5E1D8]">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("dashboard")}
-                  className={`px-3 sm:px-4 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
-                    activeTab === "dashboard"
-                      ? "bg-[#171717] text-[#FAF9F5] shadow-xs"
-                      : "text-[#64748B] hover:text-[#171717]"
-                  }`}
-                >
-                  <LayoutDashboard className="w-3.5 h-3.5" />
-                  <span>Dashboard</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("orders")}
-                  className={`px-3 sm:px-4 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
-                    activeTab === "orders"
-                      ? "bg-[#171717] text-[#FAF9F5] shadow-xs"
-                      : "text-[#64748B] hover:text-[#171717]"
-                  }`}
-                >
-                  <ShoppingBag className="w-3.5 h-3.5" />
-                  <span>Orders</span>
-                  {metrics.pendingVerification > 0 && (
-                    <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#A98B57] text-white">
-                      {metrics.pendingVerification}
-                    </span>
-                  )}
-                </button>
+              {/* Sutra CRM Brand Scope Indicator */}
+              <div className="mt-4 p-3 rounded-2xl bg-[#171717] text-white flex items-center justify-between text-xs shadow-xs">
+                <div>
+                  <span className="text-[10px] text-[#A98B57] block uppercase font-mono font-bold tracking-widest">
+                    Sutra Studio CRM
+                  </span>
+                  <span className="font-bold text-white uppercase tracking-wider text-xs">
+                    Executive Terminal
+                  </span>
+                </div>
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              </div>
+
+              {/* CRM Navigation */}
+              <nav className="mt-4 flex-1 space-y-1.5 overflow-y-auto">
+                {CRM_NAV.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => switchTab(item.id)}
+                      className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-[#171717] text-[#FAF9F5] font-semibold shadow-xs"
+                          : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717]"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Icon className={`w-4 h-4 ${isActive ? "text-[#A98B57]" : "text-[#737373]"}`} />
+                        <span>{item.label}</span>
+                      </div>
+                      {item.badge !== null && (
+                        <span
+                          className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                            isActive ? "bg-[#A98B57] text-white" : "bg-[#F0ECE1] text-[#5C3A1E]"
+                          }`}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </nav>
 
-              {/* Live Status & Admin Profile Actions */}
-              <div className="flex items-center gap-2.5 sm:gap-3">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => fetchOrders()}
-                  isLoading={isRefreshing}
-                  leftIcon={<RefreshCw className="w-3.5 h-3.5 text-[#5C3A1E]" />}
-                  className="hidden md:inline-flex text-xs text-[#5C3A1E]"
-                  title="Refresh Live Orders from Firestore"
+              <div className="pt-4 border-t border-[#E5E1D8] space-y-3">
+                <Link
+                  href="/"
+                  target="_blank"
+                  className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#FFFFFF] border border-[#E5E1D8] text-xs font-semibold text-[#171717] hover:border-[#A98B57]"
                 >
-                  Refresh
-                </Button>
+                  <span className="flex items-center gap-2">
+                    <Globe className="w-3.5 h-3.5 text-[#A98B57]" />
+                    <span>Live Public Website</span>
+                  </span>
+                  <span className="text-[10px] text-[#737373]">↗</span>
+                </Link>
 
-                <div className="flex items-center gap-2 border-l border-[#E5E1D8] pl-2 sm:pl-3">
-                  <Avatar
-                    name={user?.displayName || user?.email || "Studio Admin"}
-                    size="sm"
-                    status="online"
-                  />
-                  <div className="hidden lg:block text-left">
-                    <p className="text-xs font-semibold text-[#171717] leading-none truncate max-w-[130px]">
-                      {user?.email || "Admin"}
-                    </p>
-                    <span className="text-[10px] text-[#A98B57] font-medium leading-tight">Master Clearance</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Avatar name={user?.displayName || "Studio Admin"} size="sm" status="online" />
+                    <div className="text-xs">
+                      <p className="font-semibold text-[#171717] truncate max-w-[120px]">
+                        {user?.email || "Admin"}
+                      </p>
+                      <p className="text-[#A98B57] text-[10px]">Lead Producer</p>
+                    </div>
                   </div>
                   <button
-                    type="button"
                     onClick={() => logout()}
-                    className="p-2 rounded-xl text-[#64748B] hover:text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
-                    title="Sign Out of Admin Terminal"
+                    title="Sign Out"
+                    className="text-[#737373] hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" />
                   </button>
@@ -419,182 +768,638 @@ export function AdminDashboardClient() {
               </div>
             </div>
           </div>
-        </header>
+        )}
 
-        {/* Main Workspace Body */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
-          {/* TAB 1: EXECUTIVE DASHBOARD */}
-          {activeTab === "dashboard" && (
-            <div className="space-y-6 sm:space-y-8">
-              {/* Executive Greeting & Quick Action Bar */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-3xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-warm">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-xs font-mono text-[#A98B57] tracking-wider uppercase font-semibold">
-                      Live Studio Engine Active
-                    </span>
-                  </div>
-                  <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#171717]">
-                    Sutra Studio Dashboard
-                  </h1>
-                  <p className="text-xs text-[#64748B]">
-                    Real-time commission overview, instant UPI payment verification, and client order check.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2.5 flex-wrap">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => setActiveTab("orders")}
-                    leftIcon={<ShoppingBag className="w-3.5 h-3.5" />}
-                  >
-                    Check Orders ({orders.length})
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => fetchOrders()}
-                    isLoading={isRefreshing}
-                    leftIcon={<RefreshCw className="w-3.5 h-3.5 text-[#5C3A1E]" />}
-                  >
-                    Sync Live Data
-                  </Button>
-                </div>
-              </div>
-
-              {/* 5-Column KPI Metric Cards */}
-              <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4">
-                {/* Total Orders */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-2">
-                  <div className="flex items-center justify-between text-xs text-[#64748B]">
-                    <span className="font-medium">Total Orders</span>
-                    <ShoppingBag className="w-4 h-4 text-[#A98B57]" />
-                  </div>
-                  <div className="font-serif text-2xl sm:text-3xl font-bold text-[#171717]">
-                    {isLoading ? "—" : metrics.totalOrders}
-                  </div>
-                  <div className="text-[11px] text-[#64748B]">All incoming orders</div>
-                </div>
-
-                {/* Pending Verification */}
-                <div
-                  onClick={() => {
-                    setStatusFilter("pending");
-                    setActiveTab("orders");
-                  }}
-                  className={`p-4 sm:p-5 rounded-2xl border shadow-2xs space-y-2 cursor-pointer transition-all ${
-                    metrics.pendingVerification > 0
-                      ? "bg-amber-50/70 border-amber-300 hover:border-amber-400"
-                      : "bg-[#FFFDF9] border-[#E5E1D8]"
-                  }`}
+        {/* ============================================================ */}
+        {/* DESKTOP PERSISTENT COLLAPSIBLE CRM SIDEBAR */}
+        {/* ============================================================ */}
+        <aside
+          className={`${
+            sidebarCollapsed ? "w-20" : "w-64"
+          } shrink-0 border-r border-[#E5E1D8] bg-[#FFFDF9] min-h-screen p-4 flex flex-col justify-between hidden md:flex transition-all duration-300 ease-in-out sticky top-0 h-screen z-30`}
+        >
+          <div>
+            {/* Brand Header & Toggle */}
+            <div className="pb-4 border-b border-[#E5E1D8] flex flex-col gap-2.5">
+              <div className="flex items-center justify-between">
+                {!sidebarCollapsed ? (
+                  <SutraLogo variant="horizontal" size="md" href="/admin" />
+                ) : (
+                  <Link href="/admin" className="p-1 rounded-lg hover:bg-[#F0ECE1]">
+                    <SutraLogo variant="symbol" size="sm" />
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+                  className="p-1.5 rounded-lg text-[#737373] hover:text-[#171717] hover:bg-[#F0ECE1] transition-colors cursor-pointer"
+                  aria-label={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
                 >
-                  <div className="flex items-center justify-between text-xs text-amber-900 font-medium">
-                    <span>To Verify (UPI)</span>
-                    <Clock className="w-4 h-4 text-amber-600" />
-                  </div>
-                  <div className="font-serif text-2xl sm:text-3xl font-bold text-amber-950">
-                    {isLoading ? "—" : metrics.pendingVerification}
-                  </div>
-                  <div className="text-[11px] text-amber-800 font-semibold flex items-center gap-1">
-                    <span>{metrics.pendingVerification > 0 ? "Action required" : "Clear queue"}</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </div>
-                </div>
-
-                {/* In Production */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-2">
-                  <div className="flex items-center justify-between text-xs text-[#64748B]">
-                    <span className="font-medium">In Production</span>
-                    <Activity className="w-4 h-4 text-[#5C3A1E]" />
-                  </div>
-                  <div className="font-serif text-2xl sm:text-3xl font-bold text-[#171717]">
-                    {isLoading ? "—" : metrics.inProduction}
-                  </div>
-                  <div className="text-[11px] text-[#64748B]">Studio pipeline active</div>
-                </div>
-
-                {/* Completed */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-2">
-                  <div className="flex items-center justify-between text-xs text-[#64748B]">
-                    <span className="font-medium">Completed</span>
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  </div>
-                  <div className="font-serif text-2xl sm:text-3xl font-bold text-[#171717]">
-                    {isLoading ? "—" : metrics.completed}
-                  </div>
-                  <div className="text-[11px] text-emerald-700 font-medium">Vaulted & Delivered</div>
-                </div>
-
-                {/* Studio Revenue */}
-                <div className="col-span-2 lg:col-span-1 p-4 sm:p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-2">
-                  <div className="flex items-center justify-between text-xs text-[#64748B]">
-                    <span className="font-medium">Studio Revenue</span>
-                    <TrendingUp className="w-4 h-4 text-[#A98B57]" />
-                  </div>
-                  <div className="font-serif text-2xl sm:text-3xl font-bold text-[#5C3A1E]">
-                    ₹{isLoading ? "—" : metrics.totalRevenue.toLocaleString("en-IN")}
-                  </div>
-                  <div className="text-[11px] text-[#64748B]">Gross commissions</div>
-                </div>
+                  {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                </button>
               </div>
 
-              {/* URGENT QUEUE: PAYMENTS TO VERIFY (When an order arrives, check details right here!) */}
-              <section className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-[#A98B57]" />
-                    <h2 className="font-serif text-lg sm:text-xl font-bold text-[#171717]">
-                      Pending Verification Queue
-                    </h2>
-                    <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#F4EFE6] border border-[#E5E1D8] text-[#5C3A1E]">
-                      {pendingOrders.length}
+              {!sidebarCollapsed && (
+                <div className="flex items-center justify-between pt-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[10px] font-mono text-[#A98B57] uppercase font-bold tracking-wider">
+                      Sutra CRM Active
                     </span>
                   </div>
-                  {pendingOrders.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setStatusFilter("pending");
-                        setActiveTab("orders");
-                      }}
-                      className="text-xs font-semibold text-[#5C3A1E] hover:text-[#A98B57] flex items-center gap-1 transition-colors cursor-pointer"
-                    >
-                      <span>View in full table</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#171717] text-white">
+                    PRODUCER
+                  </span>
                 </div>
+              )}
+            </div>
 
-                {isLoading ? (
-                  <div className="p-8 text-center text-xs text-[#64748B] bg-[#FFFDF9] rounded-2xl border border-[#E5E1D8]">
-                    <RefreshCw className="w-5 h-5 animate-spin mx-auto text-[#A98B57] mb-2" />
-                    Checking for incoming orders...
+            {/* CRM Navigation Links */}
+            <nav className="mt-4 space-y-1">
+              {CRM_NAV.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => switchTab(item.id)}
+                    title={sidebarCollapsed ? item.label : undefined}
+                    className={`w-full flex items-center ${
+                      sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3 py-2.5"
+                    } rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                      isActive
+                        ? "bg-[#171717] text-[#FAF9F5] font-semibold shadow-xs"
+                        : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717]"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Icon
+                        className={`w-4 h-4 shrink-0 ${
+                          isActive ? "text-[#A98B57]" : "text-[#737373]"
+                        }`}
+                      />
+                      {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
+                    </div>
+
+                    {!sidebarCollapsed && item.badge !== null && (
+                      <span
+                        className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                          isActive ? "bg-[#A98B57] text-white" : "bg-[#F0ECE1] text-[#5C3A1E]"
+                        }`}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Sidebar Footer */}
+          <div className="pt-4 border-t border-[#E5E1D8] space-y-3">
+            {!sidebarCollapsed && (
+              <Link
+                href="/"
+                target="_blank"
+                className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#171717] hover:border-[#A98B57] transition-all"
+              >
+                <span className="flex items-center gap-2">
+                  <Globe className="w-3.5 h-3.5 text-[#A98B57]" />
+                  <span>Public Website</span>
+                </span>
+                <span className="text-[10px] text-[#737373]">↗</span>
+              </Link>
+            )}
+
+            <div
+              className={`flex items-center ${
+                sidebarCollapsed ? "justify-center" : "justify-between"
+              }`}
+            >
+              {!sidebarCollapsed ? (
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Avatar name={user?.displayName || "Studio Admin"} size="sm" status="online" />
+                  <div className="text-xs min-w-0">
+                    <p className="font-semibold text-[#171717] truncate max-w-[110px]">
+                      {user?.email || "Admin"}
+                    </p>
+                    <p className="text-[#A98B57] text-[10px] truncate">Executive CRM</p>
                   </div>
-                ) : pendingOrders.length === 0 ? (
-                  <div className="p-6 sm:p-8 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] text-center space-y-2">
-                    <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto opacity-70" />
-                    <p className="font-semibold text-sm text-[#171717]">All Payments Verified</p>
-                    <p className="text-xs text-[#64748B] max-w-md mx-auto">
-                      There are no pending UPI verifications. When a client submits an order via UPI or checkout, it will instantly appear here for your approval.
+                </div>
+              ) : (
+                <Avatar name={user?.displayName || "Admin"} size="sm" status="online" />
+              )}
+
+              <button
+                type="button"
+                onClick={() => logout()}
+                title="Sign Out"
+                className="text-[#737373] hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 cursor-pointer transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        {/* ============================================================ */}
+        {/* MAIN CRM WORKSPACE CONTENT AREA */}
+        {/* ============================================================ */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Top Desktop Breadcrumb & Action Bar */}
+          <header className="hidden md:flex sticky top-0 z-20 items-center justify-between px-6 lg:px-8 py-4 bg-[#FFFDF9]/95 backdrop-blur-md border-b border-[#E5E1D8]">
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-mono uppercase font-bold text-[#A98B57] tracking-wider">
+                Sutra CRM
+              </span>
+              <span className="text-[#E5E1D8]">/</span>
+              <span className="text-sm font-serif font-bold text-[#171717] capitalize">
+                {activeTab === "overview"
+                  ? "Studio Dashboard"
+                  : activeTab === "orders"
+                  ? "Orders & Commissions Ledger"
+                  : activeTab === "cms"
+                  ? "Website Pages CMS & Editor"
+                  : activeTab === "clients"
+                  ? "Clients Directory"
+                  : "Studio & Payment Settings"}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => fetchOrders()}
+                isLoading={isRefreshing}
+                leftIcon={<RefreshCw className="w-3.5 h-3.5 text-[#5C3A1E]" />}
+                className="text-xs text-[#5C3A1E]"
+                title="Refresh Live Orders from Firestore"
+              >
+                Sync Data
+              </Button>
+
+              <div className="h-5 w-px bg-[#E5E1D8]" />
+
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs text-[#64748B]">Real-Time Sync</span>
+              </div>
+            </div>
+          </header>
+
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto w-full">
+            {/* ============================================================ */}
+            {/* TAB 1: EXECUTIVE CRM DASHBOARD */}
+            {/* ============================================================ */}
+            {activeTab === "overview" && (
+              <div className="space-y-6 sm:space-y-8">
+                {/* Greeting & Quick Action Banner */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-3xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-warm">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-xs font-mono text-[#A98B57] tracking-wider uppercase font-semibold">
+                        Sutra CRM Engine Online
+                      </span>
+                    </div>
+                    <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#171717]">
+                      Executive Studio Dashboard
+                    </h1>
+                    <p className="text-xs text-[#64748B]">
+                      Real-time commission overview, instant UPI payment verification, and client pipeline tracking.
                     </p>
                   </div>
-                ) : (
+
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => switchTab("orders")}
+                      leftIcon={<ShoppingBag className="w-3.5 h-3.5" />}
+                    >
+                      Orders Ledger ({orders.length})
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => switchTab("cms")}
+                      leftIcon={<Globe className="w-3.5 h-3.5 text-[#5C3A1E]" />}
+                    >
+                      Edit Website CMS
+                    </Button>
+                  </div>
+                </div>
+
+                {/* 5-Column KPI Metric Cards */}
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4">
+                  {/* Total Orders */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-2">
+                    <div className="flex items-center justify-between text-xs text-[#64748B]">
+                      <span className="font-medium">Total Orders</span>
+                      <ShoppingBag className="w-4 h-4 text-[#A98B57]" />
+                    </div>
+                    <div className="font-serif text-2xl sm:text-3xl font-bold text-[#171717]">
+                      {isLoading ? "—" : metrics.totalOrders}
+                    </div>
+                    <div className="text-[11px] text-[#64748B]">All incoming orders</div>
+                  </div>
+
+                  {/* Pending Verification */}
+                  <div
+                    onClick={() => {
+                      setStatusFilter("pending");
+                      switchTab("orders");
+                    }}
+                    className={`p-4 sm:p-5 rounded-2xl border shadow-2xs space-y-2 cursor-pointer transition-all ${
+                      metrics.pendingVerification > 0
+                        ? "bg-amber-50/70 border-amber-300 hover:border-amber-400"
+                        : "bg-[#FFFDF9] border-[#E5E1D8]"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between text-xs text-amber-900 font-medium">
+                      <span>To Verify (UPI)</span>
+                      <Clock className="w-4 h-4 text-amber-600" />
+                    </div>
+                    <div className="font-serif text-2xl sm:text-3xl font-bold text-amber-950">
+                      {isLoading ? "—" : metrics.pendingVerification}
+                    </div>
+                    <div className="text-[11px] text-amber-800 font-semibold flex items-center gap-1">
+                      <span>{metrics.pendingVerification > 0 ? "Action required" : "Clear queue"}</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </div>
+                  </div>
+
+                  {/* In Production */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-2">
+                    <div className="flex items-center justify-between text-xs text-[#64748B]">
+                      <span className="font-medium">In Production</span>
+                      <Activity className="w-4 h-4 text-[#5C3A1E]" />
+                    </div>
+                    <div className="font-serif text-2xl sm:text-3xl font-bold text-[#171717]">
+                      {isLoading ? "—" : metrics.inProduction}
+                    </div>
+                    <div className="text-[11px] text-[#64748B]">Pipeline active</div>
+                  </div>
+
+                  {/* Completed */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-2">
+                    <div className="flex items-center justify-between text-xs text-[#64748B]">
+                      <span className="font-medium">Completed</span>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <div className="font-serif text-2xl sm:text-3xl font-bold text-[#171717]">
+                      {isLoading ? "—" : metrics.completed}
+                    </div>
+                    <div className="text-[11px] text-emerald-700 font-medium">Vaulted & Delivered</div>
+                  </div>
+
+                  {/* Studio Revenue */}
+                  <div className="col-span-2 lg:col-span-1 p-4 sm:p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-2">
+                    <div className="flex items-center justify-between text-xs text-[#64748B]">
+                      <span className="font-medium">Gross Revenue</span>
+                      <TrendingUp className="w-4 h-4 text-[#A98B57]" />
+                    </div>
+                    <div className="font-serif text-2xl sm:text-3xl font-bold text-[#5C3A1E]">
+                      ₹{isLoading ? "—" : metrics.totalRevenue.toLocaleString("en-IN")}
+                    </div>
+                    <div className="text-[11px] text-[#64748B]">Direct UPI & Cards</div>
+                  </div>
+                </div>
+
+                {/* URGENT PRIORITY QUEUE: PAYMENTS TO VERIFY */}
+                <section className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-[#A98B57]" />
+                      <h2 className="font-serif text-lg sm:text-xl font-bold text-[#171717]">
+                        Pending Verification Queue
+                      </h2>
+                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#F4EFE6] border border-[#E5E1D8] text-[#5C3A1E]">
+                        {pendingOrders.length}
+                      </span>
+                    </div>
+                    {pendingOrders.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStatusFilter("pending");
+                          switchTab("orders");
+                        }}
+                        className="text-xs font-semibold text-[#5C3A1E] hover:text-[#A98B57] flex items-center gap-1 transition-colors cursor-pointer"
+                      >
+                        <span>View all in ledger</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {isLoading ? (
+                    <div className="p-8 text-center text-xs text-[#64748B] bg-[#FFFDF9] rounded-2xl border border-[#E5E1D8]">
+                      <RefreshCw className="w-5 h-5 animate-spin mx-auto text-[#A98B57] mb-2" />
+                      Checking for incoming orders...
+                    </div>
+                  ) : pendingOrders.length === 0 ? (
+                    <div className="p-6 sm:p-8 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] text-center space-y-2">
+                      <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto opacity-70" />
+                      <p className="font-semibold text-sm text-[#171717]">All Payments Verified</p>
+                      <p className="text-xs text-[#64748B] max-w-md mx-auto">
+                        There are no pending UPI verifications. When a client submits an order via UPI or checkout, it will instantly appear here for your approval.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {pendingOrders.map((ord) => (
+                        <div
+                          key={ord.id}
+                          className="p-5 rounded-2xl bg-[#FFFDF9] border-2 border-amber-300 shadow-warm space-y-3 flex flex-col justify-between"
+                        >
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-mono font-bold text-xs text-[#5C3A1E]">
+                                {ord.orderNumber || ord.code || ord.id.slice(0, 10)}
+                              </span>
+                              <Badge variant="gold" size="sm">
+                                Verify Payment
+                              </Badge>
+                            </div>
+
+                            <div>
+                              <h3 className="font-serif font-bold text-base text-[#171717]">{ord.clientName}</h3>
+                              <p className="text-xs text-[#64748B]">{ord.clientEmail}</p>
+                            </div>
+
+                            <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] flex items-center justify-between text-xs">
+                              <div>
+                                <span className="text-[#64748B] text-[10px] block">Service:</span>
+                                <span className="font-semibold text-[#171717]">
+                                  {ord.packageName || ord.service || "Creative Package"}
+                                </span>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-[#64748B] text-[10px] block">Amount:</span>
+                                <span className="font-serif font-bold text-base text-[#5C3A1E]">
+                                  ₹{(ord.totalAmount || ord.amountPaid || 3499).toLocaleString("en-IN")}
+                                </span>
+                              </div>
+                            </div>
+
+                            {ord.utrNumber ? (
+                              <div className="p-2.5 rounded-xl bg-emerald-50/80 border border-emerald-200 text-xs flex items-center justify-between">
+                                <div>
+                                  <span className="text-[10px] text-emerald-800 block font-medium">12-Digit UPI UTR:</span>
+                                  <span className="font-mono font-bold text-emerald-950">{ord.utrNumber}</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => copyUtr(ord.utrNumber!)}
+                                  className="p-1.5 rounded-lg bg-white border border-emerald-200 text-emerald-800 hover:bg-emerald-100 transition-colors cursor-pointer"
+                                  title="Copy UTR Reference"
+                                >
+                                  {copiedUtr ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="p-2 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-800">
+                                No UTR entered by client yet. Check screenshot proof in details.
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 pt-3 border-t border-[#E5E1D8]">
+                            <button
+                              type="button"
+                              onClick={() => setInspectingOrder(ord)}
+                              className="py-2.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] flex items-center justify-center gap-1.5 hover:bg-[#F0ECE1] transition-colors cursor-pointer"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>Check Details</span>
+                            </button>
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              className="w-full justify-center text-xs"
+                              onClick={() => handleVerifyAndDispatch(ord)}
+                              leftIcon={<Play className="w-3 h-3" />}
+                            >
+                              Verify &amp; Start
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </section>
+
+                {/* RECENT COMMISSIONS FEED */}
+                <section className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-[#5C3A1E]" />
+                      <h2 className="font-serif text-lg sm:text-xl font-bold text-[#171717]">
+                        Recent Studio Commissions
+                      </h2>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => switchTab("orders")}
+                      className="text-xs font-semibold text-[#5C3A1E] hover:text-[#A98B57] flex items-center gap-1 transition-colors cursor-pointer"
+                    >
+                      <span>View All ({orders.length})</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] overflow-hidden shadow-warm">
+                    {orders.length === 0 ? (
+                      <div className="p-8 text-center text-xs text-[#64748B]">No orders recorded yet.</div>
+                    ) : (
+                      <div className="divide-y divide-[#E5E1D8]">
+                        {orders.slice(0, 8).map((ord) => (
+                          <div
+                            key={ord.id}
+                            className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-[#FAF9F5] transition-colors"
+                          >
+                            <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+                              <div className="w-9 h-9 rounded-xl bg-[#F4EFE6] border border-[#E5E1D8] flex items-center justify-center shrink-0">
+                                <ShoppingBag className="w-4 h-4 text-[#5C3A1E]" />
+                              </div>
+                              <div className="min-w-0 space-y-0.5">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-mono font-bold text-xs text-[#5C3A1E]">
+                                    {ord.orderNumber || ord.code || ord.id.slice(0, 8)}
+                                  </span>
+                                  {renderChannelBadge(ord.source, Boolean(ord.isDraft || ord.status === "draft"))}
+                                  <Badge variant={getStatusBadgeVariant(ord.status)} size="sm">
+                                    {ord.status.replace("_", " ")}
+                                  </Badge>
+                                </div>
+                                <p className="text-xs font-semibold text-[#171717] truncate">{ord.clientName}</p>
+                                <p className="text-[11px] text-[#64748B] truncate">
+                                  {ord.packageName || ord.service || "Creative Commission"} • {ord.clientEmail}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#E5E1D8]/60">
+                              <div className="text-right">
+                                <span className="font-serif font-bold text-sm text-[#5C3A1E]">
+                                  ₹{(ord.totalAmount || ord.amountPaid || 3499).toLocaleString("en-IN")}
+                                </span>
+                                <span className="block text-[10px] text-[#64748B]">
+                                  {ord.createdAt ? new Date(ord.createdAt).toLocaleDateString("en-IN") : "Recent"}
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setInspectingOrder(ord)}
+                                className="px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] hover:bg-[#F0ECE1] transition-colors cursor-pointer flex items-center gap-1"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                                <span>Inspect</span>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </section>
+              </div>
+            )}
+
+            {/* ============================================================ */}
+            {/* TAB 2: ORDERS MANAGEMENT & DETAIL CHECKER */}
+            {/* ============================================================ */}
+            {activeTab === "orders" && (
+              <div className="space-y-6">
+                {/* Header & Quick Sync */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E5E1D8]">
+                  <div>
+                    <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#171717]">
+                      Orders Ledger &amp; Detail Checker
+                    </h1>
+                    <p className="text-xs text-[#64748B]">
+                      Inspect client submissions, check UPI payment proof, deliver 4K assets, and update order status.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => fetchOrders()}
+                      isLoading={isRefreshing}
+                      leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
+                    >
+                      Refresh Orders
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Search & Filter Toolbar */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                  <div className="relative flex-1 max-w-md">
+                    <Search className="w-4 h-4 text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Search by Client, Email, Order ID, or 12-digit UTR..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#FFFDF9] border border-[#E5E1D8] text-xs text-[#171717] focus:outline-none focus:border-[#A98B57]"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* Status Filter Buttons */}
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                      {[
+                        { id: "all", label: "All Orders" },
+                        { id: "pending", label: "Payments to Verify" },
+                        { id: "in_production", label: "In Production" },
+                        { id: "completed", label: "Completed" },
+                        { id: "cancelled", label: "Cancelled" },
+                      ].map((f) => (
+                        <button
+                          key={f.id}
+                          type="button"
+                          onClick={() => setStatusFilter(f.id)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                            statusFilter === f.id
+                              ? "bg-[#171717] text-white shadow-2xs"
+                              : "bg-[#FFFDF9] text-[#64748B] border border-[#E5E1D8] hover:border-[#A98B57]"
+                          }`}
+                        >
+                          {f.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Grid / List Mode */}
+                    <div className="flex items-center gap-1 bg-[#FFFDF9] p-1 rounded-xl border border-[#E5E1D8] shadow-2xs shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setViewMode("grid")}
+                        className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
+                          viewMode === "grid"
+                            ? "bg-[#171717] text-white shadow-2xs"
+                            : "text-[#64748B] hover:text-[#171717]"
+                        }`}
+                        title="Card Grid View"
+                      >
+                        <LayoutGrid className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Grid</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setViewMode("list")}
+                        className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
+                          viewMode === "list"
+                            ? "bg-[#171717] text-white shadow-2xs"
+                            : "text-[#64748B] hover:text-[#171717]"
+                        }`}
+                        title="Row List View"
+                      >
+                        <ListIcon className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">List</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Orders Display (Grid vs List) */}
+                {isLoading ? (
+                  <div className="p-12 text-center text-xs text-[#64748B] bg-[#FFFDF9] rounded-2xl border border-[#E5E1D8]">
+                    <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#A98B57] mb-2" />
+                    Loading real-time orders...
+                  </div>
+                ) : filteredOrders.length === 0 ? (
+                  <div className="p-12 text-center text-xs text-[#64748B] bg-[#FFFDF9] rounded-2xl border border-[#E5E1D8] space-y-2">
+                    <FileText className="w-8 h-8 text-[#94A3B8] mx-auto opacity-50" />
+                    <p className="font-semibold text-sm text-[#171717]">No orders matched your search</p>
+                    <p>Try resetting your filter or search query to view all commissions.</p>
+                  </div>
+                ) : viewMode === "grid" ? (
+                  /* Responsive Card Grid */
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {pendingOrders.map((ord) => (
+                    {filteredOrders.map((ord) => (
                       <div
                         key={ord.id}
-                        className="p-5 rounded-2xl bg-[#FFFDF9] border-2 border-amber-300 shadow-warm space-y-3 flex flex-col justify-between"
+                        className="p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-warm space-y-3 flex flex-col justify-between hover:border-[#A98B57]/60 transition-all"
                       >
                         <div className="space-y-3">
                           <div className="flex items-center justify-between gap-2">
                             <span className="font-mono font-bold text-xs text-[#5C3A1E]">
                               {ord.orderNumber || ord.code || ord.id.slice(0, 10)}
                             </span>
-                            <Badge variant="gold" size="sm">
-                              Verify Payment
-                            </Badge>
+                            <div className="flex items-center gap-1.5">
+                              {renderChannelBadge(ord.source, Boolean(ord.isDraft || ord.status === "draft"))}
+                              <Badge variant={getStatusBadgeVariant(ord.status)} size="sm">
+                                {ord.status.replace("_", " ")}
+                              </Badge>
+                            </div>
                           </div>
 
                           <div>
@@ -604,7 +1409,7 @@ export function AdminDashboardClient() {
 
                           <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] flex items-center justify-between text-xs">
                             <div>
-                              <span className="text-[#64748B] text-[10px] block">Service:</span>
+                              <span className="text-[#64748B] text-[10px] block">Service / Package:</span>
                               <span className="font-semibold text-[#171717]">{ord.packageName || ord.service || "Creative Package"}</span>
                             </div>
                             <div className="text-right">
@@ -618,21 +1423,28 @@ export function AdminDashboardClient() {
                           {ord.utrNumber ? (
                             <div className="p-2.5 rounded-xl bg-emerald-50/80 border border-emerald-200 text-xs flex items-center justify-between">
                               <div>
-                                <span className="text-[10px] text-emerald-800 block font-medium">12-Digit UPI UTR:</span>
+                                <span className="text-[10px] text-emerald-800 block font-medium">12-Digit UTR:</span>
                                 <span className="font-mono font-bold text-emerald-950">{ord.utrNumber}</span>
                               </div>
                               <button
                                 type="button"
                                 onClick={() => copyUtr(ord.utrNumber!)}
-                                className="p-1.5 rounded-lg bg-white border border-emerald-200 text-emerald-800 hover:bg-emerald-100 transition-colors"
-                                title="Copy UTR Reference"
+                                className="p-1 rounded-md bg-white border border-emerald-200 text-emerald-800 hover:bg-emerald-100 transition-colors cursor-pointer"
+                                title="Copy UTR"
                               >
                                 {copiedUtr ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                               </button>
                             </div>
                           ) : (
-                            <div className="p-2 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-800">
-                              No UTR entered by client yet. Check screenshot proof in details.
+                            <div className="p-2 rounded-lg bg-stone-100 border border-stone-200 text-[11px] text-[#64748B]">
+                              No UTR provided yet
+                            </div>
+                          )}
+
+                          {ord.deliverables && ord.deliverables.length > 0 && (
+                            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#8B6508] bg-amber-50 px-2.5 py-1.5 rounded-xl border border-amber-200">
+                              <Sparkles className="w-3.5 h-3.5 text-[#B38E46] shrink-0" />
+                              <span>{ord.deliverables.length} Deliverable(s) Vaulted</span>
                             </div>
                           )}
                         </div>
@@ -641,678 +1453,1256 @@ export function AdminDashboardClient() {
                           <button
                             type="button"
                             onClick={() => setInspectingOrder(ord)}
-                            className="py-2.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] flex items-center justify-center gap-1.5 hover:bg-[#F0ECE1] transition-colors cursor-pointer"
+                            className="w-full py-2.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] flex items-center justify-center gap-1.5 hover:bg-[#F0ECE1] transition-colors cursor-pointer"
                           >
                             <Eye className="w-3.5 h-3.5" />
                             <span>Check Details</span>
                           </button>
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            className="w-full justify-center text-xs"
-                            onClick={() => handleVerifyAndDispatch(ord)}
-                            leftIcon={<Play className="w-3 h-3" />}
-                          >
-                            Verify &amp; Start
-                          </Button>
+
+                          {ord.status !== "in_production" && ord.status !== "completed" && ord.status !== "cancelled" ? (
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              className="w-full justify-center text-xs"
+                              onClick={() => handleVerifyAndDispatch(ord)}
+                              leftIcon={<Play className="w-3 h-3" />}
+                            >
+                              Verify &amp; Start
+                            </Button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setInspectingOrder(ord)}
+                              className="w-full py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-[#5C3A1E] font-semibold flex items-center justify-center gap-1.5 hover:bg-amber-100 transition-colors cursor-pointer"
+                            >
+                              <Sparkles className="w-3.5 h-3.5 text-[#B38E46]" />
+                              <span>View Assets</span>
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
                   </div>
-                )}
-              </section>
-
-              {/* RECENT ORDERS FEED */}
-              <section className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-[#5C3A1E]" />
-                    <h2 className="font-serif text-lg sm:text-xl font-bold text-[#171717]">
-                      Recent Studio Commissions
-                    </h2>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("orders")}
-                    className="text-xs font-semibold text-[#5C3A1E] hover:text-[#A98B57] flex items-center gap-1 transition-colors cursor-pointer"
-                  >
-                    <span>View All Orders ({orders.length})</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                <div className="rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] overflow-hidden shadow-warm">
-                  {orders.length === 0 ? (
-                    <div className="p-8 text-center text-xs text-[#64748B]">No orders recorded yet.</div>
-                  ) : (
-                    <div className="divide-y divide-[#E5E1D8]">
-                      {orders.slice(0, 8).map((ord) => (
-                        <div
-                          key={ord.id}
-                          className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-[#FAF9F5] transition-colors"
-                        >
-                          <div className="flex items-start sm:items-center gap-3.5 min-w-0">
-                            <div className="w-9 h-9 rounded-xl bg-[#F4EFE6] border border-[#E5E1D8] flex items-center justify-center shrink-0">
-                              <ShoppingBag className="w-4 h-4 text-[#5C3A1E]" />
-                            </div>
-                            <div className="min-w-0 space-y-0.5">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-mono font-bold text-xs text-[#5C3A1E]">
-                                  {ord.orderNumber || ord.code || ord.id.slice(0, 8)}
-                                </span>
-                                {renderChannelBadge(ord.source, Boolean(ord.isDraft || ord.status === "draft"))}
-                                <Badge variant={getStatusBadgeVariant(ord.status)} size="sm">
-                                  {ord.status.replace("_", " ")}
-                                </Badge>
-                              </div>
-                              <p className="text-xs font-semibold text-[#171717] truncate">{ord.clientName}</p>
-                              <p className="text-[11px] text-[#64748B] truncate">
-                                {ord.packageName || ord.service || "Creative Commission"} • {ord.clientEmail}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#E5E1D8]/60">
-                            <div className="text-right">
-                              <span className="font-serif font-bold text-sm text-[#5C3A1E]">
-                                ₹{(ord.totalAmount || ord.amountPaid || 3499).toLocaleString("en-IN")}
-                              </span>
-                              <span className="block text-[10px] text-[#64748B]">
-                                {ord.createdAt ? new Date(ord.createdAt).toLocaleDateString("en-IN") : "Recent"}
-                              </span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setInspectingOrder(ord)}
-                              className="px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] hover:bg-[#F0ECE1] transition-colors cursor-pointer flex items-center gap-1"
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                              <span>Inspect</span>
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </section>
-            </div>
-          )}
-
-          {/* TAB 2: ORDERS MANAGEMENT & DETAIL CHECKER */}
-          {activeTab === "orders" && (
-            <div className="space-y-6">
-              {/* Header & Back to Dashboard */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E5E1D8]">
-                <div>
-                  <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#171717]">
-                    Orders Ledger &amp; Detail Checker
-                  </h1>
-                  <p className="text-xs text-[#64748B]">
-                    Inspect client submissions, check UPI payment proof, deliver 4K assets, and update order status.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setActiveTab("dashboard")}
-                    leftIcon={<LayoutDashboard className="w-3.5 h-3.5 text-[#5C3A1E]" />}
-                  >
-                    Back to Dashboard
-                  </Button>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => fetchOrders()}
-                    isLoading={isRefreshing}
-                    leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
-                  >
-                    Refresh Orders
-                  </Button>
-                </div>
-              </div>
-
-              {/* Search & Filter Toolbar */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                <div className="relative flex-1 max-w-md">
-                  <Search className="w-4 h-4 text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    placeholder="Search by Client, Email, Order ID, or 12-digit UTR..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#FFFDF9] border border-[#E5E1D8] text-xs text-[#171717] focus:outline-none focus:border-[#A98B57]"
-                  />
-                </div>
-
-                <div className="flex items-center gap-2 flex-wrap">
-                  {/* Status Filter Buttons */}
-                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-                    {[
-                      { id: "all", label: "All Orders" },
-                      { id: "pending", label: "Payments to Verify" },
-                      { id: "in_production", label: "In Production" },
-                      { id: "completed", label: "Completed" },
-                      { id: "cancelled", label: "Cancelled" },
-                    ].map((f) => (
-                      <button
-                        key={f.id}
-                        type="button"
-                        onClick={() => setStatusFilter(f.id)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                          statusFilter === f.id
-                            ? "bg-[#171717] text-white shadow-2xs"
-                            : "bg-[#FFFDF9] text-[#64748B] border border-[#E5E1D8] hover:border-[#A98B57]"
-                        }`}
+                ) : (
+                  /* Row List Mode */
+                  <div className="space-y-3">
+                    {filteredOrders.map((ord) => (
+                      <div
+                        key={ord.id}
+                        className="p-4 sm:p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs hover:border-[#A98B57]/60 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4"
                       >
-                        {f.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Grid / List Mode */}
-                  <div className="flex items-center gap-1 bg-[#FFFDF9] p-1 rounded-xl border border-[#E5E1D8] shadow-2xs shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setViewMode("grid")}
-                      className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
-                        viewMode === "grid"
-                          ? "bg-[#171717] text-white shadow-2xs"
-                          : "text-[#64748B] hover:text-[#171717]"
-                      }`}
-                      title="Card Grid View"
-                    >
-                      <LayoutGrid className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">Grid</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setViewMode("list")}
-                      className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
-                        viewMode === "list"
-                          ? "bg-[#171717] text-white shadow-2xs"
-                          : "text-[#64748B] hover:text-[#171717]"
-                      }`}
-                      title="Row List View"
-                    >
-                      <ListIcon className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">List</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Orders Display (Grid vs List) */}
-              {isLoading ? (
-                <div className="p-12 text-center text-xs text-[#64748B] bg-[#FFFDF9] rounded-2xl border border-[#E5E1D8]">
-                  <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#A98B57] mb-2" />
-                  Loading real-time orders...
-                </div>
-              ) : filteredOrders.length === 0 ? (
-                <div className="p-12 text-center text-xs text-[#64748B] bg-[#FFFDF9] rounded-2xl border border-[#E5E1D8] space-y-2">
-                  <FileText className="w-8 h-8 text-[#94A3B8] mx-auto opacity-50" />
-                  <p className="font-semibold text-sm text-[#171717]">No orders matched your search</p>
-                  <p>Try resetting your filter or search query to view all commissions.</p>
-                </div>
-              ) : viewMode === "grid" ? (
-                /* Responsive Card Grid */
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredOrders.map((ord) => (
-                    <div
-                      key={ord.id}
-                      className="p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-warm space-y-3 flex flex-col justify-between hover:border-[#A98B57]/60 transition-all"
-                    >
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="font-mono font-bold text-xs text-[#5C3A1E]">
-                            {ord.orderNumber || ord.code || ord.id.slice(0, 10)}
-                          </span>
-                          <div className="flex items-center gap-1.5">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1 min-w-0">
+                          <div className="space-y-1 sm:w-36 shrink-0">
+                            <span className="font-mono font-bold text-xs text-[#5C3A1E] block">
+                              {ord.orderNumber || ord.code || ord.id.slice(0, 8)}
+                            </span>
                             {renderChannelBadge(ord.source, Boolean(ord.isDraft || ord.status === "draft"))}
                             <Badge variant={getStatusBadgeVariant(ord.status)} size="sm">
                               {ord.status.replace("_", " ")}
                             </Badge>
                           </div>
-                        </div>
 
-                        <div>
-                          <h3 className="font-serif font-bold text-base text-[#171717]">{ord.clientName}</h3>
-                          <p className="text-xs text-[#64748B]">{ord.clientEmail}</p>
-                          {ord.clientPhone && (
-                            <p className="text-[11px] text-[#64748B] flex items-center gap-1 mt-0.5">
-                              <Phone className="w-3 h-3 text-[#A98B57]" />
-                              <span>{ord.clientPhone}</span>
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] flex items-center justify-between text-xs">
-                          <div>
-                            <span className="text-[#64748B] text-[10px] block">Service / Plan:</span>
-                            <span className="font-semibold text-[#171717]">{ord.packageName || ord.service || "Creative Service"}</span>
+                          <div className="sm:w-48 min-w-0">
+                            <h4 className="font-serif font-bold text-sm text-[#171717] truncate">{ord.clientName}</h4>
+                            <p className="text-xs text-[#64748B] truncate">{ord.clientEmail}</p>
                           </div>
-                          <div className="text-right">
-                            <span className="text-[#64748B] text-[10px] block">Total:</span>
-                            <span className="font-serif font-bold text-base text-[#5C3A1E]">
+
+                          <div className="sm:w-44 min-w-0">
+                            <span className="text-[10px] text-[#64748B] block">Package / Service</span>
+                            <span className="text-xs font-semibold text-[#171717] truncate block">
+                              {ord.packageName || ord.service || "Creative Package"}
+                            </span>
+                          </div>
+
+                          <div className="sm:w-28 shrink-0">
+                            <span className="text-[10px] text-[#64748B] block">Amount</span>
+                            <span className="font-serif font-bold text-sm text-[#5C3A1E]">
                               ₹{(ord.totalAmount || ord.amountPaid || 3499).toLocaleString("en-IN")}
                             </span>
                           </div>
-                        </div>
 
-                        {ord.utrNumber ? (
-                          <div className="p-2.5 rounded-xl bg-emerald-50/80 border border-emerald-200 text-xs flex items-center justify-between">
-                            <div>
-                              <span className="text-[10px] text-emerald-800 block font-medium">12-Digit UPI UTR:</span>
-                              <span className="font-mono font-bold text-emerald-950">{ord.utrNumber}</span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => copyUtr(ord.utrNumber!)}
-                              className="p-1.5 rounded-lg bg-white border border-emerald-200 text-emerald-800 hover:bg-emerald-100 transition-colors"
-                              title="Copy UTR"
-                            >
-                              {copiedUtr ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                            </button>
-                          </div>
-                        ) : null}
-
-                        {ord.deliverables && ord.deliverables.length > 0 && (
-                          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#8B6508] bg-amber-50 px-2.5 py-1.5 rounded-xl border border-amber-200/80">
-                            <Sparkles className="w-3.5 h-3.5 text-[#B38E46] shrink-0" />
-                            <span>{ord.deliverables.length} Deliverable(s) Vaulted</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 pt-3 border-t border-[#E5E1D8]">
-                        <button
-                          type="button"
-                          onClick={() => setInspectingOrder(ord)}
-                          className="w-full py-2.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] flex items-center justify-center gap-1.5 hover:bg-[#F0ECE1] transition-colors cursor-pointer"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>Check Details</span>
-                        </button>
-
-                        {ord.status !== "in_production" && ord.status !== "completed" && ord.status !== "cancelled" && ord.status !== "rejected" ? (
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            className="w-full justify-center text-xs"
-                            onClick={() => handleVerifyAndDispatch(ord)}
-                            leftIcon={<Play className="w-3 h-3" />}
-                          >
-                            Verify &amp; Start
-                          </Button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => setInspectingOrder(ord)}
-                            className="w-full py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-[#5C3A1E] font-semibold text-center flex items-center justify-center gap-1.5 hover:bg-amber-100 transition-colors cursor-pointer"
-                          >
-                            <Sparkles className="w-3.5 h-3.5 text-[#B38E46]" />
-                            <span>View Assets</span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                /* Responsive Row List */
-                <div className="space-y-3">
-                  {filteredOrders.map((ord) => (
-                    <div
-                      key={ord.id}
-                      className="p-4 sm:p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs hover:border-[#A98B57]/60 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4"
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1 min-w-0">
-                        <div className="space-y-1 sm:w-36 shrink-0">
-                          <span className="font-mono font-bold text-xs text-[#5C3A1E] block">
-                            {ord.orderNumber || ord.code || ord.id.slice(0, 10)}
-                          </span>
-                          {renderChannelBadge(ord.source, Boolean(ord.isDraft || ord.status === "draft"))}
-                          <Badge variant={getStatusBadgeVariant(ord.status)} size="sm">
-                            {ord.status.replace("_", " ")}
-                          </Badge>
-                        </div>
-
-                        <div className="sm:w-52 min-w-0">
-                          <h4 className="font-serif font-bold text-sm text-[#171717] truncate">{ord.clientName}</h4>
-                          <p className="text-xs text-[#64748B] truncate">{ord.clientEmail}</p>
-                          {ord.clientPhone && <p className="text-[11px] text-[#64748B]">{ord.clientPhone}</p>}
-                        </div>
-
-                        <div className="sm:w-44 min-w-0">
-                          <span className="text-[10px] text-[#64748B] block">Service / Plan</span>
-                          <span className="text-xs font-semibold text-[#171717] truncate block">
-                            {ord.packageName || ord.service || "Creative Package"}
-                          </span>
-                        </div>
-
-                        <div className="sm:w-28 shrink-0">
-                          <span className="text-[10px] text-[#64748B] block">Total Amount</span>
-                          <span className="font-serif font-bold text-sm text-[#5C3A1E]">
-                            ₹{(ord.totalAmount || ord.amountPaid || 3499).toLocaleString("en-IN")}
-                          </span>
-                        </div>
-
-                        {ord.utrNumber ? (
                           <div className="sm:w-36 shrink-0">
-                            <span className="text-[10px] text-emerald-800 block font-medium">12-Digit UTR</span>
-                            <span className="font-mono font-semibold text-xs text-emerald-950 truncate block">
-                              {ord.utrNumber}
+                            <span className="text-[10px] text-[#64748B] block">12-Digit UTR</span>
+                            <span className="font-mono font-semibold text-xs text-emerald-800 truncate block">
+                              {ord.utrNumber || "— Pending —"}
                             </span>
                           </div>
-                        ) : (
-                          <div className="sm:w-36 shrink-0 text-[#94A3B8] text-xs font-mono">—</div>
-                        )}
-                      </div>
+                        </div>
 
-                      <div className="flex items-center gap-2 shrink-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-[#E5E1D8]/60">
-                        <button
-                          type="button"
-                          onClick={() => setInspectingOrder(ord)}
-                          className="px-3.5 py-2 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] flex items-center justify-center gap-1.5 hover:bg-[#F0ECE1] transition-colors cursor-pointer"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>Check Details</span>
-                        </button>
-
-                        {ord.status !== "in_production" && ord.status !== "completed" && ord.status !== "cancelled" && ord.status !== "rejected" ? (
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            className="text-xs py-2 px-3.5"
-                            onClick={() => handleVerifyAndDispatch(ord)}
-                            leftIcon={<Play className="w-3 h-3" />}
-                          >
-                            Verify &amp; Start
-                          </Button>
-                        ) : (
+                        <div className="flex items-center gap-2 shrink-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-[#E5E1D8]/60">
                           <button
                             type="button"
                             onClick={() => setInspectingOrder(ord)}
-                            className="px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-200 text-xs text-[#5C3A1E] font-semibold flex items-center justify-center gap-1.5 hover:bg-amber-100 transition-colors cursor-pointer"
+                            className="px-3.5 py-2 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] flex items-center justify-center gap-1.5 hover:bg-[#F0ECE1] transition-colors cursor-pointer"
                           >
-                            <Sparkles className="w-3.5 h-3.5 text-[#B38E46]" />
-                            <span>View Assets</span>
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Inspect</span>
                           </button>
+
+                          {ord.status !== "in_production" && ord.status !== "completed" && ord.status !== "cancelled" ? (
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              className="text-xs py-2 px-3.5"
+                              onClick={() => handleVerifyAndDispatch(ord)}
+                              leftIcon={<Play className="w-3 h-3" />}
+                            >
+                              Verify UPI
+                            </Button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setInspectingOrder(ord)}
+                              className="px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-200 text-xs text-[#5C3A1E] font-semibold flex items-center justify-center gap-1.5 hover:bg-amber-100 transition-colors cursor-pointer"
+                            >
+                              <Sparkles className="w-3.5 h-3.5 text-[#B38E46]" />
+                              <span>Assets</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ============================================================ */}
+            {/* TAB 3: WEBSITE PAGES CMS & LIVE CONTENT EDITOR */}
+            {/* ============================================================ */}
+            {activeTab === "cms" && (
+              <div className="space-y-6">
+                {/* CMS Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E5E1D8]">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Globe className="w-5 h-5 text-[#A98B57]" />
+                      <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#171717]">
+                        Website Pages CMS &amp; Live Editor
+                      </h1>
+                    </div>
+                    <p className="text-xs text-[#64748B] mt-1">
+                      Directly manage copy, headlines, pricing, and contact information for every page of SutraStudio.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2.5">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => fetchCmsContent()}
+                      isLoading={isCmsLoading}
+                      leftIcon={<RefreshCw className="w-3.5 h-3.5 text-[#5C3A1E]" />}
+                    >
+                      Reload Cloud Copy
+                    </Button>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={handleSaveCms}
+                      isLoading={isCmsSaving}
+                      leftIcon={<Save className="w-3.5 h-3.5" />}
+                    >
+                      Save &amp; Publish
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Feedback Toast */}
+                {cmsFeedback && (
+                  <div
+                    className={`p-4 rounded-2xl text-xs font-semibold flex items-center gap-2.5 ${
+                      cmsFeedback.type === "success"
+                        ? "bg-emerald-50 text-emerald-900 border border-emerald-300"
+                        : "bg-red-50 text-red-900 border border-red-300"
+                    }`}
+                  >
+                    {cmsFeedback.type === "success" ? (
+                      <CheckCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                    )}
+                    <span>{cmsFeedback.message}</span>
+                  </div>
+                )}
+
+                {/* Page Tabs Sub-Navigation */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-[#E5E1D8]">
+                  {[
+                    { id: "home" as CmsSubPage, label: "Home Page (/)", route: "/" },
+                    { id: "about" as CmsSubPage, label: "About Studio (/about)", route: "/about" },
+                    { id: "services" as CmsSubPage, label: "Services (/services)", route: "/services" },
+                    { id: "pricing" as CmsSubPage, label: "Pricing & Plans (/pricing)", route: "/pricing" },
+                    { id: "contact" as CmsSubPage, label: "Contact & Concierge (/contact)", route: "/contact" },
+                    { id: "header" as CmsSubPage, label: "Header & Announcement", route: "/" },
+                    { id: "footer" as CmsSubPage, label: "Footer & Social Links", route: "/" },
+                  ].map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setActiveCmsPage(p.id)}
+                      className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                        activeCmsPage === p.id
+                          ? "bg-[#171717] text-[#FAF9F5] shadow-xs"
+                          : "bg-[#FFFDF9] text-[#64748B] border border-[#E5E1D8] hover:border-[#A98B57]"
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* CMS PAGE 1: HOME PAGE */}
+                {activeCmsPage === "home" && (
+                  <div className="space-y-6 bg-[#FFFDF9] p-6 rounded-3xl border border-[#E5E1D8] shadow-warm">
+                    <div className="flex items-center justify-between pb-3 border-b border-[#E5E1D8]">
+                      <div>
+                        <h2 className="font-serif text-lg font-bold text-[#171717]">Home Hero &amp; Headline Copy</h2>
+                        <p className="text-xs text-[#64748B]">Displayed on the main landing page (`/`).</p>
+                      </div>
+                      <Link
+                        href="/"
+                        target="_blank"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] hover:border-[#A98B57]"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Preview Live Home ↗</span>
+                      </Link>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5 md:col-span-2">
+                        <label className="text-xs font-bold text-[#171717]">Hero Tagline (Kicker):</label>
+                        <input
+                          type="text"
+                          value={cmsData?.hero?.tagline || ""}
+                          onChange={(e) => updateCmsField("hero", "tagline", e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717] focus:outline-none focus:border-[#A98B57]"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5 md:col-span-2">
+                        <label className="text-xs font-bold text-[#171717]">Main Hero Title:</label>
+                        <input
+                          type="text"
+                          value={cmsData?.hero?.title || ""}
+                          onChange={(e) => updateCmsField("hero", "title", e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs font-bold text-[#171717] focus:outline-none focus:border-[#A98B57]"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5 md:col-span-2">
+                        <label className="text-xs font-bold text-[#171717]">Hero Description Copy:</label>
+                        <textarea
+                          rows={3}
+                          value={cmsData?.hero?.description || ""}
+                          onChange={(e) => updateCmsField("hero", "description", e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717] focus:outline-none focus:border-[#A98B57]"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-[#171717]">Primary CTA Button Text:</label>
+                        <input
+                          type="text"
+                          value={cmsData?.hero?.primaryCtaText || ""}
+                          onChange={(e) => updateCmsField("hero", "primaryCtaText", e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717] focus:outline-none focus:border-[#A98B57]"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-[#171717]">Secondary CTA Button Text:</label>
+                        <input
+                          type="text"
+                          value={cmsData?.hero?.secondaryCtaText || ""}
+                          onChange={(e) => updateCmsField("hero", "secondaryCtaText", e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717] focus:outline-none focus:border-[#A98B57]"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-[#171717]">Key Metric 1 (Turnaround):</label>
+                        <input
+                          type="text"
+                          value={cmsData?.hero?.statsTurnaround || ""}
+                          onChange={(e) => updateCmsField("hero", "statsTurnaround", e.target.value)}
+                          placeholder="48-72 Hours"
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717] focus:outline-none focus:border-[#A98B57]"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-[#171717]">Key Metric 2 (Precision):</label>
+                        <input
+                          type="text"
+                          value={cmsData?.hero?.statsRating || ""}
+                          onChange={(e) => updateCmsField("hero", "statsRating", e.target.value)}
+                          placeholder="99.8% Precision"
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717] focus:outline-none focus:border-[#A98B57]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* CMS PAGE 2: ABOUT STUDIO */}
+                {activeCmsPage === "about" && (
+                  <div className="space-y-6 bg-[#FFFDF9] p-6 rounded-3xl border border-[#E5E1D8] shadow-warm">
+                    <div className="flex items-center justify-between pb-3 border-b border-[#E5E1D8]">
+                      <div>
+                        <h2 className="font-serif text-lg font-bold text-[#171717]">About Studio &amp; Heritage Narrative</h2>
+                        <p className="text-xs text-[#64748B]">Displayed on the About Studio page (`/about`).</p>
+                      </div>
+                      <Link
+                        href="/about"
+                        target="_blank"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] hover:border-[#A98B57]"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Preview Live About ↗</span>
+                      </Link>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5 md:col-span-2">
+                        <label className="text-xs font-bold text-[#171717]">About Page Heading:</label>
+                        <input
+                          type="text"
+                          value={cmsData?.about?.title || ""}
+                          onChange={(e) => updateCmsField("about", "title", e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717] focus:outline-none focus:border-[#A98B57]"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5 md:col-span-2">
+                        <label className="text-xs font-bold text-[#171717]">About Subtitle &amp; Thesis:</label>
+                        <input
+                          type="text"
+                          value={cmsData?.about?.subtitle || ""}
+                          onChange={(e) => updateCmsField("about", "subtitle", e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717] focus:outline-none focus:border-[#A98B57]"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5 md:col-span-2">
+                        <label className="text-xs font-bold text-[#171717]">Studio Heritage Story &amp; Philosophy:</label>
+                        <textarea
+                          rows={4}
+                          value={cmsData?.about?.story || ""}
+                          onChange={(e) => updateCmsField("about", "story", e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717] focus:outline-none focus:border-[#A98B57]"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-[#171717]">Values Statement:</label>
+                        <input
+                          type="text"
+                          value={cmsData?.about?.valuesStatement || ""}
+                          onChange={(e) => updateCmsField("about", "valuesStatement", e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717] focus:outline-none focus:border-[#A98B57]"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-[#171717]">Atelier Base / Location Statement:</label>
+                        <input
+                          type="text"
+                          value={cmsData?.about?.location || ""}
+                          onChange={(e) => updateCmsField("about", "location", e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717] focus:outline-none focus:border-[#A98B57]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* CMS PAGE 3: SERVICES */}
+                {activeCmsPage === "services" && (
+                  <div className="space-y-6 bg-[#FFFDF9] p-6 rounded-3xl border border-[#E5E1D8] shadow-warm">
+                    <div className="flex items-center justify-between pb-3 border-b border-[#E5E1D8]">
+                      <div>
+                        <h2 className="font-serif text-lg font-bold text-[#171717]">Services &amp; Studio Capabilities</h2>
+                        <p className="text-xs text-[#64748B]">Displayed on the Services page (`/services`).</p>
+                      </div>
+                      <Link
+                        href="/services"
+                        target="_blank"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] hover:border-[#A98B57]"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Preview Live Services ↗</span>
+                      </Link>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5 md:col-span-2">
+                        <label className="text-xs font-bold text-[#171717]">Services Page Title:</label>
+                        <input
+                          type="text"
+                          value={cmsData?.services?.title || ""}
+                          onChange={(e) => updateCmsField("services", "title", e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717] focus:outline-none focus:border-[#A98B57]"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5 md:col-span-2">
+                        <label className="text-xs font-bold text-[#171717]">Services Subtitle:</label>
+                        <input
+                          type="text"
+                          value={cmsData?.services?.subtitle || ""}
+                          onChange={(e) => updateCmsField("services", "subtitle", e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717] focus:outline-none focus:border-[#A98B57]"
+                        />
+                      </div>
+
+                      {/* Discipline 1 */}
+                      <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-2 md:col-span-2">
+                        <span className="text-xs font-mono font-bold text-[#A98B57] uppercase">Discipline 01</span>
+                        <input
+                          type="text"
+                          value={cmsData?.services?.service1Title || ""}
+                          onChange={(e) => updateCmsField("services", "service1Title", e.target.value)}
+                          placeholder="Service Title"
+                          className="w-full px-3.5 py-2 rounded-xl bg-white border border-[#E5E1D8] text-xs font-bold text-[#171717]"
+                        />
+                        <textarea
+                          rows={2}
+                          value={cmsData?.services?.service1Desc || ""}
+                          onChange={(e) => updateCmsField("services", "service1Desc", e.target.value)}
+                          placeholder="Service Description"
+                          className="w-full px-3.5 py-2 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717]"
+                        />
+                      </div>
+
+                      {/* Discipline 2 */}
+                      <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-2 md:col-span-2">
+                        <span className="text-xs font-mono font-bold text-[#A98B57] uppercase">Discipline 02</span>
+                        <input
+                          type="text"
+                          value={cmsData?.services?.service2Title || ""}
+                          onChange={(e) => updateCmsField("services", "service2Title", e.target.value)}
+                          placeholder="Service Title"
+                          className="w-full px-3.5 py-2 rounded-xl bg-white border border-[#E5E1D8] text-xs font-bold text-[#171717]"
+                        />
+                        <textarea
+                          rows={2}
+                          value={cmsData?.services?.service2Desc || ""}
+                          onChange={(e) => updateCmsField("services", "service2Desc", e.target.value)}
+                          placeholder="Service Description"
+                          className="w-full px-3.5 py-2 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717]"
+                        />
+                      </div>
+
+                      {/* Discipline 3 */}
+                      <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-2 md:col-span-2">
+                        <span className="text-xs font-mono font-bold text-[#A98B57] uppercase">Discipline 03</span>
+                        <input
+                          type="text"
+                          value={cmsData?.services?.service3Title || ""}
+                          onChange={(e) => updateCmsField("services", "service3Title", e.target.value)}
+                          placeholder="Service Title"
+                          className="w-full px-3.5 py-2 rounded-xl bg-white border border-[#E5E1D8] text-xs font-bold text-[#171717]"
+                        />
+                        <textarea
+                          rows={2}
+                          value={cmsData?.services?.service3Desc || ""}
+                          onChange={(e) => updateCmsField("services", "service3Desc", e.target.value)}
+                          placeholder="Service Description"
+                          className="w-full px-3.5 py-2 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717]"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5 md:col-span-2">
+                        <label className="text-xs font-bold text-[#171717]">Turnaround SLA Policy Note:</label>
+                        <input
+                          type="text"
+                          value={cmsData?.services?.turnaroundSla || ""}
+                          onChange={(e) => updateCmsField("services", "turnaroundSla", e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* CMS PAGE 4: PRICING & PACKAGES */}
+                {activeCmsPage === "pricing" && (
+                  <div className="space-y-6 bg-[#FFFDF9] p-6 rounded-3xl border border-[#E5E1D8] shadow-warm">
+                    <div className="flex items-center justify-between pb-3 border-b border-[#E5E1D8]">
+                      <div>
+                        <h2 className="font-serif text-lg font-bold text-[#171717]">Pricing Tiers &amp; Retainer Packages</h2>
+                        <p className="text-xs text-[#64748B]">Displayed on the Pricing page (`/pricing`).</p>
+                      </div>
+                      <Link
+                        href="/pricing"
+                        target="_blank"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] hover:border-[#A98B57]"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Preview Live Pricing ↗</span>
+                      </Link>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Tier 1 */}
+                      <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-3">
+                        <span className="text-xs font-mono font-bold text-[#A98B57] uppercase">Starter Tier</span>
+                        <input
+                          type="text"
+                          value={cmsData?.pricing?.starterName || ""}
+                          onChange={(e) => updateCmsField("pricing", "starterName", e.target.value)}
+                          placeholder="Package Name"
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#E5E1D8] text-xs font-bold text-[#171717]"
+                        />
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-[#64748B]">₹</span>
+                          <input
+                            type="text"
+                            value={cmsData?.pricing?.starterPrice || ""}
+                            onChange={(e) => updateCmsField("pricing", "starterPrice", e.target.value)}
+                            placeholder="Price (e.g. 3,499)"
+                            className="w-full px-3 py-2 rounded-xl bg-white border border-[#E5E1D8] text-xs font-serif font-bold text-[#5C3A1E]"
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          value={cmsData?.pricing?.starterDelivery || ""}
+                          onChange={(e) => updateCmsField("pricing", "starterDelivery", e.target.value)}
+                          placeholder="Turnaround SLA"
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#64748B]"
+                        />
+                        <textarea
+                          rows={3}
+                          value={cmsData?.pricing?.starterFeatures || ""}
+                          onChange={(e) => updateCmsField("pricing", "starterFeatures", e.target.value)}
+                          placeholder="Features summary"
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717]"
+                        />
+                      </div>
+
+                      {/* Tier 2 */}
+                      <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-300 space-y-3">
+                        <span className="text-xs font-mono font-bold text-[#5C3A1E] uppercase">Pro Tier (Popular)</span>
+                        <input
+                          type="text"
+                          value={cmsData?.pricing?.proName || ""}
+                          onChange={(e) => updateCmsField("pricing", "proName", e.target.value)}
+                          placeholder="Package Name"
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs font-bold text-[#171717]"
+                        />
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-[#64748B]">₹</span>
+                          <input
+                            type="text"
+                            value={cmsData?.pricing?.proPrice || ""}
+                            onChange={(e) => updateCmsField("pricing", "proPrice", e.target.value)}
+                            placeholder="Price (e.g. 7,499)"
+                            className="w-full px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs font-serif font-bold text-[#5C3A1E]"
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          value={cmsData?.pricing?.proDelivery || ""}
+                          onChange={(e) => updateCmsField("pricing", "proDelivery", e.target.value)}
+                          placeholder="Turnaround SLA"
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs text-[#64748B]"
+                        />
+                        <textarea
+                          rows={3}
+                          value={cmsData?.pricing?.proFeatures || ""}
+                          onChange={(e) => updateCmsField("pricing", "proFeatures", e.target.value)}
+                          placeholder="Features summary"
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs text-[#171717]"
+                        />
+                      </div>
+
+                      {/* Tier 3 */}
+                      <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-3">
+                        <span className="text-xs font-mono font-bold text-[#A98B57] uppercase">Retainer Tier</span>
+                        <input
+                          type="text"
+                          value={cmsData?.pricing?.retainerName || ""}
+                          onChange={(e) => updateCmsField("pricing", "retainerName", e.target.value)}
+                          placeholder="Package Name"
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#E5E1D8] text-xs font-bold text-[#171717]"
+                        />
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-[#64748B]">₹</span>
+                          <input
+                            type="text"
+                            value={cmsData?.pricing?.retainerPrice || ""}
+                            onChange={(e) => updateCmsField("pricing", "retainerPrice", e.target.value)}
+                            placeholder="Price (e.g. 19,999)"
+                            className="w-full px-3 py-2 rounded-xl bg-white border border-[#E5E1D8] text-xs font-serif font-bold text-[#5C3A1E]"
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          value={cmsData?.pricing?.retainerDelivery || ""}
+                          onChange={(e) => updateCmsField("pricing", "retainerDelivery", e.target.value)}
+                          placeholder="Turnaround SLA"
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#64748B]"
+                        />
+                        <textarea
+                          rows={3}
+                          value={cmsData?.pricing?.retainerFeatures || ""}
+                          onChange={(e) => updateCmsField("pricing", "retainerFeatures", e.target.value)}
+                          placeholder="Features summary"
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* CMS PAGE 5: CONTACT & CONCIERGE */}
+                {activeCmsPage === "contact" && (
+                  <div className="space-y-6 bg-[#FFFDF9] p-6 rounded-3xl border border-[#E5E1D8] shadow-warm">
+                    <div className="flex items-center justify-between pb-3 border-b border-[#E5E1D8]">
+                      <div>
+                        <h2 className="font-serif text-lg font-bold text-[#171717]">Contact, Concierge &amp; Address Details</h2>
+                        <p className="text-xs text-[#64748B]">Displayed on the Contact page (`/contact`) and inquiry modals.</p>
+                      </div>
+                      <Link
+                        href="/contact"
+                        target="_blank"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] hover:border-[#A98B57]"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Preview Live Contact ↗</span>
+                      </Link>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-[#171717]">Official Email:</label>
+                        <input
+                          type="email"
+                          value={cmsData?.contact?.email || ""}
+                          onChange={(e) => updateCmsField("contact", "email", e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717]"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-[#171717]">WhatsApp Phone Number:</label>
+                        <input
+                          type="text"
+                          value={cmsData?.contact?.whatsapp || ""}
+                          onChange={(e) => updateCmsField("contact", "whatsapp", e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717]"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-[#171717]">Studio Operating Hours:</label>
+                        <input
+                          type="text"
+                          value={cmsData?.contact?.operatingHours || ""}
+                          onChange={(e) => updateCmsField("contact", "operatingHours", e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717]"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-[#171717]">Response Time Guarantee SLA:</label>
+                        <input
+                          type="text"
+                          value={cmsData?.contact?.responseSla || ""}
+                          onChange={(e) => updateCmsField("contact", "responseSla", e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717]"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5 md:col-span-2">
+                        <label className="text-xs font-bold text-[#171717]">Physical Studio Base Address:</label>
+                        <input
+                          type="text"
+                          value={cmsData?.contact?.address || ""}
+                          onChange={(e) => updateCmsField("contact", "address", e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* CMS PAGE 6: HEADER & ANNOUNCEMENT */}
+                {activeCmsPage === "header" && (
+                  <div className="space-y-6 bg-[#FFFDF9] p-6 rounded-3xl border border-[#E5E1D8] shadow-warm">
+                    <div className="pb-3 border-b border-[#E5E1D8]">
+                      <h2 className="font-serif text-lg font-bold text-[#171717]">Top Header &amp; Announcement Bar</h2>
+                      <p className="text-xs text-[#64748B]">Manage the global announcement banner visible across every public page.</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8]">
+                        <div>
+                          <p className="font-semibold text-xs text-[#171717]">Announcement Banner Active</p>
+                          <p className="text-[11px] text-[#64748B]">Enable or disable the gold ticker at the top of the site.</p>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={Boolean(cmsData?.header?.announcementActive)}
+                          onChange={(e) => updateCmsField("header", "announcementActive", e.target.checked)}
+                          className="w-4 h-4 accent-[#A98B57] cursor-pointer"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-[#171717]">Announcement Banner Text:</label>
+                        <input
+                          type="text"
+                          value={cmsData?.header?.announcementBarText || ""}
+                          onChange={(e) => updateCmsField("header", "announcementBarText", e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* CMS PAGE 7: FOOTER & SOCIALS */}
+                {activeCmsPage === "footer" && (
+                  <div className="space-y-6 bg-[#FFFDF9] p-6 rounded-3xl border border-[#E5E1D8] shadow-warm">
+                    <div className="pb-3 border-b border-[#E5E1D8]">
+                      <h2 className="font-serif text-lg font-bold text-[#171717]">Global Footer &amp; Social Links</h2>
+                      <p className="text-xs text-[#64748B]">Control official Instagram, Facebook, and WhatsApp connections.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5 md:col-span-2">
+                        <label className="text-xs font-bold text-[#171717]">Footer Brand Tagline:</label>
+                        <input
+                          type="text"
+                          value={cmsData?.footer?.brandTagline || ""}
+                          onChange={(e) => updateCmsField("footer", "brandTagline", e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717]"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-[#171717]">Official Instagram URL:</label>
+                        <input
+                          type="text"
+                          value={cmsData?.footer?.socialLinks?.instagram || ""}
+                          onChange={(e) =>
+                            setCmsData((prev: any) => ({
+                              ...prev,
+                              footer: {
+                                ...prev.footer,
+                                socialLinks: {
+                                  ...(prev.footer?.socialLinks || {}),
+                                  instagram: e.target.value,
+                                },
+                              },
+                            }))
+                          }
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717]"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-[#171717]">Official Facebook Page URL:</label>
+                        <input
+                          type="text"
+                          value={cmsData?.footer?.socialLinks?.facebookPage || ""}
+                          onChange={(e) =>
+                            setCmsData((prev: any) => ({
+                              ...prev,
+                              footer: {
+                                ...prev.footer,
+                                socialLinks: {
+                                  ...(prev.footer?.socialLinks || {}),
+                                  facebookPage: e.target.value,
+                                },
+                              },
+                            }))
+                          }
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717]"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5 md:col-span-2">
+                        <label className="text-xs font-bold text-[#171717]">Direct WhatsApp Concierge Link:</label>
+                        <input
+                          type="text"
+                          value={cmsData?.footer?.socialLinks?.whatsapp || ""}
+                          onChange={(e) =>
+                            setCmsData((prev: any) => ({
+                              ...prev,
+                              footer: {
+                                ...prev.footer,
+                                socialLinks: {
+                                  ...(prev.footer?.socialLinks || {}),
+                                  whatsapp: e.target.value,
+                                },
+                              },
+                            }))
+                          }
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Floating Save Bar */}
+                <div className="p-4 rounded-2xl bg-[#171717] text-white flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl">
+                  <div className="flex items-center gap-2">
+                    <Save className="w-4 h-4 text-[#A98B57]" />
+                    <span className="text-xs font-medium">
+                      Unpublished edits in memory. Click Save to write immediately to Cloud Firestore.
+                    </span>
+                  </div>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={handleSaveCms}
+                    isLoading={isCmsSaving}
+                    leftIcon={<Check className="w-3.5 h-3.5" />}
+                    className="w-full sm:w-auto"
+                  >
+                    Save &amp; Publish Website Changes
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* ============================================================ */}
+            {/* TAB 4: CLIENTS DIRECTORY (CRM ROSTER) */}
+            {/* ============================================================ */}
+            {activeTab === "clients" && (
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E5E1D8]">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Users className="w-5 h-5 text-[#A98B57]" />
+                      <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#171717]">
+                        CRM Clients Directory
+                      </h1>
+                    </div>
+                    <p className="text-xs text-[#64748B] mt-1">
+                      Aggregated client contact records, lifetime value (LTV), and active commission history.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#FAF9F5] border border-[#E5E1D8] text-[#5C3A1E]">
+                      {clientsList.length} Unique Clients
+                    </span>
+                  </div>
+                </div>
+
+                {/* Search Bar */}
+                <div className="relative max-w-md">
+                  <Search className="w-4 h-4 text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Search clients by name, email, or phone..."
+                    value={clientSearchQuery}
+                    onChange={(e) => setClientSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#FFFDF9] border border-[#E5E1D8] text-xs text-[#171717] focus:outline-none focus:border-[#A98B57]"
+                  />
+                </div>
+
+                {clientsList.length === 0 ? (
+                  <div className="p-12 text-center text-xs text-[#64748B] bg-[#FFFDF9] rounded-2xl border border-[#E5E1D8] space-y-2">
+                    <Users className="w-8 h-8 text-[#94A3B8] mx-auto opacity-50" />
+                    <p className="font-semibold text-sm text-[#171717]">No clients found</p>
+                    <p>Clients who initiate orders or checkout will appear here in the CRM roster automatically.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {clientsList.map((client) => (
+                      <div
+                        key={client.email}
+                        className="p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-warm space-y-4 hover:border-[#A98B57]/60 transition-all flex flex-col justify-between"
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <Avatar name={client.name} size="md" status="online" />
+                              <div className="min-w-0">
+                                <h3 className="font-serif font-bold text-sm text-[#171717] truncate">{client.name}</h3>
+                                <p className="text-xs text-[#64748B] truncate">{client.email}</p>
+                              </div>
+                            </div>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF9F5] border border-[#E5E1D8] text-[#5C3A1E] shrink-0">
+                              {client.totalOrders} order{client.totalOrders > 1 ? "s" : ""}
+                            </span>
+                          </div>
+
+                          <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-1.5 text-xs">
+                            <div className="flex justify-between items-center">
+                              <span className="text-[#64748B] text-[10px]">Lifetime Value (LTV):</span>
+                              <span className="font-serif font-bold text-sm text-[#5C3A1E]">
+                                ₹{client.totalLtv.toLocaleString("en-IN")}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center text-[11px]">
+                              <span className="text-[#64748B]">Recent Package:</span>
+                              <span className="font-medium text-[#171717] truncate max-w-[130px]">
+                                {client.latestPackage}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center text-[10px] text-[#64748B]">
+                              <span>Status:</span>
+                              <Badge variant={getStatusBadgeVariant(client.latestStatus)} size="sm">
+                                {client.latestStatus.replace("_", " ")}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 pt-3 border-t border-[#E5E1D8]">
+                          <a
+                            href={`mailto:${client.email}`}
+                            className="py-2 px-3 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] flex items-center justify-center gap-1.5 hover:bg-[#F0ECE1] transition-colors"
+                          >
+                            <Mail className="w-3.5 h-3.5" />
+                            <span>Email</span>
+                          </a>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSearchQuery(client.email);
+                              switchTab("orders");
+                            }}
+                            className="py-2 px-3 rounded-xl bg-[#171717] text-white text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-[#262626] transition-colors cursor-pointer"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-[#A98B57]" />
+                            <span>Commissions</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ============================================================ */}
+            {/* TAB 5: STUDIO & PAYMENT SETTINGS */}
+            {/* ============================================================ */}
+            {activeTab === "settings" && (
+              <div className="space-y-6 bg-[#FFFDF9] p-6 rounded-3xl border border-[#E5E1D8] shadow-warm">
+                <div className="pb-3 border-b border-[#E5E1D8]">
+                  <div className="flex items-center gap-2">
+                    <Settings className="w-5 h-5 text-[#A98B57]" />
+                    <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#171717]">
+                      Studio &amp; Payment Settings
+                    </h1>
+                  </div>
+                  <p className="text-xs text-[#64748B] mt-1">
+                    Manage direct UPI payment credentials, administrator email notifications, and automated pipeline webhooks.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5 md:col-span-2">
+                    <label className="text-xs font-bold text-[#171717]">Direct Merchant UPI VPA ID (For Instant Client Checkout):</label>
+                    <input
+                      type="text"
+                      value={cmsData?.payment?.upiVpa || "yashjoshi7355@okaxis"}
+                      onChange={(e) => updateCmsField("payment", "upiVpa", e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs font-mono font-bold text-[#2E7D4F]"
+                    />
+                    <p className="text-[11px] text-[#64748B]">
+                      This UPI VPA is embedded into the QR codes generated for every client order.
+                    </p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-[#171717]">Merchant / Payee Name:</label>
+                    <input
+                      type="text"
+                      value={cmsData?.payment?.merchantName || "Sutra Studio / Yash Joshi"}
+                      onChange={(e) => updateCmsField("payment", "merchantName", e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717]"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-[#171717]">Account Holder Name:</label>
+                    <input
+                      type="text"
+                      value={cmsData?.payment?.accountHolder || "Yash Joshi"}
+                      onChange={(e) => updateCmsField("payment", "accountHolder", e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717]"
+                    />
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8] md:col-span-2 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-xs font-bold text-[#171717]">Local n8n Workflow Dispatch Engine</span>
+                    </div>
+                    <p className="text-[11px] text-[#64748B]">
+                      When you verify a payment and click &quot;Dispatch to n8n&quot;, the system dispatches an automated webhook to the local engine to trigger 4K rendering and Google Drive vault upload.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-[#E5E1D8] flex items-center justify-between">
+                  <span className="text-xs text-[#64748B]">Save configuration to live Firestore database</span>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={handleSaveCms}
+                    isLoading={isCmsSaving}
+                    leftIcon={<Save className="w-3.5 h-3.5" />}
+                  >
+                    Save Studio Settings
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* ============================================================ */}
+            {/* INSPECTION & DISPATCH MODAL */}
+            {/* ============================================================ */}
+            {inspectingOrder && (
+              <Modal
+                isOpen={!!inspectingOrder}
+                onClose={() => setInspectingOrder(null)}
+                title="Order Verification &amp; Studio Generation"
+                description={`Order #${inspectingOrder.orderNumber || inspectingOrder.code || inspectingOrder.id.slice(0, 10)}`}
+                maxWidth="lg"
+              >
+                <div className="space-y-4">
+                  {/* Client & Financial Details Card */}
+                  <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-2.5 text-xs">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#64748B]">Channel Source:</span>
+                      <div>
+                        {renderChannelBadge(
+                          inspectingOrder.source,
+                          Boolean(inspectingOrder.isDraft || inspectingOrder.status === "draft")
                         )}
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
 
-          {/* COMPREHENSIVE ORDER DETAIL CHECKER MODAL */}
-          {inspectingOrder && (
-            <Modal
-              isOpen={Boolean(inspectingOrder)}
-              onClose={() => {
-                setInspectingOrder(null);
-                setActionMessage(null);
-              }}
-              title="Order Details & Verification Check"
-              description={`Order #${inspectingOrder.orderNumber || inspectingOrder.code || inspectingOrder.id}`}
-              maxWidth="lg"
-            >
-              <div className="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
-                {/* Status Bar */}
-                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8]">
-                  <div className="space-y-0.5">
-                    <span className="text-[10px] text-[#64748B] uppercase font-semibold">Current Status</span>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={getStatusBadgeVariant(inspectingOrder.status)} size="md">
-                        {inspectingOrder.status.replace("_", " ")}
-                      </Badge>
-                      {inspectingOrder.paymentStatus && (
-                        <span className="text-xs text-[#64748B]">
-                          Payment: <strong className="text-[#171717]">{inspectingOrder.paymentStatus}</strong>
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    {renderChannelBadge(inspectingOrder.source, Boolean(inspectingOrder.isDraft || inspectingOrder.status === "draft"))}
-                  </div>
-                </div>
-
-                {/* Client Information */}
-                <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] space-y-2.5">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#A98B57]">Client Specifications</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    <div>
-                      <span className="text-[#64748B] block text-[11px]">Full Name:</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#64748B]">Client Name:</span>
                       <span className="font-semibold text-[#171717]">{inspectingOrder.clientName}</span>
                     </div>
-                    <div>
-                      <span className="text-[#64748B] block text-[11px]">Email Address:</span>
-                      <a href={`mailto:${inspectingOrder.clientEmail}`} className="font-medium text-[#5C3A1E] hover:underline flex items-center gap-1">
-                        <Mail className="w-3 h-3" />
-                        <span>{inspectingOrder.clientEmail}</span>
-                      </a>
-                    </div>
-                    {inspectingOrder.clientPhone && (
-                      <div>
-                        <span className="text-[#64748B] block text-[11px]">Phone / WhatsApp:</span>
-                        <a href={`tel:${inspectingOrder.clientPhone}`} className="font-medium text-[#5C3A1E] hover:underline flex items-center gap-1">
-                          <Phone className="w-3 h-3" />
-                          <span>{inspectingOrder.clientPhone}</span>
-                        </a>
-                      </div>
-                    )}
-                    {inspectingOrder.brandName && (
-                      <div>
-                        <span className="text-[#64748B] block text-[11px]">Brand / Business Name:</span>
-                        <span className="font-semibold text-[#171717]">{inspectingOrder.brandName}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
 
-                {/* Service & Financials */}
-                <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] space-y-2.5">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#A98B57]">Commission &amp; Pricing</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    <div>
-                      <span className="text-[#64748B] block text-[11px]">Package / Service:</span>
-                      <span className="font-bold text-[#171717]">{inspectingOrder.packageName || inspectingOrder.service || "Creative Package"}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#64748B]">Email Address:</span>
+                      <span className="font-mono text-[#171717]">{inspectingOrder.clientEmail}</span>
                     </div>
-                    <div>
-                      <span className="text-[#64748B] block text-[11px]">Total Valuation:</span>
+
+                    {inspectingOrder.clientPhone && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-[#64748B]">Phone / WhatsApp:</span>
+                        <span className="font-mono text-[#171717]">{inspectingOrder.clientPhone}</span>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between items-center pt-2 border-t border-[#E5E1D8]/60">
+                      <span className="text-[#64748B]">Service / Package:</span>
+                      <span className="font-semibold text-[#171717]">
+                        {inspectingOrder.packageName || inspectingOrder.service || "Creative Package"}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#64748B]">Total Amount:</span>
                       <span className="font-serif font-bold text-base text-[#5C3A1E]">
                         ₹{(inspectingOrder.totalAmount || inspectingOrder.amountPaid || 3499).toLocaleString("en-IN")}
                       </span>
                     </div>
                   </div>
-                </div>
 
-                {/* UPI UTR Verification Box */}
-                <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <ShieldCheck className="w-4 h-4 text-amber-700" />
-                      <h4 className="text-xs font-bold text-amber-950 uppercase tracking-wider">
-                        UPI Payment Verification Proof
-                      </h4>
+                  {/* UPI Verification Box */}
+                  <div className="p-4 rounded-2xl bg-amber-50/80 border-2 border-amber-300 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-amber-950 font-bold text-xs">
+                        <DollarSign className="w-4 h-4 text-amber-700" />
+                        <span>UPI Payment Proof Verification</span>
+                      </div>
+                      {inspectingOrder.utrNumber && (
+                        <button
+                          type="button"
+                          onClick={() => copyUtr(inspectingOrder.utrNumber!)}
+                          className="px-2.5 py-1 rounded-lg bg-white border border-amber-300 text-amber-900 text-[11px] font-semibold flex items-center gap-1 hover:bg-amber-100 transition-colors cursor-pointer"
+                        >
+                          {copiedUtr ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                          <span>Copy UTR</span>
+                        </button>
+                      )}
                     </div>
-                    {inspectingOrder.utrNumber && (
-                      <button
-                        type="button"
-                        onClick={() => copyUtr(inspectingOrder.utrNumber!)}
-                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-800 bg-white px-2 py-1 rounded-lg border border-emerald-200 hover:bg-emerald-50 transition-colors"
-                      >
-                        {copiedUtr ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                        <span>Copy UTR</span>
-                      </button>
+
+                    <div className="text-xs space-y-1">
+                      <span className="text-amber-900 text-[11px] block">12-Digit Reference (UTR):</span>
+                      <span className="font-mono font-bold text-sm sm:text-base text-amber-950 block">
+                        {inspectingOrder.utrNumber || "— No UTR provided by client yet —"}
+                      </span>
+                    </div>
+
+                    {inspectingOrder.screenshotUrl && (
+                      <div className="space-y-1.5 pt-2 border-t border-amber-200">
+                        <span className="text-xs font-semibold text-amber-950 block">Payment Screenshot Proof:</span>
+                        <div
+                          onClick={() => setZoomScreenshot(true)}
+                          className="relative h-48 w-full rounded-xl overflow-hidden border border-amber-300 bg-white cursor-pointer group"
+                        >
+                          <Image
+                            src={inspectingOrder.screenshotUrl}
+                            alt="UPI Payment Proof"
+                            fill
+                            className="object-contain group-hover:scale-105 transition-transform"
+                          />
+                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-semibold transition-opacity">
+                            Click to Enlarge Proof
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
 
-                  <div className="text-xs space-y-1">
-                    <span className="text-amber-900 text-[11px] block">12-Digit Reference (UTR):</span>
-                    <span className="font-mono font-bold text-sm sm:text-base text-amber-950 block">
-                      {inspectingOrder.utrNumber || "— No UTR provided by client yet —"}
-                    </span>
-                  </div>
-
-                  {inspectingOrder.screenshotUrl && (
-                    <div className="space-y-1.5 pt-2 border-t border-amber-200">
-                      <span className="text-xs font-semibold text-amber-950 block">Payment Screenshot Proof:</span>
-                      <div
-                        onClick={() => setZoomScreenshot(true)}
-                        className="relative h-48 w-full rounded-xl overflow-hidden border border-amber-300 bg-white cursor-pointer group"
-                      >
-                        <Image
-                          src={inspectingOrder.screenshotUrl}
-                          alt="UPI Payment Proof"
-                          fill
-                          className="object-contain group-hover:scale-105 transition-transform"
-                        />
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-semibold transition-opacity">
-                          Click to Enlarge Proof
+                  {/* Vaulted Deliverables Showcase */}
+                  {inspectingOrder.deliverables && inspectingOrder.deliverables.length > 0 ? (
+                    <div className="space-y-3 p-4 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8]">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <Sparkles className="w-4 h-4 text-[#A98B57]" />
+                          <span className="text-xs font-bold text-[#171717]">
+                            Vault Deliverables ({inspectingOrder.deliverables.length})
+                          </span>
                         </div>
+                        <Badge variant="completed" size="sm">
+                          Ready
+                        </Badge>
                       </div>
-                    </div>
-                  )}
-                </div>
 
-                {/* Vaulted Deliverables Showcase */}
-                {inspectingOrder.deliverables && inspectingOrder.deliverables.length > 0 ? (
-                  <div className="space-y-3 p-4 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8]">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <Sparkles className="w-4 h-4 text-[#A98B57]" />
-                        <span className="text-xs font-bold text-[#171717]">
-                          Vault Deliverables ({inspectingOrder.deliverables.length})
-                        </span>
-                      </div>
-                      <Badge variant="completed" size="sm">
-                        Ready
-                      </Badge>
-                    </div>
+                      <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+                        {inspectingOrder.deliverables.map((item, idx) => {
+                          const isVid =
+                            item.mimeType?.includes("video") ||
+                            item.filename?.endsWith(".mp4") ||
+                            item.filename?.endsWith(".mov");
 
-                    <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
-                      {inspectingOrder.deliverables.map((item, idx) => {
-                        const isVid =
-                          item.mimeType?.includes("video") ||
-                          item.filename?.endsWith(".mp4") ||
-                          item.filename?.endsWith(".mov");
-
-                        return (
-                          <div
-                            key={item.driveFileId || idx}
-                            className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-2"
-                          >
-                            <div className="flex items-center justify-between text-xs">
-                              <div className="flex items-center gap-1.5 font-medium text-[#171717] truncate">
-                                {isVid ? (
-                                  <VideoIcon className="w-3.5 h-3.5 text-[#5C3A1E] shrink-0" />
-                                ) : (
-                                  <ImageIcon className="w-3.5 h-3.5 text-[#A98B57] shrink-0" />
-                                )}
-                                <span className="truncate">{item.filename}</span>
+                          return (
+                            <div
+                              key={item.driveFileId || idx}
+                              className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-2"
+                            >
+                              <div className="flex items-center justify-between text-xs">
+                                <div className="flex items-center gap-1.5 font-medium text-[#171717] truncate">
+                                  {isVid ? (
+                                    <VideoIcon className="w-3.5 h-3.5 text-[#5C3A1E] shrink-0" />
+                                  ) : (
+                                    <ImageIcon className="w-3.5 h-3.5 text-[#A98B57] shrink-0" />
+                                  )}
+                                  <span className="truncate">{item.filename}</span>
+                                </div>
+                                <span className="text-[11px] text-[#64748B] shrink-0">
+                                  {item.fileSize || "4K Master"}
+                                </span>
                               </div>
-                              <span className="text-[11px] text-[#64748B] shrink-0">{item.fileSize || "4K Master"}</span>
+
+                              {isVid && (item.previewUrl || item.downloadUrl) && (
+                                <div className="rounded-lg overflow-hidden border border-[#E5E1D8] bg-black">
+                                  <video
+                                    src={item.previewUrl || item.downloadUrl}
+                                    controls
+                                    playsInline
+                                    preload="metadata"
+                                    className="w-full max-h-36 object-contain"
+                                  />
+                                </div>
+                              )}
+
+                              {(item.previewUrl || item.downloadUrl) && (
+                                <div className="flex justify-end pt-1">
+                                  <a
+                                    href={item.downloadUrl || item.previewUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#5C3A1E] hover:text-[#A98B57]"
+                                  >
+                                    <ExternalLink className="w-3 h-3" />
+                                    <span>Open Google Drive Master</span>
+                                  </a>
+                                </div>
+                              )}
                             </div>
-
-                            {isVid && (item.previewUrl || item.downloadUrl) && (
-                              <div className="rounded-lg overflow-hidden border border-[#E5E1D8] bg-black">
-                                <video
-                                  src={item.previewUrl || item.downloadUrl}
-                                  controls
-                                  playsInline
-                                  preload="metadata"
-                                  className="w-full max-h-36 object-contain"
-                                />
-                              </div>
-                            )}
-
-                            {(item.previewUrl || item.downloadUrl) && (
-                              <div className="flex justify-end pt-1">
-                                <a
-                                  href={item.downloadUrl || item.previewUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#5C3A1E] hover:text-[#A98B57]"
-                                >
-                                  <ExternalLink className="w-3 h-3" />
-                                  <span>Open Google Drive Master</span>
-                                </a>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ) : null}
+                  ) : null}
 
-                {/* Action Feedback Banner */}
-                {actionMessage && (
-                  <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-xs text-amber-950 font-medium">
-                    {actionMessage}
-                  </div>
-                )}
-
-                {/* Action Footer Buttons */}
-                <div className="pt-3 border-t border-[#E5E1D8] flex flex-col sm:flex-row items-center justify-end gap-2.5">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleRejectOrder(inspectingOrder.id)}
-                    className="text-red-600 hover:text-red-700 w-full sm:w-auto"
-                  >
-                    Reject Payment
-                  </Button>
-
-                  {inspectingOrder.status !== "in_production" && inspectingOrder.status !== "completed" && inspectingOrder.status !== "cancelled" ? (
-                    <Button
-                      variant="primary"
-                      size="md"
-                      disabled={isDispatching}
-                      isLoading={isDispatching}
-                      onClick={() => handleVerifyAndDispatch(inspectingOrder)}
-                      className="w-full sm:w-auto"
-                      leftIcon={<Play className="w-4 h-4" />}
-                    >
-                      Verify UPI &amp; Start Work
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="secondary"
-                      size="md"
-                      onClick={() => setInspectingOrder(null)}
-                      className="w-full sm:w-auto"
-                    >
-                      Close Details
-                    </Button>
+                  {/* Action Feedback Banner */}
+                  {actionMessage && (
+                    <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-xs text-amber-950 font-medium">
+                      {actionMessage}
+                    </div>
                   )}
+
+                  {/* Action Footer Buttons */}
+                  <div className="pt-3 border-t border-[#E5E1D8] flex flex-col sm:flex-row items-center justify-end gap-2.5">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRejectOrder(inspectingOrder.id)}
+                      className="text-red-600 hover:text-red-700 w-full sm:w-auto"
+                    >
+                      Reject Payment
+                    </Button>
+
+                    {inspectingOrder.status !== "in_production" &&
+                    inspectingOrder.status !== "completed" &&
+                    inspectingOrder.status !== "cancelled" ? (
+                      <Button
+                        variant="primary"
+                        size="md"
+                        disabled={isDispatching}
+                        isLoading={isDispatching}
+                        onClick={() => handleVerifyAndDispatch(inspectingOrder)}
+                        className="w-full sm:w-auto"
+                        leftIcon={<Play className="w-4 h-4" />}
+                      >
+                        Verify UPI &amp; Start Work
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="secondary"
+                        size="md"
+                        onClick={() => setInspectingOrder(null)}
+                        className="w-full sm:w-auto"
+                      >
+                        Close Details
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </Modal>
+            )}
+
+            {/* Screenshot Enlarge Lightbox */}
+            {zoomScreenshot && inspectingOrder?.screenshotUrl && (
+              <div
+                onClick={() => setZoomScreenshot(false)}
+                className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
+              >
+                <div className="relative max-w-3xl max-h-[90vh] w-full h-[80vh] rounded-2xl overflow-hidden border border-white/20">
+                  <Image
+                    src={inspectingOrder.screenshotUrl}
+                    alt="UPI Proof Full"
+                    fill
+                    className="object-contain"
+                  />
                 </div>
               </div>
-            </Modal>
-          )}
-
-          {/* Screenshot Enlarge Lightbox */}
-          {zoomScreenshot && inspectingOrder?.screenshotUrl && (
-            <div
-              onClick={() => setZoomScreenshot(false)}
-              className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
-            >
-              <div className="relative max-w-3xl max-h-[90vh] w-full h-[80vh] rounded-2xl overflow-hidden border border-white/20">
-                <Image
-                  src={inspectingOrder.screenshotUrl}
-                  alt="UPI Proof Full"
-                  fill
-                  className="object-contain"
-                />
-              </div>
-            </div>
-          )}
-        </main>
+            )}
+          </main>
+        </div>
       </div>
     </RouteGuard>
   );

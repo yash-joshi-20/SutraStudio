@@ -38,6 +38,10 @@ export function Navbar() {
   const { user, role, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [announcement, setAnnouncement] = useState<{ active: boolean; text: string }>({
+    active: true,
+    text: "Now Booking Q4 Autonomous Retainers • Instant Zero-Fee UPI Direct Checkout",
+  });
   const drawerRef = useRef<HTMLDivElement>(null);
 
   const isAuthenticated = !!user;
@@ -45,6 +49,20 @@ export function Navbar() {
   const isClient = role === "client";
 
   const navLinks = PUBLIC_NAV_LINKS;
+
+  useEffect(() => {
+    fetch("/api/cms", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.content?.header) {
+          setAnnouncement({
+            active: data.content.header.announcementActive !== false,
+            text: data.content.header.announcementBarText || "",
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -87,6 +105,20 @@ export function Navbar() {
           : "bg-[#FFFDF9]/90 backdrop-blur-md border-b border-[#EADFCB]/80"
       }`}
     >
+      {/* Live CMS Announcement Bar */}
+      {announcement.active && announcement.text && (
+        <div className="bg-[#171717] text-[#FAF9F5] py-1.5 px-4 text-center text-[11px] sm:text-xs font-medium border-b border-[#262626] flex items-center justify-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#A98B57] animate-pulse shrink-0" />
+          <span className="truncate max-w-xl">{announcement.text}</span>
+          <Link
+            href="/pricing"
+            className="text-[#A98B57] hover:underline shrink-0 text-[10px] sm:text-[11px] font-semibold"
+          >
+            Explore Retainers →
+          </Link>
+        </div>
+      )}
+
       <div className="app-container-cap px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
         {/* Prominent Official Brand Logo Container */}
         <div className="flex items-center shrink-0 min-w-0 py-1">

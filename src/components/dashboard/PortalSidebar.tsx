@@ -18,6 +18,8 @@ import {
   X,
   Activity,
   Globe,
+  Users,
+  Settings,
   type LucideIcon,
 } from "lucide-react";
 
@@ -49,8 +51,11 @@ export const CLIENT_NAV_ITEMS: PortalNavItem[] = [
 ];
 
 export const ADMIN_NAV_ITEMS: PortalNavItem[] = [
-  { name: "Dashboard", href: "/admin", tabKey: "overview", icon: Activity },
-  { name: "Orders & Verification", href: "/admin/orders", tabKey: "orders", icon: ShoppingBag },
+  { name: "Dashboard", href: "/admin?tab=overview", tabKey: "overview", icon: Activity },
+  { name: "Orders & Verification", href: "/admin?tab=orders", tabKey: "orders", icon: ShoppingBag },
+  { name: "Website Pages CMS", href: "/admin?tab=cms", tabKey: "cms", icon: Globe },
+  { name: "Clients Directory", href: "/admin?tab=clients", tabKey: "clients", icon: Users },
+  { name: "Studio Settings", href: "/admin?tab=settings", tabKey: "settings", icon: Settings },
 ];
 
 export interface PortalSidebarProps {
@@ -136,8 +141,8 @@ export function PortalSidebarInner({
             {isAdmin && (
               <div className="mt-3 p-2.5 rounded-xl bg-[#171717] text-white flex items-center justify-between text-xs">
                 <div>
-                  <span className="text-[10px] text-[#A98B57] block uppercase font-mono font-semibold">Executive Terminal</span>
-                  <span className="font-bold text-white uppercase">Supervisor Mode</span>
+                  <span className="text-[10px] text-[#A98B57] block uppercase font-mono font-semibold">Sutra CRM Terminal</span>
+                  <span className="font-bold text-white uppercase tracking-wider">Executive CRM Mode</span>
                 </div>
                 <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-pulse" />
               </div>
@@ -244,8 +249,8 @@ export function PortalSidebarInner({
           {isAdmin && !isCollapsed && (
             <div className="mt-3 p-2.5 rounded-xl bg-[#171717] text-white flex items-center justify-between text-xs shadow-xs">
               <div>
-                <span className="text-[10px] text-[#A98B57] block uppercase font-mono font-semibold">Executive Terminal</span>
-                <span className="font-bold text-white uppercase tracking-wider">Supervisor Mode</span>
+                <span className="text-[10px] text-[#A98B57] block uppercase font-mono font-semibold">Sutra CRM Terminal</span>
+                <span className="font-bold text-white uppercase tracking-wider">Executive CRM Mode</span>
               </div>
               <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-pulse" />
             </div>
