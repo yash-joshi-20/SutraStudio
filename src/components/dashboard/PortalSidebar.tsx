@@ -20,6 +20,8 @@ import {
   Globe,
   Users,
   Settings,
+  ChevronLeft,
+  ChevronRight,
   type LucideIcon,
 } from "lucide-react";
 
@@ -207,30 +209,24 @@ export function PortalSidebarInner({
       <aside className={desktopClass}>
         <div>
           {/* Brand Header & Toggle Button */}
-          <div className="pb-4 border-b border-[#E5E1D8] flex flex-col gap-2.5">
-            <div className="flex items-center justify-between">
-              {!isCollapsed ? (
+          {!isCollapsed ? (
+            <div className="pb-4 border-b border-[#E5E1D8] flex flex-col gap-2.5">
+              <div className="flex items-center justify-between">
                 <SutraLogo variant="horizontal" size="md" href={isAdmin ? "/admin" : "/dashboard"} />
-              ) : (
-                <Link href={isAdmin ? "/admin" : "/dashboard"} className="p-1 rounded-lg hover:bg-[#F0ECE1]">
-                  <SutraLogo variant="symbol" size="sm" />
-                </Link>
-              )}
-              <div className="flex items-center gap-1">
-                {!contained && !isCollapsed && <NotificationBell align="left" />}
-                <button
-                  type="button"
-                  onClick={handleToggleCollapse}
-                  title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-                  className="p-1.5 rounded-lg text-[#737373] hover:text-[#171717] hover:bg-[#F0ECE1] transition-colors cursor-pointer"
-                  aria-label={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-                >
-                  <Menu className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1">
+                  {!contained && <NotificationBell align="left" />}
+                  <button
+                    type="button"
+                    onClick={handleToggleCollapse}
+                    title="Collapse Sidebar"
+                    className="p-1.5 rounded-xl text-[#737373] hover:text-[#171717] hover:bg-[#F0ECE1] transition-colors cursor-pointer"
+                    aria-label="Collapse Sidebar"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {!isCollapsed && (
               <Link
                 href="/"
                 className="inline-flex items-center justify-between px-3 py-1.5 rounded-xl bg-[#FFFFFF] border border-[#E5E1D8] text-xs font-semibold text-[#171717] hover:border-[#A98B57] hover:bg-[#F0ECE1] transition-all"
@@ -242,8 +238,27 @@ export function PortalSidebarInner({
                 </span>
                 <span className="text-[10px] text-[#737373]">↗</span>
               </Link>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="pb-4 border-b border-[#E5E1D8] flex flex-col items-center gap-2.5">
+              <Link
+                href={isAdmin ? "/admin" : "/dashboard"}
+                className="p-1.5 rounded-xl hover:bg-[#F0ECE1] transition-colors flex items-center justify-center"
+                title="Sutra Portal"
+              >
+                <SutraLogo variant="symbol" size="sm" />
+              </Link>
+              <button
+                type="button"
+                onClick={handleToggleCollapse}
+                title="Expand Sidebar"
+                className="w-8 h-8 flex items-center justify-center rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-[#5C3A1E] hover:border-[#A98B57] hover:bg-[#F0ECE1] transition-all cursor-pointer shadow-2xs"
+                aria-label="Expand Sidebar"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
 
           {/* Portal Scope Indicator (Admin Only) */}
           {isAdmin && !isCollapsed && (
@@ -302,33 +317,45 @@ export function PortalSidebarInner({
         </div>
 
         {/* Footer / Account */}
-        <div className={`pt-4 border-t border-[#E5E1D8] flex items-center ${isCollapsed ? "justify-center" : "justify-between"}`}>
+        <div className="pt-4 border-t border-[#E5E1D8]">
           {!isCollapsed ? (
-            <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Avatar
+                  name={user?.displayName || (isAdmin ? "Studio Producer" : "Studio Client")}
+                  size="sm"
+                  status="online"
+                />
+                <div className="text-xs min-w-0">
+                  <p className="font-semibold text-[#171717] truncate max-w-[110px]">{user?.displayName || (isAdmin ? "Studio Producer" : "Studio Client")}</p>
+                  <p className="text-[#737373] text-[10px] truncate">{isAdmin ? "Lead Producer" : "Client Workspace"}</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => void logout()}
+                title="Sign Out"
+                className="text-[#737373] hover:text-[#171717] p-1.5 rounded-lg hover:bg-[#F0ECE1] cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A98B57]"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2.5">
               <Avatar
                 name={user?.displayName || (isAdmin ? "Studio Producer" : "Studio Client")}
                 size="sm"
                 status="online"
               />
-              <div className="text-xs min-w-0">
-                <p className="font-semibold text-[#171717] truncate max-w-[110px]">{user?.displayName || (isAdmin ? "Studio Producer" : "Studio Client")}</p>
-                <p className="text-[#737373] text-[10px] truncate">{isAdmin ? "Lead Producer" : "Client Workspace"}</p>
-              </div>
+              <button
+                onClick={() => void logout()}
+                title="Sign Out"
+                className="text-[#737373] hover:text-[#171717] p-1.5 rounded-lg hover:bg-[#F0ECE1] cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A98B57]"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
             </div>
-          ) : (
-            <Avatar
-              name={user?.displayName || (isAdmin ? "Studio Producer" : "Studio Client")}
-              size="sm"
-              status="online"
-            />
           )}
-          <button
-            onClick={() => void logout()}
-            title="Sign Out"
-            className="text-[#737373] hover:text-[#171717] p-1.5 rounded-lg hover:bg-[#F0ECE1] cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A98B57]"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
         </div>
       </aside>
     </>

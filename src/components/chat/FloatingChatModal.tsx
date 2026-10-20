@@ -233,6 +233,11 @@ export function FloatingChatModal() {
   const { user, profile, isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
 
+  // Never render the public client concierge widget on admin CRM routes
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
+
   useEffect(() => {
     const handleOpen = () => setIsOpen(true);
     window.addEventListener("open-sutra-chat", handleOpen);

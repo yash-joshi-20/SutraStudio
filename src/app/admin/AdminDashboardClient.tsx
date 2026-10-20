@@ -775,32 +775,26 @@ export function AdminDashboardClient() {
         {/* ============================================================ */}
         <aside
           className={`${
-            sidebarCollapsed ? "w-20" : "w-64"
-          } shrink-0 border-r border-[#E5E1D8] bg-[#FFFDF9] min-h-screen p-4 flex flex-col justify-between hidden md:flex transition-all duration-300 ease-in-out sticky top-0 h-screen z-30`}
+            sidebarCollapsed ? "w-20 px-2.5 py-4" : "w-64 p-4"
+          } shrink-0 border-r border-[#E5E1D8] bg-[#FFFDF9] min-h-screen flex flex-col justify-between hidden md:flex transition-all duration-300 ease-in-out sticky top-0 h-screen z-30 select-none`}
         >
           <div>
             {/* Brand Header & Toggle */}
-            <div className="pb-4 border-b border-[#E5E1D8] flex flex-col gap-2.5">
-              <div className="flex items-center justify-between">
-                {!sidebarCollapsed ? (
+            {!sidebarCollapsed ? (
+              <div className="pb-4 border-b border-[#E5E1D8] flex flex-col gap-2.5">
+                <div className="flex items-center justify-between">
                   <SutraLogo variant="horizontal" size="md" href="/admin" />
-                ) : (
-                  <Link href="/admin" className="p-1 rounded-lg hover:bg-[#F0ECE1]">
-                    <SutraLogo variant="symbol" size="sm" />
-                  </Link>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                  title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-                  className="p-1.5 rounded-lg text-[#737373] hover:text-[#171717] hover:bg-[#F0ECE1] transition-colors cursor-pointer"
-                  aria-label={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-                >
-                  {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    onClick={() => setSidebarCollapsed(true)}
+                    title="Collapse Sidebar"
+                    className="p-1.5 rounded-xl text-[#737373] hover:text-[#171717] hover:bg-[#F0ECE1] transition-colors cursor-pointer"
+                    aria-label="Collapse Sidebar"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                </div>
 
-              {!sidebarCollapsed && (
                 <div className="flex items-center justify-between pt-1">
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -812,11 +806,30 @@ export function AdminDashboardClient() {
                     PRODUCER
                   </span>
                 </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="pb-4 border-b border-[#E5E1D8] flex flex-col items-center gap-2.5">
+                <Link
+                  href="/admin"
+                  className="p-1 rounded-xl hover:bg-[#F0ECE1] transition-colors flex items-center justify-center"
+                  title="Sutra CRM"
+                >
+                  <SutraLogo variant="symbol" size="sm" />
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setSidebarCollapsed(false)}
+                  title="Expand Sidebar"
+                  className="w-8 h-8 flex items-center justify-center rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-[#5C3A1E] hover:border-[#A98B57] hover:bg-[#F0ECE1] transition-all cursor-pointer shadow-2xs"
+                  aria-label="Expand Sidebar"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
 
             {/* CRM Navigation Links */}
-            <nav className="mt-4 space-y-1">
+            <nav className="mt-4 space-y-1.5">
               {CRM_NAV.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
@@ -827,14 +840,16 @@ export function AdminDashboardClient() {
                     onClick={() => switchTab(item.id)}
                     title={sidebarCollapsed ? item.label : undefined}
                     className={`w-full flex items-center ${
-                      sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3 py-2.5"
-                    } rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                      sidebarCollapsed
+                        ? "justify-center h-11 w-11 mx-auto rounded-xl"
+                        : "justify-between px-3 py-2.5 rounded-xl"
+                    } text-xs font-medium transition-all cursor-pointer ${
                       isActive
                         ? "bg-[#171717] text-[#FAF9F5] font-semibold shadow-xs"
                         : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717]"
                     }`}
                   >
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-3"} min-w-0`}>
                       <Icon
                         className={`w-4 h-4 shrink-0 ${
                           isActive ? "text-[#A98B57]" : "text-[#737373]"
@@ -859,64 +874,80 @@ export function AdminDashboardClient() {
           </div>
 
           {/* Sidebar Footer */}
-          <div className="pt-4 border-t border-[#E5E1D8] space-y-3">
-            {!sidebarCollapsed && (
-              <Link
-                href="/"
-                target="_blank"
-                className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#171717] hover:border-[#A98B57] transition-all"
-              >
-                <span className="flex items-center gap-2">
-                  <Globe className="w-3.5 h-3.5 text-[#A98B57]" />
-                  <span>Public Website</span>
-                </span>
-                <span className="text-[10px] text-[#737373]">↗</span>
-              </Link>
-            )}
+          <div className="pt-4 border-t border-[#E5E1D8]">
+            {!sidebarCollapsed ? (
+              <div className="space-y-3">
+                <Link
+                  href="/"
+                  target="_blank"
+                  className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#171717] hover:border-[#A98B57] transition-all"
+                >
+                  <span className="flex items-center gap-2">
+                    <Globe className="w-3.5 h-3.5 text-[#A98B57]" />
+                    <span>Public Website</span>
+                  </span>
+                  <span className="text-[10px] text-[#737373]">↗</span>
+                </Link>
 
-            <div
-              className={`flex items-center ${
-                sidebarCollapsed ? "justify-center" : "justify-between"
-              }`}
-            >
-              {!sidebarCollapsed ? (
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <Avatar name={user?.displayName || "Studio Admin"} size="sm" status="online" />
-                  <div className="text-xs min-w-0">
-                    <p className="font-semibold text-[#171717] truncate max-w-[110px]">
-                      {user?.email || "Admin"}
-                    </p>
-                    <p className="text-[#A98B57] text-[10px] truncate">Executive CRM</p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Avatar name={user?.displayName || "Studio Admin"} size="sm" status="online" />
+                    <div className="text-xs min-w-0">
+                      <p className="font-semibold text-[#171717] truncate max-w-[110px]">
+                        {user?.email || "Admin"}
+                      </p>
+                      <p className="text-[#A98B57] text-[10px] truncate">Executive CRM</p>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <Avatar name={user?.displayName || "Admin"} size="sm" status="online" />
-              )}
 
-              <button
-                type="button"
-                onClick={() => logout()}
-                title="Sign Out"
-                className="text-[#737373] hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 cursor-pointer transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
+                  <button
+                    type="button"
+                    onClick={() => logout()}
+                    title="Sign Out"
+                    className="text-[#737373] hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 cursor-pointer transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-3">
+                <Link
+                  href="/"
+                  target="_blank"
+                  title="Public Website"
+                  className="w-10 h-10 flex items-center justify-center rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-[#5C3A1E] hover:border-[#A98B57] hover:bg-[#F0ECE1] transition-all cursor-pointer shadow-2xs"
+                >
+                  <Globe className="w-4 h-4 text-[#A98B57]" />
+                </Link>
+                <div title={user?.email || "Admin"}>
+                  <Avatar name={user?.displayName || "Admin"} size="sm" status="online" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => logout()}
+                  title="Sign Out"
+                  className="w-10 h-10 flex items-center justify-center text-[#737373] hover:text-red-700 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
         </aside>
 
         {/* ============================================================ */}
         {/* MAIN CRM WORKSPACE CONTENT AREA */}
         {/* ============================================================ */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 w-full overflow-x-hidden">
           {/* Top Desktop Breadcrumb & Action Bar */}
-          <header className="hidden md:flex sticky top-0 z-20 items-center justify-between px-6 lg:px-8 py-4 bg-[#FFFDF9]/95 backdrop-blur-md border-b border-[#E5E1D8]">
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-mono uppercase font-bold text-[#A98B57] tracking-wider">
+          <header className="hidden md:flex sticky top-0 z-20 items-center justify-between px-4 sm:px-6 lg:px-8 py-3.5 bg-[#FFFDF9]/95 backdrop-blur-md border-b border-[#E5E1D8] gap-4">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <span className="text-xs font-mono uppercase font-bold text-[#A98B57] tracking-wider shrink-0">
                 Sutra CRM
               </span>
-              <span className="text-[#E5E1D8]">/</span>
-              <span className="text-sm font-serif font-bold text-[#171717] capitalize">
+              <span className="text-[#E5E1D8] shrink-0">/</span>
+              <span className="text-xs sm:text-sm font-serif font-bold text-[#171717] capitalize truncate max-w-xs sm:max-w-md">
                 {activeTab === "overview"
                   ? "Studio Dashboard"
                   : activeTab === "orders"
@@ -929,7 +960,7 @@ export function AdminDashboardClient() {
               </span>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
               <Button
                 variant="ghost"
                 size="sm"
@@ -942,23 +973,23 @@ export function AdminDashboardClient() {
                 Sync Data
               </Button>
 
-              <div className="h-5 w-px bg-[#E5E1D8]" />
+              <div className="h-4 w-px bg-[#E5E1D8]" />
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-xs text-[#64748B]">Real-Time Sync</span>
+                <span className="text-xs text-[#64748B] hidden sm:inline">Real-Time Sync</span>
               </div>
             </div>
           </header>
 
-          <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto w-full">
+          <main className="flex-1 p-3.5 sm:p-5 md:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto w-full min-w-0">
             {/* ============================================================ */}
             {/* TAB 1: EXECUTIVE CRM DASHBOARD */}
             {/* ============================================================ */}
             {activeTab === "overview" && (
               <div className="space-y-6 sm:space-y-8">
                 {/* Greeting & Quick Action Banner */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-3xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-warm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-warm">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -994,18 +1025,18 @@ export function AdminDashboardClient() {
                   </div>
                 </div>
 
-                {/* 5-Column KPI Metric Cards */}
-                <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4">
+                {/* 5-Column KPI Metric Cards (Fluid responsive wrapping) */}
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
                   {/* Total Orders */}
-                  <div className="p-4 sm:p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-2">
-                    <div className="flex items-center justify-between text-xs text-[#64748B]">
-                      <span className="font-medium">Total Orders</span>
-                      <ShoppingBag className="w-4 h-4 text-[#A98B57]" />
+                  <div className="p-3.5 sm:p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-1.5 min-w-0">
+                    <div className="flex items-center justify-between text-xs text-[#64748B] gap-1">
+                      <span className="font-medium truncate">Total Orders</span>
+                      <ShoppingBag className="w-4 h-4 text-[#A98B57] shrink-0" />
                     </div>
-                    <div className="font-serif text-2xl sm:text-3xl font-bold text-[#171717]">
+                    <div className="font-serif text-xl sm:text-2xl lg:text-3xl font-bold text-[#171717] truncate">
                       {isLoading ? "—" : metrics.totalOrders}
                     </div>
-                    <div className="text-[11px] text-[#64748B]">All incoming orders</div>
+                    <div className="text-[11px] text-[#64748B] truncate">All incoming orders</div>
                   </div>
 
                   {/* Pending Verification */}
@@ -1014,59 +1045,62 @@ export function AdminDashboardClient() {
                       setStatusFilter("pending");
                       switchTab("orders");
                     }}
-                    className={`p-4 sm:p-5 rounded-2xl border shadow-2xs space-y-2 cursor-pointer transition-all ${
+                    className={`p-3.5 sm:p-5 rounded-2xl border shadow-2xs space-y-1.5 cursor-pointer transition-all min-w-0 ${
                       metrics.pendingVerification > 0
                         ? "bg-amber-50/70 border-amber-300 hover:border-amber-400"
                         : "bg-[#FFFDF9] border-[#E5E1D8]"
                     }`}
                   >
-                    <div className="flex items-center justify-between text-xs text-amber-900 font-medium">
-                      <span>To Verify (UPI)</span>
-                      <Clock className="w-4 h-4 text-amber-600" />
+                    <div className="flex items-center justify-between text-xs text-amber-900 font-medium gap-1">
+                      <span className="truncate">To Verify (UPI)</span>
+                      <Clock className="w-4 h-4 text-amber-600 shrink-0" />
                     </div>
-                    <div className="font-serif text-2xl sm:text-3xl font-bold text-amber-950">
+                    <div className="font-serif text-xl sm:text-2xl lg:text-3xl font-bold text-amber-950 truncate">
                       {isLoading ? "—" : metrics.pendingVerification}
                     </div>
-                    <div className="text-[11px] text-amber-800 font-semibold flex items-center gap-1">
-                      <span>{metrics.pendingVerification > 0 ? "Action required" : "Clear queue"}</span>
-                      <ArrowRight className="w-3 h-3" />
+                    <div className="text-[11px] text-amber-800 font-semibold flex items-center gap-1 truncate">
+                      <span className="truncate">{metrics.pendingVerification > 0 ? "Action required" : "Clear queue"}</span>
+                      <ArrowRight className="w-3 h-3 shrink-0" />
                     </div>
                   </div>
 
                   {/* In Production */}
-                  <div className="p-4 sm:p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-2">
-                    <div className="flex items-center justify-between text-xs text-[#64748B]">
-                      <span className="font-medium">In Production</span>
-                      <Activity className="w-4 h-4 text-[#5C3A1E]" />
+                  <div className="p-3.5 sm:p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-1.5 min-w-0">
+                    <div className="flex items-center justify-between text-xs text-[#64748B] gap-1">
+                      <span className="font-medium truncate">In Production</span>
+                      <Activity className="w-4 h-4 text-[#5C3A1E] shrink-0" />
                     </div>
-                    <div className="font-serif text-2xl sm:text-3xl font-bold text-[#171717]">
+                    <div className="font-serif text-xl sm:text-2xl lg:text-3xl font-bold text-[#171717] truncate">
                       {isLoading ? "—" : metrics.inProduction}
                     </div>
-                    <div className="text-[11px] text-[#64748B]">Pipeline active</div>
+                    <div className="text-[11px] text-[#64748B] truncate">Pipeline active</div>
                   </div>
 
                   {/* Completed */}
-                  <div className="p-4 sm:p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-2">
-                    <div className="flex items-center justify-between text-xs text-[#64748B]">
-                      <span className="font-medium">Completed</span>
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <div className="p-3.5 sm:p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-1.5 min-w-0">
+                    <div className="flex items-center justify-between text-xs text-[#64748B] gap-1">
+                      <span className="font-medium truncate">Completed</span>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                     </div>
-                    <div className="font-serif text-2xl sm:text-3xl font-bold text-[#171717]">
+                    <div className="font-serif text-xl sm:text-2xl lg:text-3xl font-bold text-[#171717] truncate">
                       {isLoading ? "—" : metrics.completed}
                     </div>
-                    <div className="text-[11px] text-emerald-700 font-medium">Vaulted & Delivered</div>
+                    <div className="text-[11px] text-emerald-700 font-medium truncate">Vaulted &amp; Delivered</div>
                   </div>
 
                   {/* Studio Revenue */}
-                  <div className="col-span-2 lg:col-span-1 p-4 sm:p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-2">
-                    <div className="flex items-center justify-between text-xs text-[#64748B]">
-                      <span className="font-medium">Gross Revenue</span>
-                      <TrendingUp className="w-4 h-4 text-[#A98B57]" />
+                  <div className="col-span-2 sm:col-span-2 md:col-span-1 xl:col-span-1 p-3.5 sm:p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-1.5 min-w-0">
+                    <div className="flex items-center justify-between text-xs text-[#64748B] gap-1">
+                      <span className="font-medium truncate">Gross Revenue</span>
+                      <TrendingUp className="w-4 h-4 text-[#A98B57] shrink-0" />
                     </div>
-                    <div className="font-serif text-2xl sm:text-3xl font-bold text-[#5C3A1E]">
+                    <div
+                      className="font-serif text-lg sm:text-xl md:text-xl lg:text-2xl xl:text-3xl font-bold text-[#5C3A1E] truncate"
+                      title={`₹${metrics.totalRevenue.toLocaleString("en-IN")}`}
+                    >
                       ₹{isLoading ? "—" : metrics.totalRevenue.toLocaleString("en-IN")}
                     </div>
-                    <div className="text-[11px] text-[#64748B]">Direct UPI & Cards</div>
+                    <div className="text-[11px] text-[#64748B] truncate">Direct UPI &amp; Cards</div>
                   </div>
                 </div>
 
@@ -1111,7 +1145,7 @@ export function AdminDashboardClient() {
                       </p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
                       {pendingOrders.map((ord) => (
                         <div
                           key={ord.id}
@@ -1300,8 +1334,8 @@ export function AdminDashboardClient() {
                 </div>
 
                 {/* Search & Filter Toolbar */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                  <div className="relative flex-1 max-w-md">
+                <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3.5">
+                  <div className="relative flex-1 max-w-md w-full">
                     <Search className="w-4 h-4 text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
@@ -1312,9 +1346,9 @@ export function AdminDashboardClient() {
                     />
                   </div>
 
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap justify-between xl:justify-end">
                     {/* Status Filter Buttons */}
-                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
                       {[
                         { id: "all", label: "All Orders" },
                         { id: "pending", label: "Payments to Verify" },
@@ -1383,7 +1417,7 @@ export function AdminDashboardClient() {
                   </div>
                 ) : viewMode === "grid" ? (
                   /* Responsive Card Grid */
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
                     {filteredOrders.map((ord) => (
                       <div
                         key={ord.id}
@@ -2315,7 +2349,7 @@ export function AdminDashboardClient() {
                     <p>Clients who initiate orders or checkout will appear here in the CRM roster automatically.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
                     {clientsList.map((client) => (
                       <div
                         key={client.email}
