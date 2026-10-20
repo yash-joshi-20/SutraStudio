@@ -551,6 +551,14 @@ export function AdminDashboardClient() {
     const tabParam = searchParams.get("tab") as CrmTab;
     if (tabParam && ["overview", "orders", "cms", "clients", "settings"].includes(tabParam)) {
       setActiveTab(tabParam);
+      if (tabParam === "cms") {
+        setCmsSidebarExpanded(true);
+      }
+    }
+    const pageParam = searchParams.get("page") as CmsSubPage;
+    if (pageParam && CMS_SUB_PAGES.some((p) => p.id === pageParam)) {
+      setActiveCmsPage(pageParam);
+      setCmsSidebarExpanded(true);
     }
     const clientParam = searchParams.get("client");
     if (clientParam) {
@@ -560,9 +568,23 @@ export function AdminDashboardClient() {
 
   const switchTab = (tab: CrmTab) => {
     setActiveTab(tab);
+    if (tab === "cms") {
+      setCmsSidebarExpanded(true);
+    }
     setMobileDrawerOpen(false);
     const params = new URLSearchParams(window.location.search);
     params.set("tab", tab);
+    router.replace(`/admin?${params.toString()}`, { scroll: false });
+  };
+
+  const selectCmsPage = (pageId: CmsSubPage) => {
+    setActiveTab("cms");
+    setActiveCmsPage(pageId);
+    setCmsSidebarExpanded(true);
+    setMobileDrawerOpen(false);
+    const params = new URLSearchParams(window.location.search);
+    params.set("tab", "cms");
+    params.set("page", pageId);
     router.replace(`/admin?${params.toString()}`, { scroll: false });
   };
 
@@ -1341,9 +1363,13 @@ export function AdminDashboardClient() {
                           </div>
                         </button>
 
-                        {/* Mobile Dropdown Sub-Items */}
+                        {/* Mobile Custom Dropdown Sub-Items */}
                         {cmsSidebarExpanded && (
-                          <div className="pl-3 py-1 space-y-0.5 border-l-2 border-[#E5E1D8] ml-4 my-1">
+                          <div className="my-1.5 ml-2 pl-2.5 border-l-2 border-[#A98B57]/40 bg-[#FFFDF9] rounded-r-2xl py-2 pr-1 space-y-1 shadow-2xs">
+                            <div className="px-2 py-0.5 flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-[#8C827A] font-bold">
+                              <span>CMS Pages ({CMS_SUB_PAGES.length})</span>
+                              <span className="text-[#A98B57]">Live</span>
+                            </div>
                             {CMS_SUB_PAGES.map((sub) => {
                               const isSubActive = activeTab === "cms" && activeCmsPage === sub.id;
                               const SubIcon = sub.icon;
@@ -1351,22 +1377,35 @@ export function AdminDashboardClient() {
                                 <button
                                   key={sub.id}
                                   type="button"
-                                  onClick={() => {
-                                    switchTab("cms");
-                                    setActiveCmsPage(sub.id);
-                                    setMobileDrawerOpen(false);
-                                  }}
-                                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                                  onClick={() => selectCmsPage(sub.id)}
+                                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-all cursor-pointer ${
                                     isSubActive
-                                      ? "bg-[#A98B57]/15 text-[#5C3A1E] font-bold border border-[#A98B57]/30"
-                                      : "text-[#64748B] hover:text-[#171717] hover:bg-[#F0ECE1]"
+                                      ? "bg-[#171717] text-[#FAF9F5] font-bold shadow-xs border border-[#171717]"
+                                      : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717] font-medium"
                                   }`}
                                 >
                                   <div className="flex items-center gap-2.5 min-w-0">
-                                    <SubIcon className={`w-3.5 h-3.5 shrink-0 ${isSubActive ? "text-[#A98B57]" : "text-[#8C827A]"}`} />
+                                    <SubIcon
+                                      className={`w-3.5 h-3.5 shrink-0 ${
+                                        isSubActive ? "text-[#A98B57]" : "text-[#8C827A]"
+                                      }`}
+                                    />
                                     <span className="truncate">{sub.shortLabel}</span>
                                   </div>
-                                  {isSubActive && <span className="w-1.5 h-1.5 rounded-full bg-[#A98B57]" />}
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    <span
+                                      className={`text-[9px] font-mono px-1.5 py-0.5 rounded-md ${
+                                        isSubActive
+                                          ? "bg-[#A98B57]/20 text-[#D4AF37] border border-[#A98B57]/30"
+                                          : "bg-[#FAF9F5] text-[#8C827A] border border-[#E5E1D8]"
+                                      }`}
+                                    >
+                                      {sub.route}
+                                    </span>
+                                    {isSubActive && (
+                                      <span className="w-1.5 h-1.5 rounded-full bg-[#A98B57] shrink-0 animate-pulse" />
+                                    )}
+                                  </div>
                                 </button>
                               );
                             })}
@@ -1560,9 +1599,13 @@ export function AdminDashboardClient() {
                         )}
                       </button>
 
-                      {/* Desktop Dropdown Sub-Items */}
+                      {/* Desktop Custom Dropdown Sub-Items */}
                       {!sidebarCollapsed && cmsSidebarExpanded && (
-                        <div className="pl-3 py-1 space-y-0.5 border-l-2 border-[#E5E1D8] ml-4 my-1">
+                        <div className="my-1.5 ml-2 pl-2.5 border-l-2 border-[#A98B57]/40 bg-[#FFFDF9] rounded-r-2xl py-2 pr-1 space-y-1 shadow-2xs">
+                          <div className="px-2 py-0.5 flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-[#8C827A] font-bold">
+                            <span>CMS Pages ({CMS_SUB_PAGES.length})</span>
+                            <span className="text-[#A98B57]">Live</span>
+                          </div>
                           {CMS_SUB_PAGES.map((sub) => {
                             const isSubActive = activeTab === "cms" && activeCmsPage === sub.id;
                             const SubIcon = sub.icon;
@@ -1570,21 +1613,35 @@ export function AdminDashboardClient() {
                               <button
                                 key={sub.id}
                                 type="button"
-                                onClick={() => {
-                                  switchTab("cms");
-                                  setActiveCmsPage(sub.id);
-                                }}
-                                className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-[11px] font-medium transition-all cursor-pointer ${
+                                onClick={() => selectCmsPage(sub.id)}
+                                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] transition-all cursor-pointer ${
                                   isSubActive
-                                    ? "bg-[#A98B57]/15 text-[#5C3A1E] font-bold border border-[#A98B57]/30"
-                                    : "text-[#64748B] hover:text-[#171717] hover:bg-[#F0ECE1]"
+                                    ? "bg-[#171717] text-[#FAF9F5] font-bold shadow-xs border border-[#171717]"
+                                    : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717] font-medium"
                                 }`}
                               >
                                 <div className="flex items-center gap-2 min-w-0">
-                                  <SubIcon className={`w-3.5 h-3.5 shrink-0 ${isSubActive ? "text-[#A98B57]" : "text-[#8C827A]"}`} />
+                                  <SubIcon
+                                    className={`w-3.5 h-3.5 shrink-0 ${
+                                      isSubActive ? "text-[#A98B57]" : "text-[#8C827A]"
+                                    }`}
+                                  />
                                   <span className="truncate">{sub.shortLabel}</span>
                                 </div>
-                                {isSubActive && <span className="w-1.5 h-1.5 rounded-full bg-[#A98B57]" />}
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  <span
+                                    className={`text-[9px] font-mono px-1.5 py-0.5 rounded-md ${
+                                      isSubActive
+                                        ? "bg-[#A98B57]/20 text-[#D4AF37] border border-[#A98B57]/30"
+                                        : "bg-[#FAF9F5] text-[#8C827A] border border-[#E5E1D8]"
+                                    }`}
+                                  >
+                                    {sub.route}
+                                  </span>
+                                  {isSubActive && (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[#A98B57] shrink-0 animate-pulse" />
+                                  )}
+                                </div>
                               </button>
                             );
                           })}
@@ -2715,27 +2772,40 @@ export function AdminDashboardClient() {
                   </div>
                 )}
 
-                {/* Page Tabs Sub-Navigation */}
-                <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-[#E5E1D8]">
-                  {CMS_SUB_PAGES.map((p) => {
-                    const SubIcon = p.icon;
-                    return (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => setActiveCmsPage(p.id)}
-                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                          activeCmsPage === p.id
-                            ? "bg-[#171717] text-[#FAF9F5] shadow-xs"
-                            : "bg-[#FFFDF9] text-[#64748B] border border-[#E5E1D8] hover:border-[#A98B57]"
-                        }`}
-                      >
-                        <SubIcon className={`w-3.5 h-3.5 ${activeCmsPage === p.id ? "text-[#A98B57]" : "text-[#8C827A]"}`} />
-                        <span>{p.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+                {/* Active CMS Page Header Banner (Deleted previous horizontal tabs row as requested) */}
+                {(() => {
+                  const currentSubPage = CMS_SUB_PAGES.find((p) => p.id === activeCmsPage) || CMS_SUB_PAGES[0];
+                  const PageIcon = currentSubPage.icon;
+                  return (
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-[#171717] text-[#FAF9F5] flex items-center justify-center shrink-0 shadow-xs">
+                          <PageIcon className="w-5 h-5 text-[#A98B57]" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-mono uppercase tracking-wider text-[#A98B57] font-bold">
+                              Active Editor Mode
+                            </span>
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[#FAF9F5] border border-[#E5E1D8] text-[#5C3A1E] font-bold">
+                              {currentSubPage.route}
+                            </span>
+                          </div>
+                          <h2 className="text-base font-serif font-bold text-[#171717]">
+                            {currentSubPage.label}
+                          </h2>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-xs text-[#8C827A] font-medium">
+                        <span className="hidden sm:inline">Selected via Sidebar Dropdown</span>
+                        <span className="px-2.5 py-1 rounded-full bg-[#FAF9F5] border border-[#E5E1D8] text-[11px] font-mono text-[#5C3A1E]">
+                          Page {CMS_SUB_PAGES.findIndex((p) => p.id === activeCmsPage) + 1} of {CMS_SUB_PAGES.length}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* CMS PAGE 1: HOME PAGE */}
                 {activeCmsPage === "home" && (
