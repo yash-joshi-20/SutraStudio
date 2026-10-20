@@ -93,18 +93,19 @@ export function PortalSidebarInner({
   const desktopWidthClass = isCollapsed ? "w-20" : "w-64";
   const desktopClass = contained
     ? "flex flex-col h-full p-4 transition-all duration-300 ease-in-out"
-    : `${desktopWidthClass} shrink-0 border-r border-[#E5E1D8] bg-[#FAF9F5] min-h-screen p-4 flex flex-col justify-between hidden md:flex transition-all duration-300 ease-in-out`;
+    : `${desktopWidthClass} shrink-0 border-r border-[#E5E1D8] bg-[#FFFDF9] min-h-screen p-4 flex flex-col justify-between hidden md:flex transition-all duration-300 ease-in-out sticky top-0 h-screen z-30 select-none`;
 
   return (
     <>
       {!contained && (
       <>
       {/* Mobile Top Bar with Drawer Toggle */}
-      <div className="md:hidden sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-[#FAF9F5] border-b border-[#E5E1D8] backdrop-blur-md">
+      <div className="md:hidden sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-[#FFFDF9] border-b border-[#E5E1D8] backdrop-blur-md">
         <div className="flex items-center gap-3">
           <button
+            type="button"
             onClick={() => setMobileDrawerOpen(true)}
-            className="p-2 rounded-lg text-[#171717] hover:bg-[#F0ECE1] transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#A98B57] cursor-pointer"
+            className="p-2 rounded-xl text-[#171717] hover:bg-[#F0ECE1] transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#A98B57] cursor-pointer"
             aria-label="Open Navigation Menu"
           >
             <Menu className="w-5 h-5 text-[#171717]" />
@@ -128,29 +129,38 @@ export function PortalSidebarInner({
             className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
             onClick={() => setMobileDrawerOpen(false)}
           />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-[#FAF9F5] border-r border-[#E5E1D8] p-6 z-10">
+          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-[#FFFDF9] border-r border-[#E5E1D8] p-6 z-10">
             <div className="flex items-center justify-between pb-4 border-b border-[#E5E1D8]">
               <SutraLogo variant="horizontal" size="md" href={isAdmin ? "/admin" : "/dashboard"} />
               <button
+                type="button"
                 onClick={() => setMobileDrawerOpen(false)}
-                className="p-1.5 rounded-lg text-[#737373] hover:text-[#171717] hover:bg-[#F0ECE1] cursor-pointer"
+                className="p-1.5 rounded-xl text-[#737373] hover:text-[#171717] hover:bg-[#F0ECE1] cursor-pointer"
                 aria-label="Close Navigation"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {isAdmin && (
-              <div className="mt-3 p-2.5 rounded-xl bg-[#171717] text-white flex items-center justify-between text-xs">
-                <div>
-                  <span className="text-[10px] text-[#A98B57] block uppercase font-mono font-semibold">Sutra CRM Terminal</span>
-                  <span className="font-bold text-white uppercase tracking-wider">Executive CRM Mode</span>
-                </div>
-                <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-pulse" />
+            {/* Scope Card */}
+            <div className="mt-4 p-3 rounded-2xl bg-[#171717] text-white flex items-center justify-between text-xs shadow-xs">
+              <div>
+                <span className="text-[10px] text-[#A98B57] block uppercase font-mono font-bold tracking-widest">
+                  {isAdmin ? "Sutra CRM Terminal" : "Sutra Client Workspace"}
+                </span>
+                <span className="font-bold text-white uppercase tracking-wider text-xs">
+                  {isAdmin ? "Executive Producer" : "Verified Client"}
+                </span>
               </div>
-            )}
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[9px] font-mono font-bold text-emerald-400 uppercase tracking-wider">
+                  Active
+                </span>
+              </div>
+            </div>
 
-            <nav className="mt-4 flex-1 space-y-1 overflow-y-auto">
+            <nav className="mt-4 flex-1 space-y-1.5 overflow-y-auto">
               {navItems.map((item: any) => {
                 const Icon = item.icon;
                 let isActive = false;
@@ -166,38 +176,60 @@ export function PortalSidebarInner({
                     key={item.name}
                     href={item.href}
                     onClick={() => setMobileDrawerOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                    className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                       isActive
-                        ? "bg-[#FFFFFF] text-[#A98B57] font-semibold border border-[#E5E1D8] shadow-xs"
+                        ? "bg-[#171717] text-[#FAF9F5] font-semibold shadow-xs"
                         : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717]"
                     }`}
                   >
-                    <Icon className={`w-4 h-4 ${isActive ? "text-[#A98B57]" : "text-[#737373]"}`} />
-                    <span>{item.name}</span>
+                    <div className="flex items-center gap-3">
+                      <Icon className={`w-4 h-4 ${isActive ? "text-[#A98B57]" : "text-[#737373]"}`} />
+                      <span>{item.name}</span>
+                    </div>
+                    {isActive && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#A98B57]" />
+                    )}
                   </Link>
                 );
               })}
             </nav>
 
-            <div className="pt-4 border-t border-[#E5E1D8] flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Avatar
-                  name={user?.displayName || (isAdmin ? "Studio Producer" : "Studio Client")}
-                  size="sm"
-                  status="online"
-                />
-                <div className="text-xs">
-                  <p className="font-semibold text-[#171717]">{user?.displayName || (isAdmin ? "Studio Producer" : "Client")}</p>
-                  <p className="text-[#737373]">{isAdmin ? "Admin" : "Client"}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => void logout()}
-                title="Sign Out"
-                className="text-[#737373] hover:text-[#171717] p-1.5 rounded-lg hover:bg-[#F0ECE1] cursor-pointer"
+            <div className="pt-4 border-t border-[#E5E1D8] space-y-3">
+              <Link
+                href="/"
+                target="_blank"
+                className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#FFFFFF] border border-[#E5E1D8] text-xs font-semibold text-[#171717] hover:border-[#A98B57]"
               >
-                <LogOut className="w-4 h-4" />
-              </button>
+                <span className="flex items-center gap-2">
+                  <Globe className="w-3.5 h-3.5 text-[#A98B57]" />
+                  <span>Live Public Website</span>
+                </span>
+                <span className="text-[10px] text-[#737373]">↗</span>
+              </Link>
+
+              <div className="flex items-center justify-between pt-1">
+                <div className="flex items-center gap-2">
+                  <Avatar
+                    name={user?.displayName || (isAdmin ? "Studio Producer" : "Studio Client")}
+                    size="sm"
+                    status="online"
+                  />
+                  <div className="text-xs">
+                    <p className="font-semibold text-[#171717] truncate max-w-[120px]">
+                      {user?.displayName || (isAdmin ? "Studio Producer" : "Client")}
+                    </p>
+                    <p className="text-[#737373] text-[10px]">{isAdmin ? "Admin" : "Verified Client"}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void logout()}
+                  title="Sign Out"
+                  className="text-[#737373] hover:text-[#171717] p-1.5 rounded-lg hover:bg-[#F0ECE1] cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -224,6 +256,24 @@ export function PortalSidebarInner({
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
+                </div>
+              </div>
+
+              {/* Scope Indicator Card */}
+              <div className="mt-1 p-3 rounded-2xl bg-[#171717] text-white flex items-center justify-between text-xs shadow-warm">
+                <div>
+                  <span className="text-[10px] text-[#A98B57] block uppercase font-mono font-bold tracking-widest">
+                    {isAdmin ? "Sutra CRM Terminal" : "Sutra Client Workspace"}
+                  </span>
+                  <span className="font-bold text-white uppercase tracking-wider text-xs">
+                    {isAdmin ? "Executive Producer" : "Verified Client"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[9px] font-mono font-bold text-emerald-400 uppercase tracking-wider">
+                    Active
+                  </span>
                 </div>
               </div>
 
@@ -257,22 +307,12 @@ export function PortalSidebarInner({
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
-            </div>
-          )}
-
-          {/* Portal Scope Indicator (Admin Only) */}
-          {isAdmin && !isCollapsed && (
-            <div className="mt-3 p-2.5 rounded-xl bg-[#171717] text-white flex items-center justify-between text-xs shadow-xs">
-              <div>
-                <span className="text-[10px] text-[#A98B57] block uppercase font-mono font-semibold">Sutra CRM Terminal</span>
-                <span className="font-bold text-white uppercase tracking-wider">Executive CRM Mode</span>
-              </div>
-              <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-pulse" />
+              {!contained && <NotificationBell align="left" />}
             </div>
           )}
 
           {/* Navigation Items */}
-          <nav className="mt-4 space-y-1">
+          <nav className="mt-4 space-y-1.5">
             {navItems.map((item: any) => {
               const Icon = item.icon;
               let isActive = false;
@@ -296,20 +336,27 @@ export function PortalSidebarInner({
                       }
                     }
                   }}
-                  className={`flex items-center ${
-                    isCollapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2"
-                  } rounded-xl text-xs font-medium transition-all ${
+                  className={`w-full flex items-center ${
+                    isCollapsed
+                      ? "justify-center h-11 w-11 mx-auto rounded-xl"
+                      : "justify-between px-3 py-2.5 rounded-xl"
+                  } text-xs font-medium transition-all cursor-pointer ${
                     isActive
-                      ? "bg-[#FFFFFF] text-[#A98B57] font-semibold shadow-xs border border-[#E5E1D8]"
-                      : "text-[#525252] hover:bg-[#FFFFFF]/60 hover:text-[#171717]"
+                      ? "bg-[#171717] text-[#FAF9F5] font-semibold shadow-xs"
+                      : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717]"
                   }`}
                 >
-                  <Icon
-                    className={`w-4 h-4 shrink-0 ${
-                      isActive ? "text-[#A98B57]" : "text-[#737373]"
-                    }`}
-                  />
-                  {!isCollapsed && <span className="truncate">{item.name}</span>}
+                  <div className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"} min-w-0`}>
+                    <Icon
+                      className={`w-4 h-4 shrink-0 ${
+                        isActive ? "text-[#A98B57]" : "text-[#737373]"
+                      }`}
+                    />
+                    {!isCollapsed && <span className="truncate">{item.name}</span>}
+                  </div>
+                  {!isCollapsed && isActive && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#A98B57] shrink-0" />
+                  )}
                 </Link>
               );
             })}

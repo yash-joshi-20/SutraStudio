@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PortalSidebar } from "@/components/dashboard/PortalSidebar";
@@ -20,6 +21,7 @@ import {
   ArrowRight,
   ArrowLeft,
   Check,
+  Copy,
   Eye,
   Sparkles,
   HardDrive,
@@ -77,6 +79,8 @@ interface OrderItem {
   nextAction: string;
   notes?: string;
   isDemo?: boolean;
+  utrNumber?: string;
+  screenshotUrl?: string;
 }
 
 export default function ClientDashboardPage() {
@@ -146,6 +150,8 @@ export default function ClientDashboardPage() {
                   : "Production Underway",
                 notes: o.notes,
                 isDemo: Boolean(o.isDemo || o.id?.startsWith("demo-")),
+                utrNumber: o.utrNumber || o.utr || o.paymentReference || undefined,
+                screenshotUrl: o.screenshotUrl || undefined,
               }))
             );
           }
@@ -172,6 +178,14 @@ export default function ClientDashboardPage() {
   const [feedbackSuccess, setFeedbackSuccess] = useState("");
   const [downloadState, setDownloadState] = useState<{ msg: string; type: "info" | "error" | "success" } | null>(null);
   const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
+  const [zoomScreenshot, setZoomScreenshot] = useState(false);
+  const [copiedUtr, setCopiedUtr] = useState(false);
+
+  const copyUtr = (utr: string) => {
+    navigator.clipboard?.writeText(utr);
+    setCopiedUtr(true);
+    setTimeout(() => setCopiedUtr(false), 2000);
+  };
 
   const handleDownloadDeliverable = async (fileId?: string, filename?: string) => {
     if (!fileId) {
@@ -1475,6 +1489,55 @@ export default function ClientDashboardPage() {
                 </div>
               </div>
 
+              {/* UPI Payment Proof Verification Box */}
+              {(inspectingOrder.utrNumber || inspectingOrder.screenshotUrl) && (
+                <div className="p-4 rounded-2xl bg-amber-50/80 border-2 border-amber-300 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-amber-950 font-bold text-xs">
+                      <DollarSign className="w-4 h-4 text-amber-700" />
+                      <span>UPI Payment Proof Verification</span>
+                    </div>
+                    {inspectingOrder.utrNumber && (
+                      <button
+                        type="button"
+                        onClick={() => copyUtr(inspectingOrder.utrNumber!)}
+                        className="px-2.5 py-1 rounded-lg bg-white border border-amber-300 text-amber-900 text-[11px] font-semibold flex items-center gap-1 hover:bg-amber-100 transition-colors cursor-pointer"
+                      >
+                        {copiedUtr ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                        <span>Copy UTR</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="text-xs space-y-1">
+                    <span className="text-amber-900 text-[11px] block">12-Digit Reference (UTR):</span>
+                    <span className="font-mono font-bold text-sm sm:text-base text-amber-950 block">
+                      {inspectingOrder.utrNumber || "— Recorded with studio proof —"}
+                    </span>
+                  </div>
+
+                  {inspectingOrder.screenshotUrl && (
+                    <div className="space-y-1.5 pt-2 border-t border-amber-200">
+                      <span className="text-xs font-semibold text-amber-950 block">Payment Screenshot Proof:</span>
+                      <div
+                        onClick={() => setZoomScreenshot(true)}
+                        className="relative h-48 w-full rounded-xl overflow-hidden border border-amber-300 bg-white cursor-pointer group"
+                      >
+                        <Image
+                          src={inspectingOrder.screenshotUrl}
+                          alt="UPI Payment Proof"
+                          fill
+                          className="object-contain group-hover:scale-105 transition-transform"
+                        />
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-semibold transition-opacity">
+                          Click to Enlarge Proof
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Deliverables / Vault Section */}
               <div className="space-y-2">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-[#A98B57]">
@@ -1626,6 +1689,23 @@ export default function ClientDashboardPage() {
             </div>
           )}
         </Modal>
+
+        {/* Screenshot Enlarge Lightbox */}
+        {zoomScreenshot && inspectingOrder?.screenshotUrl && (
+          <div
+            onClick={() => setZoomScreenshot(false)}
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
+          >
+            <div className="relative max-w-3xl max-h-[90vh] w-full h-[80vh] rounded-2xl overflow-hidden border border-white/20">
+              <Image
+                src={inspectingOrder.screenshotUrl}
+                alt="UPI Proof Full"
+                fill
+                className="object-contain"
+              />
+            </div>
+          </div>
+        )}
       </div>
     </RouteGuard>
   );

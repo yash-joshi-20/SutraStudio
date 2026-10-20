@@ -281,11 +281,11 @@ export function NotificationBell({
         onClick={() => setIsOpen(!isOpen)}
         aria-label="View Studio Notifications"
         aria-expanded={isOpen}
-        className="relative p-2 rounded-xl text-[#5C3A1E] hover:bg-[#F8F5EF] border border-[#EADFCB] bg-[#FFFDF9] transition-all cursor-pointer shadow-2xs focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D4A35A] min-h-[44px] min-w-[44px] flex items-center justify-center"
+        className="relative p-2 rounded-xl text-[#171717] hover:bg-[#F0ECE1] border border-[#E5E1D8] bg-[#FFFDF9] transition-all cursor-pointer shadow-2xs focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A98B57] min-h-[44px] min-w-[44px] flex items-center justify-center"
       >
-        <AnimatedBellIcon hasUnread={unreadCount > 0} className="w-4 h-4 text-[#5C3A1E]" />
+        <AnimatedBellIcon hasUnread={unreadCount > 0} className="w-4 h-4 text-[#171717]" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-[#B91C1C] text-[10px] font-bold text-white shadow-xs animate-pulse">
+          <span className="absolute -top-1 -right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white shadow-xs animate-pulse">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -300,7 +300,7 @@ export function NotificationBell({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
-              className="sm:hidden fixed inset-0 bg-[#0F172A]/40 backdrop-blur-sm z-[var(--z-drawer)]"
+              className="sm:hidden fixed inset-0 bg-black/40 backdrop-blur-xs z-[var(--z-drawer)]"
               aria-hidden="true"
             />
 
@@ -318,28 +318,33 @@ export function NotificationBell({
               aria-label="Notifications"
               className={`fixed inset-x-0 bottom-0 sm:bottom-auto sm:inset-x-auto sm:absolute ${
                 align === "left" ? "sm:left-0 sm:right-auto" : "sm:right-0 sm:left-auto"
-              } sm:top-full sm:mt-2 w-full sm:w-96 max-w-[calc(100vw-1.5rem)] rounded-t-3xl sm:rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] shadow-2xl z-50 overflow-hidden text-xs text-[#0F172A] flex flex-col max-h-[85dvh] sm:max-h-[520px] pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:pb-0`}
+              } sm:top-full sm:mt-2 w-full sm:w-96 max-w-[calc(100vw-1.5rem)] rounded-t-3xl sm:rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xl z-50 overflow-hidden text-xs text-[#171717] flex flex-col max-h-[85dvh] sm:max-h-[520px] pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:pb-0`}
             >
               {/* Mobile Drag Indicator Handle */}
               <div className="sm:hidden pt-2.5 pb-1 flex justify-center cursor-grab active:cursor-grabbing">
-                <div className="w-10 h-1 rounded-full bg-[#D4A35A]/50" />
+                <div className="w-10 h-1 rounded-full bg-[#A98B57]/50" />
               </div>
 
               {/* Panel Header */}
-              <div className="p-3.5 sm:p-4 bg-[#FAF9F5] border-b border-[#EADFCB] space-y-2.5 shrink-0">
+              <div className="p-4 bg-[#171717] text-white border-b border-white/10 space-y-3 shrink-0">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="font-serif font-bold text-xs uppercase tracking-wider text-[#5C3A1E]">
-                      Studio Dispatch
+                  <div>
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#A98B57] block">
+                      SUTRA REAL-TIME FEED
                     </span>
-                    {unreadCount > 0 && (
-                      <span className="px-1.5 py-0.5 rounded-full bg-[#5C3A1E] text-white text-[10px] font-mono font-semibold">
-                        {unreadCount} unread
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="font-serif font-bold text-sm text-white">
+                        Studio Notifications
                       </span>
-                    )}
+                      {unreadCount > 0 && (
+                        <span className="px-2 py-0.5 rounded-full bg-[#A98B57] text-white text-[10px] font-mono font-bold">
+                          {unreadCount} new
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2">
                     {/* Audio Sound Mute / Unmute Toggle */}
                     <button
                       type="button"
@@ -350,11 +355,11 @@ export function NotificationBell({
                           soundSystem.play("notification");
                         }
                       }}
-                      className="p-1 rounded-md text-[#64748B] hover:text-[#5C3A1E] hover:bg-[#EADFCB]/40 transition-colors cursor-pointer"
+                      className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                       title={isMuted ? "Unmute Studio Sounds" : "Mute Studio Sounds"}
                       aria-label={isMuted ? "Unmute audio" : "Mute audio"}
                     >
-                      {isMuted ? <VolumeX className="w-3.5 h-3.5 text-[#94A3B8]" /> : <Volume2 className="w-3.5 h-3.5 text-[#5C3A1E]" />}
+                      {isMuted ? <VolumeX className="w-3.5 h-3.5 text-white/40" /> : <Volume2 className="w-3.5 h-3.5 text-[#A98B57]" />}
                     </button>
 
                     {unreadCount > 0 && (
@@ -362,7 +367,7 @@ export function NotificationBell({
                         type="button"
                         onClick={handleMarkAllAsRead}
                         disabled={isLoading}
-                        className="text-[11px] font-semibold text-[#5C3A1E] hover:text-[#432813] transition-colors cursor-pointer flex items-center gap-1 ml-1"
+                        className="text-[11px] font-semibold text-[#D4AF37] hover:underline transition-colors cursor-pointer flex items-center gap-1"
                       >
                         <CheckCheck className="w-3.5 h-3.5" />
                         <span>Mark all read</span>
@@ -371,7 +376,7 @@ export function NotificationBell({
                     <button
                       type="button"
                       onClick={() => setIsOpen(false)}
-                      className="sm:hidden p-1 rounded-full text-[#64748B] hover:text-[#0F172A]"
+                      className="sm:hidden p-1 rounded-full text-white/70 hover:text-white"
                       aria-label="Close notifications"
                     >
                       <X className="w-4 h-4" />
@@ -380,14 +385,14 @@ export function NotificationBell({
                 </div>
 
                 {/* Filter Tabs */}
-                <div className="flex items-center gap-1 bg-[#FFFDF9] p-0.5 rounded-lg border border-[#EADFCB]/80 text-[11px]">
+                <div className="flex items-center gap-1 bg-white/10 p-0.5 rounded-xl border border-white/15 text-xs">
                   <button
                     type="button"
                     onClick={() => setTab("unread")}
-                    className={`flex-1 py-1 rounded-md font-medium transition-all cursor-pointer ${
+                    className={`flex-1 py-1 rounded-lg font-medium transition-all cursor-pointer ${
                       tab === "unread"
-                        ? "bg-[#5C3A1E] text-white shadow-2xs font-semibold"
-                        : "text-[#64748B] hover:text-[#0F172A]"
+                        ? "bg-white text-[#171717] shadow-xs font-bold"
+                        : "text-white/70 hover:text-white"
                     }`}
                   >
                     Unread ({unreadCount})
@@ -395,10 +400,10 @@ export function NotificationBell({
                   <button
                     type="button"
                     onClick={() => setTab("all")}
-                    className={`flex-1 py-1 rounded-md font-medium transition-all cursor-pointer ${
+                    className={`flex-1 py-1 rounded-lg font-medium transition-all cursor-pointer ${
                       tab === "all"
-                        ? "bg-[#5C3A1E] text-white shadow-2xs font-semibold"
-                        : "text-[#64748B] hover:text-[#0F172A]"
+                        ? "bg-white text-[#171717] shadow-xs font-bold"
+                        : "text-white/70 hover:text-white"
                     }`}
                   >
                     All Archive ({notifications.length})
