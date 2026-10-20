@@ -315,7 +315,7 @@ export function createNewCreativeJob(params: {
         "Sutra Studio automates the creative engineering pipeline into 48 hours.",
         "Precision design systems, continuous client isolation, and zero fluff.",
       ],
-      cta: "Explore verified studio services starting at ₹99.",
+      cta: "Explore verified studio services starting at ₹249.",
       visualDirection: [
         "Warm ivory canvas (#FAF9F5)",
         "Kinetic bold typography in dark slate (#171717)",

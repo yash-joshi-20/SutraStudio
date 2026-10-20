@@ -475,7 +475,7 @@ export class N8nAutomationService {
       // Video Package (₹1,499 / ₹7,499 Reel): Commercial Motion Reel Deliverable
       deliverables.push(videoDeliverable);
     } else {
-      // Image Package (₹99 Trial / ₹499 Render / ₹3,499 Standard): 4K Master Render Image Deliverable
+      // Image Package (₹249 Pack / ₹499 Render / ₹3,499 Standard): 4K Master Render Image Deliverable
       deliverables.push(imageDeliverable);
       if (is3D) {
         deliverables.push(spatialDeliverable);

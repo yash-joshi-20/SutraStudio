@@ -82,12 +82,12 @@ assert(dailyPlan?.popular === true, "Daily Trend Creator is flagged as popular /
 // ------------------------------------------------------------------------------
 console.log("\n--> 2. Validating Standalone Image Services...");
 const expectedImageServices: Record<string, number> = {
-  "img-basic-template": 99,
+  "img-basic-template": 299,
   "img-branded-social": 199,
   "img-ai-product": 299,
   "img-banner-cover": 299,
   "img-carousel-5s": 499,
-  "copy-caption-hashtags": 99,
+  "copy-caption-hashtags": 299,
   "img-product-cleanup": 199,
 };
 
@@ -153,7 +153,7 @@ assert(total2Packs === 498, "2 packs of 3 basic images total is ₹498", `got ${
 // Per unit item calculation check
 const singleItem = CANONICAL_SERVICES.find((s) => s.id === "img-basic-template")!;
 const total3Single = computeItemTotal(singleItem, 3);
-assert(total3Single === 297, "3 single basic template images total is 3 * 99 = ₹297", `got ${total3Single}`);
+assert(total3Single === 897, "3 single basic template images total is 3 * 299 = ₹897", `got ${total3Single}`);
 
 // ------------------------------------------------------------------------------
 // CHECK 6: Other Specialized Services Pricing

@@ -97,7 +97,7 @@ async function runTests() {
   // --------------------------------------------------------------------------
   console.log("\n--> 2. Testing Standalone Services & Deliverable Packs Pricing...");
 
-  // 2a. Basic Template Image (₹99)
+  // 2a. Basic Template Image (₹299)
   const imgRes = await fetch(`${BASE_URL}/api/orders`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -110,7 +110,7 @@ async function runTests() {
   });
   const imgData = await imgRes.json();
   assert(imgRes.status === 200, "Basic template image order created with HTTP 200");
-  assert(imgData.order.totalAmount === 99, "Basic template image price is ₹99");
+  assert(imgData.order.totalAmount === 299, "Basic template image price is ₹299");
   assert(imgData.order.type === "service", "Standalone item type is 'service'");
   assert(imgData.order.orderSnapshot?.billingPeriod === "one_time", "Standalone snapshot billingPeriod is 'one_time'");
 

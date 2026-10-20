@@ -114,7 +114,7 @@ export function PricingCatalogSection({
                 {
                   label: "Individual Solutions",
                   value: "services",
-                  badge: "From ₹99",
+                  badge: "Single Orders",
                   description: "Single standalone deliverables on demand",
                 },
                 {

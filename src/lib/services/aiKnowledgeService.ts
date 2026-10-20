@@ -54,7 +54,7 @@ let MEMORY_KNOWLEDGE: KnowledgeBaseEntry[] = [
     title: "Commercial & Product Image Creation — Deliverables, Resolution & SLA",
     category: "service_details",
     question: "What is included in Commercial & Product Image Creation and what is the turnaround time?",
-    answer: "Commercial & Product Image Creation starts at ₹99 per single image (Basic Image Pack 3 for ₹249, Branded Image Pack 3 for ₹499, 5 for ₹799, 10 for ₹1,499) with a 24–48 hour turnaround SLA. Includes 4K Ultra-HD master deliverables (PNG/TIFF), studio lighting passes, lifestyle ambient staging, up to 2 revision rounds, and full commercial copyright license.",
+    answer: "Commercial & Product Image Creation starts at ₹249 for a 3-pack (or ₹299 single image, Branded Image Pack 3 for ₹499, 5 for ₹799, 10 for ₹1,499) with a 24–48 hour turnaround SLA. Includes 4K Ultra-HD master deliverables (PNG/TIFF), studio lighting passes, lifestyle ambient staging, up to 2 revision rounds, and full commercial copyright license.",
     status: "active",
     source: "admin_manual",
     createdAt: "2026-10-12T10:00:00.000Z",

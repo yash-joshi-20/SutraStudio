@@ -159,7 +159,7 @@ export const MASTER_PROMPT_LIBRARY: MasterPromptTemplate[] = [
     negativeConstraints: [
       "No generic corporate stock footage of business people shaking hands",
       "No cheesy upbeat ukulele music",
-      "No pricing claims outside the verified ₹99 to ₹19,999 range",
+      "No pricing claims outside the verified ₹249 to ₹19,999 range",
     ],
     compatibleCapabilities: ["scriptwriting", "video_generation", "voiceover", "media_rendering"],
     outputRequirements: {

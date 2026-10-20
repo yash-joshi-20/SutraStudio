@@ -151,7 +151,7 @@ export const SUTRA_PRICING_INR = {
     },
   ],
   servicesStartingAt: {
-    imageCreation: "₹99",
+    imageCreation: "₹249",
     videoCreation: "₹199",
     threeDModeling: "₹999",
     threeSixtyTour: "₹2,999",
@@ -167,7 +167,7 @@ export const SUTRA_PRICING_INR = {
 } as const;
 
 export const SUTRA_SERVICES_12 = [
-  { id: "image", name: "Commercial & Product Image Creation", category: "Creative", price: "₹99", description: "Bespoke 4K brand imagery, campaign visuals, and master key visuals." },
+  { id: "image", name: "Commercial & Product Image Creation", category: "Creative", price: "₹249", description: "Bespoke 4K brand imagery, campaign visuals, and master key visuals." },
   { id: "video", name: "Promotional Video & Reel Production", category: "Creative", price: "₹199", description: "Cinematic commercial motion reels, product promos, and social ads with audio." },
   { id: "three-d", name: "3D Product Modeling & Visualization", category: "Design", price: "₹999", description: "Photorealistic 3D spatial renders and interactive web-ready GLTF models." },
   { id: "three-sixty", name: "360° Virtual Tours", category: "Design", price: "₹2,999", description: "Immersive 360 virtual architectural and luxury showroom spatial tours." },

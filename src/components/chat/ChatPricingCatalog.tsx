@@ -41,7 +41,7 @@ export function ChatPricingCatalog({
   onOpenFullForm,
   className = "",
 }: ChatPricingCatalogProps) {
-  const [activeTab, setActiveTab] = useState<"services" | "packages">("services");
+  const [activeTab, setActiveTab] = useState<"services" | "packages">("packages");
 
   return (
     <div
@@ -56,23 +56,12 @@ export function ChatPricingCatalog({
             Studio Rate Card
           </span>
           <h4 className="font-serif font-bold text-xs text-[#171717]">
-            {activeTab === "services" ? "8 Core Disciplines" : "Packages & Retainers"}
+            {activeTab === "packages" ? "Packages & Retainers" : "8 Core Disciplines"}
           </h4>
         </div>
 
         {/* Tab Switcher Pills */}
         <div className="flex items-center gap-1 bg-white p-0.5 rounded-xl border border-[#E5E1D8] text-[10px]">
-          <button
-            type="button"
-            onClick={() => setActiveTab("services")}
-            className={`px-2 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
-              activeTab === "services"
-                ? "bg-[#5C3A1E] text-white shadow-2xs"
-                : "text-[#64748B] hover:text-[#171717]"
-            }`}
-          >
-            Services (From ₹99)
-          </button>
           <button
             type="button"
             onClick={() => setActiveTab("packages")}
@@ -83,6 +72,17 @@ export function ChatPricingCatalog({
             }`}
           >
             Packages &amp; Retainers
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("services")}
+            className={`px-2 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+              activeTab === "services"
+                ? "bg-[#5C3A1E] text-white shadow-2xs"
+                : "text-[#64748B] hover:text-[#171717]"
+            }`}
+          >
+            Individual Services
           </button>
         </div>
       </div>

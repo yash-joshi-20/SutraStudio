@@ -144,7 +144,7 @@ const organizationSchema = {
       "@id": `${baseUrl}/#service`,
       name: "Sutra Studio Creative Engineering",
       url: baseUrl,
-      priceRange: "₹99 - ₹19,999",
+      priceRange: "₹249 - ₹19,999",
       currenciesAccepted: "INR",
       paymentAccepted: "UPI, Google Pay, PhonePe, Paytm, NetBanking, Cards",
       areaServed: ["India", "Global"],

@@ -47,7 +47,7 @@ const VERIFIED_MARKET_TRENDS: Array<{
           hook: "Most agencies still invoice $10k retainers for work that takes 2 hours of code.",
           point1: "Showcase automated pipeline: Brief -> Script -> Remotion Render in minutes.",
           point2: "Explain why client isolation and quality gates prevent typical AI errors.",
-          callToAction: "Explore verified studio services starting at ₹99.",
+          callToAction: "Explore verified studio services starting at ₹249.",
         },
       },
       {
@@ -76,7 +76,7 @@ const VERIFIED_MARKET_TRENDS: Array<{
         trendVelocity: "evergreen",
         hooks: [
           "The era of opaque agency hourly billing is officially over.",
-          "How transparent pricing from ₹99 to ₹19,999 builds instant client trust.",
+          "How transparent pricing from ₹249 to ₹19,999 builds instant client trust.",
         ],
         format: "marketing_commercial",
         style: "Editorial luxury atelier aesthetic with clear typography and transparent price cards.",

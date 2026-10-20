@@ -85,9 +85,9 @@ export const SEED_CATALOG_SERVICES: CatalogService[] = [
     tagline: "Product, Ads, Mockups",
     shortDescription:
       "High-fidelity commercial product imagery, luxury brand mockups, and advertising visual assets crafted by our production atelier.",
-    startingPrice: 99,
+    startingPrice: 249,
     isByQuote: false,
-    priceDisplay: "Starting from ₹99 (Single) / ₹249 (3-Pack)",
+    priceDisplay: "Starting from ₹249 (3-Pack) / ₹299 (Single)",
     currency: "INR",
     icon: "Image",
     active: true,

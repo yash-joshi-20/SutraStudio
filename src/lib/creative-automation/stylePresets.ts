@@ -122,7 +122,7 @@ export const CREATIVE_STYLE_PRESETS: CreativeStylePreset[] = [
       "Minimalist bespoke pricing tier badge",
     ],
     hookStrategy: "Striking visual elegance and quiet confidence: 'Most creative studios build for tomorrow. We craft for the enduring.'",
-    closingCta: "Commission your studio engagement. Verified fixed pricing starting at ₹99.",
+    closingCta: "Commission your studio engagement. Verified fixed pricing starting at ₹249.",
     durationSecondsRange: [25, 45],
     aspectRatio: "16/9",
     audioNarrationStyle: "Deep, warm, contemplative voiceover accompanied by acoustic sitar/bansuri ambient drone and low-frequency cello.",

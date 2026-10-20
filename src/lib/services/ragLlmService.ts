@@ -30,14 +30,14 @@ Neutral Identity Directives:
 
 Official Canonical Investment Rates (All rates in INR):
 Image Creation:
-• Basic Template Image: ₹99 each
+• Basic Template Image: ₹299 each
 • Branded Social Media Image: ₹199 each
 • Product Creative Design: ₹299 each
 • Basic Image Pack: 3 for ₹249
 • Branded Image Pack: 3 for ₹499 | 5 for ₹799 | 10 for ₹1,499
 • Banner & Cover Design: ₹299
 • Carousel Design (5 slides): ₹499
-• Caption & Hashtag Set: ₹99 per post
+• Caption & Hashtag Set: ₹299 per post
 • Product Image Cleanup: ₹199 each
 
 Video Production:
@@ -91,7 +91,7 @@ export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
     title: "12 Specialized Studio Capabilities & Pricing Matrix",
     content: `Here are our official Studio Capabilities and verified investment rates:
 
-1. 🎨 **Commercial & Product Image Creation** — Single from ₹99 | 3 for ₹249 | Branded 3 for ₹499 | 5 for ₹799 | 10 for ₹1,499
+1. 🎨 **Commercial & Product Image Creation** — Single from ₹299 | 3 for ₹249 | Branded 3 for ₹499 | 5 for ₹799 | 10 for ₹1,499
    • 4K Photorealistic brand imagery, studio product shots, ambient staging. 24–48h SLA.
 2. 🎬 **Promotional Video & Reel Production** — Basic 10s Edit from ₹199 | Promo Reel from ₹499 | Product Reel from ₹799 | 3 Edits for ₹499 | 3 Reels for ₹1,299 | 5 for ₹1,999 | 10 for ₹3,499
    • 15–30s Commercial Reels with high-fidelity voiceover, sound design, and motion typography. 24–48h SLA.

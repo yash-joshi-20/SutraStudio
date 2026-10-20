@@ -202,9 +202,9 @@ function deriveLeadDetails(conv: any) {
   let estimatedPrice = 3499;
   let outputType: "image" | "video" | "website" | "full_package" = "image";
 
-  if (allText.includes("99") || allText.includes("trial") || allText.includes("ટ્રાયલ")) {
-    intent = "₹99 Instant Architectural Trial";
-    estimatedPrice = 99;
+  if (allText.includes("249") || allText.includes("pack") || allText.includes("પેક")) {
+    intent = "₹249 Basic Deliverable Pack";
+    estimatedPrice = 249;
     outputType = "image";
   } else if (allText.includes("499") || allText.includes("single render")) {
     intent = "₹499 Single 4K Master Render";

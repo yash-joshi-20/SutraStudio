@@ -24,7 +24,7 @@ export const DEFAULT_SUTRA_STUDIO_BRAND: BrandProfile = {
     "Interactive 3D Spatial Walkthroughs & Three.js 360° Viewers",
     "Luxury Brand Identity Systems & Motion Design",
     "Meta Ads & Programmatic Video Marketing",
-    "Fixed-Price Creative Retainers (₹99 to ₹19,999 ceiling)",
+    "Fixed-Price Creative Retainers (₹249 to ₹19,999 ceiling)",
   ],
   contentPreferences: {
     voiceTone: "luxury_atelier",
@@ -38,7 +38,7 @@ export const DEFAULT_SUTRA_STUDIO_BRAND: BrandProfile = {
       "No generic stock business photography of people shaking hands",
       "No fabricated testimonials or fictitious client statistics",
       "No claims of services outside verified studio capabilities",
-      "No prices outside the canonical ₹99 to ₹19,999 pricing framework",
+      "No prices outside the canonical ₹249 to ₹19,999 pricing framework",
     ],
   },
   referenceAssets: [
@@ -82,7 +82,7 @@ export const DEFAULT_SUTRA_STUDIO_BRAND: BrandProfile = {
     {
       id: "cal-sutra-02",
       scheduledDate: "2026-10-18T14:00:00Z",
-      topic: "Live Walkthrough: Ordering Studio Services Starting at ₹99",
+      topic: "Live Walkthrough: Ordering Studio Services Starting at ₹249",
       format: "screen_ui_demo",
       status: "planned",
     },

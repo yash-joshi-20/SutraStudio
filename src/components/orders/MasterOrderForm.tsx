@@ -94,21 +94,21 @@ export interface IntakePackageOption {
  * this file never states a price of its own.
  */
 const INTAKE_PACKAGES_SOURCE: Omit<IntakePackageOption, "price">[] = [
+  // --- 1. 30-Day Retainer Packages (Screenshot 1) ---
   {
-    id: "daily-trend-creator",
-    title: "Daily Trend Creator (Flagship)",
+    id: "starter-trend",
+    title: "Starter Trend",
     billingCycle: "monthly",
-    turnaround: "Daily Active Pipeline",
-    popular: true,
-    description: "Flagship 30-day production pipeline: 30 custom visual graphics + 30 commercial short videos (1 delivered daily) with daily trend research, QA, and Google Drive vault delivery.",
-    iconName: "zap",
+    turnaround: "Alternating Drops (48h SLA)",
+    description: "Bi-daily active creative pipeline designed for emerging brands. Delivers 15 high-impact visual graphics and 15 commercial short videos across 30 days.",
+    iconName: "sparkles",
     features: [
-      "30 Custom Visual Graphics (1 Delivered Daily)",
-      "30 Commercial Video Reels / Shorts (1 Delivered Daily)",
-      "Daily Trend Research & Brand Alignment",
-      "Brand-Specific Prompt Architecture",
-      "Editorial Captions & Strategic Hashtags",
-      "Organized Google Drive Vault Staging",
+      "15 Branded Social & Product Images across 30 days",
+      "15 Commercial Short Videos / Reels (up to 15s)",
+      "Trend topic research & brand relevance review",
+      "Custom tailored creative direction & concept planning",
+      "Post captions & hashtag recommendations",
+      "Organized private Google Drive Vault delivery",
       "1 Consolidated Revision Round per Deliverable",
     ],
   },
@@ -116,41 +116,138 @@ const INTAKE_PACKAGES_SOURCE: Omit<IntakePackageOption, "price">[] = [
     id: "growth-trend",
     title: "Growth Trend",
     billingCycle: "monthly",
-    turnaround: "Priority Milestones",
-    description: "High-velocity 30-day atelier delivering 20 branded images + 20 commercial short videos with 30-day content calendar.",
+    turnaround: "5 Assets / Week (Continuous)",
+    description: "Accelerated creative output for scaling digital brands. Delivers 20 visual assets and 20 commercial short videos with dedicated content calendar.",
     iconName: "layers",
     features: [
       "20 Branded Social & Product Images across 30 days",
       "20 Commercial Short Videos / Reels (15–30s)",
-      "Daily Trending-Topic Research & Alignment",
-      "30-Day Strategic Editorial Content Calendar",
-      "High-Converting Captions, Hooks & Hashtags",
-      "Organized Google Drive Vault Archive",
+      "Daily trending-topic research & brand alignment",
+      "Tailored creative direction & campaign planning",
+      "30-Day strategic editorial content calendar",
+      "Organized private Google Drive Vault archive",
       "1 Consolidated Revision Round per Deliverable",
     ],
   },
   {
-    id: "starter-trend",
-    title: "Starter Trend",
+    id: "daily-trend-creator",
+    title: "Daily Trend Creator (Flagship)",
     billingCycle: "monthly",
-    turnaround: "Scheduled Milestones",
-    description: "Essential monthly creative engine: 15 branded images + 15 short videos across 30 days for boutique brands.",
-    iconName: "sparkles",
+    turnaround: "1 Image + 1 Reel Daily (24h)",
+    popular: true,
+    description: "Our flagship daily active creative queue. Delivers 1 custom image and 1 short video every day for 30 days, backed by daily trend research, customized creative direction, and full studio production.",
+    iconName: "zap",
     features: [
-      "15 Branded Social & Product Images across 30 days",
-      "15 Commercial Short Videos / Reels (up to 15s)",
-      "Trend Topic Research & Brand Relevance Review",
-      "Tailored Generation Prompts",
-      "Post Captions & Hashtag Sets",
-      "Google Drive Vault Delivery",
+      "30 Images (1 Custom Image Delivered Daily)",
+      "30 Short Videos / Reels (1 Short Video Delivered Daily)",
+      "Daily trending-topic research tailored to your brand",
+      "Brand relevance review & creative direction planning",
+      "Complete captions, hooks & targeted hashtag bundles",
+      "Organized private Google Drive Vault Staging",
       "1 Consolidated Revision Round per Deliverable",
     ],
   },
+
+  // --- 2. Curated Multi-Service Bundles (Screenshot 2) ---
+  {
+    id: "commission-starter-image-video",
+    title: "Starter Creative Pack",
+    billingCycle: "one_time",
+    turnaround: "48h Rapid SLA",
+    description: "Essential launch suite containing 5 branded visuals and 1 cinematic promotional reel for fast social campaigns.",
+    iconName: "sparkles",
+    features: [
+      "5x Branded Visual Graphics",
+      "1x 15–30s Commercial Promo Reel",
+      "Private Google Drive Vault delivery",
+      "Full commercial usage rights",
+      "2 Consolidated Revision Rounds Included",
+    ],
+  },
+  {
+    id: "commission-studio-growth",
+    title: "Studio Growth Pack",
+    billingCycle: "one_time",
+    turnaround: "48–72h SLA",
+    popular: true,
+    description: "Multi-format creative production spanning 10 branded visuals, 3 commercial video reels, and 1 3D product view.",
+    iconName: "layers",
+    features: [
+      "10x Branded Visual Creatives",
+      "3x 15–30s Promotional Video Reels",
+      "1x 4K 3D Render from Model",
+      "Sound design & kinetic typography",
+      "Private Google Drive Vault staging",
+      "2 Consolidated Revision Rounds Included",
+    ],
+  },
+  {
+    id: "pkg-branding-logo-bundle",
+    title: "Branding & Logo Bundle",
+    billingCycle: "one_time",
+    turnaround: "3–4 Days SLA",
+    description: "Complete brand foundation pack combining bespoke vector logo design, official color/typography style guide, and 5 branded launch graphics.",
+    iconName: "palette",
+    features: [
+      "Vector Logo Suite (SVG, PDF, PNG)",
+      "Brand Guidelines Deck (PDF)",
+      "5x Branded Visual Launch Graphics",
+      "Private Google Drive Vault archive",
+      "2 Consolidated Revision Rounds Included",
+    ],
+  },
+  {
+    id: "pkg-digital-marketing-bundle",
+    title: "Digital Marketing Campaign Bundle",
+    billingCycle: "one_time",
+    turnaround: "4–5 Days SLA",
+    description: "High-converting paid advertising and organic launch bundle with targeted Meta campaign structure, 5 static creatives, and 3 motion reels.",
+    iconName: "share",
+    features: [
+      "Meta Ads Blueprint & Audience Architecture",
+      "5x High-Converting Ad Creative Images",
+      "3x Commercial Video Reels (15–30s)",
+      "Copywriting & Hook Matrix Deck",
+      "2 Consolidated Revision Rounds Included",
+    ],
+  },
+  {
+    id: "pkg-real-estate-viz-bundle",
+    title: "Real Estate & 3D Visualization Bundle",
+    billingCycle: "one_time",
+    turnaround: "5–7 Days SLA",
+    description: "Complete spatial visualization suite for real estate developers and designers featuring 3D cutaways, interior CGI, and WebGL virtual tours.",
+    iconName: "building",
+    features: [
+      "1x 4K 3D Floor Plan Render",
+      "3x 4K Interior Perspective Views",
+      "Interactive 360° Virtual Tour with Hotspots",
+      "Photometric Lighting Passes & Private Drive Staging",
+      "2 Consolidated Revision Rounds Included",
+    ],
+  },
+  {
+    id: "pkg-business-web-launch-bundle",
+    title: "Business Website & Launch Bundle",
+    billingCycle: "one_time",
+    turnaround: "7–10 Days SLA",
+    description: "Complete digital flagship: High-performance Next.js responsive website, SEO optimization, lead intake forms, and cloud deployment.",
+    iconName: "monitor",
+    features: [
+      "Modern 5-Page Responsive Web Application (Next.js)",
+      "High-Conversion Lead Capture & Contact Ingestion",
+      "Full Mobile & Desktop Responsive Optimization",
+      "Core Web Vitals & Technical SEO Architecture",
+      "Vercel Cloud Deployment & Domain DNS Link",
+    ],
+  },
+
+  // --- 3. Standalone Deliverable Packs ---
   {
     id: "branded-image-pack-5",
     title: "Branded Image Pack (5 Images)",
     billingCycle: "one_time",
-    turnaround: "Project Milestone",
+    turnaround: "48h SLA",
     description: "Curated 5-image campaign bundle with brand color grading and commercial licensing.",
     iconName: "sparkles",
     features: [
@@ -164,7 +261,7 @@ const INTAKE_PACKAGES_SOURCE: Omit<IntakePackageOption, "price">[] = [
     id: "promotional-reels-pack-3",
     title: "Promotional Reels Pack (3 Reels)",
     billingCycle: "one_time",
-    turnaround: "Project Milestone",
+    turnaround: "48h SLA",
     description: "3 commercial promo reels with kinetic motion graphics, sound design, and vertical 9:16 master exports.",
     iconName: "video",
     features: [
@@ -178,7 +275,7 @@ const INTAKE_PACKAGES_SOURCE: Omit<IntakePackageOption, "price">[] = [
     id: "social-carousel-5-slides",
     title: "Social Carousel Pack (5 Slides)",
     billingCycle: "one_time",
-    turnaround: "Project Milestone",
+    turnaround: "24–48h SLA",
     description: "Seamless 5-slide educational or product storytelling carousel for Instagram & LinkedIn.",
     iconName: "layers",
     features: [
@@ -186,66 +283,6 @@ const INTAKE_PACKAGES_SOURCE: Omit<IntakePackageOption, "price">[] = [
       "Educational Framework & Headline Hooks",
       "1 Consolidated Revision Round",
       "1080×1350 High-Res Master Exports",
-    ],
-  },
-  {
-    id: "pkg-branding-logo-bundle",
-    title: "Branding & Logo Identity Bundle",
-    billingCycle: "one_time",
-    turnaround: "5-7 Days",
-    description: "Complete visual identity system: Custom logo mark, typography hierarchy, brand color palette, and business stationery kit.",
-    iconName: "palette",
-    features: [
-      "3 Bespoke Logo Concepts + Final Master Vector Export",
-      "Comprehensive Brand Guidelines & Color Harmonies",
-      "Typography Scale & Font Pairing Spec",
-      "Business Stationery Kit (Business Card & Letterhead)",
-      "Full Commercial Copyright License & Transfer",
-    ],
-  },
-  {
-    id: "pkg-digital-marketing-bundle",
-    title: "Digital Marketing & Growth Bundle",
-    billingCycle: "one_time",
-    turnaround: "48-72h",
-    description: "End-to-end performance marketing launch pack: high-converting Meta ad creatives, targeted copywriting hooks, and audience segmentation architecture.",
-    iconName: "share",
-    features: [
-      "5x High-Converting Meta/Instagram Ad Creatives",
-      "Persuasive Ad Copywriting & Hook Variations",
-      "Audience Targeting & Campaign Structure Guide",
-      "A/B Creative Test Matrix",
-      "1 Consolidated Revision Round",
-    ],
-  },
-  {
-    id: "pkg-real-estate-viz-bundle",
-    title: "Real Estate & Spatial Viz Bundle",
-    billingCycle: "one_time",
-    turnaround: "5-7 Days",
-    description: "Luxury spatial showcase: 3 photorealistic interior renders, 1 interactive 360° virtual tour panorama, and lighting staging.",
-    iconName: "building",
-    features: [
-      "3x Photorealistic 4K Interior Renders",
-      "1x Interactive 360° Panorama Virtual Tour",
-      "Day & Night Architectural Lighting Staging",
-      "High-Resolution Print & Web Master Exports",
-      "1 Consolidated Revision Round",
-    ],
-  },
-  {
-    id: "pkg-business-web-launch-bundle",
-    title: "Business Web & Launch Bundle",
-    billingCycle: "one_time",
-    turnaround: "7-10 Days",
-    description: "Complete digital flagship: High-performance Next.js responsive website, SEO optimization, lead intake forms, and cloud deployment.",
-    iconName: "monitor",
-    features: [
-      "Modern 5-Page Responsive Web Application (Next.js)",
-      "High-Conversion Lead Capture & Contact Ingestion",
-      "Full Mobile & Desktop Responsive Optimization",
-      "Core Web Vitals & Technical SEO Architecture",
-      "Vercel Cloud Deployment & Domain DNS Link",
     ],
   },
 ];
@@ -297,7 +334,12 @@ export const INTAKE_SERVICES: IntakeServiceOption[] = INTAKE_SERVICE_SOURCES.fla
 const LEGACY_INTAKE_TO_CANONICAL: Record<string, string> = {
   "logo-design": "des-logo-design",
   "des-logo-design": "des-logo-design",
+  "starter-creative-pack": "commission-starter-image-video",
+  "commission-starter-image-video": "commission-starter-image-video",
+  "studio-growth-pack": "commission-studio-growth",
+  "commission-studio-growth": "commission-studio-growth",
   "branding-logo-bundle": "pkg-branding-logo-bundle",
+  "pkg-branding-logo-bundle": "pkg-branding-logo-bundle",
   "digital-marketing-bundle": "pkg-digital-marketing-bundle",
   "real-estate-viz-bundle": "pkg-real-estate-viz-bundle",
   "business-web-launch-bundle": "pkg-business-web-launch-bundle",
@@ -368,13 +410,19 @@ function resolveInitialSelection(
     initialServiceId === "daily-trend-creator" ||
     initialServiceId === "growth-trend" ||
     initialServiceId === "starter-trend" ||
+    initialServiceId === "starter-creative-pack" ||
+    initialServiceId === "commission-starter-image-video" ||
+    initialServiceId === "studio-growth-pack" ||
+    initialServiceId === "commission-studio-growth" ||
+    initialServiceId === "branding-logo-bundle" ||
+    initialServiceId === "pkg-branding-logo-bundle" ||
     Boolean(initialTierId);
 
   const defaults: DeepLinkSelection = {
-    mode: "services",
+    mode: "packages",
     serviceId: "img-creation",
-    packageId: "daily-trend-creator",
-    tierId: "daily-trend-creator",
+    packageId: "commission-starter-image-video",
+    tierId: "commission-starter-image-video",
     notice: null,
   };
 
@@ -391,8 +439,14 @@ function resolveInitialSelection(
       known = "growth-trend";
     } else if (clean === "starter-trend" || clean === "starter" || clean === "studio-starter") {
       known = "starter-trend";
+    } else if (clean === "starter-creative-pack" || clean === "commission-starter-image-video" || clean === "starter-creative") {
+      known = "commission-starter-image-video";
+    } else if (clean === "studio-growth-pack" || clean === "commission-studio-growth") {
+      known = "commission-studio-growth";
+    } else if (clean === "branding-logo-bundle" || clean === "pkg-branding-logo-bundle") {
+      known = "pkg-branding-logo-bundle";
     } else {
-      known = INTAKE_PACKAGES.find((p) => p.id === clean)?.id;
+      known = INTAKE_PACKAGES.find((p) => p.id === clean || p.id.toLowerCase() === clean)?.id;
     }
     if (known) {
       return { ...defaults, mode: "packages", packageId: known, tierId: known };
@@ -412,14 +466,14 @@ function resolveInitialSelection(
     //    the price shown in the form equals the server-validated price.
     const canonical = findServiceBySlug(clean);
     if (canonical && canonical.active !== false) {
-      return { ...defaults, serviceId: canonical.id };
+      return { ...defaults, mode: "services", serviceId: canonical.id };
     }
     // 2. Historical intake IDs → canonical equivalents.
     const mapped = LEGACY_INTAKE_TO_CANONICAL[clean];
-    if (mapped) return { ...defaults, serviceId: mapped };
+    if (mapped) return { ...defaults, mode: "services", serviceId: mapped };
     // 3. Historical deep-link prefixes → nearest canonical discipline.
     for (const [pattern, target] of LEGACY_PREFIX_TO_CANONICAL) {
-      if (pattern.test(clean)) return { ...defaults, serviceId: target };
+      if (pattern.test(clean)) return { ...defaults, mode: "services", serviceId: target };
     }
     return {
       mode: "services",
