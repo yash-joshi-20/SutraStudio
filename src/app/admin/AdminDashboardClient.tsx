@@ -48,6 +48,11 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  Palette,
+  Paintbrush,
+  Type,
+  Zap,
   Share2,
   CheckCheck,
   Sliders,
@@ -61,7 +66,7 @@ import {
 } from "lucide-react";
 
 export type CrmTab = "overview" | "orders" | "cms" | "clients" | "settings";
-export type CmsSubPage = "home" | "about" | "services" | "pricing" | "contact" | "header" | "footer";
+export type CmsSubPage = "home" | "about" | "services" | "pricing" | "contact" | "header" | "footer" | "theme";
 
 export interface AdminOrderRecord {
   id: string;
@@ -159,6 +164,125 @@ function getStatusBadgeVariant(status: string): BadgeVariant {
   }
 }
 
+const CMS_SUB_PAGES: Array<{ id: CmsSubPage; label: string; shortLabel: string; icon: any; route: string }> = [
+  { id: "home", label: "Home Page (/)", shortLabel: "Home Page", icon: Globe, route: "/" },
+  { id: "about", label: "About Studio (/about)", shortLabel: "About Studio", icon: Sparkles, route: "/about" },
+  { id: "services", label: "Services (/services)", shortLabel: "Services & Skills", icon: Zap, route: "/services" },
+  { id: "pricing", label: "Pricing & Plans (/pricing)", shortLabel: "Pricing Plans", icon: DollarSign, route: "/pricing" },
+  { id: "contact", label: "Contact & Concierge (/contact)", shortLabel: "Contact & SLA", icon: Phone, route: "/contact" },
+  { id: "theme", label: "Global Theme & Body Style", shortLabel: "Theme & Body Style", icon: Palette, route: "/" },
+  { id: "header", label: "Header & Announcement", shortLabel: "Header & Nav", icon: LayoutGrid, route: "/" },
+  { id: "footer", label: "Footer & Social Links", shortLabel: "Footer & Links", icon: FileText, route: "/" },
+];
+
+function SectionVisualControls({
+  sectionKey,
+  sectionTitle,
+  cmsData,
+  updateCmsField,
+}: {
+  sectionKey: string;
+  sectionTitle: string;
+  cmsData: any;
+  updateCmsField: (section: string, field: string, value: any) => void;
+}) {
+  const current = cmsData?.[sectionKey] || {};
+  return (
+    <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-4">
+      <div className="flex items-center justify-between pb-2 border-b border-[#E5E1D8]">
+        <div className="flex items-center gap-2">
+          <Palette className="w-4 h-4 text-[#A98B57]" />
+          <h4 className="text-xs font-bold text-[#171717] uppercase tracking-wider">
+            {sectionTitle} Visuals, Background &amp; Media
+          </h4>
+        </div>
+        <span className="text-[10px] font-semibold text-[#8C827A] bg-[#FFFDF9] px-2 py-0.5 rounded-md border border-[#E5E1D8]">
+          Live Customization
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        {/* Background Color */}
+        <div className="space-y-1">
+          <label className="text-[11px] font-bold text-[#171717]">Section Background Color</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={current.bgColor || "#FAF9F5"}
+              onChange={(e) => updateCmsField(sectionKey, "bgColor", e.target.value)}
+              className="w-8 h-8 rounded-lg cursor-pointer border border-[#E5E1D8] p-0.5 bg-white shrink-0"
+            />
+            <input
+              type="text"
+              value={current.bgColor || "#FAF9F5"}
+              onChange={(e) => updateCmsField(sectionKey, "bgColor", e.target.value)}
+              className="flex-1 px-2.5 py-1.5 rounded-lg bg-white border border-[#E5E1D8] text-xs font-mono text-[#171717]"
+              placeholder="#FAF9F5"
+            />
+          </div>
+        </div>
+
+        {/* Background Image URL */}
+        <div className="space-y-1">
+          <label className="text-[11px] font-bold text-[#171717]">Background Image URL (Optional)</label>
+          <input
+            type="text"
+            value={current.bgImage || ""}
+            onChange={(e) => updateCmsField(sectionKey, "bgImage", e.target.value)}
+            placeholder="https://... or /patterns/..."
+            className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-[#E5E1D8] text-xs text-[#171717]"
+          />
+        </div>
+
+        {/* Overlay Opacity */}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <label className="text-[11px] font-bold text-[#171717]">Overlay Opacity</label>
+            <span className="text-[10px] font-mono text-[#8C827A]">
+              {Math.round((current.overlayOpacity !== undefined ? current.overlayOpacity : 0.1) * 100)}%
+            </span>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={current.overlayOpacity !== undefined ? current.overlayOpacity : 0.1}
+            onChange={(e) => updateCmsField(sectionKey, "overlayOpacity", parseFloat(e.target.value))}
+            className="w-full accent-[#A98B57] cursor-pointer"
+          />
+        </div>
+      </div>
+
+      {/* Media Image URL + Live Preview */}
+      <div className="pt-2 border-t border-[#E5E1D8]/60 space-y-1.5">
+        <label className="text-[11px] font-bold text-[#171717]">Section Featured Media Image URL:</label>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <input
+            type="text"
+            value={current.mediaImage || ""}
+            onChange={(e) => updateCmsField(sectionKey, "mediaImage", e.target.value)}
+            placeholder="/brand/sutra-hero-banner.jpg or https://..."
+            className="flex-1 px-3 py-1.5 rounded-lg bg-white border border-[#E5E1D8] text-xs text-[#171717]"
+          />
+          {current.mediaImage && (
+            <div className="relative w-16 h-10 rounded-lg overflow-hidden border border-[#E5E1D8] shrink-0 bg-neutral-100 shadow-2xs">
+              <img
+                src={current.mediaImage}
+                alt="Section media preview"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = "none";
+                }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AdminDashboardClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -171,6 +295,7 @@ export function AdminDashboardClient() {
   // Sidebar Layout State
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [cmsSidebarExpanded, setCmsSidebarExpanded] = useState<boolean>(true);
 
   // Orders State
   const [orders, setOrders] = useState<AdminOrderRecord[]>([]);
@@ -188,6 +313,16 @@ export function AdminDashboardClient() {
   // CMS State
   const [activeCmsPage, setActiveCmsPage] = useState<CmsSubPage>("home");
   const [cmsData, setCmsData] = useState<any>({
+    theme: {
+      accentColor: "#A98B57",
+      bodyBgColor: "#FAF9F5",
+      bodyBgImage: "",
+      bodyFont: "Outfit",
+      headingFont: "Playfair Display",
+      texturePattern: "subtle-dots",
+      navbarBgColor: "#FFFDF9",
+      footerBgColor: "#171717",
+    },
     hero: {
       tagline: "ENTERPRISE CREATIVE TECHNOLOGY & SPATIAL 3D STUDIO",
       title: "Tradition Meets Computational Technology",
@@ -198,6 +333,10 @@ export function AdminDashboardClient() {
       statsTurnaround: "48-72 Hours",
       statsRating: "99.8% Precision",
       statsProjects: "300+ Delivered",
+      bgColor: "#F8F5EF",
+      bgImage: "",
+      mediaImage: "/brand/sutra-hero-banner.jpg",
+      overlayOpacity: 0.15,
     },
     about: {
       title: "Rooted in Tradition, Engineered with Code",
@@ -665,9 +804,13 @@ export function AdminDashboardClient() {
         throw new Error(data.error || "Failed to save CMS changes.");
       }
 
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("cms-content-updated", { detail: cmsData }));
+      }
+
       setCmsFeedback({
         type: "success",
-        message: "✓ Website pages successfully updated and published to live Firestore!",
+        message: "✓ Website pages & theme successfully updated and applied live!",
       });
       setTimeout(() => setCmsFeedback(null), 5000);
     } catch (e: any) {
@@ -790,6 +933,84 @@ export function AdminDashboardClient() {
                 {CRM_NAV.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeTab === item.id;
+                  const isCms = item.id === "cms";
+
+                  if (isCms) {
+                    return (
+                      <div key={item.id} className="space-y-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (activeTab === "cms") {
+                              setCmsSidebarExpanded(!cmsSidebarExpanded);
+                            } else {
+                              switchTab("cms");
+                              setCmsSidebarExpanded(true);
+                            }
+                          }}
+                          className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                            isActive
+                              ? "bg-[#171717] text-[#FAF9F5] font-semibold shadow-xs"
+                              : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717]"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Icon className={`w-4 h-4 ${isActive ? "text-[#A98B57]" : "text-[#737373]"}`} />
+                            <span>{item.label}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            {item.badge !== null && (
+                              <span
+                                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                  isActive ? "bg-[#A98B57] text-white" : "bg-[#F0ECE1] text-[#5C3A1E]"
+                                }`}
+                              >
+                                {item.badge}
+                              </span>
+                            )}
+                            <ChevronDown
+                              className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                                cmsSidebarExpanded ? "rotate-180 text-[#A98B57]" : "text-[#737373]"
+                              }`}
+                            />
+                          </div>
+                        </button>
+
+                        {/* Mobile Dropdown Sub-Items */}
+                        {cmsSidebarExpanded && (
+                          <div className="pl-3 py-1 space-y-0.5 border-l-2 border-[#E5E1D8] ml-4 my-1">
+                            {CMS_SUB_PAGES.map((sub) => {
+                              const isSubActive = activeTab === "cms" && activeCmsPage === sub.id;
+                              const SubIcon = sub.icon;
+                              return (
+                                <button
+                                  key={sub.id}
+                                  type="button"
+                                  onClick={() => {
+                                    switchTab("cms");
+                                    setActiveCmsPage(sub.id);
+                                    setMobileDrawerOpen(false);
+                                  }}
+                                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                                    isSubActive
+                                      ? "bg-[#A98B57]/15 text-[#5C3A1E] font-bold border border-[#A98B57]/30"
+                                      : "text-[#64748B] hover:text-[#171717] hover:bg-[#F0ECE1]"
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2.5 min-w-0">
+                                    <SubIcon className={`w-3.5 h-3.5 shrink-0 ${isSubActive ? "text-[#A98B57]" : "text-[#8C827A]"}`} />
+                                    <span className="truncate">{sub.shortLabel}</span>
+                                  </div>
+                                  {isSubActive && <span className="w-1.5 h-1.5 rounded-full bg-[#A98B57]" />}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
                   return (
                     <button
                       key={item.id}
@@ -918,6 +1139,96 @@ export function AdminDashboardClient() {
               {CRM_NAV.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
+                const isCms = item.id === "cms";
+
+                if (isCms) {
+                  return (
+                    <div key={item.id} className="space-y-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (sidebarCollapsed) setSidebarCollapsed(false);
+                          if (activeTab === "cms") {
+                            setCmsSidebarExpanded(!cmsSidebarExpanded);
+                          } else {
+                            switchTab("cms");
+                            setCmsSidebarExpanded(true);
+                          }
+                        }}
+                        title={sidebarCollapsed ? item.label : undefined}
+                        className={`w-full flex items-center ${
+                          sidebarCollapsed
+                            ? "justify-center h-11 w-11 mx-auto rounded-xl"
+                            : "justify-between px-3 py-2.5 rounded-xl"
+                        } text-xs font-medium transition-all cursor-pointer ${
+                          isActive
+                            ? "bg-[#171717] text-[#FAF9F5] font-semibold shadow-xs"
+                            : "text-[#525252] hover:bg-[#F0ECE1] hover:text-[#171717]"
+                        }`}
+                      >
+                        <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-3"} min-w-0`}>
+                          <Icon
+                            className={`w-4 h-4 shrink-0 ${
+                              isActive ? "text-[#A98B57]" : "text-[#737373]"
+                            }`}
+                          />
+                          {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
+                        </div>
+
+                        {!sidebarCollapsed && (
+                          <div className="flex items-center gap-1.5">
+                            {item.badge !== null && (
+                              <span
+                                className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                                  isActive ? "bg-[#A98B57] text-white" : "bg-[#F0ECE1] text-[#5C3A1E]"
+                                }`}
+                              >
+                                {item.badge}
+                              </span>
+                            )}
+                            <ChevronDown
+                              className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                                cmsSidebarExpanded ? "rotate-180 text-[#A98B57]" : "text-[#737373]"
+                              }`}
+                            />
+                          </div>
+                        )}
+                      </button>
+
+                      {/* Desktop Dropdown Sub-Items */}
+                      {!sidebarCollapsed && cmsSidebarExpanded && (
+                        <div className="pl-3 py-1 space-y-0.5 border-l-2 border-[#E5E1D8] ml-4 my-1">
+                          {CMS_SUB_PAGES.map((sub) => {
+                            const isSubActive = activeTab === "cms" && activeCmsPage === sub.id;
+                            const SubIcon = sub.icon;
+                            return (
+                              <button
+                                key={sub.id}
+                                type="button"
+                                onClick={() => {
+                                  switchTab("cms");
+                                  setActiveCmsPage(sub.id);
+                                }}
+                                className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-[11px] font-medium transition-all cursor-pointer ${
+                                  isSubActive
+                                    ? "bg-[#A98B57]/15 text-[#5C3A1E] font-bold border border-[#A98B57]/30"
+                                    : "text-[#64748B] hover:text-[#171717] hover:bg-[#F0ECE1]"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <SubIcon className={`w-3.5 h-3.5 shrink-0 ${isSubActive ? "text-[#A98B57]" : "text-[#8C827A]"}`} />
+                                  <span className="truncate">{sub.shortLabel}</span>
+                                </div>
+                                {isSubActive && <span className="w-1.5 h-1.5 rounded-full bg-[#A98B57]" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
                 return (
                   <button
                     key={item.id}
@@ -1761,28 +2072,24 @@ export function AdminDashboardClient() {
 
                 {/* Page Tabs Sub-Navigation */}
                 <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-[#E5E1D8]">
-                  {[
-                    { id: "home" as CmsSubPage, label: "Home Page (/)", route: "/" },
-                    { id: "about" as CmsSubPage, label: "About Studio (/about)", route: "/about" },
-                    { id: "services" as CmsSubPage, label: "Services (/services)", route: "/services" },
-                    { id: "pricing" as CmsSubPage, label: "Pricing & Plans (/pricing)", route: "/pricing" },
-                    { id: "contact" as CmsSubPage, label: "Contact & Concierge (/contact)", route: "/contact" },
-                    { id: "header" as CmsSubPage, label: "Header & Announcement", route: "/" },
-                    { id: "footer" as CmsSubPage, label: "Footer & Social Links", route: "/" },
-                  ].map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => setActiveCmsPage(p.id)}
-                      className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                        activeCmsPage === p.id
-                          ? "bg-[#171717] text-[#FAF9F5] shadow-xs"
-                          : "bg-[#FFFDF9] text-[#64748B] border border-[#E5E1D8] hover:border-[#A98B57]"
-                      }`}
-                    >
-                      {p.label}
-                    </button>
-                  ))}
+                  {CMS_SUB_PAGES.map((p) => {
+                    const SubIcon = p.icon;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setActiveCmsPage(p.id)}
+                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                          activeCmsPage === p.id
+                            ? "bg-[#171717] text-[#FAF9F5] shadow-xs"
+                            : "bg-[#FFFDF9] text-[#64748B] border border-[#E5E1D8] hover:border-[#A98B57]"
+                        }`}
+                      >
+                        <SubIcon className={`w-3.5 h-3.5 ${activeCmsPage === p.id ? "text-[#A98B57]" : "text-[#8C827A]"}`} />
+                        <span>{p.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {/* CMS PAGE 1: HOME PAGE */}
@@ -1876,6 +2183,13 @@ export function AdminDashboardClient() {
                         />
                       </div>
                     </div>
+
+                    <SectionVisualControls
+                      sectionKey="hero"
+                      sectionTitle="Home Hero Section"
+                      cmsData={cmsData}
+                      updateCmsField={updateCmsField}
+                    />
                   </div>
                 )}
 
@@ -1948,6 +2262,13 @@ export function AdminDashboardClient() {
                         />
                       </div>
                     </div>
+
+                    <SectionVisualControls
+                      sectionKey="about"
+                      sectionTitle="About Studio Section"
+                      cmsData={cmsData}
+                      updateCmsField={updateCmsField}
+                    />
                   </div>
                 )}
 
@@ -2057,6 +2378,13 @@ export function AdminDashboardClient() {
                         />
                       </div>
                     </div>
+
+                    <SectionVisualControls
+                      sectionKey="services"
+                      sectionTitle="Services & Capabilities Section"
+                      cmsData={cmsData}
+                      updateCmsField={updateCmsField}
+                    />
                   </div>
                 )}
 
@@ -2187,6 +2515,13 @@ export function AdminDashboardClient() {
                         />
                       </div>
                     </div>
+
+                    <SectionVisualControls
+                      sectionKey="pricing"
+                      sectionTitle="Pricing & Investment Section"
+                      cmsData={cmsData}
+                      updateCmsField={updateCmsField}
+                    />
                   </div>
                 )}
 
@@ -2259,6 +2594,13 @@ export function AdminDashboardClient() {
                         />
                       </div>
                     </div>
+
+                    <SectionVisualControls
+                      sectionKey="contact"
+                      sectionTitle="Contact & Inquiry Section"
+                      cmsData={cmsData}
+                      updateCmsField={updateCmsField}
+                    />
                   </div>
                 )}
 
@@ -2294,6 +2636,13 @@ export function AdminDashboardClient() {
                         />
                       </div>
                     </div>
+
+                    <SectionVisualControls
+                      sectionKey="header"
+                      sectionTitle="Header Navigation & Bar"
+                      cmsData={cmsData}
+                      updateCmsField={updateCmsField}
+                    />
                   </div>
                 )}
 
@@ -2376,6 +2725,251 @@ export function AdminDashboardClient() {
                             }))
                           }
                           className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717]"
+                        />
+                      </div>
+                    </div>
+
+                    <SectionVisualControls
+                      sectionKey="footer"
+                      sectionTitle="Footer & Copyright Section"
+                      cmsData={cmsData}
+                      updateCmsField={updateCmsField}
+                    />
+                  </div>
+                )}
+
+                {/* CMS PAGE: GLOBAL THEME & BODY STYLE */}
+                {activeCmsPage === "theme" && (
+                  <div className="space-y-6 bg-[#FFFDF9] p-6 rounded-3xl border border-[#E5E1D8] shadow-warm">
+                    <div className="flex items-center justify-between pb-3 border-b border-[#E5E1D8]">
+                      <div>
+                        <h2 className="font-serif text-lg font-bold text-[#171717]">Global Theme, Body &amp; Typography Studio</h2>
+                        <p className="text-xs text-[#64748B]">
+                          Directly control global background color, primary brand accent, typography fonts, and body texture patterns live across the entire website.
+                        </p>
+                      </div>
+                      <Link
+                        href="/"
+                        target="_blank"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] hover:border-[#A98B57]"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>View Live Site ↗</span>
+                      </Link>
+                    </div>
+
+                    {/* Live Preview Card */}
+                    <div
+                      className="p-5 rounded-2xl border transition-all"
+                      style={{
+                        backgroundColor: cmsData?.theme?.bodyBgColor || "#FAF9F5",
+                        borderColor: cmsData?.theme?.accentColor || "#A98B57",
+                      }}
+                    >
+                      <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-white/80 border border-[#E5E1D8] text-[#171717]">
+                        Live Theme Preview
+                      </span>
+                      <h3
+                        className="mt-3 text-2xl font-bold"
+                        style={{
+                          color: "#171717",
+                          fontFamily: cmsData?.theme?.headingFont ? `"${cmsData.theme.headingFont}", serif` : undefined,
+                        }}
+                      >
+                        Tradition Meets Computational Technology
+                      </h3>
+                      <p
+                        className="mt-1 text-xs text-[#525252] max-w-xl"
+                        style={{
+                          fontFamily: cmsData?.theme?.bodyFont ? `"${cmsData.theme.bodyFont}", sans-serif` : undefined,
+                        }}
+                      >
+                        This preview card reflects your selected primary brand accent, body background tint, and heading/body typography live.
+                      </p>
+                      <div className="mt-4 flex items-center gap-3">
+                        <button
+                          type="button"
+                          style={{ backgroundColor: cmsData?.theme?.accentColor || "#A98B57" }}
+                          className="px-4 py-2 rounded-xl text-xs font-semibold text-white shadow-xs cursor-pointer"
+                        >
+                          Primary Accent Button
+                        </button>
+                        <button
+                          type="button"
+                          className="px-4 py-2 rounded-xl text-xs font-semibold bg-white border border-[#E5E1D8] text-[#171717] cursor-pointer"
+                        >
+                          Secondary Action
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Brand Primary Accent Color */}
+                      <div className="space-y-3 p-4 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8]">
+                        <label className="text-xs font-bold text-[#171717] flex items-center gap-2">
+                          <Palette className="w-3.5 h-3.5 text-[#A98B57]" />
+                          <span>Primary Brand Accent Color:</span>
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={cmsData?.theme?.accentColor || "#A98B57"}
+                            onChange={(e) => updateCmsField("theme", "accentColor", e.target.value)}
+                            className="w-10 h-10 rounded-xl cursor-pointer border border-[#E5E1D8] p-0.5 bg-white shrink-0"
+                          />
+                          <input
+                            type="text"
+                            value={cmsData?.theme?.accentColor || "#A98B57"}
+                            onChange={(e) => updateCmsField("theme", "accentColor", e.target.value)}
+                            className="w-32 px-3 py-2 rounded-xl bg-white border border-[#E5E1D8] text-xs font-mono font-bold text-[#171717]"
+                          />
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                          <span className="text-[10px] text-[#8C827A] mr-1">Presets:</span>
+                          {[
+                            { label: "Muted Brass", hex: "#A98B57" },
+                            { label: "Royal Gold", hex: "#D4A35A" },
+                            { label: "Vedic Amber", hex: "#C2761A" },
+                            { label: "Heritage Emerald", hex: "#2E7D4F" },
+                            { label: "Charcoal Noir", hex: "#171717" },
+                          ].map((c) => (
+                            <button
+                              key={c.hex}
+                              type="button"
+                              onClick={() => updateCmsField("theme", "accentColor", c.hex)}
+                              className="px-2 py-1 rounded-md text-[10px] font-semibold border border-[#E5E1D8] bg-white hover:border-[#A98B57] flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: c.hex }} />
+                              <span>{c.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Main Body Background Color */}
+                      <div className="space-y-3 p-4 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8]">
+                        <label className="text-xs font-bold text-[#171717] flex items-center gap-2">
+                          <Paintbrush className="w-3.5 h-3.5 text-[#A98B57]" />
+                          <span>Main Body Background Color:</span>
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={cmsData?.theme?.bodyBgColor || "#FAF9F5"}
+                            onChange={(e) => updateCmsField("theme", "bodyBgColor", e.target.value)}
+                            className="w-10 h-10 rounded-xl cursor-pointer border border-[#E5E1D8] p-0.5 bg-white shrink-0"
+                          />
+                          <input
+                            type="text"
+                            value={cmsData?.theme?.bodyBgColor || "#FAF9F5"}
+                            onChange={(e) => updateCmsField("theme", "bodyBgColor", e.target.value)}
+                            className="w-32 px-3 py-2 rounded-xl bg-white border border-[#E5E1D8] text-xs font-mono font-bold text-[#171717]"
+                          />
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                          <span className="text-[10px] text-[#8C827A] mr-1">Presets:</span>
+                          {[
+                            { label: "Warm Ivory", hex: "#FAF9F5" },
+                            { label: "Pure White", hex: "#FFFFFF" },
+                            { label: "Atelier Cream", hex: "#F8F5EF" },
+                            { label: "Sand Linen", hex: "#F5F2EB" },
+                            { label: "Alabaster Light", hex: "#FFFDF9" },
+                          ].map((c) => (
+                            <button
+                              key={c.hex}
+                              type="button"
+                              onClick={() => updateCmsField("theme", "bodyBgColor", c.hex)}
+                              className="px-2 py-1 rounded-md text-[10px] font-semibold border border-[#E5E1D8] bg-white hover:border-[#A98B57] flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <span className="w-2.5 h-2.5 rounded-full shrink-0 border border-neutral-300" style={{ backgroundColor: c.hex }} />
+                              <span>{c.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Body Typography Font Family */}
+                      <div className="space-y-2 p-4 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8]">
+                        <label className="text-xs font-bold text-[#171717] flex items-center gap-2">
+                          <Type className="w-3.5 h-3.5 text-[#A98B57]" />
+                          <span>Body Font Family:</span>
+                        </label>
+                        <select
+                          value={cmsData?.theme?.bodyFont || "Outfit"}
+                          onChange={(e) => updateCmsField("theme", "bodyFont", e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs font-semibold text-[#171717] focus:outline-none focus:border-[#A98B57]"
+                        >
+                          <option value="Outfit">Outfit (Modern Clean Geometric - Studio Default)</option>
+                          <option value="Inter">Inter (Precise Clean UI Standard)</option>
+                          <option value="Plus Jakarta Sans">Plus Jakarta Sans (Contemporary Atelier)</option>
+                          <option value="Roboto">Roboto (Crisp Editorial)</option>
+                          <option value="Lato">Lato (Balanced &amp; Warm)</option>
+                          <option value="Poppins">Poppins (Friendly &amp; Geometric)</option>
+                        </select>
+                        <p className="text-[11px] text-[#8C827A]">Controls paragraphs, button labels, descriptions, and UI text.</p>
+                      </div>
+
+                      {/* Heading Typography Font Family */}
+                      <div className="space-y-2 p-4 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8]">
+                        <label className="text-xs font-bold text-[#171717] flex items-center gap-2">
+                          <Type className="w-3.5 h-3.5 text-[#A98B57]" />
+                          <span>Headings Font Family (Serif / Display):</span>
+                        </label>
+                        <select
+                          value={cmsData?.theme?.headingFont || "Playfair Display"}
+                          onChange={(e) => updateCmsField("theme", "headingFont", e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs font-semibold text-[#171717] focus:outline-none focus:border-[#A98B57]"
+                        >
+                          <option value="Playfair Display">Playfair Display (Luxury Editorial Serif - Studio Default)</option>
+                          <option value="Cinzel">Cinzel (Classical Roman Architectural)</option>
+                          <option value="Cormorant Garamond">Cormorant Garamond (High-Fashion Heritage)</option>
+                          <option value="Bodoni Moda">Bodoni Moda (Couture Italian Display)</option>
+                          <option value="Outfit">Outfit (Contemporary Sans Display)</option>
+                        </select>
+                        <p className="text-[11px] text-[#8C827A]">Controls H1, H2, H3 and display titles throughout the site.</p>
+                      </div>
+
+                      {/* Background Texture Pattern */}
+                      <div className="space-y-2 p-4 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8] md:col-span-2">
+                        <label className="text-xs font-bold text-[#171717]">Body Background Texture Pattern:</label>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                          {[
+                            { id: "subtle-dots", label: "Luxury Dots", desc: "Gold dot matrix" },
+                            { id: "grid", label: "Studio Grid", desc: "Architectural blueprint" },
+                            { id: "warm-grain", label: "Paper Grain", desc: "Handmade texture" },
+                            { id: "none", label: "Smooth Solid", desc: "Zero texture overlay" },
+                          ].map((pt) => {
+                            const isSelected = (cmsData?.theme?.texturePattern || "subtle-dots") === pt.id;
+                            return (
+                              <button
+                                key={pt.id}
+                                type="button"
+                                onClick={() => updateCmsField("theme", "texturePattern", pt.id)}
+                                className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                                  isSelected
+                                    ? "bg-[#171717] text-white border-[#171717] shadow-xs"
+                                    : "bg-white text-[#171717] border-[#E5E1D8] hover:border-[#A98B57]"
+                                }`}
+                              >
+                                <div className="text-xs font-bold">{pt.label}</div>
+                                <div className={`text-[10px] mt-0.5 ${isSelected ? "text-neutral-300" : "text-[#8C827A]"}`}>
+                                  {pt.desc}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Custom Body Background Image URL */}
+                      <div className="space-y-1.5 md:col-span-2">
+                        <label className="text-xs font-bold text-[#171717]">Custom Body Background Image / Pattern URL (Optional):</label>
+                        <input
+                          type="text"
+                          value={cmsData?.theme?.bodyBgImage || ""}
+                          onChange={(e) => updateCmsField("theme", "bodyBgImage", e.target.value)}
+                          placeholder="https://... or /patterns/luxury-grain.png"
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs text-[#171717] focus:outline-none focus:border-[#A98B57]"
                         />
                       </div>
                     </div>

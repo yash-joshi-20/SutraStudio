@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth/authContext";
+import { useCms } from "@/components/providers/CmsThemeProvider";
 
 interface NavLinkItem {
   name: string;
@@ -49,20 +50,16 @@ export function Navbar() {
   const isClient = role === "client";
 
   const navLinks = PUBLIC_NAV_LINKS;
+  const { cmsData } = useCms();
 
   useEffect(() => {
-    fetch("/api/cms", { cache: "no-store" })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.content?.header) {
-          setAnnouncement({
-            active: data.content.header.announcementActive !== false,
-            text: data.content.header.announcementBarText || "",
-          });
-        }
-      })
-      .catch(() => {});
-  }, []);
+    if (cmsData?.header) {
+      setAnnouncement({
+        active: cmsData.header.announcementActive !== false,
+        text: cmsData.header.announcementBarText || "",
+      });
+    }
+  }, [cmsData]);
 
   useEffect(() => {
     const handleScroll = () => {

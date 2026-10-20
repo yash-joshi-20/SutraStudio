@@ -3,7 +3,48 @@ import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
 import { AuditLogService } from "@/lib/services/auditLogService";
 import { assertAdminSession } from "@/lib/auth/requestRole";
 
+import fs from "fs";
+import path from "path";
+
+const DATA_DIR = path.join(process.cwd(), "data");
+const CMS_FILE_PATH = path.join(DATA_DIR, "sutra_cms_content.json");
+
+function readDiskCms(): any | null {
+  try {
+    if (fs.existsSync(CMS_FILE_PATH)) {
+      const raw = fs.readFileSync(CMS_FILE_PATH, "utf-8");
+      return JSON.parse(raw);
+    }
+  } catch (e) {
+    console.warn("[CMS API] Error reading disk CMS file:", e);
+  }
+  return null;
+}
+
+function writeDiskCms(data: any): boolean {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    fs.writeFileSync(CMS_FILE_PATH, JSON.stringify(data, null, 2), "utf-8");
+    return true;
+  } catch (e) {
+    console.warn("[CMS API] Error writing disk CMS file:", e);
+    return false;
+  }
+}
+
 const DEFAULT_SITE_CONTENT = {
+  theme: {
+    accentColor: "#A98B57",
+    bodyBgColor: "#FAF9F5",
+    bodyBgImage: "",
+    bodyFont: "Outfit",
+    headingFont: "Playfair Display",
+    texturePattern: "subtle-dots",
+    navbarBgColor: "#FFFDF9",
+    footerBgColor: "#171717",
+  },
   hero: {
     tagline: "ENTERPRISE CREATIVE TECHNOLOGY & SPATIAL 3D STUDIO",
     title: "Tradition Meets Computational Technology",
@@ -14,6 +55,10 @@ const DEFAULT_SITE_CONTENT = {
     statsTurnaround: "48-72 Hours",
     statsRating: "99.8% Precision",
     statsProjects: "300+ Delivered",
+    bgColor: "#F8F5EF",
+    bgImage: "",
+    mediaImage: "/brand/sutra-hero-banner.jpg",
+    overlayOpacity: 0.15,
   },
   about: {
     title: "Rooted in Tradition, Engineered with Code",
@@ -22,6 +67,10 @@ const DEFAULT_SITE_CONTENT = {
       "Founded as an elite digital atelier, Sutra Studio crafts spatial 3D environments, commercial cinematic motion, and autonomous creative infrastructure. Every frame is guided by classical proportion (Pramana), emotional resonance (Rasa), and algorithmic precision (Yantra).",
     valuesStatement: "Zero compromise on craft. Seamless 24/7 digital delivery vault. Direct founder-led engineering.",
     location: "Ahmedabad, Gujarat, India • Serving Discerning Global Brands",
+    bgColor: "#FFFFFF",
+    bgImage: "",
+    mediaImage: "/brand/sutra-founder-atelier.jpg",
+    overlayOpacity: 0.05,
   },
   services: {
     title: "Master Disciplines & Studio Capabilities",
@@ -33,6 +82,10 @@ const DEFAULT_SITE_CONTENT = {
     service3Title: "Autonomous Creative Retainers",
     service3Desc: "End-to-end continuous creative pipeline delivering on-demand assets via secure Google Drive vaults.",
     turnaroundSla: "Standard turnaround within 48–72 hours. Rush 24-hour delivery available on request.",
+    bgColor: "#FAF9F5",
+    bgImage: "",
+    mediaImage: "",
+    overlayOpacity: 0.1,
   },
   pricing: {
     title: "Transparent Studio Investment",
@@ -49,6 +102,10 @@ const DEFAULT_SITE_CONTENT = {
     retainerPrice: "19,999",
     retainerDelivery: "Continuous Dedicated Pipeline",
     retainerFeatures: "Continuous Weekly Renders & Reels • Dedicated Senior Producer • Unlimited Revisions • Direct WhatsApp VIP Concierge",
+    bgColor: "#FFFDF9",
+    bgImage: "",
+    mediaImage: "",
+    overlayOpacity: 0.05,
   },
   contact: {
     title: "Initiate a Studio Commission",
@@ -59,6 +116,10 @@ const DEFAULT_SITE_CONTENT = {
     address: "Ahmedabad, Gujarat, India",
     operatingHours: "Monday – Saturday: 9:00 AM – 8:00 PM IST",
     responseSla: "All inquiries receive a response within 2 hours during studio business hours.",
+    bgColor: "#F8F5EF",
+    bgImage: "",
+    mediaImage: "",
+    overlayOpacity: 0.05,
   },
   header: {
     announcementBarText: "Now Booking Q4 Autonomous Retainers • Instant Zero-Fee UPI Direct Checkout",
@@ -69,6 +130,10 @@ const DEFAULT_SITE_CONTENT = {
       { label: "Portfolio", href: "/#portfolio" },
       { label: "Studio", href: "/studio" },
     ],
+    bgColor: "#FFFDF9",
+    textColor: "#171717",
+    announcementBg: "#171717",
+    announcementTextColor: "#FAF9F5",
   },
   footer: {
     brandTagline: "High-precision computational design and luxury 3D visual engineering atelier.",
@@ -81,6 +146,10 @@ const DEFAULT_SITE_CONTENT = {
       facebookProfile: "https://www.facebook.com/yashjoshisutrastudio/",
       whatsapp: "https://wa.me/918200192781?text=Hello%20Sutra%20Studio%2C%20I%20would%20like%20to%20discuss%20a%20project.",
     },
+    bgColor: "#171717",
+    textColor: "#FAF9F5",
+    bgImage: "",
+    overlayOpacity: 0.2,
   },
   branding: {
     logoUrl: "/brand/sutra-logo-primary.png",
@@ -94,7 +163,22 @@ const DEFAULT_SITE_CONTENT = {
   },
 };
 
-let IN_MEMORY_CONTENT = { ...DEFAULT_SITE_CONTENT };
+// Seed initial memory content from disk if present
+const diskInitial = readDiskCms();
+let IN_MEMORY_CONTENT = diskInitial
+  ? {
+      theme: { ...DEFAULT_SITE_CONTENT.theme, ...diskInitial.theme },
+      hero: { ...DEFAULT_SITE_CONTENT.hero, ...diskInitial.hero },
+      about: { ...DEFAULT_SITE_CONTENT.about, ...diskInitial.about },
+      services: { ...DEFAULT_SITE_CONTENT.services, ...diskInitial.services },
+      pricing: { ...DEFAULT_SITE_CONTENT.pricing, ...diskInitial.pricing },
+      contact: { ...DEFAULT_SITE_CONTENT.contact, ...diskInitial.contact },
+      header: { ...DEFAULT_SITE_CONTENT.header, ...diskInitial.header },
+      footer: { ...DEFAULT_SITE_CONTENT.footer, ...diskInitial.footer },
+      branding: { ...DEFAULT_SITE_CONTENT.branding, ...diskInitial.branding },
+      payment: { ...DEFAULT_SITE_CONTENT.payment, ...diskInitial.payment },
+    }
+  : { ...DEFAULT_SITE_CONTENT };
 
 export async function GET() {
   try {
@@ -103,24 +187,44 @@ export async function GET() {
         const snap = await adminDb().collection("site_settings").doc("content").get();
         if (snap.exists) {
           const data = snap.data();
+          const merged = {
+            theme: { ...DEFAULT_SITE_CONTENT.theme, ...data?.theme },
+            hero: { ...DEFAULT_SITE_CONTENT.hero, ...data?.hero },
+            about: { ...DEFAULT_SITE_CONTENT.about, ...data?.about },
+            services: { ...DEFAULT_SITE_CONTENT.services, ...data?.services },
+            pricing: { ...DEFAULT_SITE_CONTENT.pricing, ...data?.pricing },
+            contact: { ...DEFAULT_SITE_CONTENT.contact, ...data?.contact },
+            header: { ...DEFAULT_SITE_CONTENT.header, ...data?.header },
+            footer: { ...DEFAULT_SITE_CONTENT.footer, ...data?.footer },
+            branding: { ...DEFAULT_SITE_CONTENT.branding, ...data?.branding },
+            payment: { ...DEFAULT_SITE_CONTENT.payment, ...data?.payment },
+          };
+          IN_MEMORY_CONTENT = merged;
+          writeDiskCms(merged);
           return NextResponse.json({
             success: true,
-            content: {
-              hero: { ...DEFAULT_SITE_CONTENT.hero, ...data?.hero },
-              about: { ...DEFAULT_SITE_CONTENT.about, ...data?.about },
-              services: { ...DEFAULT_SITE_CONTENT.services, ...data?.services },
-              pricing: { ...DEFAULT_SITE_CONTENT.pricing, ...data?.pricing },
-              contact: { ...DEFAULT_SITE_CONTENT.contact, ...data?.contact },
-              header: { ...DEFAULT_SITE_CONTENT.header, ...data?.header },
-              footer: { ...DEFAULT_SITE_CONTENT.footer, ...data?.footer },
-              branding: { ...DEFAULT_SITE_CONTENT.branding, ...data?.branding },
-              payment: { ...DEFAULT_SITE_CONTENT.payment, ...data?.payment },
-            },
+            content: merged,
           });
         }
       } catch (e) {
         console.warn("[CMS GET] Firestore fallback:", e);
       }
+    }
+
+    const diskData = readDiskCms();
+    if (diskData) {
+      IN_MEMORY_CONTENT = {
+        theme: { ...DEFAULT_SITE_CONTENT.theme, ...diskData.theme },
+        hero: { ...DEFAULT_SITE_CONTENT.hero, ...diskData.hero },
+        about: { ...DEFAULT_SITE_CONTENT.about, ...diskData.about },
+        services: { ...DEFAULT_SITE_CONTENT.services, ...diskData.services },
+        pricing: { ...DEFAULT_SITE_CONTENT.pricing, ...diskData.pricing },
+        contact: { ...DEFAULT_SITE_CONTENT.contact, ...diskData.contact },
+        header: { ...DEFAULT_SITE_CONTENT.header, ...diskData.header },
+        footer: { ...DEFAULT_SITE_CONTENT.footer, ...diskData.footer },
+        branding: { ...DEFAULT_SITE_CONTENT.branding, ...diskData.branding },
+        payment: { ...DEFAULT_SITE_CONTENT.payment, ...diskData.payment },
+      };
     }
 
     return NextResponse.json({
@@ -142,6 +246,7 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const updated = {
+      theme: { ...DEFAULT_SITE_CONTENT.theme, ...(body.theme || {}) },
       hero: { ...DEFAULT_SITE_CONTENT.hero, ...(body.hero || {}) },
       about: { ...DEFAULT_SITE_CONTENT.about, ...(body.about || {}) },
       services: { ...DEFAULT_SITE_CONTENT.services, ...(body.services || {}) },
@@ -155,6 +260,7 @@ export async function POST(req: Request) {
     };
 
     IN_MEMORY_CONTENT = { ...updated };
+    writeDiskCms(updated);
 
     if (isFirebaseAdminReady()) {
       try {

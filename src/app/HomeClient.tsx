@@ -18,6 +18,7 @@ import { CustomDropdown } from "@/components/ui/CustomDropdown";
 import { MainServiceCard } from "@/components/services/MainServiceCard";
 import { MAIN_SERVICES, getMainServices } from "@/config/mainServices";
 import { SUTRA_PROJECTS } from "@/data/projectsData";
+import { useCms } from "@/components/providers/CmsThemeProvider";
 
 import {
   Play,
@@ -58,6 +59,8 @@ const HERO_DISCIPLINES = MAIN_SERVICES.map((service) => ({
 }));
 
 export default function HomePage() {
+  const { cmsData } = useCms();
+  const heroData = cmsData?.hero;
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [demoModalOpen, setDemoModalOpen] = useState(false);
   const [activeHeroDiscipline, setActiveHeroDiscipline] = useState("image-creation");
@@ -80,7 +83,15 @@ export default function HomePage() {
         {/* ===================================================
             1. HERO SECTION (Clean White / Warm Ivory Luxury Atelier)
             =================================================== */}
-        <section className="relative overflow-hidden pt-6 pb-16 md:pt-12 md:pb-24">
+        <section
+          className="relative overflow-hidden pt-6 pb-16 md:pt-12 md:pb-24 transition-colors"
+          style={{
+            backgroundColor: heroData?.bgColor || undefined,
+            backgroundImage: heroData?.bgImage ? `url("${heroData.bgImage}")` : undefined,
+            backgroundSize: heroData?.bgImage ? "cover" : undefined,
+            backgroundPosition: "center",
+          }}
+        >
           {/* Subtle Background Lotus Watermark */}
           <div className="absolute top-10 left-1/2 -translate-x-1/2 -z-10 opacity-[0.03] pointer-events-none">
             <LotusSymbol className="w-[850px] h-[850px]" color="gold" />
@@ -95,32 +106,37 @@ export default function HomePage() {
                   <div className="hero-badge inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] shadow-xs">
                     <span className="w-2 h-2 rounded-full bg-[#2E7D4F] animate-pulse" />
                     <span className="text-[10px] md:text-xs font-semibold tracking-[0.22em] text-[#5C3A1E] uppercase">
-                      IDEAS ◆ DESIGN ◆ DEVELOPMENT ◆ GROWTH
+                      {heroData?.tagline || "IDEAS ◆ DESIGN ◆ DEVELOPMENT ◆ GROWTH"}
                     </span>
                   </div>
 
                   {/* Main Display Headline */}
                   <h1 className="hero-heading font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold leading-[1.06] tracking-tight text-[#0F172A]">
-                    <span className="text-gold-gradient font-bold">Tradition</span> Meets Modern Creative Technology
+                    {heroData?.title ? (
+                      heroData.title
+                    ) : (
+                      <>
+                        <span className="text-gold-gradient font-bold">Tradition</span> Meets Modern Creative Technology
+                      </>
+                    )}
                   </h1>
 
                   {/* Subtitle */}
                   <p className="hero-subhead text-base sm:text-lg text-[#64748B] max-w-xl leading-relaxed font-sans">
-                    Bespoke Creative Technology, 3D Spatial Design, Full-Stack Engineering &amp;
-                    Digital Marketing Solutions. Rooted in traditional Indian
-                    aesthetics, executed with high-precision studio craftsmanship.
+                    {heroData?.description ||
+                      "Bespoke Creative Technology, 3D Spatial Design, Full-Stack Engineering & Digital Marketing Solutions. Rooted in traditional Indian aesthetics, executed with high-precision studio craftsmanship."}
                   </p>
 
                   {/* Action Buttons */}
                   <div className="hero-cta flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-2">
                     <Link href="/orders" className="w-full sm:w-auto">
                       <Button variant="primary" size="lg" withArrow className="w-full sm:w-auto shadow-warm justify-center">
-                        Start Your Project Today
+                        {heroData?.primaryCtaText || "Start Your Project Today"}
                       </Button>
                     </Link>
                     <Link href="/services" className="w-full sm:w-auto">
                       <Button variant="secondary" size="lg" className="w-full sm:w-auto justify-center">
-                        Explore Solutions &amp; Work
+                        {heroData?.secondaryCtaText || "Explore Solutions & Work"}
                       </Button>
                     </Link>
                   </div>

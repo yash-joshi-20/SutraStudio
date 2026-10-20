@@ -7,6 +7,7 @@ import { FloatingChatModal } from "@/components/chat/FloatingChatModal";
 import { OfflineBanner } from "@/components/sync/OfflineBanner";
 
 import { RouteProgressIndicator } from "@/components/motion/RouteProgressIndicator";
+import { CmsThemeProvider } from "@/components/providers/CmsThemeProvider";
 import { Suspense } from "react";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
@@ -25,14 +26,16 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthProvider>
-      <ToastProvider>
-        <Suspense fallback={null}>
-          <RouteProgressIndicator />
-        </Suspense>
-        {children}
-        <FloatingChatModal />
-        <OfflineBanner />
-      </ToastProvider>
+      <CmsThemeProvider>
+        <ToastProvider>
+          <Suspense fallback={null}>
+            <RouteProgressIndicator />
+          </Suspense>
+          {children}
+          <FloatingChatModal />
+          <OfflineBanner />
+        </ToastProvider>
+      </CmsThemeProvider>
     </AuthProvider>
   );
 }

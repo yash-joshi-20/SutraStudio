@@ -20,6 +20,7 @@ import {
   BookOpen,
   CheckCircle2,
 } from "lucide-react";
+import { useCms } from "@/components/providers/CmsThemeProvider";
 
 const PILLARS = [
   {
@@ -61,13 +62,24 @@ const MILESTONES = [
 ];
 
 export default function AboutPage() {
+  const { cmsData } = useCms();
+  const aboutData = cmsData?.about;
+
   return (
     <div className="flex-1 flex flex-col bg-[#F8F5EF] text-[#0F172A] selection:bg-[#D4A35A]/20 selection:text-[#5C3A1E]">
       <main id="main-content" className="flex-1 pb-28 md:pb-20">
         {/* ===================================================
             1. HERO SECTION (Split Editorial)
             =================================================== */}
-        <section className="relative overflow-hidden pt-12 pb-20 md:pt-16 md:pb-28">
+        <section
+          className="relative overflow-hidden pt-12 pb-20 md:pt-16 md:pb-28 transition-colors"
+          style={{
+            backgroundColor: aboutData?.bgColor || undefined,
+            backgroundImage: aboutData?.bgImage ? `url("${aboutData.bgImage}")` : undefined,
+            backgroundSize: aboutData?.bgImage ? "cover" : undefined,
+            backgroundPosition: "center",
+          }}
+        >
           <div className="absolute top-10 right-10 -z-10 opacity-[0.03] pointer-events-none">
             <LotusSymbol className="w-[600px] h-[600px]" color="gold" />
           </div>
@@ -79,26 +91,22 @@ export default function AboutPage() {
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] shadow-xs">
                   <span className="text-[#D4A35A] text-xs">◆</span>
                   <span className="text-[10px] md:text-xs font-semibold tracking-[0.22em] text-[#5C3A1E] uppercase">
-                    HERITAGE & PHILOSOPHY
+                    HERITAGE &amp; PHILOSOPHY
                   </span>
                 </div>
 
                 <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold leading-[1.12] tracking-tight text-[#0F172A]">
-                  Bridging Millennia of <span className="text-gold-gradient">Indian Aesthetic Tradition</span> with Advanced Computational Engineering
+                  {aboutData?.title || "Bridging Millennia of Indian Aesthetic Tradition with Advanced Computational Engineering"}
                 </h1>
 
                 <p className="text-base sm:text-lg text-[#64748B] leading-relaxed font-sans">
-                  &quot;Sutra&quot; translates from Sanskrit to an aphorism, a thread,
-                  or a foundational principle connecting disparate disciplines into a
-                  coherent whole. At Sutra Studio, we are the thread connecting classical
-                  artistic heritage with state-of-the-art spatial and computational design.
+                  {aboutData?.subtitle ||
+                    "\"Sutra\" translates from Sanskrit to an aphorism, a thread, or a foundational principle connecting disparate disciplines into a coherent whole. At Sutra Studio, we are the thread connecting classical artistic heritage with state-of-the-art spatial and computational design."}
                 </p>
 
                 <p className="text-sm text-[#475569] leading-relaxed">
-                  We engineer high-fidelity commercial imagery, immersive 3D spatial
-                  environments, and bespoke web platforms for forward-thinking brands
-                  who demand the warmth, depth, and prestige of traditional craftsmanship
-                  without sacrificing digital speed.
+                  {aboutData?.story ||
+                    "We engineer high-fidelity commercial imagery, immersive 3D spatial environments, and bespoke web platforms for forward-thinking brands who demand the warmth, depth, and prestige of traditional craftsmanship without sacrificing digital speed."}
                 </p>
 
                 <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 max-w-md">
