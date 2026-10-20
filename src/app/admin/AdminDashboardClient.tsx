@@ -63,10 +63,29 @@ import {
   Send,
   Bot,
   User,
+  Bell,
+  CheckCircle,
+  FileCode,
+  Layers,
 } from "lucide-react";
 
 export type CrmTab = "overview" | "orders" | "cms" | "clients" | "settings";
 export type CmsSubPage = "home" | "about" | "services" | "pricing" | "contact" | "header" | "footer" | "theme";
+
+export interface StudioNotificationRecord {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  message: string;
+  orderId?: string;
+  orderNumber?: string;
+  actionUrl?: string;
+  actionLabel?: string;
+  read: boolean;
+  createdAt: string;
+  metadata?: Record<string, any>;
+}
 
 export interface AdminOrderRecord {
   id: string;
@@ -88,6 +107,7 @@ export interface AdminOrderRecord {
   source?: string;
   isDraft?: boolean;
   notes?: string;
+  requirements?: string;
   attribution?: {
     utm_source?: string;
     utm_medium?: string;
@@ -162,6 +182,81 @@ function getStatusBadgeVariant(status: string): BadgeVariant {
     default:
       return "neutral";
   }
+}
+
+function deriveLeadDetails(conv: any) {
+  const messages: any[] = Array.isArray(conv?.messages) ? conv.messages : [];
+  const clientQuestions = messages.filter((m) => m.sender === "client");
+  const aiAnswers = messages.filter((m) => m.sender === "assistant" || m.sender === "studio");
+
+  const latestQuestion =
+    clientQuestions.length > 0
+      ? clientQuestions[clientQuestions.length - 1].text
+      : conv?.lastMessageSnippet || "No inquiry message brief provided";
+  const latestAnswer =
+    aiAnswers.length > 0 ? aiAnswers[aiAnswers.length - 1].text : "";
+
+  const allText = messages.map((m) => m.text || "").join(" ").toLowerCase();
+
+  let intent = "3D Architectural Visualization";
+  let estimatedPrice = 3499;
+  let outputType: "image" | "video" | "website" | "full_package" = "image";
+
+  if (allText.includes("99") || allText.includes("trial") || allText.includes("ટ્રાયલ")) {
+    intent = "₹99 Instant Architectural Trial";
+    estimatedPrice = 99;
+    outputType = "image";
+  } else if (allText.includes("499") || allText.includes("single render")) {
+    intent = "₹499 Single 4K Master Render";
+    estimatedPrice = 499;
+    outputType = "image";
+  } else if (allText.includes("1499") || (allText.includes("reel") && !allText.includes("7499"))) {
+    intent = "₹1,499 Commercial 4K Reel";
+    estimatedPrice = 1499;
+    outputType = "video";
+  } else if (allText.includes("7499") || allText.includes("commercial reel") || allText.includes("campaign video")) {
+    intent = "₹7,499 Commercial Pro Reel Pack";
+    estimatedPrice = 7499;
+    outputType = "video";
+  } else if (
+    allText.includes("website") ||
+    allText.includes("web app") ||
+    allText.includes("landing") ||
+    allText.includes("વેબસાઇટ")
+  ) {
+    intent = "Website Development & Engineering";
+    estimatedPrice = 9999;
+    outputType = "website";
+  } else if (
+    allText.includes("retainer") ||
+    allText.includes("19999") ||
+    allText.includes("enterprise") ||
+    allText.includes("growth")
+  ) {
+    intent = "₹19,999 Monthly Studio Retainer";
+    estimatedPrice = 19999;
+    outputType = "full_package";
+  } else if (allText.includes("video") || allText.includes("ad") || allText.includes("વિડિયો")) {
+    intent = "Cinematic Motion & Commercial Video";
+    estimatedPrice = 1499;
+    outputType = "video";
+  } else {
+    intent = "3D Architectural & Spatial Visualization";
+    estimatedPrice = 3499;
+    outputType = "image";
+  }
+
+  return {
+    clientQuestions,
+    aiAnswers,
+    latestQuestion,
+    latestAnswer,
+    intent,
+    estimatedPrice,
+    outputType,
+    totalMessages: messages.length,
+    attachments: messages.flatMap((m) => m.attachments || []),
+  };
 }
 
 const CMS_SUB_PAGES: Array<{ id: CmsSubPage; label: string; shortLabel: string; icon: any; route: string }> = [
@@ -309,6 +404,30 @@ export function AdminDashboardClient() {
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [copiedUtr, setCopiedUtr] = useState(false);
   const [zoomScreenshot, setZoomScreenshot] = useState(false);
+
+  // Orders Sub-tab & AI Chat Leads State
+  const [ordersSubTab, setOrdersSubTab] = useState<"orders" | "leads">("orders");
+  const [inspectingLead, setInspectingLead] = useState<any | null>(null);
+
+  // Real-Time Notifications State
+  const [notifications, setNotifications] = useState<StudioNotificationRecord[]>([]);
+  const [unreadNotifCount, setUnreadNotifCount] = useState<number>(0);
+  const [notificationsDrawerOpen, setNotificationsDrawerOpen] = useState<boolean>(false);
+  const [isNotifsLoading, setIsNotifsLoading] = useState<boolean>(false);
+
+  // n8n Autonomous Workflow Execution Monitor State
+  const [n8nWorkflowModal, setN8nWorkflowModal] = useState<{
+    isOpen: boolean;
+    orderOrLead: any;
+    runId?: string;
+    status: "idle" | "dispatching" | "queued" | "running" | "draft_ready" | "completed" | "error";
+    targetWebhook: string;
+    packagePrice: number;
+    outputType: "image" | "video" | "website" | "full_package";
+    deliverables: any[];
+    logs: string[];
+    errorMessage?: string;
+  } | null>(null);
 
   // CMS State
   const [activeCmsPage, setActiveCmsPage] = useState<CmsSubPage>("home");
@@ -524,17 +643,249 @@ export function AdminDashboardClient() {
     }
   }, []);
 
-  // Initial load and periodic 10-second polling for orders and client chats
+  // Fetch real-time notifications from API
+  const fetchNotifications = useCallback(async () => {
+    setIsNotifsLoading(true);
+    try {
+      const res = await fetch("/api/notifications?userId=usr_admin_001", {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.notifications)) {
+          setNotifications(data.notifications);
+          setUnreadNotifCount(
+            typeof data.unreadCount === "number"
+              ? data.unreadCount
+              : data.notifications.filter((n: any) => !n.read).length
+          );
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to load notifications:", e);
+    } finally {
+      setIsNotifsLoading(false);
+    }
+  }, []);
+
+  const markNotificationRead = async (id: string) => {
+    try {
+      await fetch("/api/notifications?userId=usr_admin_001", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+      );
+      setUnreadNotifCount((prev) => Math.max(0, prev - 1));
+    } catch (e) {
+      console.warn("Failed to mark notification as read:", e);
+    }
+  };
+
+  const markAllNotificationsRead = async () => {
+    try {
+      await fetch("/api/notifications?userId=usr_admin_001", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ markAllAsRead: true }),
+      });
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      setUnreadNotifCount(0);
+    } catch (e) {
+      console.warn("Failed to mark all notifications as read:", e);
+    }
+  };
+
+  const handleNotificationClick = (notif: StudioNotificationRecord) => {
+    markNotificationRead(notif.id);
+    setNotificationsDrawerOpen(false);
+    if (
+      notif.type === "ai_chat" ||
+      notif.title.toLowerCase().includes("chat") ||
+      notif.title.toLowerCase().includes("inquiry")
+    ) {
+      switchTab("orders");
+      setOrdersSubTab("leads");
+    } else {
+      switchTab("orders");
+      setOrdersSubTab("orders");
+      if (notif.orderId) {
+        const match = orders.find(
+          (o) => o.id === notif.orderId || o.orderNumber === notif.orderNumber
+        );
+        if (match) setInspectingOrder(match);
+      }
+    }
+  };
+
+  // Dispatch order or AI Chat Lead to n8n Automation Engine
+  const handleDispatchN8n = async (target: {
+    id: string;
+    name: string;
+    email: string;
+    phone?: string;
+    brand?: string;
+    service: string;
+    brief: string;
+    price: number;
+    outputType: "image" | "video" | "website" | "full_package";
+    isOrder?: boolean;
+  }) => {
+    const runIdTemp = `sutra_run_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    setN8nWorkflowModal({
+      isOpen: true,
+      orderOrLead: target,
+      runId: runIdTemp,
+      status: "dispatching",
+      targetWebhook: "https://n8n.sutrastudios.in/webhook/sutra-master-dispatch",
+      packagePrice: target.price,
+      outputType: target.outputType,
+      deliverables: [],
+      logs: [
+        `[${new Date().toLocaleTimeString()}] Initializing Autonomous n8n Workflow Dispatch...`,
+        `[${new Date().toLocaleTimeString()}] Target Webhook: https://n8n.sutrastudios.in/webhook/sutra-master-dispatch`,
+        `[${new Date().toLocaleTimeString()}] Package Pipeline: ${target.outputType.toUpperCase()} Pipeline (₹${target.price.toLocaleString("en-IN")})`,
+        `[${new Date().toLocaleTimeString()}] Client: ${target.name} <${target.email}>`,
+        `[${new Date().toLocaleTimeString()}] Dispatching intake brief to master engine...`,
+      ],
+    });
+
+    try {
+      const res = await fetch("/api/n8n/dispatch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          workflowId: "sutra-master-dispatch",
+          isAdminDispatch: true,
+          orderId: target.id,
+          service: target.service,
+          brief: target.brief,
+          amount: target.price,
+          client: {
+            name: target.name,
+            email: target.email,
+            phone: target.phone,
+            brandName: target.brand || target.name,
+          },
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setN8nWorkflowModal((prev) =>
+          prev
+            ? {
+                ...prev,
+                status: data.status === "running" ? "running" : "draft_ready",
+                runId: data.runId || prev.runId,
+                deliverables: data.deliverables || (data.output?.deliverables ?? []),
+                logs: [
+                  ...prev.logs,
+                  `[${new Date().toLocaleTimeString()}] Dispatched successfully. Run ID: ${data.runId || prev.runId}`,
+                  `[${new Date().toLocaleTimeString()}] Engine Status: ${data.status.toUpperCase()}`,
+                  `[${new Date().toLocaleTimeString()}] Output Deliverables Generated: ${data.deliverables?.length || (data.output?.deliverables?.length ?? 0)} item(s) vaulted in '02 Drafts'`,
+                  `[${new Date().toLocaleTimeString()}] Master Webhook acknowledged: 200 OK`,
+                ],
+              }
+            : null
+        );
+        fetchOrders(true);
+        fetchNotifications();
+      } else {
+        throw new Error(data.error || "Failed to dispatch automation pipeline.");
+      }
+    } catch (err: any) {
+      setN8nWorkflowModal((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: "error",
+              errorMessage: err?.message || String(err),
+              logs: [
+                ...prev.logs,
+                `[${new Date().toLocaleTimeString()}] ERROR: ${err?.message || String(err)}`,
+              ],
+            }
+          : null
+      );
+    }
+  };
+
+  // Convert an AI Chat inquiry into a verified Studio Order
+  const handleConvertLeadToOrder = async (lead: any) => {
+    const details = deriveLeadDetails(lead);
+    setIsDispatching(true);
+    setActionMessage("Converting client AI inquiry into formal studio commission order...");
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clientName: lead.clientName || "Studio Client",
+          clientEmail: lead.clientEmail || `${lead.clientKey}@client.sutrastudios.in`,
+          clientPhone: lead.clientPhone || "",
+          brandName: lead.clientName || "Sutra Client",
+          service: details.intent,
+          packageName: details.intent,
+          totalAmount: details.estimatedPrice,
+          requirements: `Client Chat Brief: "${details.latestQuestion}"\nTotal Inbound Exchanges: ${details.totalMessages}`,
+          source: "chat",
+        }),
+      });
+      if (res.ok) {
+        await fetchOrders(true);
+        setOrdersSubTab("orders");
+        setActionMessage(`✓ Converted lead to Order (₹${details.estimatedPrice.toLocaleString("en-IN")})!`);
+        setTimeout(() => setActionMessage(null), 3000);
+      }
+    } catch (err) {
+      console.warn("Failed to convert lead to order:", err);
+    } finally {
+      setIsDispatching(false);
+    }
+  };
+
+  // Initial load and periodic 10-second polling for orders, notifications, and client chats
   useEffect(() => {
     fetchOrders();
     fetchClientChats();
     fetchCmsContent();
+    fetchNotifications();
     const interval = setInterval(() => {
       fetchOrders(true);
       fetchClientChats();
+      fetchNotifications();
     }, 10000);
-    return () => clearInterval(interval);
-  }, [fetchOrders, fetchClientChats, fetchCmsContent]);
+    const unsub = SyncManager.subscribe("NOTIFICATIONS_UPDATED", () => {
+      fetchNotifications();
+    });
+    return () => {
+      clearInterval(interval);
+      unsub?.();
+    };
+  }, [fetchOrders, fetchClientChats, fetchCmsContent, fetchNotifications]);
+
+  // Filtered AI Chat Leads
+  const aiChatLeads = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    return clientConversations.filter((conv) => {
+      if (!conv.messages || conv.messages.length === 0) return false;
+      const matchesSearch =
+        !q ||
+        conv.clientName?.toLowerCase().includes(q) ||
+        conv.clientEmail?.toLowerCase().includes(q) ||
+        conv.clientPhone?.toLowerCase().includes(q) ||
+        conv.clientKey?.toLowerCase().includes(q) ||
+        conv.messages.some((m: any) => m.text?.toLowerCase().includes(q));
+      return matchesSearch;
+    });
+  }, [clientConversations, searchQuery]);
 
   // Derived KPI metrics
   const metrics = useMemo(() => {
@@ -887,6 +1238,20 @@ export function AdminDashboardClient() {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setNotificationsDrawerOpen(true)}
+              className="relative p-2 rounded-xl text-[#171717] hover:bg-[#F0ECE1] transition-colors cursor-pointer"
+              aria-label="Open Notifications"
+              title="Studio Notifications"
+            >
+              <Bell className="w-5 h-5 text-[#171717]" />
+              {unreadNotifCount > 0 && (
+                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[9px] font-bold text-white shadow-xs animate-pulse">
+                  {unreadNotifCount > 9 ? "9+" : unreadNotifCount}
+                </span>
+              )}
+            </button>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#171717] text-[#FAF9F5] uppercase tracking-wider">
               Sutra CRM
             </span>
@@ -1357,10 +1722,35 @@ export function AdminDashboardClient() {
             </div>
 
             <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => setNotificationsDrawerOpen(true)}
+                className="relative px-3 py-1.5 rounded-xl bg-white border border-[#E5E1D8] text-[#171717] hover:bg-[#F0ECE1] hover:border-[#A98B57] transition-all cursor-pointer flex items-center gap-2 shadow-2xs"
+                title="Studio Notifications & Alerts"
+                aria-label="Notifications"
+              >
+                <div className="relative">
+                  <Bell className="w-4 h-4 text-[#A98B57]" />
+                  {unreadNotifCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5 rounded-full bg-red-600 animate-ping" />
+                  )}
+                </div>
+                <span className="text-xs font-bold text-[#171717]">Alerts</span>
+                {unreadNotifCount > 0 && (
+                  <span className="flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-red-600 text-[9px] font-bold text-white">
+                    {unreadNotifCount}
+                  </span>
+                )}
+              </button>
+
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => fetchOrders()}
+                onClick={() => {
+                  fetchOrders();
+                  fetchNotifications();
+                  fetchClientChats();
+                }}
                 isLoading={isRefreshing}
                 leftIcon={<RefreshCw className="w-3.5 h-3.5 text-[#5C3A1E]" />}
                 className="text-xs text-[#5C3A1E]"
@@ -1729,7 +2119,208 @@ export function AdminDashboardClient() {
                   </div>
                 </div>
 
-                {/* Search & Filter Toolbar */}
+                {/* Orders / AI Chat Leads View Switcher */}
+                <div className="flex items-center gap-2 p-1 bg-[#FAF9F5] rounded-2xl border border-[#E5E1D8] w-fit">
+                  <button
+                    type="button"
+                    onClick={() => setOrdersSubTab("orders")}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                      ordersSubTab === "orders"
+                        ? "bg-[#171717] text-white shadow-xs"
+                        : "text-[#64748B] hover:text-[#171717]"
+                    }`}
+                  >
+                    <ShoppingBag className="w-3.5 h-3.5" />
+                    <span>Client Orders Ledger</span>
+                    <span
+                      className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                        ordersSubTab === "orders"
+                          ? "bg-white/20 text-white"
+                          : "bg-[#E5E1D8] text-[#5C3A1E]"
+                      }`}
+                    >
+                      {orders.length}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setOrdersSubTab("leads")}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                      ordersSubTab === "leads"
+                        ? "bg-[#171717] text-white shadow-xs"
+                        : "text-[#64748B] hover:text-[#171717]"
+                    }`}
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span>AI Chat Inquiries &amp; Leads</span>
+                    <span
+                      className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        ordersSubTab === "leads"
+                          ? "bg-amber-400 text-stone-900"
+                          : "bg-amber-100 text-amber-900"
+                      }`}
+                    >
+                      {aiChatLeads.length}
+                    </span>
+                  </button>
+                </div>
+
+                {ordersSubTab === "leads" ? (
+                  /* ============================================================ */
+                  /* AI CHAT INQUIRIES & LEADS VIEW (ORDER NI JEM)                */
+                  /* ============================================================ */
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                      <div className="relative flex-1 max-w-md w-full">
+                        <Search className="w-4 h-4 text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          placeholder="Search chat leads by client name, email, or question..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#FFFDF9] border border-[#E5E1D8] text-xs text-[#171717] focus:outline-none focus:border-[#A98B57]"
+                        />
+                      </div>
+                      <div className="text-xs text-[#64748B]">
+                        Showing <strong className="text-[#171717]">{aiChatLeads.length}</strong> active client inquiry lead(s)
+                      </div>
+                    </div>
+
+                    {isChatsLoading && clientConversations.length === 0 ? (
+                      <div className="p-12 text-center text-xs text-[#64748B] bg-[#FFFDF9] rounded-2xl border border-[#E5E1D8]">
+                        <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#A98B57] mb-2" />
+                        Loading AI chat inquiries &amp; conversation history...
+                      </div>
+                    ) : aiChatLeads.length === 0 ? (
+                      <div className="p-12 text-center text-xs text-[#64748B] bg-[#FFFDF9] rounded-2xl border border-[#E5E1D8] space-y-2">
+                        <MessageSquare className="w-8 h-8 text-[#94A3B8] mx-auto opacity-50" />
+                        <p className="font-semibold text-sm text-[#171717]">No AI chat inquiries found</p>
+                        <p>When clients interact with the Studio AI Assistant, their inquiries will appear here formatted as orders.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+                        {aiChatLeads.map((conv) => {
+                          const lead = deriveLeadDetails(conv);
+                          return (
+                            <div
+                              key={conv.clientKey}
+                              className="p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-warm space-y-3 flex flex-col justify-between hover:border-[#A98B57]/60 transition-all"
+                            >
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="font-mono font-bold text-xs text-[#5C3A1E]">
+                                    INQ-{conv.clientKey.slice(-6).toUpperCase()}
+                                  </span>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-50 text-purple-800 border border-purple-200">
+                                      AI Chat Lead
+                                    </span>
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                      {lead.totalMessages} Msg
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <h3 className="font-serif font-bold text-base text-[#171717]">
+                                    {conv.clientName || "Studio Client"}
+                                  </h3>
+                                  <p className="text-xs text-[#64748B]">{conv.clientEmail}</p>
+                                  {conv.clientPhone && (
+                                    <p className="text-[11px] text-[#A98B57] font-medium mt-0.5">
+                                      {conv.clientPhone}
+                                    </p>
+                                  )}
+                                </div>
+
+                                <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] flex items-center justify-between text-xs">
+                                  <div>
+                                    <span className="text-[#64748B] text-[10px] block">Service Intent:</span>
+                                    <span className="font-semibold text-[#171717]">{lead.intent}</span>
+                                  </div>
+                                  <div className="text-right">
+                                    <span className="text-[#64748B] text-[10px] block">Target Package:</span>
+                                    <span className="font-serif font-bold text-base text-[#5C3A1E]">
+                                      ₹{lead.estimatedPrice.toLocaleString("en-IN")}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="p-3 rounded-xl bg-white border border-[#E5E1D8] space-y-2 text-xs">
+                                  <div className="space-y-1">
+                                    <span className="text-[10px] font-bold text-[#A98B57] uppercase tracking-wider block">
+                                      Client Question / Brief:
+                                    </span>
+                                    <p className="text-[#171717] font-medium line-clamp-2 italic bg-[#FAF9F5] p-2 rounded-lg border border-[#E5E1D8]">
+                                      &ldquo;{lead.latestQuestion}&rdquo;
+                                    </p>
+                                  </div>
+
+                                  {lead.latestAnswer && (
+                                    <div className="space-y-1 pt-1 border-t border-[#E5E1D8]/60">
+                                      <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider block">
+                                        AI Studio Reply:
+                                      </span>
+                                      <p className="text-[#64748B] line-clamp-2 text-[11px]">
+                                        {lead.latestAnswer}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="space-y-2 pt-3 border-t border-[#E5E1D8]">
+                                <div className="grid grid-cols-2 gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => setInspectingLead(conv)}
+                                    className="w-full py-2.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] flex items-center justify-center gap-1.5 hover:bg-[#F0ECE1] transition-colors cursor-pointer"
+                                  >
+                                    <Eye className="w-3.5 h-3.5" />
+                                    <span>Inspect Q&amp;A</span>
+                                  </button>
+
+                                  <Button
+                                    variant="primary"
+                                    size="sm"
+                                    className="w-full justify-center text-xs"
+                                    onClick={() =>
+                                      handleDispatchN8n({
+                                        id: `INQ-${conv.clientKey.slice(-6).toUpperCase()}`,
+                                        name: conv.clientName || "Studio Client",
+                                        email: conv.clientEmail || conv.clientKey,
+                                        phone: conv.clientPhone,
+                                        service: lead.intent,
+                                        brief: lead.latestQuestion,
+                                        price: lead.estimatedPrice,
+                                        outputType: lead.outputType,
+                                      })
+                                    }
+                                    leftIcon={<Play className="w-3 h-3" />}
+                                  >
+                                    Dispatch n8n
+                                  </Button>
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleConvertLeadToOrder(conv)}
+                                  className="w-full py-2 rounded-xl bg-white border border-[#E5E1D8] text-[11px] font-semibold text-[#171717] hover:bg-[#FAF9F5] hover:border-[#A98B57] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                                >
+                                  <Sparkles className="w-3 h-3 text-[#A98B57]" />
+                                  <span>Convert to Studio Order</span>
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Search & Filter Toolbar */}
                 <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3.5">
                   <div className="relative flex-1 max-w-md w-full">
                     <Search className="w-4 h-4 text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2" />
@@ -1915,6 +2506,32 @@ export function AdminDashboardClient() {
                           <button
                             type="button"
                             onClick={() => {
+                              const isVid = ord.totalAmount === 1499 || ord.totalAmount === 7499 || (ord.service || "").toLowerCase().includes("video");
+                              const isRet = (ord.totalAmount || 0) >= 19999 || (ord.service || "").toLowerCase().includes("retainer");
+                              const isWeb = (ord.service || "").toLowerCase().includes("web");
+                              const outType = isRet ? "full_package" : isWeb ? "website" : isVid ? "video" : "image";
+                              handleDispatchN8n({
+                                id: ord.id,
+                                name: ord.clientName,
+                                email: ord.clientEmail,
+                                phone: ord.clientPhone,
+                                brand: ord.brandName,
+                                service: ord.service || ord.packageName || "Studio Creative",
+                                brief: ord.requirements || ord.notes || "",
+                                price: ord.totalAmount || 3499,
+                                outputType: outType,
+                                isOrder: true,
+                              });
+                            }}
+                            className="w-full py-2 rounded-xl bg-amber-500/10 border border-amber-300/60 text-xs font-bold text-[#8B6508] hover:bg-amber-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <Play className="w-3.5 h-3.5 text-[#A98B57]" />
+                            <span>1-Click n8n Automation</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
                               setSelectedClientDropdownKey((ord.clientEmail || ord.clientName || "").toLowerCase().trim());
                               switchTab("clients");
                             }}
@@ -1983,6 +2600,32 @@ export function AdminDashboardClient() {
                             <span>Inspect</span>
                           </button>
 
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const isVid = ord.totalAmount === 1499 || ord.totalAmount === 7499 || (ord.service || "").toLowerCase().includes("video");
+                              const isRet = (ord.totalAmount || 0) >= 19999 || (ord.service || "").toLowerCase().includes("retainer");
+                              const isWeb = (ord.service || "").toLowerCase().includes("web");
+                              const outType = isRet ? "full_package" : isWeb ? "website" : isVid ? "video" : "image";
+                              handleDispatchN8n({
+                                id: ord.id,
+                                name: ord.clientName,
+                                email: ord.clientEmail,
+                                phone: ord.clientPhone,
+                                brand: ord.brandName,
+                                service: ord.service || ord.packageName || "Studio Creative",
+                                brief: ord.requirements || ord.notes || "",
+                                price: ord.totalAmount || 3499,
+                                outputType: outType,
+                                isOrder: true,
+                              });
+                            }}
+                            className="px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-300/60 text-xs font-bold text-[#8B6508] hover:bg-amber-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <Play className="w-3.5 h-3.5 text-[#A98B57]" />
+                            <span>n8n Pipeline</span>
+                          </button>
+
                           {ord.status !== "in_production" && ord.status !== "completed" && ord.status !== "cancelled" ? (
                             <Button
                               variant="primary"
@@ -2006,6 +2649,8 @@ export function AdminDashboardClient() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
                   </div>
                 )}
               </div>
@@ -3784,6 +4429,35 @@ export function AdminDashboardClient() {
                       Reject Payment
                     </Button>
 
+                    {inspectingOrder && (
+                      <Button
+                        variant="secondary"
+                        size="md"
+                        onClick={() => {
+                          const isVid = inspectingOrder.totalAmount === 1499 || inspectingOrder.totalAmount === 7499 || (inspectingOrder.service || "").toLowerCase().includes("video");
+                          const isRet = (inspectingOrder.totalAmount || 0) >= 19999 || (inspectingOrder.service || "").toLowerCase().includes("retainer");
+                          const isWeb = (inspectingOrder.service || "").toLowerCase().includes("web");
+                          const outType = isRet ? "full_package" : isWeb ? "website" : isVid ? "video" : "image";
+                          handleDispatchN8n({
+                            id: inspectingOrder.id,
+                            name: inspectingOrder.clientName,
+                            email: inspectingOrder.clientEmail,
+                            phone: inspectingOrder.clientPhone,
+                            brand: inspectingOrder.brandName,
+                            service: inspectingOrder.service || inspectingOrder.packageName || "Studio Creative",
+                            brief: inspectingOrder.requirements || inspectingOrder.notes || "",
+                            price: inspectingOrder.totalAmount || 3499,
+                            outputType: outType,
+                            isOrder: true,
+                          });
+                        }}
+                        className="w-full sm:w-auto"
+                        leftIcon={<Play className="w-4 h-4 text-[#A98B57]" />}
+                      >
+                        Dispatch n8n Automation
+                      </Button>
+                    )}
+
                     {inspectingOrder.status !== "in_production" &&
                     inspectingOrder.status !== "completed" &&
                     inspectingOrder.status !== "cancelled" ? (
@@ -3828,6 +4502,510 @@ export function AdminDashboardClient() {
                   />
                 </div>
               </div>
+            )}
+
+            {/* ============================================================ */}
+            {/* RESPONSIVE SLIDE-OVER NOTIFICATIONS DRAWER                   */}
+            {/* ============================================================ */}
+            {notificationsDrawerOpen && (
+              <div className="fixed inset-0 z-50 flex justify-end">
+                <div
+                  className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
+                  onClick={() => setNotificationsDrawerOpen(false)}
+                />
+                <div className="relative w-full max-w-md bg-[#FFFDF9] border-l border-[#E5E1D8] h-full shadow-2xl z-10 flex flex-col">
+                  {/* Drawer Header */}
+                  <div className="p-4 sm:p-5 border-b border-[#E5E1D8] flex items-center justify-between bg-white">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-300/40 text-[#A98B57]">
+                        <Bell className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-serif font-bold text-base text-[#171717]">
+                          Studio Notifications
+                        </h3>
+                        <p className="text-[11px] text-[#64748B]">
+                          Real-time alerts for orders, client chats, and n8n dispatches
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setNotificationsDrawerOpen(false)}
+                      className="p-1.5 rounded-lg text-[#737373] hover:text-[#171717] hover:bg-[#F0ECE1] cursor-pointer"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Actions Toolbar */}
+                  <div className="px-4 py-2.5 bg-[#FAF9F5] border-b border-[#E5E1D8] flex items-center justify-between text-xs">
+                    <span className="font-semibold text-[#171717]">
+                      {unreadNotifCount} unread alert{unreadNotifCount === 1 ? "" : "s"}
+                    </span>
+                    {unreadNotifCount > 0 && (
+                      <button
+                        onClick={markAllNotificationsRead}
+                        className="text-[11px] font-bold text-[#A98B57] hover:underline cursor-pointer"
+                      >
+                        Mark all as read
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Notifications List */}
+                  <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2.5">
+                    {isNotifsLoading && notifications.length === 0 ? (
+                      <div className="p-8 text-center text-xs text-[#64748B]">
+                        <RefreshCw className="w-5 h-5 animate-spin mx-auto text-[#A98B57] mb-2" />
+                        Loading notifications...
+                      </div>
+                    ) : notifications.length === 0 ? (
+                      <div className="p-10 text-center text-xs text-[#64748B] space-y-2">
+                        <Bell className="w-8 h-8 text-[#A98B57]/40 mx-auto" />
+                        <p className="font-semibold text-sm text-[#171717]">No notifications yet</p>
+                        <p>New client orders and AI chat inquiries will appear here in real time.</p>
+                      </div>
+                    ) : (
+                      notifications.map((n) => {
+                        const isChat = n.type === "ai_chat" || n.title.toLowerCase().includes("chat") || n.title.toLowerCase().includes("inquiry");
+                        const isOrder = n.type === "order_placed" || n.type === "order_paid";
+                        return (
+                          <div
+                            key={n.id}
+                            onClick={() => handleNotificationClick(n)}
+                            className={`p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                              !n.read
+                                ? "bg-white border-[#A98B57]/60 shadow-xs"
+                                : "bg-[#FAF9F5] border-[#E5E1D8] hover:border-[#A98B57]/40 opacity-80"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={`p-1.5 rounded-lg text-xs ${
+                                    isChat
+                                      ? "bg-purple-100 text-purple-800"
+                                      : isOrder
+                                      ? "bg-emerald-100 text-emerald-800"
+                                      : "bg-amber-100 text-amber-900"
+                                  }`}
+                                >
+                                  {isChat ? (
+                                    <MessageSquare className="w-3.5 h-3.5" />
+                                  ) : isOrder ? (
+                                    <ShoppingBag className="w-3.5 h-3.5" />
+                                  ) : (
+                                    <Sparkles className="w-3.5 h-3.5" />
+                                  )}
+                                </span>
+                                <span className="font-bold text-xs text-[#171717]">
+                                  {n.title}
+                                </span>
+                              </div>
+                              {!n.read && (
+                                <span className="w-2 h-2 rounded-full bg-red-600 shrink-0 mt-1" />
+                              )}
+                            </div>
+
+                            <p className="text-xs text-[#5C3A1E] mt-2 line-clamp-2">
+                              {n.message}
+                            </p>
+
+                            <div className="mt-2.5 flex items-center justify-between text-[10px] text-[#8C827A] pt-2 border-t border-[#E5E1D8]/60">
+                              <span>{new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                              <span className="font-semibold text-[#A98B57] hover:underline">
+                                {n.actionLabel || "View Details →"}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ============================================================ */}
+            {/* INSPECTING AI CHAT LEAD MODAL                                */}
+            {/* ============================================================ */}
+            {inspectingLead && (() => {
+              const details = deriveLeadDetails(inspectingLead);
+              return (
+                <Modal
+                  isOpen={Boolean(inspectingLead)}
+                  onClose={() => setInspectingLead(null)}
+                  title={`AI Chat Lead: ${inspectingLead.clientName || "Studio Client"}`}
+                  maxWidth="xl"
+                >
+                  <div className="space-y-5 max-h-[80vh] overflow-y-auto pr-1">
+                    <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#E5E1D8]">
+                        <div>
+                          <span className="text-[10px] font-mono text-[#A98B57] uppercase font-bold tracking-wider block">
+                            Inquiry Key: {inspectingLead.clientKey}
+                          </span>
+                          <h3 className="font-serif font-bold text-lg text-[#171717]">
+                            {inspectingLead.clientName || "Studio Client"}
+                          </h3>
+                          <p className="text-xs text-[#64748B]">{inspectingLead.clientEmail}</p>
+                          {inspectingLead.clientPhone && (
+                            <p className="text-xs text-[#A98B57] font-medium">{inspectingLead.clientPhone}</p>
+                          )}
+                        </div>
+
+                        <div className="text-left sm:text-right">
+                          <span className="text-[10px] text-[#64748B] block">Resolved Package &amp; Output:</span>
+                          <span className="font-serif font-bold text-lg text-[#5C3A1E]">
+                            ₹{details.estimatedPrice.toLocaleString("en-IN")}
+                          </span>
+                          <span className="block text-[11px] font-semibold text-[#A98B57] uppercase">
+                            {details.outputType.toUpperCase()} Pipeline
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                        <div className="p-2.5 rounded-xl bg-white border border-[#E5E1D8]">
+                          <span className="text-[10px] text-[#64748B] block">Service Intent</span>
+                          <span className="font-bold text-[#171717]">{details.intent}</span>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-white border border-[#E5E1D8]">
+                          <span className="text-[10px] text-[#64748B] block">Total Q&amp;A Exchanges</span>
+                          <span className="font-bold text-[#171717]">{details.totalMessages} Messages</span>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-white border border-[#E5E1D8]">
+                          <span className="text-[10px] text-[#64748B] block">Last Activity</span>
+                          <span className="font-bold text-[#171717]">
+                            {new Date(inspectingLead.lastMessageAt).toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-bold text-[#171717] uppercase tracking-wider flex items-center gap-1.5">
+                          <MessageSquare className="w-3.5 h-3.5 text-[#A98B57]" />
+                          <span>Full Q&amp;A Conversation Transcript</span>
+                        </h4>
+                        <span className="text-[11px] text-[#64748B]">Client Questions &amp; AI Studio Answers</span>
+                      </div>
+
+                      <div className="space-y-3 p-4 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] max-h-[350px] overflow-y-auto">
+                        {inspectingLead.messages && inspectingLead.messages.length > 0 ? (
+                          inspectingLead.messages.map((m: any, idx: number) => {
+                            const isClient = m.sender === "client";
+                            return (
+                              <div
+                                key={m.id || idx}
+                                className={`flex flex-col ${isClient ? "items-start" : "items-end"} space-y-1`}
+                              >
+                                <div className="flex items-center gap-1.5 text-[10px] text-[#8C827A]">
+                                  <span className="font-bold">{isClient ? inspectingLead.clientName || "Client" : "Sutra Studio AI Assistant"}</span>
+                                  <span>•</span>
+                                  <span>{new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                </div>
+                                <div
+                                  className={`p-3 rounded-2xl text-xs max-w-[85%] whitespace-pre-wrap leading-relaxed ${
+                                    isClient
+                                      ? "bg-[#FAF9F5] text-[#171717] border border-[#E5E1D8]"
+                                      : "bg-[#171717] text-[#FAF9F5]"
+                                  }`}
+                                >
+                                  {m.text}
+                                  {m.attachments && m.attachments.length > 0 && (
+                                    <div className="mt-2 pt-2 border-t border-white/20 flex flex-wrap gap-1.5">
+                                      {m.attachments.map((att: any, aIdx: number) => (
+                                        <span
+                                          key={aIdx}
+                                          className="px-2 py-0.5 rounded-md bg-white/10 text-[10px] font-mono"
+                                        >
+                                          📎 {att.name}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <p className="text-xs text-[#64748B] text-center py-6">No transcript messages found.</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-[#E5E1D8] flex flex-col sm:flex-row items-center justify-between gap-3">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setInspectingLead(null)}
+                        className="w-full sm:w-auto"
+                      >
+                        Close
+                      </Button>
+
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                            handleConvertLeadToOrder(inspectingLead);
+                            setInspectingLead(null);
+                          }}
+                          className="w-full sm:w-auto text-xs"
+                          leftIcon={<Sparkles className="w-3.5 h-3.5 text-[#A98B57]" />}
+                        >
+                          Convert to Order
+                        </Button>
+
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => {
+                            const conv = inspectingLead;
+                            setInspectingLead(null);
+                            handleDispatchN8n({
+                              id: `INQ-${conv.clientKey.slice(-6).toUpperCase()}`,
+                              name: conv.clientName || "Studio Client",
+                              email: conv.clientEmail || conv.clientKey,
+                              phone: conv.clientPhone,
+                              service: details.intent,
+                              brief: details.latestQuestion,
+                              price: details.estimatedPrice,
+                              outputType: details.outputType,
+                            });
+                          }}
+                          className="w-full sm:w-auto text-xs"
+                          leftIcon={<Play className="w-3.5 h-3.5" />}
+                        >
+                          1-Click Dispatch to n8n
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </Modal>
+              );
+            })()}
+
+            {/* ============================================================ */}
+            {/* AUTONOMOUS n8n WORKFLOW EXECUTION MONITOR MODAL              */}
+            {/* ============================================================ */}
+            {n8nWorkflowModal?.isOpen && (
+              <Modal
+                isOpen={n8nWorkflowModal.isOpen}
+                onClose={() => setN8nWorkflowModal(null)}
+                title="Autonomous n8n Workflow Execution Monitor"
+                maxWidth="xl"
+              >
+                <div className="space-y-6 max-h-[80vh] overflow-y-auto pr-1">
+                  <div className="p-4 rounded-2xl bg-[#171717] text-white space-y-3 shadow-warm">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-white/10">
+                      <div>
+                        <span className="text-[10px] font-mono text-[#A98B57] font-bold uppercase tracking-widest block">
+                          SUTRA AUTONOMOUS ORCHESTRATION ENGINE
+                        </span>
+                        <h3 className="font-serif font-bold text-base text-white">
+                          {n8nWorkflowModal.orderOrLead?.service || "Studio Creative"} — Pipeline
+                        </h3>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-[#A98B57]/20 text-[#D4AF37] border border-[#A98B57]/40">
+                          ₹{n8nWorkflowModal.packagePrice.toLocaleString("en-IN")} • {n8nWorkflowModal.outputType.toUpperCase()}
+                        </span>
+                        <span
+                          className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase ${
+                            n8nWorkflowModal.status === "draft_ready" || n8nWorkflowModal.status === "completed"
+                              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                              : n8nWorkflowModal.status === "error"
+                              ? "bg-red-500/20 text-red-300 border border-red-500/40"
+                              : "bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse"
+                          }`}
+                        >
+                          {n8nWorkflowModal.status.replace("_", " ")}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="text-xs space-y-1 text-white/80 font-mono">
+                      <p className="flex items-center gap-1.5 truncate">
+                        <span className="text-white/50">Target Webhook:</span>
+                        <span className="text-[#D4AF37]">{n8nWorkflowModal.targetWebhook}</span>
+                      </p>
+                      {n8nWorkflowModal.runId && (
+                        <p className="flex items-center gap-1.5">
+                          <span className="text-white/50">Run ID:</span>
+                          <span className="text-white">{n8nWorkflowModal.runId}</span>
+                        </p>
+                      )}
+                      <p className="flex items-center gap-1.5">
+                        <span className="text-white/50">Client:</span>
+                        <span className="text-white">
+                          {n8nWorkflowModal.orderOrLead?.name} ({n8nWorkflowModal.orderOrLead?.email})
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-3">
+                    <h4 className="text-xs font-bold text-[#171717] uppercase tracking-wider">
+                      Workflow Pipeline Stages
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 text-xs">
+                      {[
+                        { step: 1, title: "Intake Verified", desc: `₹${n8nWorkflowModal.packagePrice} Resolved`, done: true },
+                        { step: 2, title: "n8n Dispatched", desc: "Webhook 200 OK", done: true },
+                        {
+                          step: 3,
+                          title: "Autonomous Synthesis",
+                          desc: `${n8nWorkflowModal.outputType.toUpperCase()} Engine`,
+                          done: n8nWorkflowModal.status !== "dispatching" && n8nWorkflowModal.status !== "error",
+                        },
+                        {
+                          step: 4,
+                          title: "Drive Vault Sync",
+                          desc: "Folder: 02 Drafts",
+                          done: n8nWorkflowModal.status === "draft_ready" || n8nWorkflowModal.status === "completed",
+                        },
+                        {
+                          step: 5,
+                          title: "Ready for Review",
+                          desc: "Admin Clearance",
+                          done: n8nWorkflowModal.status === "draft_ready" || n8nWorkflowModal.status === "completed",
+                        },
+                      ].map((st) => (
+                        <div
+                          key={st.step}
+                          className={`p-3 rounded-xl border flex flex-col justify-between ${
+                            st.done
+                              ? "bg-white border-emerald-300 shadow-2xs"
+                              : "bg-[#FFFDF9] border-[#E5E1D8] opacity-60"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-bold text-[#64748B]">Stage {st.step}</span>
+                            {st.done ? (
+                              <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                            ) : (
+                              <Clock className="w-3.5 h-3.5 text-[#94A3B8]" />
+                            )}
+                          </div>
+                          <span className="font-bold text-[#171717] text-xs leading-snug">{st.title}</span>
+                          <span className="text-[10px] text-[#64748B] mt-0.5">{st.desc}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {n8nWorkflowModal.deliverables && n8nWorkflowModal.deliverables.length > 0 && (
+                    <div className="p-4 rounded-2xl bg-white border border-[#E5E1D8] space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-bold text-[#171717] uppercase tracking-wider flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5 text-[#A98B57]" />
+                          <span>Synthesized Deliverables ({n8nWorkflowModal.deliverables.length})</span>
+                        </h4>
+                        <span className="text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 font-semibold">
+                          Vaulted in '02 Drafts'
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {n8nWorkflowModal.deliverables.map((item: any, idx: number) => {
+                          const isImg = item.mimeType?.startsWith("image/") || item.filename?.endsWith(".png") || item.filename?.endsWith(".jpg");
+                          const isVid = item.mimeType?.startsWith("video/") || item.filename?.endsWith(".mp4");
+                          const isWeb = item.filename?.includes("Web") || item.filename?.endsWith(".zip");
+
+                          return (
+                            <div
+                              key={idx}
+                              className="p-3.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-2.5 flex flex-col justify-between"
+                            >
+                              <div className="space-y-1.5">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="font-mono font-bold text-[11px] text-[#5C3A1E] truncate max-w-[200px]">
+                                    {item.filename || `Deliverable_${idx + 1}`}
+                                  </span>
+                                  <span className="px-2 py-0.5 rounded-md bg-white border border-[#E5E1D8] text-[10px] font-mono text-[#64748B]">
+                                    {item.fileSize || "Vaulted"}
+                                  </span>
+                                </div>
+
+                                {isImg && item.previewUrl && (
+                                  <div className="relative w-full h-44 rounded-lg overflow-hidden border border-[#E5E1D8] bg-black">
+                                    <Image
+                                      src={item.previewUrl}
+                                      alt={item.filename || "Deliverable"}
+                                      fill
+                                      className="object-cover"
+                                    />
+                                  </div>
+                                )}
+
+                                {isVid && (
+                                  <div className="rounded-lg overflow-hidden border border-[#E5E1D8] bg-black">
+                                    <video
+                                      controls
+                                      className="w-full h-44 object-cover"
+                                      src={item.previewUrl || item.downloadUrl}
+                                    />
+                                  </div>
+                                )}
+
+                                {isWeb && (
+                                  <div className="p-4 rounded-lg bg-white border border-[#E5E1D8] text-center space-y-1">
+                                    <FileCode className="w-8 h-8 text-[#A98B57] mx-auto" />
+                                    <span className="font-bold text-xs text-[#171717] block">
+                                      Next.js Web Deliverable Architecture
+                                    </span>
+                                    <p className="text-[10px] text-[#64748B]">
+                                      Responsive full-stack bundle ready for deployment.
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="pt-2 border-t border-[#E5E1D8] flex items-center justify-between">
+                                <span className="text-[10px] text-[#8C827A]">{item.version || "v1.0"}</span>
+                                <a
+                                  href={item.downloadUrl || item.previewUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-xs font-bold text-[#A98B57] hover:underline"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                  <span>Open Master Asset</span>
+                                </a>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="p-4 rounded-2xl bg-[#171717] text-white space-y-2">
+                    <span className="text-[10px] font-mono uppercase text-[#A98B57] font-bold tracking-wider block">
+                      n8n Live Execution Logs &amp; Audit Trail
+                    </span>
+                    <div className="p-3 rounded-xl bg-black/60 font-mono text-[11px] text-emerald-400 space-y-1 max-h-36 overflow-y-auto">
+                      {n8nWorkflowModal.logs.map((lg, i) => (
+                        <p key={i} className="leading-relaxed">{lg}</p>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-[#E5E1D8] flex justify-end">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setN8nWorkflowModal(null)}
+                    >
+                      Close Monitor
+                    </Button>
+                  </div>
+                </div>
+              </Modal>
             )}
           </main>
         </div>

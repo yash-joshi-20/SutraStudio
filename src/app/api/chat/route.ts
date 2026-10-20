@@ -6,6 +6,7 @@ import { requestRole, requestUid } from "@/lib/auth/requestRole";
 import { generateChatResponse } from "@/lib/ai/llm";
 import { MASTER_RAG_KNOWLEDGE_STORE, MASTER_SYSTEM_PROMPT } from "@/lib/services/ragLlmService";
 import { ClientChatStore } from "@/lib/services/clientChatStore";
+import { NotificationsStore } from "@/lib/services/notificationsStore";
 
 // In-memory rate limiter: 120 requests / minute per client/IP
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -200,6 +201,27 @@ export async function POST(req: Request) {
       attachments,
       channel: "ai_chat",
     }).catch(() => {});
+
+    // Notify Studio Administrator of new inbound client chat inquiry
+    try {
+      NotificationsStore.add({
+        userId: "usr_admin_001",
+        type: "ai_chat",
+        title: "New AI Chat Inquiry",
+        message: `${clientName || clientEmail || "Client"} inquired: "${message.slice(0, 90)}${message.length > 90 ? "..." : ""}"`,
+        actionUrl: "/admin?tab=orders",
+        actionLabel: "View Inquiry & Chat Lead",
+        metadata: {
+          clientId: activeUid,
+          clientEmail,
+          clientName,
+          clientPhone,
+          messageSnippet: message.slice(0, 160),
+        },
+      });
+    } catch (notifErr) {
+      console.warn("[ChatRoute] Admin notification dispatch notice:", notifErr);
+    }
 
     const lower = message.toLowerCase().trim();
 

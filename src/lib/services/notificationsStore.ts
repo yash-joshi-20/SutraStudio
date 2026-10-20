@@ -28,7 +28,10 @@ export type NotificationType =
   | "draft_review_reminder"
   | "unpaid_reminder"
   | "order_due_warning"
-  | "order_overdue";
+  | "order_overdue"
+  | "ai_chat"
+  | "n8n_dispatched"
+  | "n8n_completed";
 
 export interface StudioNotification {
   id: string;

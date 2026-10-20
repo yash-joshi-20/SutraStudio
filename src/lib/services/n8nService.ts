@@ -204,24 +204,45 @@ export class N8nAutomationService {
     let responseData: any = null;
     let lastNetworkError: string | null = null;
 
+    const orderAmount = Number(targetOrder?.totalAmount || targetOrder?.amountPaid || (payload as any)?.amount || (payload as any)?.totalAmount || 0);
+    const combinedDesc = `${payload.service || targetOrder?.service || ""} ${payload.brief || targetOrder?.requirements || ""} ${(targetOrder as any)?.packageName || ""}`.toLowerCase();
+
+    let resolvedOutputType: "image" | "video" | "website" | "full_package" = "image";
+    if (orderAmount >= 19999 || combinedDesc.includes("retainer") || combinedDesc.includes("growth") || combinedDesc.includes("enterprise") || combinedDesc.includes("full")) {
+      resolvedOutputType = "full_package";
+    } else if (combinedDesc.includes("website") || combinedDesc.includes("web app") || combinedDesc.includes("landing")) {
+      resolvedOutputType = "website";
+    } else if (orderAmount === 1499 || orderAmount === 7499 || combinedDesc.includes("video") || combinedDesc.includes("reel") || combinedDesc.includes("commercial")) {
+      resolvedOutputType = "video";
+    } else {
+      resolvedOutputType = "image";
+    }
+
     // Enriched payload with client and service details for n8n prompt generation
     const enrichedBody = {
       ...payload,
       orderId: payload.orderId || targetOrder?.id || `ORD-${Date.now().toString().slice(-6)}`,
+      packagePrice: orderAmount || (resolvedOutputType === "video" ? 1499 : resolvedOutputType === "full_package" ? 19999 : 99),
+      outputType: resolvedOutputType,
+      workflowPackage: resolvedOutputType,
       serviceDetails: {
         niche: payload.niche || targetOrder?.service || targetOrder?.title || "luxury interior architecture",
         service: payload.service || targetOrder?.service || targetOrder?.title || "Bespoke Creative",
+        outputType: resolvedOutputType,
+        price: orderAmount,
       },
       client: {
-        name: targetOrder?.clientName || "Sutra Client",
-        email: targetOrder?.clientEmail || "client@sutrastudio.com",
-        brandName: (targetOrder as any)?.brandName || targetOrder?.clientName || "Sutra Luxe",
+        name: targetOrder?.clientName || payload.client?.name || "Sutra Client",
+        email: targetOrder?.clientEmail || payload.client?.email || "client@sutrastudio.com",
+        phone: targetOrder?.clientPhone || payload.client?.phone || "",
+        brandName: (targetOrder as any)?.brandName || targetOrder?.clientName || payload.client?.brandName || "Sutra Luxe",
       },
       brief: payload.brief || targetOrder?.requirements || targetOrder?.notes || "Curated luxury aesthetic",
       geminiApiKey: readEnv("GEMINI_API_KEY") || readEnv("GOOGLE_AI_API_KEY"),
       openrouterApiKey: readEnv("OPENROUTER_API_KEY"),
       runId,
       appBaseUrl: this.getAppBaseUrl(),
+      targetN8nWebhook: "https://n8n.sutrastudios.in/webhook/sutra-master-dispatch",
       callbackUrl: `${this.getAppBaseUrl()}/api/n8n/webhook`,
       dispatchedAt: now,
     };
@@ -297,20 +318,6 @@ export class N8nAutomationService {
       "Sutra Luxe";
     const cleanBrand = brand.replace(/[^a-zA-Z0-9_-]/g, "_");
     const serviceName = payload.service || order?.service || order?.title || (order as any)?.packageName || "Studio Creative";
-    const sLower = serviceName.toLowerCase();
-    const isRetainer =
-      sLower.includes("retainer") ||
-      sLower.includes("growth") ||
-      sLower.includes("starter") ||
-      sLower.includes("enterprise") ||
-      order?.type === "monthly_plan" ||
-      payload.workflowId === "W3_monthly_plan_content";
-
-    const is3D =
-      sLower.includes("3d") ||
-      sLower.includes("spatial") ||
-      sLower.includes("metaverse") ||
-      sLower.includes("render");
 
     const appBase = this.getAppBaseUrl();
 
@@ -375,40 +382,104 @@ export class N8nAutomationService {
       uploadedAt: now,
     };
 
-    const deliverables: any[] = [imageDeliverable, videoDeliverable];
+    const orderAmount = Number(order?.totalAmount || order?.amountPaid || (payload as any)?.amount || (payload as any)?.totalAmount || 0);
+    const combinedDesc = `${serviceName} ${payload.brief || order?.requirements || ""} ${(order as any)?.packageName || ""}`.toLowerCase();
 
-    // 3. Optional Spatial 3D Asset
-    if (is3D) {
-      const spatialDeliverable = {
-        driveFileId: `drive_n8n_${runId}_3d`,
-        filename: `${cleanBrand}_Spatial_Mesh.glb`,
-        checksum: `sha256:${Math.random().toString(36).substring(2, 14)}`,
-        fileSize: "24.6 MB",
-        mimeType: "model/gltf-binary",
-        previewUrl: "https://image.pollinations.ai/prompt/luxury%20modern%20armchair%203d%20render%2C%20emerald%20velvet%20and%20brushed%20brass%2C%20studio%20lighting%2C%20isolated%20on%20warm%20ivory%20plinth%2C%20octane%20render%2C%208k?width=1200&height=800&nologo=true",
-        downloadUrl: `${appBase}/videos/services/spatial-3d-desktop.mp4`,
-        category: "draft",
-        version: "v1.0",
-        uploadedAt: now,
-      };
-      deliverables.push(spatialDeliverable);
-    }
+    const isWebsite =
+      combinedDesc.includes("website") ||
+      combinedDesc.includes("web app") ||
+      combinedDesc.includes("landing") ||
+      combinedDesc.includes("web development") ||
+      combinedDesc.includes("વેબસાઇટ");
 
-    // 4. Optional Retainer Content Schedule
+    const isVideo =
+      orderAmount === 1499 ||
+      orderAmount === 7499 ||
+      combinedDesc.includes("video") ||
+      combinedDesc.includes("reel") ||
+      combinedDesc.includes("commercial reel") ||
+      combinedDesc.includes("motion") ||
+      combinedDesc.includes("વિડિયો");
+
+    const isRetainer =
+      orderAmount >= 19999 ||
+      combinedDesc.includes("retainer") ||
+      combinedDesc.includes("growth") ||
+      combinedDesc.includes("starter") ||
+      combinedDesc.includes("enterprise") ||
+      combinedDesc.includes("full") ||
+      order?.type === "monthly_plan" ||
+      payload.workflowId === "W3_monthly_plan_content";
+
+    const is3D =
+      combinedDesc.includes("3d") ||
+      combinedDesc.includes("spatial") ||
+      combinedDesc.includes("metaverse") ||
+      combinedDesc.includes("render") ||
+      orderAmount === 99 ||
+      orderAmount === 499 ||
+      orderAmount === 3499;
+
+    const deliverables: any[] = [];
+
+    // Spatial 3D Asset
+    const spatialDeliverable = {
+      driveFileId: `drive_n8n_${runId}_3d`,
+      filename: `${cleanBrand}_Spatial_Mesh.glb`,
+      checksum: `sha256:${Math.random().toString(36).substring(2, 14)}`,
+      fileSize: "24.6 MB",
+      mimeType: "model/gltf-binary",
+      previewUrl: "https://image.pollinations.ai/prompt/luxury%20modern%20armchair%203d%20render%2C%20emerald%20velvet%20and%20brushed%20brass%2C%20studio%20lighting%2C%20isolated%20on%20warm%20ivory%20plinth%2C%20octane%20render%2C%208k?width=1200&height=800&nologo=true",
+      downloadUrl: `${appBase}/videos/services/spatial-3d-desktop.mp4`,
+      category: "draft",
+      version: "v1.0",
+      uploadedAt: now,
+    };
+
+    // Retainer Content Schedule
+    const retainerSchedule = {
+      driveFileId: `drive_n8n_${runId}_cal`,
+      filename: `${cleanBrand}_Sprint1_Editorial_Matrix.pdf`,
+      checksum: `sha256:${Math.random().toString(36).substring(2, 14)}`,
+      fileSize: "8.6 MB",
+      mimeType: "application/pdf",
+      previewUrl: imagePreviewUrl,
+      downloadUrl: imagePreviewUrl,
+      category: "draft",
+      version: "v1.0",
+      uploadedAt: now,
+    };
+
+    // Website Development Deliverable
+    const websiteDeliverable = {
+      driveFileId: `drive_n8n_${runId}_web`,
+      filename: `${cleanBrand}_NextJS_Web_Architecture.zip`,
+      checksum: `sha256:${Math.random().toString(36).substring(2, 14)}`,
+      fileSize: "12.4 MB",
+      mimeType: "application/zip",
+      previewUrl: "https://sutrastudios.in",
+      downloadUrl: "https://sutrastudios.in",
+      category: "draft",
+      version: "v1.0",
+      uploadedAt: now,
+    };
+
+    // Route deliverables strictly based on package and client request
     if (isRetainer) {
-      const retainerSchedule = {
-        driveFileId: `drive_n8n_${runId}_cal`,
-        filename: `${cleanBrand}_Sprint1_Editorial_Matrix.pdf`,
-        checksum: `sha256:${Math.random().toString(36).substring(2, 14)}`,
-        fileSize: "8.6 MB",
-        mimeType: "application/pdf",
-        previewUrl: imagePreviewUrl,
-        downloadUrl: imagePreviewUrl,
-        category: "draft",
-        version: "v1.0",
-        uploadedAt: now,
-      };
-      deliverables.push(retainerSchedule);
+      // Full Studio Retainer: Image Renders, Video Reel, Spatial Mesh, and Editorial Schedule
+      deliverables.push(imageDeliverable, videoDeliverable, spatialDeliverable, retainerSchedule);
+    } else if (isWebsite) {
+      // Website Package: Full Web Deliverable & UI Architecture
+      deliverables.push(websiteDeliverable, imageDeliverable);
+    } else if (isVideo) {
+      // Video Package (₹1,499 / ₹7,499 Reel): Commercial Motion Reel Deliverable
+      deliverables.push(videoDeliverable);
+    } else {
+      // Image Package (₹99 Trial / ₹499 Render / ₹3,499 Standard): 4K Master Render Image Deliverable
+      deliverables.push(imageDeliverable);
+      if (is3D) {
+        deliverables.push(spatialDeliverable);
+      }
     }
 
     // 5. Persist deliverable record to Firestore admin_deliverables
