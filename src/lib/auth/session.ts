@@ -16,6 +16,7 @@ import { cookies } from "next/headers";
 import { adminAuth, adminDb, isFirebaseAdminReady, serverTimestamp } from "@/lib/firebase/admin";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { isAdminAllowedEmail } from "@/lib/config/adminPolicy";
+import { resolveClientDisplayName } from "@/lib/auth/nameUtils";
 
 export const SESSION_COOKIE = "__session";
 /** Step 1.5 — the admin portal has its own cookie and a 12-hour lifetime. */
@@ -158,10 +159,16 @@ function toSessionUser(decoded: DecodedIdToken): SessionUser {
     (decoded as Record<string, unknown>).staffRole === "admin" ||
     isAdminAllowedEmail(decoded.email ?? "");
   const role: AccountRole = isStaff ? "admin" : "client";
+  const cleanName = isStaff
+    ? (typeof decoded.name === "string" && decoded.name ? decoded.name : "Studio Administrator")
+    : resolveClientDisplayName(
+        typeof decoded.name === "string" ? decoded.name : null,
+        decoded.email ?? ""
+      );
   return {
     uid: decoded.uid,
     email: decoded.email ?? "",
-    name: typeof decoded.name === "string" ? decoded.name : (decoded.email ?? "").split("@")[0],
+    name: cleanName,
     role,
     emailVerified: Boolean(decoded.email_verified),
     picture: decoded.picture,
@@ -331,7 +338,28 @@ export async function createProfileOnSignup(input: SignupInput): Promise<UserPro
     const existing = await ref.get();
 
     if (existing.exists) {
-      return existing.data() as UserProfile;
+      const existingData = existing.data() as UserProfile;
+      const currentDisplayName = existingData.displayName || "";
+      const isCurrentGenericOrHandle =
+        !currentDisplayName ||
+        currentDisplayName.includes("@") ||
+        currentDisplayName === "Studio Client" ||
+        currentDisplayName === "Client" ||
+        currentDisplayName.toLowerCase().startsWith("index.") ||
+        currentDisplayName === (existingData.email || "").split("@")[0];
+
+      if (isCurrentGenericOrHandle && input.name && input.name !== currentDisplayName) {
+        try {
+          await ref.update({
+            displayName: input.name,
+            updatedAt: serverTimestamp(),
+          });
+          existingData.displayName = input.name;
+        } catch (updateErr) {
+          console.warn("[session] profile displayName upgrade notice:", updateErr);
+        }
+      }
+      return existingData;
     }
 
     await ref.set({ ...profile, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });

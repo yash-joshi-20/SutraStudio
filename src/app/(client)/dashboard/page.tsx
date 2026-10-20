@@ -19,6 +19,7 @@ import { formatCurrencyINR } from "@/config/services";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { MasterOrderForm } from "@/components/orders/MasterOrderForm";
 import { SyncManager } from "@/lib/sync/syncService";
+import { resolveClientDisplayName } from "@/lib/auth/nameUtils";
 import {
   Plus,
   ArrowRight,
@@ -90,6 +91,11 @@ interface OrderItem {
 export default function ClientDashboardPage() {
   const router = useRouter();
   const { user, profile, resendVerification } = useAuth();
+  const clientWelcomeName = resolveClientDisplayName(
+    user?.displayName,
+    user?.email,
+    profile?.displayName || (profile as any)?.fullName
+  );
   const [viewMode, setViewMode] = useState<"orders" | "commission" | "zero_state">("orders");
   const isZeroState = viewMode === "zero_state";
   const [isCommissionModalOpen, setIsCommissionModalOpen] = useState(false);
@@ -480,7 +486,7 @@ export default function ClientDashboardPage() {
               <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-[#0F172A] mt-1">
                 {viewMode === "commission"
                   ? "Orders, Approvals & Revisions"
-                  : `Welcome, ${user?.displayName || "Studio Client"}`}
+                  : `Welcome, ${clientWelcomeName}`}
               </h1>
               <p className="text-xs text-[#64748B] mt-0.5">
                 {viewMode === "commission"

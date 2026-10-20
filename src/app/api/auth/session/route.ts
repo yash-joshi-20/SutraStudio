@@ -18,6 +18,7 @@ import {
 import { badRequest, guarded, ok, sameOrigin } from "@/lib/api/response";
 import { getProfile } from "@/lib/services/profileStore";
 import { isNotConfigured as isDbNotConfigured } from "@/lib/firebase/db";
+import { resolveClientDisplayName } from "@/lib/auth/nameUtils";
 
 export const dynamic = "force-dynamic";
 
@@ -76,6 +77,17 @@ export async function GET() {
     };
 
     const resolvedProfile = profile || fallbackProfile;
+
+    const cleanName = user.role === "admin"
+      ? (user.name || "Studio Administrator")
+      : resolveClientDisplayName(
+          profile?.displayName || (profile as any)?.fullName || user.name,
+          user.email
+        );
+    user.name = cleanName;
+    if (resolvedProfile) {
+      resolvedProfile.displayName = cleanName;
+    }
 
     return ok({
       authenticated: true,

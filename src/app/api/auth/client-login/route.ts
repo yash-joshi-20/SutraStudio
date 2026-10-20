@@ -24,11 +24,14 @@ import {
   isAdminAllowedEmail,
   isStaffClaim,
 } from "@/lib/auth/adminAccess";
+import { resolveClientDisplayName } from "@/lib/auth/nameUtils";
 
 interface LoginBody {
   idToken: string;
   rememberMe?: boolean;
   returnTo?: string;
+  displayName?: string;
+  photoURL?: string;
 }
 
 export async function POST(req: Request) {
@@ -81,12 +84,32 @@ export async function POST(req: Request) {
       await setUserRole(decoded.uid, "client");
     }
 
+    // Resolve clean human display name (from Google Auth, token claims, or userRecord)
+    const candidateName =
+      body.displayName ||
+      (typeof decoded.name === "string" ? decoded.name : "") ||
+      userRecord.displayName ||
+      "";
+    const resolvedName = resolveClientDisplayName(candidateName, decoded.email);
+
+    // Keep Firebase Auth profile in sync if Google provided a genuine display name
+    if (resolvedName && resolvedName !== "Studio Client" && userRecord.displayName !== resolvedName) {
+      try {
+        await adminAuth().updateUser(decoded.uid, {
+          displayName: resolvedName,
+          ...(body.photoURL ? { photoURL: body.photoURL } : {}),
+        });
+      } catch (authUpdateErr) {
+        console.warn("[client-login] notice updating auth profile displayName:", authUpdateErr);
+      }
+    }
+
     // Ensure client profile document exists in Firestore (idempotent for Google OAuth & returning sign-ins)
     try {
       await createProfileOnSignup({
         uid: decoded.uid,
         email: decoded.email ?? "",
-        name: typeof decoded.name === "string" ? decoded.name : (decoded.email ?? "").split("@")[0],
+        name: resolvedName,
         acceptedTerms: true,
         acceptedPrivacy: true,
         ipAddress: clientIp(req),
@@ -97,7 +120,7 @@ export async function POST(req: Request) {
       ClientsStore.upsertClient({
         uid: decoded.uid,
         email: decoded.email ?? "",
-        name: typeof decoded.name === "string" ? decoded.name : (decoded.email ?? "").split("@")[0],
+        name: resolvedName,
       });
     } catch (profileErr) {
       console.warn("[client-login] profile bootstrap notice:", profileErr);
@@ -117,10 +140,10 @@ export async function POST(req: Request) {
       user: {
         uid: decoded.uid,
         email: decoded.email ?? "",
-        displayName: typeof decoded.name === "string" ? decoded.name : "",
+        displayName: resolvedName,
         role: "client" as const,
         emailVerified: Boolean(decoded.email_verified),
-        picture: decoded.picture,
+        picture: body.photoURL || decoded.picture || userRecord.photoURL,
       },
       emailVerified: Boolean(decoded.email_verified),
       returnTo: safeReturnTo(body.returnTo),

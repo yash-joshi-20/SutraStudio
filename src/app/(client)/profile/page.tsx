@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { useConfirm } from "@/hooks/useConfirm";
 import { SyncManager } from "@/lib/sync/syncService";
+import { resolveClientDisplayName } from "@/lib/auth/nameUtils";
 
 export default function ProfilePage() {
   const { user, profile: authProfile, logout, logoutEverywhere } = useAuth();
@@ -44,7 +45,10 @@ export default function ProfilePage() {
   // Seeded from the verified server profile or cached profile.
   const cachedProfile = SyncManager.getCachedProfile();
   const [profile, setProfile] = useState({
-    fullName: authProfile?.displayName || user?.displayName || cachedProfile?.displayName || "",
+    fullName: resolveClientDisplayName(
+      authProfile?.displayName || user?.displayName || cachedProfile?.displayName,
+      user?.email
+    ),
     jobTitle: "",
     email: user?.email || "",
     phone: authProfile?.phone || cachedProfile?.phone || "",
@@ -59,7 +63,10 @@ export default function ProfilePage() {
     if (user || authProfile) {
       setProfile((prev) => ({
         ...prev,
-        fullName: authProfile?.displayName || user?.displayName || prev.fullName,
+        fullName: resolveClientDisplayName(
+          authProfile?.displayName || user?.displayName || prev.fullName,
+          user?.email
+        ),
         email: user?.email || prev.email,
         phone: authProfile?.phone || prev.phone,
         companyName: authProfile?.companyName || prev.companyName,

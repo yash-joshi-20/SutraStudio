@@ -22,14 +22,18 @@ import {
   ADMIN_NAV_ITEMS,
 } from "@/components/dashboard/PortalSidebar";
 import { useAuth } from "@/lib/auth/authContext";
+import { resolveClientDisplayName } from "@/lib/auth/nameUtils";
 
 export function NavDrawer({ variant }: { variant: "client" | "admin" }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { user, role, logout } = useAuth();
+  const { user, role, profile, logout } = useAuth();
 
   const isAdmin = variant === "admin" || role === "admin";
+  const clientDisplayName = isAdmin
+    ? (user?.displayName || "Administrator")
+    : resolveClientDisplayName(user?.displayName, user?.email, profile?.displayName);
   const navItems = isAdmin ? ADMIN_NAV_ITEMS : CLIENT_NAV_ITEMS;
   const currentTab = searchParams ? searchParams.get("tab") || "overview" : "overview";
 
@@ -128,10 +132,10 @@ export function NavDrawer({ variant }: { variant: "client" | "admin" }) {
 
         <div className="shrink-0 border-t border-[#EADFCB] p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] space-y-1">
           <div className="flex items-center gap-3 px-2 py-2 min-w-0">
-            <Avatar name={user?.displayName || (isAdmin ? "Admin" : "Client")} size="sm" />
+            <Avatar name={clientDisplayName} size="sm" />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-[#0F172A] truncate">
-                {user?.displayName || (isAdmin ? "Administrator" : "Client")}
+                {clientDisplayName}
               </p>
               <p className="text-[11px] text-[#64748B] truncate">{user?.email}</p>
             </div>

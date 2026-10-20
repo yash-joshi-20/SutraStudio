@@ -42,6 +42,7 @@ import {
   getFirebaseAuth,
   FIREBASE_NOT_CONFIGURED,
 } from "@/lib/firebase/client";
+import { resolveClientDisplayName } from "@/lib/auth/nameUtils";
 
 export type UserRole = "client" | "admin" | "guest";
 
@@ -239,9 +240,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /* -------------------- server session helpers -------------------- */
 
-  const establishServerSession = useCallback(async (idToken: string, rememberMe: boolean) => {
-    await postJson("/api/auth/client-login", { idToken, rememberMe });
-  }, []);
+  const establishServerSession = useCallback(
+    async (
+      idToken: string,
+      rememberMe: boolean,
+      extra?: { displayName?: string; photoURL?: string }
+    ) => {
+      await postJson("/api/auth/client-login", { idToken, rememberMe, ...extra });
+    },
+    []
+  );
 
   const refreshProfile = useCallback(async (): Promise<ProfileSnapshot | null> => {
     try {
@@ -282,10 +290,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (cancelled) return;
 
         if (data.authenticated && data.user) {
+          const resolvedDisplayName = resolveClientDisplayName(
+            fbUser?.displayName || data.user.name,
+            data.user.email ?? fbUser?.email,
+            data.profile?.displayName
+          );
           const authUser: AuthUser = {
             uid: data.user.uid,
             email: data.user.email ?? fbUser?.email ?? "",
-            displayName: data.user.name ?? fbUser?.displayName ?? "",
+            displayName: resolvedDisplayName,
             photoURL: data.user.picture ?? fbUser?.photoURL ?? "",
             role: data.user.role ?? "client",
             emailVerified: Boolean(data.user.emailVerified ?? fbUser?.emailVerified),
@@ -323,16 +336,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // For regular client accounts, attempt to establish the standard client session (__session)
           try {
             const idToken = await fbUser.getIdToken();
-            await establishServerSession(idToken, true);
+            await establishServerSession(idToken, true, {
+              displayName: fbUser.displayName || undefined,
+              photoURL: fbUser.photoURL || undefined,
+            });
 
             const retry = await fetch("/api/auth/session", { cache: "no-store", credentials: "same-origin" });
             const retryData = await retry.json().catch(() => ({}));
             if (cancelled) return;
             if (retryData.authenticated && retryData.user) {
+              const resolvedDisplayName = resolveClientDisplayName(
+                fbUser.displayName || retryData.user.name,
+                retryData.user.email ?? fbUser.email,
+                retryData.profile?.displayName
+              );
               const authUser: AuthUser = {
                 uid: retryData.user.uid,
                 email: retryData.user.email ?? fbUser.email ?? "",
-                displayName: retryData.user.name ?? fbUser.displayName ?? "",
+                displayName: resolvedDisplayName,
                 photoURL: retryData.user.picture ?? fbUser.photoURL ?? "",
                 role: retryData.user.role ?? "client",
                 emailVerified: Boolean(retryData.user.emailVerified ?? fbUser.emailVerified),
@@ -477,11 +498,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           idTokenResult.claims.role === "superAdmin" ||
           Boolean(idTokenResult.claims.admin);
         const resolvedRole: UserRole = isStaff ? "admin" : "client";
-
+        const cleanGoogleName = resolveClientDisplayName(cred.user.displayName, cred.user.email);
         const next: AuthUser = {
           uid: cred.user.uid,
           email: cred.user.email ?? "",
-          displayName: cred.user.displayName ?? "",
+          displayName: cleanGoogleName,
           photoURL: cred.user.photoURL ?? "",
           role: resolvedRole,
           emailVerified: cred.user.emailVerified,
@@ -496,7 +517,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await postJson("/api/auth/admin-login", { idToken: token, rememberMe });
           } else {
             try {
-              await establishServerSession(token, rememberMe);
+              await establishServerSession(token, rememberMe, {
+                displayName: cred.user.displayName || undefined,
+                photoURL: cred.user.photoURL || undefined,
+              });
             } catch (clientErr: any) {
               // If allowlisted admin email attempts client login via Google, seamlessly route to admin-login
               if (clientErr?.code === "USE_ADMIN_LOGIN") {

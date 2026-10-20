@@ -28,6 +28,7 @@ import {
 import { useAuth } from "@/lib/auth/authContext";
 import { Avatar } from "@/components/ui/Avatar";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { resolveClientDisplayName } from "@/lib/auth/nameUtils";
 
 /**
  * One nav item shape for both portals.
@@ -72,8 +73,11 @@ export function PortalSidebarInner({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentTab = searchParams ? searchParams.get("tab") || "overview" : "overview";
-  const { user, role, logout } = useAuth();
+  const { user, role, profile, logout } = useAuth();
   const isAdmin = role === "admin";
+  const clientDisplayName = isAdmin
+    ? (user?.displayName || "Studio Producer")
+    : resolveClientDisplayName(user?.displayName, user?.email, profile?.displayName);
   const navItems = isAdmin ? ADMIN_NAV_ITEMS : CLIENT_NAV_ITEMS;
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [internalCollapsed, setInternalCollapsed] = useState(false);
@@ -113,7 +117,7 @@ export function PortalSidebarInner({
         <div className="flex items-center gap-2">
           <NotificationBell align="right" />
           <Avatar
-            name={user?.displayName || (isAdmin ? "Admin" : "Client")}
+            name={clientDisplayName}
             size="sm"
             status="online"
           />
@@ -208,13 +212,13 @@ export function PortalSidebarInner({
               <div className="flex items-center justify-between pt-1">
                 <div className="flex items-center gap-2">
                   <Avatar
-                    name={user?.displayName || (isAdmin ? "Studio Producer" : "Studio Client")}
+                    name={clientDisplayName}
                     size="sm"
                     status="online"
                   />
                   <div className="text-xs">
                     <p className="font-semibold text-[#171717] truncate max-w-[120px]">
-                      {user?.displayName || (isAdmin ? "Studio Producer" : "Client")}
+                      {clientDisplayName}
                     </p>
                     <p className="text-[#737373] text-[10px]">{isAdmin ? "Admin" : "Verified Client"}</p>
                   </div>
@@ -363,12 +367,12 @@ export function PortalSidebarInner({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5 min-w-0">
                 <Avatar
-                  name={user?.displayName || (isAdmin ? "Studio Producer" : "Studio Client")}
+                  name={clientDisplayName}
                   size="sm"
                   status="online"
                 />
                 <div className="text-xs min-w-0">
-                  <p className="font-semibold text-[#171717] truncate max-w-[110px]">{user?.displayName || (isAdmin ? "Studio Producer" : "Studio Client")}</p>
+                  <p className="font-semibold text-[#171717] truncate max-w-[110px]">{clientDisplayName}</p>
                   <p className="text-[#737373] text-[10px] truncate">{isAdmin ? "Lead Producer" : "Client Workspace"}</p>
                 </div>
               </div>
@@ -384,7 +388,7 @@ export function PortalSidebarInner({
           ) : (
             <div className="flex flex-col items-center gap-2.5">
               <Avatar
-                name={user?.displayName || (isAdmin ? "Studio Producer" : "Studio Client")}
+                name={clientDisplayName}
                 size="sm"
                 status="online"
               />
