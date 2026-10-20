@@ -56,6 +56,8 @@ import {
   HelpCircle,
   AlertCircle,
   Send,
+  Bot,
+  User,
 } from "lucide-react";
 
 export type CrmTab = "overview" | "orders" | "cms" | "clients" | "settings";
@@ -279,14 +281,22 @@ export function AdminDashboardClient() {
   const [isCmsSaving, setIsCmsSaving] = useState(false);
   const [cmsFeedback, setCmsFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-  // Clients Directory Search State
+  // Clients Directory & AI Conversations State
   const [clientSearchQuery, setClientSearchQuery] = useState("");
+  const [clientConversations, setClientConversations] = useState<any[]>([]);
+  const [selectedClientDropdownKey, setSelectedClientDropdownKey] = useState<string>("");
+  const [isChatsLoading, setIsChatsLoading] = useState(false);
+  const [clientDetailTab, setClientDetailTab] = useState<"all" | "orders" | "chats">("all");
 
   // Sync tab with URL search parameter
   useEffect(() => {
     const tabParam = searchParams.get("tab") as CrmTab;
     if (tabParam && ["overview", "orders", "cms", "clients", "settings"].includes(tabParam)) {
       setActiveTab(tabParam);
+    }
+    const clientParam = searchParams.get("client");
+    if (clientParam) {
+      setSelectedClientDropdownKey(clientParam);
     }
   }, [searchParams]);
 
@@ -328,6 +338,30 @@ export function AdminDashboardClient() {
     }
   }, []);
 
+  // Fetch live client conversations & AI chat history
+  const fetchClientChats = useCallback(async () => {
+    setIsChatsLoading(true);
+    try {
+      const res = await fetch("/api/admin/client-chats", {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.conversations)) {
+          setClientConversations(data.conversations);
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to load client chats:", e);
+    } finally {
+      setIsChatsLoading(false);
+    }
+  }, []);
+
   // Fetch live CMS content from API
   const fetchCmsContent = useCallback(async () => {
     setIsCmsLoading(true);
@@ -351,15 +385,17 @@ export function AdminDashboardClient() {
     }
   }, []);
 
-  // Initial load and periodic 10-second polling for orders
+  // Initial load and periodic 10-second polling for orders and client chats
   useEffect(() => {
     fetchOrders();
+    fetchClientChats();
     fetchCmsContent();
     const interval = setInterval(() => {
       fetchOrders(true);
+      fetchClientChats();
     }, 10000);
     return () => clearInterval(interval);
-  }, [fetchOrders, fetchCmsContent]);
+  }, [fetchOrders, fetchClientChats, fetchCmsContent]);
 
   // Derived KPI metrics
   const metrics = useMemo(() => {
@@ -433,6 +469,7 @@ export function AdminDashboardClient() {
     const map = new Map<
       string,
       {
+        key: string;
         email: string;
         name: string;
         phone?: string;
@@ -441,34 +478,70 @@ export function AdminDashboardClient() {
         latestOrderDate: string;
         latestStatus: string;
         latestPackage: string;
+        orders: AdminOrderRecord[];
+        chatMessages: any[];
       }
     >();
 
+    // 1. Ingest authentic client orders
     orders.forEach((o) => {
-      const key = (o.clientEmail || o.clientName || "Unknown Client").toLowerCase().trim();
-      const existing = map.get(key);
-      const amount = o.totalAmount || o.amountPaid || 3499;
+      const email = (o.clientEmail || "").trim();
+      const key = (email || o.clientName || "Unknown Client").toLowerCase();
+      let existing = map.get(key);
+      const amount = o.totalAmount || o.amountPaid || 0;
 
       if (!existing) {
-        map.set(key, {
-          email: o.clientEmail || "—",
+        existing = {
+          key,
+          email: email || "—",
           name: o.clientName || "Private Client",
           phone: o.clientPhone,
-          totalOrders: 1,
-          totalLtv: amount,
+          totalOrders: 0,
+          totalLtv: 0,
           latestOrderDate: o.createdAt || "",
           latestStatus: o.status,
           latestPackage: o.packageName || o.service || "Creative Commission",
-        });
+          orders: [],
+          chatMessages: [],
+        };
+        map.set(key, existing);
+      }
+
+      existing.orders.push(o);
+      existing.totalOrders += 1;
+      existing.totalLtv += amount;
+      if (o.clientPhone && !existing.phone) existing.phone = o.clientPhone;
+      if (!existing.latestOrderDate || (o.createdAt && new Date(o.createdAt) > new Date(existing.latestOrderDate))) {
+        existing.latestOrderDate = o.createdAt;
+        existing.latestStatus = o.status;
+        existing.latestPackage = o.packageName || o.service || existing.latestPackage;
+      }
+    });
+
+    // 2. Ingest client AI chat conversations
+    clientConversations.forEach((conv: any) => {
+      const email = (conv.clientEmail || "").trim();
+      const key = (email || conv.clientKey || conv.clientName || "").toLowerCase();
+      let existing = map.get(key);
+
+      if (!existing) {
+        existing = {
+          key,
+          email: email || conv.clientKey || "—",
+          name: conv.clientName || "Studio Client",
+          phone: conv.clientPhone,
+          totalOrders: 0,
+          totalLtv: 0,
+          latestOrderDate: conv.lastMessageAt || "",
+          latestStatus: "active",
+          latestPackage: "AI Chat Inquiry",
+          orders: [],
+          chatMessages: conv.messages || [],
+        };
+        map.set(key, existing);
       } else {
-        existing.totalOrders += 1;
-        existing.totalLtv += amount;
-        if (o.clientPhone && !existing.phone) existing.phone = o.clientPhone;
-        if (!existing.latestOrderDate || (o.createdAt && new Date(o.createdAt) > new Date(existing.latestOrderDate))) {
-          existing.latestOrderDate = o.createdAt;
-          existing.latestStatus = o.status;
-          existing.latestPackage = o.packageName || o.service || existing.latestPackage;
-        }
+        existing.chatMessages = conv.messages || [];
+        if (conv.clientPhone && !existing.phone) existing.phone = conv.clientPhone;
       }
     });
 
@@ -482,7 +555,19 @@ export function AdminDashboardClient() {
         c.email.toLowerCase().includes(q) ||
         (c.phone && c.phone.toLowerCase().includes(q))
     );
-  }, [orders, clientSearchQuery]);
+  }, [orders, clientConversations, clientSearchQuery]);
+
+  // Selected client for the focused dropdown inspection view
+  const selectedClient = useMemo(() => {
+    if (!selectedClientDropdownKey) return null;
+    return (
+      clientsList.find(
+        (c) =>
+          c.key.toLowerCase() === selectedClientDropdownKey.toLowerCase() ||
+          c.email.toLowerCase() === selectedClientDropdownKey.toLowerCase()
+      ) || null
+    );
+  }, [clientsList, selectedClientDropdownKey]);
 
   // Verify UPI Payment & Dispatch
   const handleVerifyAndDispatch = async (order: AdminOrderRecord) => {
@@ -1483,36 +1568,50 @@ export function AdminDashboardClient() {
                           )}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2 pt-3 border-t border-[#E5E1D8]">
-                          <button
-                            type="button"
-                            onClick={() => setInspectingOrder(ord)}
-                            className="w-full py-2.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] flex items-center justify-center gap-1.5 hover:bg-[#F0ECE1] transition-colors cursor-pointer"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                            <span>Check Details</span>
-                          </button>
-
-                          {ord.status !== "in_production" && ord.status !== "completed" && ord.status !== "cancelled" ? (
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              className="w-full justify-center text-xs"
-                              onClick={() => handleVerifyAndDispatch(ord)}
-                              leftIcon={<Play className="w-3 h-3" />}
-                            >
-                              Verify &amp; Start
-                            </Button>
-                          ) : (
+                        <div className="space-y-2 pt-3 border-t border-[#E5E1D8]">
+                          <div className="grid grid-cols-2 gap-2">
                             <button
                               type="button"
                               onClick={() => setInspectingOrder(ord)}
-                              className="w-full py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-[#5C3A1E] font-semibold flex items-center justify-center gap-1.5 hover:bg-amber-100 transition-colors cursor-pointer"
+                              className="w-full py-2.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] flex items-center justify-center gap-1.5 hover:bg-[#F0ECE1] transition-colors cursor-pointer"
                             >
-                              <Sparkles className="w-3.5 h-3.5 text-[#B38E46]" />
-                              <span>View Assets</span>
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>Check Details</span>
                             </button>
-                          )}
+
+                            {ord.status !== "in_production" && ord.status !== "completed" && ord.status !== "cancelled" ? (
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                className="w-full justify-center text-xs"
+                                onClick={() => handleVerifyAndDispatch(ord)}
+                                leftIcon={<Play className="w-3 h-3" />}
+                              >
+                                Verify &amp; Start
+                              </Button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setInspectingOrder(ord)}
+                                className="w-full py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-[#5C3A1E] font-semibold flex items-center justify-center gap-1.5 hover:bg-amber-100 transition-colors cursor-pointer"
+                              >
+                                <Sparkles className="w-3.5 h-3.5 text-[#B38E46]" />
+                                <span>View Assets</span>
+                              </button>
+                            )}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedClientDropdownKey((ord.clientEmail || ord.clientName || "").toLowerCase().trim());
+                              switchTab("clients");
+                            }}
+                            className="w-full py-1.5 px-3 rounded-lg bg-[#FAF9F5] border border-[#E5E1D8] text-[11px] font-semibold text-[#5C3A1E] flex items-center justify-center gap-1.5 hover:bg-[#F0ECE1] transition-colors cursor-pointer"
+                          >
+                            <MessageSquare className="w-3 h-3 text-[#A98B57]" />
+                            <span>Client Profile &amp; AI Chats</span>
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -2306,7 +2405,7 @@ export function AdminDashboardClient() {
             )}
 
             {/* ============================================================ */}
-            {/* TAB 4: CLIENTS DIRECTORY (CRM ROSTER) */}
+            {/* TAB 4: CLIENTS DIRECTORY & AI CONVERSATIONS */}
             {/* ============================================================ */}
             {activeTab === "clients" && (
               <div className="space-y-6">
@@ -2315,105 +2414,506 @@ export function AdminDashboardClient() {
                     <div className="flex items-center gap-2">
                       <Users className="w-5 h-5 text-[#A98B57]" />
                       <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#171717]">
-                        CRM Clients Directory
+                        CRM Clients Directory &amp; AI Chats
                       </h1>
                     </div>
                     <p className="text-xs text-[#64748B] mt-1">
-                      Aggregated client contact records, lifetime value (LTV), and active commission history.
+                      Authentic client profiles, real verified orders, and full AI chatbot conversation histories.
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#FAF9F5] border border-[#E5E1D8] text-[#5C3A1E]">
                       {clientsList.length} Unique Clients
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        fetchOrders();
+                        fetchClientChats();
+                      }}
+                      disabled={isChatsLoading || isRefreshing}
+                      className="px-3 py-1 rounded-full text-xs font-bold bg-[#171717] text-white flex items-center gap-1.5 hover:bg-[#262626] transition-colors cursor-pointer"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${isChatsLoading || isRefreshing ? "animate-spin" : ""}`} />
+                      <span>Sync Data</span>
+                    </button>
                   </div>
                 </div>
 
-                {/* Search Bar */}
-                <div className="relative max-w-md">
-                  <Search className="w-4 h-4 text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    placeholder="Search clients by name, email, or phone..."
-                    value={clientSearchQuery}
-                    onChange={(e) => setClientSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#FFFDF9] border border-[#E5E1D8] text-xs text-[#171717] focus:outline-none focus:border-[#A98B57]"
-                  />
-                </div>
+                {/* ============================================================ */}
+                {/* CLIENT SELECTOR DROPDOWN (Direct Client + Orders + AI Chat) */}
+                {/* ============================================================ */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-warm space-y-3">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] flex items-center justify-center text-[#A98B57]">
+                        <Sliders className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <label htmlFor="client-selector" className="text-xs font-bold text-[#171717] block">
+                          Client Selector (Orders &amp; AI Chat Logs):
+                        </label>
+                        <p className="text-[11px] text-[#64748B]">
+                          Choose a client from the dropdown to inspect their profile, original orders, and live AI chatbot messages.
+                        </p>
+                      </div>
+                    </div>
 
-                {clientsList.length === 0 ? (
-                  <div className="p-12 text-center text-xs text-[#64748B] bg-[#FFFDF9] rounded-2xl border border-[#E5E1D8] space-y-2">
-                    <Users className="w-8 h-8 text-[#94A3B8] mx-auto opacity-50" />
-                    <p className="font-semibold text-sm text-[#171717]">No clients found</p>
-                    <p>Clients who initiate orders or checkout will appear here in the CRM roster automatically.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
-                    {clientsList.map((client) => (
-                      <div
-                        key={client.email}
-                        className="p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-warm space-y-4 hover:border-[#A98B57]/60 transition-all flex flex-col justify-between"
+                    <div className="flex items-center gap-2">
+                      <select
+                        id="client-selector"
+                        value={selectedClientDropdownKey}
+                        onChange={(e) => setSelectedClientDropdownKey(e.target.value)}
+                        className="w-full md:w-auto min-w-[280px] sm:min-w-[340px] px-3.5 py-2.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#171717] focus:outline-none focus:border-[#A98B57] cursor-pointer shadow-2xs"
                       >
-                        <div className="space-y-3">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <Avatar name={client.name} size="md" status="online" />
-                              <div className="min-w-0">
-                                <h3 className="font-serif font-bold text-sm text-[#171717] truncate">{client.name}</h3>
-                                <p className="text-xs text-[#64748B] truncate">{client.email}</p>
-                              </div>
-                            </div>
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF9F5] border border-[#E5E1D8] text-[#5C3A1E] shrink-0">
-                              {client.totalOrders} order{client.totalOrders > 1 ? "s" : ""}
-                            </span>
-                          </div>
+                        <option value="">— Show All Clients Grid ({clientsList.length} Total) —</option>
+                        {clientsList.map((c) => (
+                          <option key={c.key} value={c.key}>
+                            {c.name} ({c.email}) • {c.orders.length} order{c.orders.length !== 1 ? "s" : ""} • {c.chatMessages.length} AI chat{c.chatMessages.length !== 1 ? "s" : ""}
+                          </option>
+                        ))}
+                      </select>
 
-                          <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-1.5 text-xs">
-                            <div className="flex justify-between items-center">
-                              <span className="text-[#64748B] text-[10px]">Lifetime Value (LTV):</span>
-                              <span className="font-serif font-bold text-sm text-[#5C3A1E]">
-                                ₹{client.totalLtv.toLocaleString("en-IN")}
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center text-[11px]">
-                              <span className="text-[#64748B]">Recent Package:</span>
-                              <span className="font-medium text-[#171717] truncate max-w-[130px]">
-                                {client.latestPackage}
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center text-[10px] text-[#64748B]">
-                              <span>Status:</span>
-                              <Badge variant={getStatusBadgeVariant(client.latestStatus)} size="sm">
-                                {client.latestStatus.replace("_", " ")}
+                      {selectedClientDropdownKey && (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedClientDropdownKey("")}
+                          className="px-3 py-2 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#64748B] hover:text-[#171717] hover:bg-[#F0ECE1] transition-colors cursor-pointer shrink-0"
+                        >
+                          Clear / Grid View
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* ============================================================ */}
+                {/* CONDITIONAL: FOCUSED CLIENT INSPECTOR (Orders + AI Chats)   */}
+                {/* ============================================================ */}
+                {selectedClient ? (
+                  <div className="space-y-6 animate-fadeIn">
+                    {/* Client Header Card */}
+                    <div className="p-5 sm:p-6 rounded-3xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-warm space-y-5">
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-[#E5E1D8]">
+                        <div className="flex items-center gap-4 min-w-0">
+                          <Avatar name={selectedClient.name} size="lg" status="online" />
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h2 className="font-serif font-bold text-xl sm:text-2xl text-[#171717] truncate">
+                                {selectedClient.name}
+                              </h2>
+                              <Badge variant={getStatusBadgeVariant(selectedClient.latestStatus)} size="sm">
+                                {selectedClient.latestStatus.replace("_", " ")}
                               </Badge>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-[#64748B] mt-1 flex-wrap">
+                              <span className="flex items-center gap-1">
+                                <Mail className="w-3.5 h-3.5 text-[#A98B57]" />
+                                <a href={`mailto:${selectedClient.email}`} className="hover:underline">
+                                  {selectedClient.email}
+                                </a>
+                              </span>
+                              {selectedClient.phone && (
+                                <span className="flex items-center gap-1">
+                                  <Phone className="w-3.5 h-3.5 text-[#A98B57]" />
+                                  <a href={`tel:${selectedClient.phone}`} className="hover:underline">
+                                    {selectedClient.phone}
+                                  </a>
+                                </span>
+                              )}
+                              {selectedClient.latestOrderDate && (
+                                <span className="flex items-center gap-1">
+                                  <Clock className="w-3.5 h-3.5 text-[#A98B57]" />
+                                  <span>Active: {new Date(selectedClient.latestOrderDate).toLocaleDateString()}</span>
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2 pt-3 border-t border-[#E5E1D8]">
+                        {/* Top Action Pills */}
+                        <div className="flex items-center gap-2 flex-wrap">
                           <a
-                            href={`mailto:${client.email}`}
-                            className="py-2 px-3 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] flex items-center justify-center gap-1.5 hover:bg-[#F0ECE1] transition-colors"
+                            href={`mailto:${selectedClient.email}`}
+                            className="px-3.5 py-2 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] flex items-center gap-1.5 hover:bg-[#F0ECE1] transition-colors"
                           >
                             <Mail className="w-3.5 h-3.5" />
-                            <span>Email</span>
+                            <span>Send Email</span>
                           </a>
-
+                          {selectedClient.phone && (
+                            <a
+                              href={`https://wa.me/${selectedClient.phone.replace(/[^0-9]/g, "")}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-800 flex items-center gap-1.5 hover:bg-emerald-100 transition-colors"
+                            >
+                              <span>WhatsApp</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          )}
                           <button
                             type="button"
-                            onClick={() => {
-                              setSearchQuery(client.email);
-                              switchTab("orders");
-                            }}
-                            className="py-2 px-3 rounded-xl bg-[#171717] text-white text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-[#262626] transition-colors cursor-pointer"
+                            onClick={() => setSelectedClientDropdownKey("")}
+                            className="px-3.5 py-2 rounded-xl bg-[#171717] text-white text-xs font-semibold flex items-center gap-1.5 hover:bg-[#262626] transition-colors cursor-pointer"
                           >
-                            <Eye className="w-3.5 h-3.5 text-[#A98B57]" />
-                            <span>Commissions</span>
+                            <ArrowRight className="w-3.5 h-3.5 text-[#A98B57]" />
+                            <span>Return to All Clients</span>
                           </button>
                         </div>
                       </div>
-                    ))}
+
+                      {/* Stat Metrics Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div className="p-3.5 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-1">
+                          <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Lifetime Value</span>
+                          <p className="font-serif text-lg font-bold text-[#5C3A1E]">
+                            ₹{selectedClient.totalLtv.toLocaleString("en-IN")}
+                          </p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-1">
+                          <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Total Orders</span>
+                          <p className="font-serif text-lg font-bold text-[#171717]">
+                            {selectedClient.orders.length}
+                          </p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-1">
+                          <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">AI Chat Messages</span>
+                          <p className="font-serif text-lg font-bold text-[#A98B57]">
+                            {selectedClient.chatMessages.length}
+                          </p>
+                        </div>
+                        <div className="p-3.5 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-1">
+                          <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Recent Package</span>
+                          <p className="font-medium text-xs text-[#171717] truncate" title={selectedClient.latestPackage}>
+                            {selectedClient.latestPackage}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Sub-tab view mode toggles */}
+                      <div className="flex items-center gap-2 pt-2 border-t border-[#E5E1D8]">
+                        <button
+                          type="button"
+                          onClick={() => setClientDetailTab("all")}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                            clientDetailTab === "all"
+                              ? "bg-[#171717] text-white"
+                              : "bg-[#FAF9F5] border border-[#E5E1D8] text-[#64748B] hover:text-[#171717]"
+                          }`}
+                        >
+                          All Details (Orders &amp; AI Chats)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setClientDetailTab("orders")}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                            clientDetailTab === "orders"
+                              ? "bg-[#171717] text-white"
+                              : "bg-[#FAF9F5] border border-[#E5E1D8] text-[#64748B] hover:text-[#171717]"
+                          }`}
+                        >
+                          Orders ({selectedClient.orders.length})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setClientDetailTab("chats")}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                            clientDetailTab === "chats"
+                              ? "bg-[#171717] text-white"
+                              : "bg-[#FAF9F5] border border-[#E5E1D8] text-[#64748B] hover:text-[#171717]"
+                          }`}
+                        >
+                          AI Chatbox Logs ({selectedClient.chatMessages.length})
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 2-COLUMN OR STACKED DETAIL VIEWS */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* SECTION 1: CLIENT'S REAL ORDERS */}
+                      {(clientDetailTab === "all" || clientDetailTab === "orders") && (
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <ShoppingBag className="w-4 h-4 text-[#A98B57]" />
+                              <h3 className="font-serif font-bold text-base text-[#171717]">
+                                Verified Client Orders ({selectedClient.orders.length})
+                              </h3>
+                            </div>
+                            <span className="text-[11px] text-[#64748B]">Real customer orders only</span>
+                          </div>
+
+                          {selectedClient.orders.length === 0 ? (
+                            <div className="p-8 text-center text-xs text-[#64748B] bg-[#FFFDF9] rounded-2xl border border-[#E5E1D8] space-y-2">
+                              <ShoppingBag className="w-6 h-6 text-[#94A3B8] mx-auto opacity-40" />
+                              <p className="font-semibold text-[#171717]">No active orders placed yet</p>
+                              <p>This client has engaged through the AI chatbot or concierge and has not completed checkout yet.</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              {selectedClient.orders.map((ord) => (
+                                <div
+                                  key={ord.id}
+                                  className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-3 hover:border-[#A98B57]/60 transition-all"
+                                >
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <span className="font-mono font-bold text-xs text-[#5C3A1E]">
+                                        {ord.orderNumber || ord.code || ord.id.slice(0, 10)}
+                                      </span>
+                                      {renderChannelBadge(ord.source, ord.isDraft)}
+                                    </div>
+                                    <Badge variant={getStatusBadgeVariant(ord.status)} size="sm">
+                                      {ord.status.replace("_", " ")}
+                                    </Badge>
+                                  </div>
+
+                                  <div className="flex items-center justify-between text-xs">
+                                    <span className="font-bold text-[#171717] truncate">
+                                      {ord.packageName || ord.service || "Creative Commission"}
+                                    </span>
+                                    <span className="font-serif font-bold text-sm text-[#5C3A1E] shrink-0">
+                                      ₹{(ord.totalAmount || ord.amountPaid || 0).toLocaleString("en-IN")}
+                                    </span>
+                                  </div>
+
+                                  {ord.utrNumber ? (
+                                    <div className="p-2 rounded-lg bg-[#FAF9F5] border border-[#E5E1D8] flex items-center justify-between text-[11px]">
+                                      <span className="text-[#64748B]">UTR Ref:</span>
+                                      <span className="font-mono font-bold text-[#2E7D4F]">{ord.utrNumber}</span>
+                                    </div>
+                                  ) : (
+                                    <p className="text-[11px] text-[#94A3B8] italic">No UTR submitted yet</p>
+                                  )}
+
+                                  <div className="flex items-center justify-between pt-2 border-t border-[#E5E1D8] text-xs">
+                                    <span className="text-[#64748B] text-[11px]">
+                                      {ord.createdAt ? new Date(ord.createdAt).toLocaleDateString() : "—"}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => setInspectingOrder(ord)}
+                                      className="py-1.5 px-3 rounded-lg bg-[#171717] text-white text-xs font-semibold flex items-center gap-1.5 hover:bg-[#262626] transition-colors cursor-pointer"
+                                    >
+                                      <Eye className="w-3 h-3 text-[#A98B57]" />
+                                      <span>Inspect Order</span>
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* SECTION 2: CLIENT'S AI CHATBOX CONVERSATIONS */}
+                      {(clientDetailTab === "all" || clientDetailTab === "chats") && (
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <MessageSquare className="w-4 h-4 text-[#A98B57]" />
+                              <h3 className="font-serif font-bold text-base text-[#171717]">
+                                AI Chatbox Message History ({selectedClient.chatMessages.length})
+                              </h3>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={fetchClientChats}
+                              disabled={isChatsLoading}
+                              className="text-[11px] font-semibold text-[#5C3A1E] hover:text-[#A98B57] flex items-center gap-1 transition-colors cursor-pointer"
+                            >
+                              <RefreshCw className={`w-3 h-3 ${isChatsLoading ? "animate-spin" : ""}`} />
+                              <span>Refresh</span>
+                            </button>
+                          </div>
+
+                          {selectedClient.chatMessages.length === 0 ? (
+                            <div className="p-8 text-center text-xs text-[#64748B] bg-[#FFFDF9] rounded-2xl border border-[#E5E1D8] space-y-2">
+                              <MessageSquare className="w-6 h-6 text-[#94A3B8] mx-auto opacity-40" />
+                              <p className="font-semibold text-[#171717]">No chat conversations recorded</p>
+                              <p>When this client messages the studio AI concierge on the website, their message stream will display here in real time.</p>
+                            </div>
+                          ) : (
+                            <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-3.5 max-h-[560px] overflow-y-auto">
+                              {selectedClient.chatMessages.map((msg: any, idx: number) => {
+                                const isClient = msg.sender === "client";
+                                return (
+                                  <div
+                                    key={msg.id || idx}
+                                    className={`flex flex-col ${isClient ? "items-end" : "items-start"} space-y-1`}
+                                  >
+                                    <div className="flex items-center gap-1.5 text-[10px] text-[#64748B] px-1">
+                                      {isClient ? (
+                                        <>
+                                          <User className="w-3 h-3 text-[#A98B57]" />
+                                          <span className="font-bold text-[#171717]">
+                                            {selectedClient.name || "Client"}
+                                          </span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Bot className="w-3 h-3 text-[#A98B57]" />
+                                          <span className="font-bold text-[#5C3A1E]">Studio AI Assistant</span>
+                                        </>
+                                      )}
+                                      <span>•</span>
+                                      <span>
+                                        {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Recent"}
+                                      </span>
+                                    </div>
+
+                                    <div
+                                      className={`p-3.5 rounded-2xl max-w-[90%] sm:max-w-[85%] text-xs leading-relaxed whitespace-pre-wrap ${
+                                        isClient
+                                          ? "bg-[#171717] text-[#FAF9F5] rounded-tr-xs"
+                                          : "bg-[#FAF9F5] text-[#171717] border border-[#E5E1D8] rounded-tl-xs shadow-2xs"
+                                      }`}
+                                    >
+                                      {msg.text}
+
+                                      {/* Order Draft Attachment Preview */}
+                                      {msg.orderDraft && (
+                                        <div className="mt-2.5 p-2.5 rounded-xl bg-white border border-[#E5E1D8] text-[11px] text-[#171717] space-y-1 shadow-2xs">
+                                          <div className="flex items-center justify-between font-bold text-[#5C3A1E]">
+                                            <span>Draft Order Generated</span>
+                                            <span>₹{msg.orderDraft.totalAmount?.toLocaleString("en-IN")}</span>
+                                          </div>
+                                          <p className="text-[10px] text-[#64748B]">{msg.orderDraft.service || msg.orderDraft.title}</p>
+                                        </div>
+                                      )}
+
+                                      {/* File Attachments */}
+                                      {Array.isArray(msg.attachments) && msg.attachments.length > 0 && (
+                                        <div className="mt-2 pt-2 border-t border-white/20 text-[10px] space-y-1">
+                                          <span className="font-bold opacity-80">Reference Files:</span>
+                                          {msg.attachments.map((att: any, i: number) => (
+                                            <p key={i} className="truncate opacity-90">
+                                              📎 {att.name || `File ${i + 1}`}
+                                            </p>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  /* ============================================================ */
+                  /* DEFAULT: ALL CLIENTS GRID VIEW                               */
+                  /* ============================================================ */
+                  <div className="space-y-4">
+                    {/* Search Bar */}
+                    <div className="relative max-w-md">
+                      <Search className="w-4 h-4 text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder="Search clients by name, email, or phone..."
+                        value={clientSearchQuery}
+                        onChange={(e) => setClientSearchQuery(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#FFFDF9] border border-[#E5E1D8] text-xs text-[#171717] focus:outline-none focus:border-[#A98B57]"
+                      />
+                    </div>
+
+                    {clientsList.length === 0 ? (
+                      <div className="p-12 text-center text-xs text-[#64748B] bg-[#FFFDF9] rounded-2xl border border-[#E5E1D8] space-y-2">
+                        <Users className="w-8 h-8 text-[#94A3B8] mx-auto opacity-50" />
+                        <p className="font-semibold text-sm text-[#171717]">No authentic clients found</p>
+                        <p>Genuine customer orders and AI chatbot inquiries will appear here automatically.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+                        {clientsList.map((client) => (
+                          <div
+                            key={client.key}
+                            className="p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-warm space-y-4 hover:border-[#A98B57]/60 transition-all flex flex-col justify-between"
+                          >
+                            <div className="space-y-3">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <Avatar name={client.name} size="md" status="online" />
+                                  <div className="min-w-0">
+                                    <h3 className="font-serif font-bold text-sm text-[#171717] truncate">{client.name}</h3>
+                                    <p className="text-xs text-[#64748B] truncate">{client.email}</p>
+                                    {client.phone && <p className="text-[11px] text-[#A98B57]">{client.phone}</p>}
+                                  </div>
+                                </div>
+                                <div className="flex flex-col items-end gap-1 shrink-0">
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF9F5] border border-[#E5E1D8] text-[#5C3A1E]">
+                                    {client.orders.length} order{client.orders.length !== 1 ? "s" : ""}
+                                  </span>
+                                  {client.chatMessages.length > 0 && (
+                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                      {client.chatMessages.length} AI chats
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] space-y-1.5 text-xs">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-[#64748B] text-[10px]">Lifetime Value (LTV):</span>
+                                  <span className="font-serif font-bold text-sm text-[#5C3A1E]">
+                                    ₹{client.totalLtv.toLocaleString("en-IN")}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between items-center text-[11px]">
+                                  <span className="text-[#64748B]">Recent Service:</span>
+                                  <span className="font-medium text-[#171717] truncate max-w-[130px]">
+                                    {client.latestPackage}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between items-center text-[10px] text-[#64748B]">
+                                  <span>Status:</span>
+                                  <Badge variant={getStatusBadgeVariant(client.latestStatus)} size="sm">
+                                    {client.latestStatus.replace("_", " ")}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="space-y-2 pt-3 border-t border-[#E5E1D8]">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedClientDropdownKey(client.key)}
+                                className="w-full py-2 px-3 rounded-xl bg-[#171717] text-white text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-[#262626] transition-colors cursor-pointer"
+                              >
+                                <MessageSquare className="w-3.5 h-3.5 text-[#A98B57]" />
+                                <span>Inspect Orders &amp; AI Chats</span>
+                              </button>
+
+                              <div className="grid grid-cols-2 gap-2">
+                                <a
+                                  href={`mailto:${client.email}`}
+                                  className="py-1.5 px-3 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] flex items-center justify-center gap-1.5 hover:bg-[#F0ECE1] transition-colors"
+                                >
+                                  <Mail className="w-3 h-3" />
+                                  <span>Email</span>
+                                </a>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSearchQuery(client.email);
+                                    switchTab("orders");
+                                  }}
+                                  className="py-1.5 px-3 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] flex items-center justify-center gap-1.5 hover:bg-[#F0ECE1] transition-colors cursor-pointer"
+                                >
+                                  <Eye className="w-3 h-3 text-[#A98B57]" />
+                                  <span>Orders Ledger</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

@@ -5,6 +5,7 @@ import { SEED_CATALOG_SERVICES, SEED_CATALOG_PLANS } from "@/lib/services/servic
 import { requestRole, requestUid } from "@/lib/auth/requestRole";
 import { generateChatResponse } from "@/lib/ai/llm";
 import { MASTER_RAG_KNOWLEDGE_STORE, MASTER_SYSTEM_PROMPT } from "@/lib/services/ragLlmService";
+import { ClientChatStore } from "@/lib/services/clientChatStore";
 
 // In-memory rate limiter: 120 requests / minute per client/IP
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -113,6 +114,9 @@ export async function POST(req: Request) {
       tool,
       params = {},
       clientId,
+      clientEmail,
+      clientName,
+      clientPhone,
       attachments = [],
       conversationHistory = [],
     } = body;
@@ -184,6 +188,18 @@ export async function POST(req: Request) {
     if (!message || typeof message !== "string") {
       return NextResponse.json({ error: "Message content is required" }, { status: 400 });
     }
+
+    // Persist inbound client message to ClientChatStore
+    await ClientChatStore.addMessage({
+      clientId: activeUid,
+      clientEmail,
+      clientName,
+      clientPhone,
+      sender: "client",
+      text: message,
+      attachments,
+      channel: "ai_chat",
+    }).catch(() => {});
 
     const lower = message.toLowerCase().trim();
 
@@ -291,6 +307,17 @@ export async function POST(req: Request) {
         : summaryMessage ||
           `I have created your commission **#${order.orderNumber}** (${order.service}) with status \`pending_payment\`.\n\nTotal: **₹${order.totalAmount?.toLocaleString("en-IN")}**\n\nPlease click **Pay by UPI QR** below to complete payment and commence studio production.`;
 
+      await ClientChatStore.addMessage({
+        clientId: activeUid,
+        clientEmail,
+        clientName,
+        clientPhone,
+        sender: "assistant",
+        text: successReply,
+        orderDraft,
+        channel: "ai_chat",
+      }).catch(() => {});
+
       return NextResponse.json({
         reply: successReply,
         classification,
@@ -340,6 +367,17 @@ CONVERSATIONAL RULES:
       messages: promptMessages,
       temperature: 0.6,
     });
+
+    await ClientChatStore.addMessage({
+      clientId: activeUid,
+      clientEmail,
+      clientName,
+      clientPhone,
+      sender: "assistant",
+      text: aiReply,
+      intent: classification?.service,
+      channel: "ai_chat",
+    }).catch(() => {});
 
     return NextResponse.json({
       reply: aiReply,

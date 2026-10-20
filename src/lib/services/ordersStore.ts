@@ -25,6 +25,33 @@ function ensureDataDir(): void {
   }
 }
 
+export function isDummyOrder(order: Partial<FirestoreOrderRecord>): boolean {
+  if (!order) return true;
+  const email = (order.clientEmail || "").toLowerCase().trim();
+  const name = (order.clientName || "").toLowerCase().trim();
+  const uid = (order.clientUid || order.clientId || "").toLowerCase().trim();
+
+  if (!email && !name) return true;
+  if (email.includes("tester_") || email.endsWith("@sutrastudio.test")) return true;
+  if (email.includes("example.com") || email.includes("probe@test.dev")) return true;
+  if (email.startsWith("qa@") || email.startsWith("qa-")) return true;
+  if (email.includes("hacker@")) return true;
+  if (
+    email.includes("@heritageluxe.com") ||
+    email.includes("@brand.com") ||
+    email.includes("@studioarchitects.com") ||
+    email.includes("@heritage.com") ||
+    email.includes("@luxury.in")
+  ) {
+    return true;
+  }
+  if (/^client_[0-9]+@sutrastudio\.com$/i.test(email)) return true;
+  if (email === "client@sutrastudio.com" && (!order.utrNumber || order.status === "draft")) return true;
+  if (name.includes("test agency") || name.includes("qa test client") || name.includes("qa package")) return true;
+  if (uid.includes("test_") || uid.includes("usr_test")) return true;
+  return false;
+}
+
 function loadOrdersFromDisk(): FirestoreOrderRecord[] {
   try {
     if (typeof window !== "undefined") return [];
@@ -34,7 +61,7 @@ function loadOrdersFromDisk(): FirestoreOrderRecord[] {
       if (raw && raw.trim().length > 0) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
-          return parsed;
+          return parsed.filter((o) => !isDummyOrder(o));
         }
       }
     }
@@ -233,7 +260,7 @@ export class OrdersStore {
       }
     }
 
-    const loaded = Array.from(map.values());
+    const loaded = Array.from(map.values()).filter((o) => !isDummyOrder(o));
     loaded.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 
     globalAny.__SUTRA_STORED_ORDERS__ = loaded;
@@ -248,7 +275,7 @@ export class OrdersStore {
     if (Date.now() - globalAny.__SUTRA_ORDERS_LAST_SYNC__ > 10000) {
       this.syncFromFirestore().catch(() => {});
     }
-    return globalAny.__SUTRA_STORED_ORDERS__;
+    return (globalAny.__SUTRA_STORED_ORDERS__ || []).filter((o: FirestoreOrderRecord) => !isDummyOrder(o));
   }
 
   public static async getAllAsync(): Promise<FirestoreOrderRecord[]> {
