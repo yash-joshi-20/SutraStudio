@@ -367,4 +367,50 @@ textarea:focus-visible {
   line-height: 1.45;
 }
 
+/* ---------------------------------------------------------------
+   SUTRA STUDIO BESPOKE THEME ARROW CURSOR
+   Custom charcoal & warm gold pointer arrow for desktop devices.
+   --------------------------------------------------------------- */
+@media (hover: hover) and (pointer: fine) {
+  /* When the smooth React CustomCursor is mounted, suppress OS pointer on interactive targets */
+  html.sutra-custom-cursor,
+  html.sutra-custom-cursor body,
+  html.sutra-custom-cursor a,
+  html.sutra-custom-cursor button,
+  html.sutra-custom-cursor [role="button"],
+  html.sutra-custom-cursor .cursor-pointer,
+  html.sutra-custom-cursor input[type="submit"],
+  html.sutra-custom-cursor input[type="button"],
+  html.sutra-custom-cursor summary {
+    cursor: none !important;
+  }
+
+  /* Text inputs keep native text I-beam */
+  html.sutra-custom-cursor input[type="text"],
+  html.sutra-custom-cursor input[type="email"],
+  html.sutra-custom-cursor input[type="password"],
+  html.sutra-custom-cursor input[type="tel"],
+  html.sutra-custom-cursor input[type="number"],
+  html.sutra-custom-cursor input[type="search"],
+  html.sutra-custom-cursor textarea {
+    cursor: text !important;
+  }
+
+  /* Native SVG Custom Arrow Cursor Fallback (instant 0ms baseline) */
+  html:not(.sutra-custom-cursor) body {
+    cursor: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 3L10.5 21L13.5 13.5L21 10.5L3 3Z' fill='%23171717' stroke='%23FFFDF9' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M3 3L13.5 13.5L10.5 21L3 3Z' fill='%23D4A35A' fill-opacity='0.9'/%3E%3C/svg%3E") 3 3, auto;
+  }
+
+  html:not(.sutra-custom-cursor) a,
+  html:not(.sutra-custom-cursor) button,
+  html:not(.sutra-custom-cursor) [role="button"],
+  html:not(.sutra-custom-cursor) .cursor-pointer,
+  html:not(.sutra-custom-cursor) input[type="submit"],
+  html:not(.sutra-custom-cursor) input[type="button"],
+  html:not(.sutra-custom-cursor) summary {
+    cursor: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 3L10.5 21L13.5 13.5L21 10.5L3 3Z' fill='%23D4A35A' stroke='%23171717' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M3 3L13.5 13.5L10.5 21L3 3Z' fill='%23B98A3E'/%3E%3Ccircle cx='18' cy='18' r='2' fill='%23171717' stroke='%23FAF9F5' stroke-width='1'/%3E%3C/svg%3E") 3 3, pointer;
+  }
+}
+
+
 

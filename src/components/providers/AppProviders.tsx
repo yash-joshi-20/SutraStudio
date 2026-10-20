@@ -8,6 +8,8 @@ import { OfflineBanner } from "@/components/sync/OfflineBanner";
 
 import { RouteProgressIndicator } from "@/components/motion/RouteProgressIndicator";
 import { CmsThemeProvider } from "@/components/providers/CmsThemeProvider";
+import { CustomCursor } from "@/components/ui/CustomCursor";
+import { ScrollToTopArrow } from "@/components/ui/ScrollToTopArrow";
 import { Suspense } from "react";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
@@ -31,8 +33,10 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
           <Suspense fallback={null}>
             <RouteProgressIndicator />
           </Suspense>
+          <CustomCursor />
           {children}
           <FloatingChatModal />
+          <ScrollToTopArrow />
           <OfflineBanner />
         </ToastProvider>
       </CmsThemeProvider>
