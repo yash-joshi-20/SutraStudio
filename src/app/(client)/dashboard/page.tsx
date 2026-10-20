@@ -17,6 +17,8 @@ import { useAuth } from "@/lib/auth/authContext";
 import { SUTRA_SERVICES } from "@/data/servicesData";
 import { formatCurrencyINR } from "@/config/services";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { MasterOrderForm } from "@/components/orders/MasterOrderForm";
+import { SyncManager } from "@/lib/sync/syncService";
 import {
   Plus,
   ArrowRight,
@@ -90,6 +92,7 @@ export default function ClientDashboardPage() {
   const { user, profile, resendVerification } = useAuth();
   const [viewMode, setViewMode] = useState<"orders" | "commission" | "zero_state">("orders");
   const isZeroState = viewMode === "zero_state";
+  const [isCommissionModalOpen, setIsCommissionModalOpen] = useState(false);
   const [verificationMsg, setVerificationMsg] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
 
@@ -420,11 +423,15 @@ export default function ClientDashboardPage() {
                 </Button>
               </Link>
 
-              <Link href="/orders">
-                <Button variant="primary" size="sm" leftIcon={<Plus className="w-3.5 h-3.5" />} className="text-xs">
-                  New Order
-                </Button>
-              </Link>
+              <Button
+                variant="primary"
+                size="sm"
+                leftIcon={<Plus className="w-3.5 h-3.5" />}
+                className="text-xs cursor-pointer"
+                onClick={() => setIsCommissionModalOpen(true)}
+              >
+                New Order
+              </Button>
             </div>
           </header>
 
@@ -533,11 +540,15 @@ export default function ClientDashboardPage() {
                 </Button>
               </Link>
 
-              <Link href="/orders">
-                <Button variant="primary" size="sm" leftIcon={<Plus className="w-3.5 h-3.5" />} className="min-h-[44px]">
-                  New Order
-                </Button>
-              </Link>
+              <Button
+                variant="primary"
+                size="sm"
+                leftIcon={<Plus className="w-3.5 h-3.5" />}
+                className="min-h-[44px] cursor-pointer"
+                onClick={() => setIsCommissionModalOpen(true)}
+              >
+                New Order
+              </Button>
             </div>
           </div>
 
@@ -577,7 +588,7 @@ export default function ClientDashboardPage() {
           <AnimatePresence mode="wait">
             {viewMode === "commission" ? (
               /* =========================================================
-                 COMMISSIONING WIZARD VIEW (4-STEP 12-CAPABILITY CREATION)
+                 UNIFIED STUDIO COMMISSION ENGINE (8 DISCIPLINES & PACKAGES)
                  ========================================================= */
               <motion.div
                 key="commission-wizard"
@@ -585,263 +596,41 @@ export default function ClientDashboardPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.25 }}
-                className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-warm p-6 sm:p-10 space-y-8"
+                className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-warm p-4 sm:p-8 space-y-6"
               >
-                {/* Stepper Progress Bar */}
-                <div className="flex items-center justify-between pb-8 border-b border-[#EADFCB] max-w-xl mx-auto">
-                  {[
-                    { num: 1, label: "Service" },
-                    { num: 2, label: "Brief" },
-                    { num: 3, label: "Brand Assets" },
-                    { num: 4, label: "Confirm" },
-                  ].map((s) => (
-                    <div key={s.num} className="flex items-center gap-2">
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                          step === s.num
-                            ? "bg-[#5C3A1E] text-white shadow-xs"
-                            : step > s.num
-                            ? "bg-[#D4A35A] text-[#0F172A]"
-                            : "bg-[#F8F5EF] text-[#94A3B8] border border-[#EADFCB]"
-                        }`}
-                      >
-                        {step > s.num ? <Check className="w-4 h-4 stroke-[3]" /> : s.num}
-                      </div>
-                      <span
-                        className={`text-xs font-medium hidden sm:inline ${
-                          step >= s.num ? "text-[#0F172A]" : "text-[#94A3B8]"
-                        }`}
-                      >
-                        {s.label}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Step 1: Select Capability (7 Studio Capabilities) */}
-                {step === 1 && (
-                  <div className="space-y-6">
-                    <div className="text-center max-w-md mx-auto">
-                      <h3 className="font-serif text-2xl sm:text-3xl font-semibold text-[#0F172A]">
-                        Select Studio Capability
-                      </h3>
-                      <p className="text-xs text-[#64748B] mt-1">
-                        Choose from our 7 specialized disciplines to route to the correct workflow.
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                      {SUTRA_SERVICES.map((srv) => {
-                        const isSelected = selectedService === srv.id;
-                        return (
-                          <div
-                            key={srv.id}
-                            onClick={() => setSelectedService(srv.id)}
-                            className={`p-4 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center justify-between ${
-                              isSelected
-                                ? "bg-[#FDF9F0] border-2 border-[#D4A35A] shadow-xs"
-                                : "bg-[#FFFFFF] border border-[#EADFCB] hover:border-[#D4A35A]/60"
-                            }`}
-                          >
-                            <div>
-                              <h4 className="text-xs sm:text-sm font-semibold text-[#0F172A] mt-1">
-                                {srv.name}
-                              </h4>
-                              <p className="text-[10px] text-[#64748B] mt-1 line-clamp-1">
-                                {srv.tagline}
-                              </p>
-                            </div>
-                            <span className="text-[11px] font-bold text-[#D4A35A] mt-3">
-                              From {srv.startingPrice}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 2: Creative Brief Specifications */}
-                {step === 2 && (
-                  <div className="space-y-6 max-w-xl mx-auto">
-                    <div className="text-center">
-                      <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
-                        {currentService.name} Specifications
-                      </h3>
-                      <p className="text-xs text-[#64748B] mt-1">
-                        Define your project goals, dimensions, and creative requirements.
-                      </p>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-[#0F172A]">
-                        Project Title / Campaign Name *
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Autumn Living Spatial Render Suite"
-                        value={orderDetails.title}
-                        onChange={(e) =>
-                          setOrderDetails({ ...orderDetails, title: e.target.value })
-                        }
-                        className="w-full rounded-xl bg-[#FFFDF9] border border-[#EADFCB] px-4 py-2.5 text-xs text-[#0F172A] focus:border-[#D4A35A] focus:outline-none focus:ring-2 focus:ring-[#D4A35A]/20"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-[#0F172A]">
-                        Creative Brief & Scope *
-                      </label>
-                      <textarea
-                        rows={4}
-                        placeholder="Describe target audience, lighting mood, color palette preferences, or specific deliverables..."
-                        value={orderDetails.brief}
-                        onChange={(e) =>
-                          setOrderDetails({ ...orderDetails, brief: e.target.value })
-                        }
-                        className="w-full rounded-xl bg-[#FFFDF9] border border-[#EADFCB] px-4 py-2.5 text-xs text-[#0F172A] focus:border-[#D4A35A] focus:outline-none focus:ring-2 focus:ring-[#D4A35A]/20"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 3: Sutra Cloud Vault Asset Uploads */}
-                {step === 3 && (
-                  <div className="space-y-6 max-w-xl mx-auto">
-                    <div className="text-center">
-                      <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
-                        References & Asset Uploads
-                      </h3>
-                      <p className="text-xs text-[#64748B] mt-1">
-                        Assets will automatically sync to your private Sutra Cloud Vault folder.
-                      </p>
-                    </div>
-
-                    <div className="border-2 border-dashed border-[#EADFCB] rounded-2xl p-8 text-center bg-[#FAF9F5] space-y-2">
-                      <HardDrive className="w-8 h-8 text-[#5C3A1E] mx-auto opacity-70" />
-                      <p className="text-sm font-semibold text-[#0F172A]">
-                        Upload Moodboards, CAD or Logo Files
-                      </p>
-                      <p className="text-xs text-[#64748B]">
-                        PNG, JPG, PDF, glTF, USDZ up to 500MB (Encrypted storage)
-                      </p>
-                      <button
-                        type="button"
-                        className="mt-2 px-4 py-2 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A]"
-                      >
-                        Select Files to Upload
-                      </button>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-[#0F172A]">
-                        Or paste Cloud / Vault Asset Link
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="https://drive.google.com/drive/folders/... or cloud link"
-                        value={orderDetails.references}
-                        onChange={(e) =>
-                          setOrderDetails({ ...orderDetails, references: e.target.value })
-                        }
-                        className="w-full rounded-xl bg-[#FFFDF9] border border-[#EADFCB] px-4 py-2.5 text-xs text-[#0F172A] focus:border-[#D4A35A] focus:outline-none focus:ring-2 focus:ring-[#D4A35A]/20"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 4: Confirm Order */}
-                {step === 4 && (
-                  <div className="space-y-6 max-w-xl mx-auto">
-                    {orderSubmitted ? (
-                      <div className="py-8 text-center space-y-4">
-                        <div className="w-14 h-14 rounded-full bg-[#EDF7F0] text-[#2E7D4F] flex items-center justify-center mx-auto">
-                          <CheckCircle2 className="w-8 h-8" />
-                        </div>
-                        <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
-                          Order Dispatched to Workflow Router
-                        </h3>
-                        <p className="text-xs text-[#64748B] leading-relaxed">
-                          Your order has been registered and routed to your dedicated Art Director.
-                        </p>
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={() => {
-                            setStep(1);
-                            setOrderSubmitted(false);
-                            setViewMode("orders");
-                          }}
-                        >
-                          Return to Active Orders
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-6">
-                        <div className="text-center">
-                          <h3 className="font-serif text-2xl font-semibold text-[#0F172A]">
-                            Review & Confirm Order
-                          </h3>
-                          <p className="text-xs text-[#64748B] mt-1">
-                            Verify project parameters before triggering studio production.
-                          </p>
-                        </div>
-
-                        <div className="rounded-2xl bg-[#F8F5EF] p-5 space-y-3 border border-[#EADFCB]">
-                          <div className="flex justify-between text-xs">
-                            <span className="text-[#64748B]">Service:</span>
-                            <span className="font-bold text-[#0F172A]">{currentService.name}</span>
-                          </div>
-                          <div className="flex justify-between text-xs">
-                            <span className="text-[#64748B]">Project Title:</span>
-                            <span className="font-bold text-[#0F172A]">
-                              {orderDetails.title || `${currentService.name} Commission`}
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-xs">
-                            <span className="text-[#64748B]">Starting Investment:</span>
-                            <span className="font-bold text-[#5C3A1E]">{currentService.startingPrice}</span>
-                          </div>
-                          <div className="flex justify-between text-xs">
-                            <span className="text-[#64748B]">Vault Storage:</span>
-                            <span className="font-bold text-[#2E7D4F]">Sutra Cloud Vault Encrypted</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Stepper Controls */}
-                {!orderSubmitted && (
-                  <div className="flex items-center justify-between pt-6 border-t border-[#EADFCB]">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleBack}
-                      disabled={step === 1}
-                      leftIcon={<ArrowLeft className="w-4 h-4" />}
-                    >
-                      Back
-                    </Button>
-
-                    {step < 4 ? (
-                      <Button variant="primary" size="sm" onClick={handleNext} withArrow>
-                        Next Step
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="primary"
-                        size="md"
-                        onClick={handleFinalSubmit}
-                        isLoading={isSubmitting}
-                        withArrow
-                      >
-                        Authorize & Launch Commission
-                      </Button>
-                    )}
-                  </div>
-                )}
+                <MasterOrderForm
+                  onOrderSuccess={(newOrd) => {
+                    setViewMode("orders");
+                    if (newOrd) {
+                      setOrders((prev) => [
+                        {
+                          id: newOrd.id || `ord_${Date.now()}`,
+                          code: newOrd.orderNumber || newOrd.code || `#ORD-${String(newOrd.id || Date.now()).slice(-3)}`,
+                          title: newOrd.title || newOrd.service || "Studio Commission",
+                          service: newOrd.service || "Creative Commission",
+                          package: newOrd.packageName,
+                          quantity: newOrd.quantity || 1,
+                          totalAmount: newOrd.totalAmount || newOrd.amountPaid || 0,
+                          amountPaid: newOrd.amountPaid || 0,
+                          paymentStatus: newOrd.paymentStatus || "pending_payment",
+                          status: newOrd.status || "pending_verification",
+                          statusLabel: newOrd.status === "in_production" ? "In Production" : "Pending Verification",
+                          deliverable: "Studio production brief queued",
+                          deliverables: [],
+                          driveFolder: "Vault",
+                          revisionRound: 0,
+                          maxRevisions: 2,
+                          orderDate: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+                          updatedAt: "Just now",
+                          progress: 25,
+                          nextAction: "Production Underway",
+                        },
+                        ...prev,
+                      ]);
+                    }
+                    SyncManager.broadcast("NOTIFICATIONS_UPDATED", {});
+                  }}
+                />
               </motion.div>
             ) : viewMode === "zero_state" ? (
               /* =========================================================
@@ -1756,6 +1545,52 @@ export default function ClientDashboardPage() {
               />
             </div>
           </div>
+        )}
+
+        {/* Direct Commissioning Modal for Quick Access */}
+        {isCommissionModalOpen && (
+          <Modal
+            isOpen={isCommissionModalOpen}
+            onClose={() => setIsCommissionModalOpen(false)}
+            title="Commission Creative Project"
+            description="Select from 8 Studio Disciplines & Creative Packages • Autonomous n8n Workflow Dispatch • Pay by UPI QR"
+            maxWidth="2xl"
+          >
+            <MasterOrderForm
+              onOrderSuccess={(newOrd) => {
+                setIsCommissionModalOpen(false);
+                setViewMode("orders");
+                if (newOrd) {
+                  setOrders((prev) => [
+                    {
+                      id: newOrd.id || `ord_${Date.now()}`,
+                      code: newOrd.orderNumber || newOrd.code || `#ORD-${String(newOrd.id || Date.now()).slice(-3)}`,
+                      title: newOrd.title || newOrd.service || "Studio Commission",
+                      service: newOrd.service || "Creative Commission",
+                      package: newOrd.packageName,
+                      quantity: newOrd.quantity || 1,
+                      totalAmount: newOrd.totalAmount || newOrd.amountPaid || 0,
+                      amountPaid: newOrd.amountPaid || 0,
+                      paymentStatus: newOrd.paymentStatus || "pending_payment",
+                      status: newOrd.status || "pending_verification",
+                      statusLabel: newOrd.status === "in_production" ? "In Production" : "Pending Verification",
+                      deliverable: "Studio production brief queued",
+                      deliverables: [],
+                      driveFolder: "Vault",
+                      revisionRound: 0,
+                      maxRevisions: 2,
+                      orderDate: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+                      updatedAt: "Just now",
+                      progress: 25,
+                      nextAction: "Production Underway",
+                    },
+                    ...prev,
+                  ]);
+                }
+                SyncManager.broadcast("NOTIFICATIONS_UPDATED", {});
+              }}
+            />
+          </Modal>
         )}
       </div>
     </RouteGuard>

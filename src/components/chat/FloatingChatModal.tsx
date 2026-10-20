@@ -34,6 +34,8 @@ import { useAuth } from "@/lib/auth/authContext";
 import { usePathname, useRouter } from "next/navigation";
 import { MAIN_SERVICES } from "@/config/mainServices";
 import { MAIN_SERVICE_ICONS } from "@/components/services/MainServiceCard";
+import { ChatPricingCatalog } from "@/components/chat/ChatPricingCatalog";
+import { formatCurrencyINR } from "@/config/pricing";
 
 declare global {
   interface Window {
@@ -59,6 +61,8 @@ interface ChatMessage {
   isLeadPrompt?: boolean;
   /** Renders the eight main services as an interactive selection panel. */
   serviceCatalog?: boolean;
+  /** Renders the synchronized pricing & package catalog with direct checkout. */
+  pricingCatalog?: boolean;
   orderDraft?: {
     orderId: string;
     orderNumber: string;
@@ -73,19 +77,16 @@ const QUICK_ACTIONS: Array<{
   label: string;
   query: string;
   showServices?: boolean;
+  showPricing?: boolean;
 }> = [
-  { label: "Our Services", query: "What services do you offer?", showServices: true },
-  { label: "Pricing & Plans", query: "What are your pricing plans and rates?" },
-  { label: "About Studio", query: "Tell me about Sutra Studio background and expertise" },
-  { label: "Office & Contact", query: "Where is your office located and how can I contact you?" },
+  { label: "Studio Services", query: "What services do you offer?", showServices: true },
+  { label: "Pricing & Rates", query: "What are your pricing plans and rates?", showPricing: true },
+  { label: "Packages & Retainers", query: "What packages and retainers do you offer?", showPricing: true },
+  { label: "New Commission", query: "I want to place an order", showPricing: true },
 ];
 
 /**
  * Client-side detection for general "what services do you offer" inquiries.
- * These are answered locally from the unified MAIN_SERVICES configuration
- * (eight services, names + short descriptions, no pricing) instead of the AI
- * backend, so service suggestions stay consistent and price-free. All other
- * messages continue through the existing /api/chat → /api/chatbot pipeline.
  */
 const SERVICE_INTENT_PATTERNS: RegExp[] = [
   /what (do you (offer|provide|sell|do)|are your services|services? (do you|are|is))/i,
@@ -102,6 +103,18 @@ function isServiceCatalogQuery(text: string): boolean {
   if (!text) return false;
   const normalized = text.trim();
   return SERVICE_INTENT_PATTERNS.some((pattern) => pattern.test(normalized));
+}
+
+const PRICING_INTENT_PATTERNS: RegExp[] = [
+  /(pricing|price|prices|rates?|cost|charges?|package|packages|retainer|retainers|fee)/i,
+  /(how much|budget|quotation|quote)/i,
+  /(ભાવ|કિંમત|દર|કેટલા|રૂપિયા|ખર્ચ|પેકેજ|પ્લાન|ઓર્ડર)/u,
+  /(kitna|rate|paisa|kharcha)/i,
+];
+
+function isPricingQuery(text: string): boolean {
+  if (!text) return false;
+  return PRICING_INTENT_PATTERNS.some((pattern) => pattern.test(text.trim()));
 }
 
 /**
@@ -576,12 +589,14 @@ export function FloatingChatModal() {
   };
 
 
-  /** Local price-free answer listing the eight main services (no API call). */
-  const buildServiceCatalogMessage = (): ChatMessage => ({
-    id: `bot_services_${Date.now()}`,
+  /** Local synchronized rate card & package catalog answer with direct ordering. */
+  const buildPricingCatalogMessage = (customText?: string): ChatMessage => ({
+    id: `bot_catalog_${Date.now()}`,
     sender: "bot",
-    text: "Here are our **eight core studio services** — select any service to open its full detail page:",
-    serviceCatalog: true,
+    text:
+      customText ||
+      "Here is our **official studio pricing & package catalogue**. You can review transparent rates below or click **Order Now** / **Order Package** to instantly launch your commission via UPI QR:",
+    pricingCatalog: true,
     time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
   });
 
@@ -589,10 +604,72 @@ export function FloatingChatModal() {
     const userMsg: ChatMessage = {
       id: `usr_${Date.now()}`,
       sender: "user",
-      text: "What services do you offer?",
+      text: "What services and packages do you offer?",
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
-    setMessages((prev) => [...prev, userMsg, buildServiceCatalogMessage()]);
+    setMessages((prev) => [...prev, userMsg, buildPricingCatalogMessage()]);
+  };
+
+  const handleQuickOrderFromChat = async (item: {
+    id: string;
+    name: string;
+    price: number;
+    type: "service" | "package";
+    turnaround?: string;
+  }) => {
+    const orderNum = Math.floor(100 + Math.random() * 900);
+    const orderCode = `#ORD-${orderNum}`;
+    const orderId = `ord_chat_${Date.now()}`;
+    const draft = {
+      orderId,
+      orderNumber: orderCode,
+      service: item.name,
+      totalAmount: item.price,
+      paid: false,
+    };
+
+    const userConfirmMsg: ChatMessage = {
+      id: `usr_${Date.now()}`,
+      sender: "user",
+      text: `I want to order ${item.name} (${formatCurrencyINR(item.price)}).`,
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    };
+
+    const botConfirmMsg: ChatMessage = {
+      id: `bot_${Date.now() + 1}`,
+      sender: "bot",
+      text: `I have created your commission draft for **${item.name}** at the verified studio rate of **${formatCurrencyINR(item.price)}**.\n\nTurnaround SLA: **${item.turnaround || "Standard Studio SLA"}**\nStatus: \`pending_payment\`\n\nPlease click **Pay by UPI QR** below to complete payment and initiate production staging.`,
+      orderDraft: draft,
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    };
+
+    setMessages((prev) => [...prev, userConfirmMsg, botConfirmMsg]);
+    setSelectedChatOrder(draft);
+    setIsPaymentModalOpen(true);
+
+    try {
+      await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: orderId,
+          orderNumber: orderCode,
+          code: orderCode,
+          clientName: profile?.displayName || user?.displayName || user?.email || "Studio Client",
+          clientEmail: user?.email || "client@sutrastudio.com",
+          service: item.name,
+          packageName: item.type === "package" ? item.name : undefined,
+          totalAmount: item.price,
+          amountPaid: 0,
+          status: "pending_verification",
+          paymentStatus: "pending_payment",
+          source: "chat",
+          createdAt: new Date().toISOString(),
+        }),
+      });
+    } catch (err) {
+      console.warn("Could not register chat order in backend:", err);
+    }
   };
 
   const handleSendMessage = async (textToSend?: string) => {
@@ -612,11 +689,13 @@ export function FloatingChatModal() {
     if (!textToSend) setInput("");
     setAttachments([]);
 
-    // General service inquiries are answered locally from the unified
-    // main-services configuration (eight services, no pricing). Everything
-    // else keeps the existing backend pipeline untouched.
-    if (isServiceCatalogQuery(text)) {
-      setMessages((prev) => [...prev, buildServiceCatalogMessage()]);
+    // Service, pricing, packages, or plans inquiries trigger the unified interactive catalogue
+    if (isPricingQuery(text) || isServiceCatalogQuery(text)) {
+      const isGujarati = /[\u0A80-\u0AFF]/.test(text) || text.includes("karo") || text.includes("chhe");
+      const reply = isGujarati
+        ? "અહીં અમારું **ઓફિશિયલ સ્ટુડિયો પ્રાઇસિંગ અને પેકેજ કેટલોગ** છે. તમે કોઈપણ સર્વિસ અથવા પેકેજ પસંદ કરીને સીધો **Order Now** પર ક્લિક કરી શકો છો:"
+        : "Here is our **official studio pricing & package catalogue**. You can review transparent rates below or click **Order Now** / **Order Package** to instantly launch your commission via UPI QR:";
+      setMessages((prev) => [...prev, buildPricingCatalogMessage(reply)]);
       return;
     }
 
@@ -893,49 +972,18 @@ export function FloatingChatModal() {
 
                       <FormattedMessageContent text={msg.text} isUser={!isBot} />
 
-                      {/* Eight Main Services Selection Panel (price-free) */}
-                      {msg.serviceCatalog && (
-                        <div
-                          className="mt-3 space-y-1.5"
-                          role="list"
-                          aria-label="Sutra Studio main services"
-                        >
-                          {MAIN_SERVICES.map((svc) => {
-                            const Icon = MAIN_SERVICE_ICONS[svc.icon] ?? Sparkles;
-                            return (
-                              <button
-                                key={svc.id}
-                                type="button"
-                                role="listitem"
-                                onClick={() => {
-                                  setIsOpen(false);
-                                  router.push(`/services/${svc.slug}`);
-                                }}
-                                aria-label={`View ${svc.title} service details`}
-                                className="w-full text-left flex items-start gap-2.5 p-2 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] hover:border-[#A98B57] hover:bg-white transition-colors cursor-pointer"
-                              >
-                                <span className="mt-0.5 w-6 h-6 rounded-lg bg-[#171717] flex items-center justify-center shrink-0">
-                                  <Icon className="w-3 h-3 text-[#D4A35A]" aria-hidden="true" />
-                                </span>
-                                <span className="flex-1 min-w-0">
-                                  <span className="block text-[11px] font-bold text-[#171717]">
-                                    {svc.title}
-                                  </span>
-                                  <span className="block text-[10px] leading-snug text-[#64748B]">
-                                    {svc.shortDescription}
-                                  </span>
-                                </span>
-                                <ArrowUpRight
-                                  className="w-3.5 h-3.5 text-[#A98B57] shrink-0 mt-1"
-                                  aria-hidden="true"
-                                />
-                              </button>
-                            );
-                          })}
-                          <p className="text-[10px] text-[#94A3B8] pt-1">
-                            Select a service to view its full scope, or ask about
-                            pricing plans and custom commissions.
-                          </p>
+                      {/* Unified Services & Packages Pricing Catalog Component */}
+                      {(msg.serviceCatalog || msg.pricingCatalog) && (
+                        <div className="mt-3">
+                          <ChatPricingCatalog
+                            onSelectItem={(item) => handleQuickOrderFromChat(item)}
+                            onOpenFullForm={(item) => {
+                              setIsOpen(false);
+                              router.push(
+                                `/orders?${item.type === "package" ? "package" : "service"}=${encodeURIComponent(item.id)}`
+                              );
+                            }}
+                          />
                         </div>
                       )}
 

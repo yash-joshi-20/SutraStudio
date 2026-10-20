@@ -283,11 +283,11 @@ export async function POST(req: Request) {
 
       let created;
       if (isPlan) {
-        const planId = lower.includes("starter")
-          ? "studio-starter"
-          : lower.includes("enterprise")
-          ? "atelier-enterprise"
-          : "studio-growth";
+        const planId = lower.includes("starter") || lower.includes("9999")
+          ? "starter-trend"
+          : lower.includes("growth") || lower.includes("14999")
+          ? "growth-trend"
+          : "daily-trend-creator";
         created = await ChatToolsService.createCommissionDraft({
           clientUid: callerUid || activeUid,
           clientName: "Studio Client",

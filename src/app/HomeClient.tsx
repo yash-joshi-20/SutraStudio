@@ -16,6 +16,7 @@ import { LotusSymbol } from "@/components/brand/SutraLogo";
 import { SutraStudioIntroLanding } from "@/components/motion/SutraStudioIntroLanding";
 import { CustomDropdown } from "@/components/ui/CustomDropdown";
 import { MainServiceCard } from "@/components/services/MainServiceCard";
+import { PricingCatalogSection } from "@/components/pricing/PricingCatalogSection";
 import { MAIN_SERVICES, getMainServices } from "@/config/mainServices";
 import { SUTRA_PROJECTS } from "@/data/projectsData";
 import { useCms } from "@/components/providers/CmsThemeProvider";
@@ -768,6 +769,15 @@ export default function HomePage() {
                 </Link>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* ===================================================
+            4B. CANONICAL PRICING & PACKAGES (SHARED COMPONENT)
+            =================================================== */}
+        <section id="pricing" className="py-16 md:py-24 bg-[#FAF9F5] border-t border-[#EADFCB]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <PricingCatalogSection variant="home" />
           </div>
         </section>
 

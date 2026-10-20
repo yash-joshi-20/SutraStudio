@@ -899,7 +899,7 @@ export function MasterOrderForm({
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
-                <span>7 Studio Services</span>
+                <span>8 Studio Services</span>
               </button>
               <button
                 type="button"
