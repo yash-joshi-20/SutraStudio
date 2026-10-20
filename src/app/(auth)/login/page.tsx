@@ -510,7 +510,7 @@ function ClientLoginForm() {
                 <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
                 <span>Studio Pipeline Active</span>
               </div>
-              <span className="text-[11px] font-mono text-[#94A3B8]">SLA: 24–48h Turnaround</span>
+              <span className="text-[11px] font-mono text-[#94A3B8]">Dedicated Studio Staging</span>
             </div>
 
             {/* Value Proposition */}

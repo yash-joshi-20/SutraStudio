@@ -99,7 +99,7 @@ const INTAKE_PACKAGES_SOURCE: Omit<IntakePackageOption, "price">[] = [
     id: "starter-trend",
     title: "Starter Trend",
     billingCycle: "monthly",
-    turnaround: "Alternating Drops (48h SLA)",
+    turnaround: "Scheduled Production Drops",
     description: "Bi-daily active creative pipeline designed for emerging brands. Delivers 15 high-impact visual graphics and 15 commercial short videos across 30 days.",
     iconName: "sparkles",
     features: [
@@ -133,7 +133,7 @@ const INTAKE_PACKAGES_SOURCE: Omit<IntakePackageOption, "price">[] = [
     id: "daily-trend-creator",
     title: "Daily Trend Creator (Flagship)",
     billingCycle: "monthly",
-    turnaround: "1 Image + 1 Reel Daily (24h)",
+    turnaround: "Continuous Daily Drops",
     popular: true,
     description: "Our flagship daily active creative queue. Delivers 1 custom image and 1 short video every day for 30 days, backed by daily trend research, customized creative direction, and full studio production.",
     iconName: "zap",
@@ -153,7 +153,7 @@ const INTAKE_PACKAGES_SOURCE: Omit<IntakePackageOption, "price">[] = [
     id: "commission-starter-image-video",
     title: "Starter Creative Pack",
     billingCycle: "one_time",
-    turnaround: "48h Rapid SLA",
+    turnaround: "Dedicated Studio Staging",
     description: "Essential launch suite containing 5 branded visuals and 1 cinematic promotional reel for fast social campaigns.",
     iconName: "sparkles",
     features: [
@@ -168,7 +168,7 @@ const INTAKE_PACKAGES_SOURCE: Omit<IntakePackageOption, "price">[] = [
     id: "commission-studio-growth",
     title: "Studio Growth Pack",
     billingCycle: "one_time",
-    turnaround: "48–72h SLA",
+    turnaround: "Dedicated Studio Staging",
     popular: true,
     description: "Multi-format creative production spanning 10 branded visuals, 3 commercial video reels, and 1 3D product view.",
     iconName: "layers",
@@ -185,7 +185,7 @@ const INTAKE_PACKAGES_SOURCE: Omit<IntakePackageOption, "price">[] = [
     id: "pkg-branding-logo-bundle",
     title: "Branding & Logo Bundle",
     billingCycle: "one_time",
-    turnaround: "3–4 Days SLA",
+    turnaround: "Structured Milestone Staging",
     description: "Complete brand foundation pack combining bespoke vector logo design, official color/typography style guide, and 5 branded launch graphics.",
     iconName: "palette",
     features: [
@@ -200,7 +200,7 @@ const INTAKE_PACKAGES_SOURCE: Omit<IntakePackageOption, "price">[] = [
     id: "pkg-digital-marketing-bundle",
     title: "Digital Marketing Campaign Bundle",
     billingCycle: "one_time",
-    turnaround: "4–5 Days SLA",
+    turnaround: "Structured Milestone Staging",
     description: "High-converting paid advertising and organic launch bundle with targeted Meta campaign structure, 5 static creatives, and 3 motion reels.",
     iconName: "share",
     features: [
@@ -215,7 +215,7 @@ const INTAKE_PACKAGES_SOURCE: Omit<IntakePackageOption, "price">[] = [
     id: "pkg-real-estate-viz-bundle",
     title: "Real Estate & 3D Visualization Bundle",
     billingCycle: "one_time",
-    turnaround: "5–7 Days SLA",
+    turnaround: "Structured Milestone Staging",
     description: "Complete spatial visualization suite for real estate developers and designers featuring 3D cutaways, interior CGI, and WebGL virtual tours.",
     iconName: "building",
     features: [
@@ -230,7 +230,7 @@ const INTAKE_PACKAGES_SOURCE: Omit<IntakePackageOption, "price">[] = [
     id: "pkg-business-web-launch-bundle",
     title: "Business Website & Launch Bundle",
     billingCycle: "one_time",
-    turnaround: "7–10 Days SLA",
+    turnaround: "Structured Milestone Staging",
     description: "Complete digital flagship: High-performance Next.js responsive website, SEO optimization, lead intake forms, and cloud deployment.",
     iconName: "monitor",
     features: [
@@ -247,7 +247,7 @@ const INTAKE_PACKAGES_SOURCE: Omit<IntakePackageOption, "price">[] = [
     id: "branded-image-pack-5",
     title: "Branded Image Pack (5 Images)",
     billingCycle: "one_time",
-    turnaround: "48h SLA",
+    turnaround: "Dedicated Studio Staging",
     description: "Curated 5-image campaign bundle with brand color grading and commercial licensing.",
     iconName: "sparkles",
     features: [
@@ -261,7 +261,7 @@ const INTAKE_PACKAGES_SOURCE: Omit<IntakePackageOption, "price">[] = [
     id: "promotional-reels-pack-3",
     title: "Promotional Reels Pack (3 Reels)",
     billingCycle: "one_time",
-    turnaround: "48h SLA",
+    turnaround: "Dedicated Studio Staging",
     description: "3 commercial promo reels with kinetic motion graphics, sound design, and vertical 9:16 master exports.",
     iconName: "video",
     features: [
@@ -275,7 +275,7 @@ const INTAKE_PACKAGES_SOURCE: Omit<IntakePackageOption, "price">[] = [
     id: "social-carousel-5-slides",
     title: "Social Carousel Pack (5 Slides)",
     billingCycle: "one_time",
-    turnaround: "24–48h SLA",
+    turnaround: "Dedicated Studio Staging",
     description: "Seamless 5-slide educational or product storytelling carousel for Instagram & LinkedIn.",
     iconName: "layers",
     features: [
@@ -984,7 +984,7 @@ export function MasterOrderForm({
                     1. Select Studio Service (8 Disciplines)
                   </h3>
                   <p className="text-xs text-[#64748B]">
-                    Choose from 8 specialized creative technology & design disciplines with guaranteed SLAs.
+                    Choose from 8 specialized creative technology & design disciplines with dedicated studio production.
                   </p>
                 </div>
 
@@ -1207,7 +1207,7 @@ export function MasterOrderForm({
                         </div>
 
                         <div className="pt-2 border-t border-[#EADFCB]/60 flex items-center justify-between text-[11px] font-mono text-[#78716C]">
-                          <span>Turnaround SLA:</span>
+                          <span>Studio Turnaround:</span>
                           <span className="font-semibold text-[#5C3A1E]">{pkg.turnaround}</span>
                         </div>
                       </div>
@@ -1284,54 +1284,24 @@ export function MasterOrderForm({
                   </div>
                 )}
 
-                {/* One-time pack quantity & live subtotal (monthly retainers are single subscriptions) */}
+                {/* One-time package confirmed scope & live subtotal */}
                 {activePackage && activePackage.billingCycle !== "monthly" && (
-                  <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between gap-4">
                     <div>
                       <span className="font-serif font-bold text-sm text-[#0F172A] block">
                         {activePackage.title}
                       </span>
                       <span className="text-xs text-[#64748B]">
-                        {formatCurrencyINR(activePackage.price)} per pack • {activePackage.turnaround}
+                        {formatCurrencyINR(activePackage.price)} per package • {activePackage.turnaround}
                       </span>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="inline-flex items-center gap-1 rounded-xl border border-[#EADFCB] bg-white p-1">
-                        <button
-                          type="button"
-                          aria-label="Decrease pack quantity"
-                          onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                          disabled={quantity <= 1}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#4A3B22] hover:bg-[#F4EFE6] disabled:opacity-40"
-                        >
-                          <Minus className="w-4 h-4" />
-                        </button>
-                        <span className="min-w-8 text-center text-sm font-semibold text-[#171717]">
-                          {quantity}
-                        </span>
-                        <button
-                          type="button"
-                          aria-label="Increase pack quantity"
-                          onClick={() => setQuantity((q) => Math.min(100, q + 1))}
-                          disabled={quantity >= 100}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#4A3B22] hover:bg-[#F4EFE6] disabled:opacity-40"
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">
-                          Subtotal {quantity > 1 ? `(×${quantity})` : ""}
-                        </span>
-                        <span className="font-serif font-bold text-lg text-[#5C3A1E]">
-                          {formatCurrencyINR(orderAmount)}
-                        </span>
-                        {quantity > 1 && (
-                          <span className="text-[10px] font-mono text-[#94A3B8] block">
-                            {formatCurrencyINR(activePackage.price)} × {quantity}
-                          </span>
-                        )}
-                      </div>
+                    <div className="text-right">
+                      <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">
+                        Subtotal
+                      </span>
+                      <span className="font-serif font-bold text-lg text-[#5C3A1E]">
+                        {formatCurrencyINR(activePackage.price)}
+                      </span>
                     </div>
                   </div>
                 )}
@@ -2056,7 +2026,7 @@ export function MasterOrderForm({
                   </div>
 
                   <div className="flex justify-between items-center">
-                    <span className="text-[#64748B]">Delivery SLA:</span>
+                    <span className="text-[#64748B]">Delivery Staging:</span>
                     <span className="font-semibold text-[#5C3A1E]">
                       {orderMode === "packages" ? activePackage?.turnaround ?? "To be confirmed" : activeService.turnaround}
                     </span>

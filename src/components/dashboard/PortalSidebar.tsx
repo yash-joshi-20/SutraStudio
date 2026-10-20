@@ -43,8 +43,6 @@ export interface PortalNavItem {
 
 export const CLIENT_NAV_ITEMS: PortalNavItem[] = [
   { name: "Workspace", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Sutra Concierge", href: "/chat", icon: Sparkles },
-  { name: "New Commission", href: "/new-order", icon: ShoppingBag },
   { name: "My Orders", href: "/orders", icon: FolderOpen },
   { name: "My Projects", href: "/projects-client", icon: FolderGit2 },
   { name: "Media Vault", href: "/media", icon: FolderOpen },

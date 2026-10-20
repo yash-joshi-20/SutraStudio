@@ -332,7 +332,7 @@ function OrderConfirmationContent() {
                     <CreditCard className="w-4 h-4 text-[#5C3A1E]" />
                   </div>
                   <p className="text-[11px] text-[#64748B] leading-relaxed">
-                    Official tax invoice dispatched upon intake review. Settle within 48h.
+                    Official tax invoice dispatched upon intake review. Settle promptly to initiate studio staging.
                   </p>
                 </button>
               </div>

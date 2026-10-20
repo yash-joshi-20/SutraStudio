@@ -1290,7 +1290,7 @@ export default function OrdersPage() {
         )
       );
       setFeedbackSuccess(
-        `Revision request submitted to Art Director. Estimated turnaround: 24 hours.`
+        `Revision request submitted to Art Director. Estimated turnaround: Structured Studio Review.`
       );
       window.dispatchEvent(new Event("sutra_orders_changed"));
       setTimeout(() => {
@@ -2510,9 +2510,9 @@ export default function OrdersPage() {
                       onChange={(e) => setPreferredTimeline(e.target.value)}
                       className="w-full rounded-xl bg-[#FFFDF9] border border-[#EADFCB] px-3.5 py-2 text-xs text-[#0F172A] focus:border-[#D4A35A] focus:outline-none"
                     >
-                      <option value="Standard Studio SLA (48-72h)">Standard Studio SLA (48–72h)</option>
-                      <option value="Priority Rush Turnaround (24-48h)">Priority Rush Turnaround (24–48h)</option>
-                      <option value="Same-Day Expedited Pass (Dedicated Director)">Same-Day Expedited Pass</option>
+                      <option value="Standard Studio Staging">Standard Studio Staging</option>
+                      <option value="Priority Rush Production">Priority Rush Production</option>
+                      <option value="Expedited Director Review">Expedited Director Review</option>
                     </select>
                   </div>
                 ) : (
@@ -3742,7 +3742,7 @@ export default function OrdersPage() {
                       Submit Revision Request to Art Director
                     </h4>
                     <p className="text-[11px] text-[#64748B]">
-                      Pass {(inspectingOrder.revisionRound || 0) + 1} of {inspectingOrder.maxRevisions || 2} included revisions. Turnaround: 24-48 hours.
+                      Pass {(inspectingOrder.revisionRound || 0) + 1} of {inspectingOrder.maxRevisions || 2} included revisions. Turnaround: Dedicated Studio Review.
                     </p>
                   </div>
 

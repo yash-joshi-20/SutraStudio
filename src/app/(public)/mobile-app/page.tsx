@@ -80,7 +80,7 @@ export default function MobileAppLandingPage() {
   const appScreenshots = [
     {
       title: "Real-Time Approvals",
-      subtitle: "1-Click Approvals & 24h Revisions",
+      subtitle: "1-Click Approvals & Structured Revisions",
       desc: "Review 4K render passes, motion cuts, and brand assets on your phone with zero delay.",
       badge: "Workflows",
     },
@@ -108,7 +108,7 @@ export default function MobileAppLandingPage() {
     {
       icon: Sparkles,
       title: "Instant 1-Click Deliverable Approvals",
-      description: "Approve 4K renders and commercial cuts directly from push notifications or request 24h revisions with pinpoint notes.",
+      description: "Approve 4K renders and commercial cuts directly from push notifications or request structured revisions with pinpoint notes.",
     },
     {
       icon: MessageSquare,

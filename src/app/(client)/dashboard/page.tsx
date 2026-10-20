@@ -342,7 +342,7 @@ export default function ClientDashboardPage() {
           : o
       )
     );
-    setFeedbackSuccess(`Revision round submitted to Art Director. Estimated turnaround: 24 hours.`);
+    setFeedbackSuccess(`Revision round submitted to Art Director. Estimated turnaround: Structured Studio Review.`);
     setTimeout(() => {
       setIsRevisionMode(false);
       setRevisionNotes("");
@@ -491,47 +491,10 @@ export default function ClientDashboardPage() {
               </p>
             </div>
 
-            {/* Navigation Tabs & Actions */}
+            {/* Navigation Actions */}
             <div className="flex flex-wrap items-center gap-3">
-              <div className="inline-flex rounded-full bg-[#FFFDF9] border border-[#EADFCB] p-1 shadow-xs">
-                <button
-                  type="button"
-                  onClick={() => setViewMode("orders")}
-                  className={`px-3.5 py-1.5 text-xs font-medium rounded-full transition-all cursor-pointer ${
-                    viewMode === "orders"
-                      ? "bg-[#5C3A1E] text-white shadow-xs"
-                      : "text-[#64748B] hover:text-[#0F172A]"
-                  }`}
-                >
-                  Active Orders ({orders.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setViewMode("commission");
-                    setStep(1);
-                    setOrderSubmitted(false);
-                  }}
-                  className={`px-3.5 py-1.5 text-xs font-medium rounded-full transition-all cursor-pointer flex items-center gap-1.5 ${
-                    viewMode === "commission"
-                      ? "bg-[#5C3A1E] text-white shadow-xs"
-                      : "text-[#64748B] hover:text-[#0F172A]"
-                  }`}
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>New Commission</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode("zero_state")}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all cursor-pointer ${
-                    viewMode === "zero_state"
-                      ? "bg-[#5C3A1E] text-white shadow-xs"
-                      : "text-[#64748B] hover:text-[#0F172A]"
-                  }`}
-                >
-                  Zero State
-                </button>
+              <div className="inline-flex rounded-full bg-[#FFFDF9] border border-[#EADFCB] px-3.5 py-1.5 shadow-xs text-xs font-medium text-[#5C3A1E]">
+                Active Orders ({orders.length})
               </div>
 
               <Link href="/">
@@ -569,9 +532,9 @@ export default function ClientDashboardPage() {
               variant="completed"
             />
             <KPITile
-              label="Turnaround SLA"
-              value="24-48h"
-              sublabel="High-resolution masters"
+              label="Studio Turnaround"
+              value="Dedicated"
+              sublabel="Structured milestone staging"
               variant="ink"
             />
             <KPITile
@@ -900,18 +863,6 @@ export default function ClientDashboardPage() {
                       Real-time production pipeline tracking, deliverable approvals, and revision passes.
                     </p>
                   </div>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    leftIcon={<Plus className="w-3.5 h-3.5" />}
-                    onClick={() => {
-                      setViewMode("commission");
-                      setStep(1);
-                      setOrderSubmitted(false);
-                    }}
-                  >
-                    New Commission
-                  </Button>
                 </div>
 
                 {/* Desktop View: Unified Stream Rows */}

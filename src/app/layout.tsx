@@ -157,7 +157,7 @@ const organizationSchema = {
             itemOffered: {
               "@type": "Service",
               name: "5x 4K Photorealistic Master Renders",
-              description: "5x 4K Master Product & Space Renders with 24h turnaround.",
+              description: "5x 4K Master Product & Space Renders with dedicated studio staging.",
             },
             price: "499",
             priceCurrency: "INR",
@@ -177,7 +177,7 @@ const organizationSchema = {
             itemOffered: {
               "@type": "Service",
               name: "Starter Creative Commission",
-              description: "5x 4K UHD Master Renders + 1x 10s Cinematic Video Ad with 48h turnaround.",
+              description: "5x 4K UHD Master Renders + 1x 10s Cinematic Video Ad with dedicated studio staging.",
             },
             price: "1999",
             priceCurrency: "INR",

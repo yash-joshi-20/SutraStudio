@@ -272,7 +272,7 @@ export default function ContactPage() {
                         Your project inquiry has been logged under reference{" "}
                         <span className="font-mono font-bold text-[#5C3A1E]">{inquiryId}</span>.
                         Our dedicated Art Director will review your specifications and
-                        respond within 24 hours.
+                        respond promptly during studio business hours.
                       </p>
                     </div>
 
