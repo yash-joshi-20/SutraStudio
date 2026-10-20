@@ -34,7 +34,7 @@ const FAQS = [
   },
   {
     q: "How does the Daily Trend Creator flagship package work?",
-    a: "Daily Trend Creator (₹19,999 / 30 days) operates as your dedicated daily active creative queue. Every single day for 30 days, we conduct daily trend research, develop brand-aligned creative direction, produce 1 custom 4K image + 1 commercial short video/reel, perform rigorous QA, and deliver directly to your private Google Drive vault.",
+    a: "Daily Trend Creator (₹19,999 / 30 days) operates as your dedicated daily active creative queue. Every single day for 30 days, we conduct daily trend research, develop brand-aligned creative direction, produce 1 custom 4K image + 1 commercial short video/reel, perform rigorous quality reviews, and deliver directly to your private Google Drive vault.",
   },
   {
     q: "Do I own full commercial rights to the deliverables?",
@@ -42,7 +42,7 @@ const FAQS = [
   },
   {
     q: "What is explicitly excluded from your standard pricing?",
-    a: "Our transparent pricing covers digital creative production, creative direction & content planning, audio sync, color grading, and QA. Paid advertising budget/ad spend, on-location physical videography shoots, on-camera actors or voiceover talent fees, and multi-tenant enterprise server infrastructure are excluded unless explicitly agreed in a custom Statement of Work.",
+    a: "Our transparent pricing covers digital creative production, creative direction & content planning, audio sync, color grading, and quality assurance. Paid advertising budget/ad spend, on-location physical videography shoots, on-camera actors or voiceover talent fees, and multi-tenant enterprise server infrastructure are excluded unless explicitly agreed in a custom Statement of Work.",
   },
   {
     q: "How are payments processed?",

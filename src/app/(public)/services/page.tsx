@@ -881,7 +881,7 @@ export default function ServicesPage() {
               <h4 className="text-xs font-bold uppercase tracking-wider text-[#5C3A1E] flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
                 5-Step Production Process (Research → Creative Direction →
-                Production → Studio QA → Delivery Vault)
+                Production → Studio Review → Delivery Vault)
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
                 {selectedSpec.productionSteps.map((step) => (

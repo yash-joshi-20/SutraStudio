@@ -254,7 +254,7 @@ export const APPROVED_MONTHLY_PACKAGES: RetainerPackage[] = [
       "Brand relevance review & creative direction planning",
       "Complete captions, hooks & targeted hashtag bundles",
       "30-Day coordinated content calendar",
-      "Rigorous studio quality checks & QA on every asset",
+      "Rigorous studio quality checks & validation on every asset",
       "Organized private Google Drive Vault delivery",
       "1 consolidated revision round per deliverable",
     ],

@@ -313,7 +313,7 @@ export default async function PackageDetailPage({
                       {item}
                     </span>
                     <span className="text-[11px] text-[#64748B] block mt-0.5">
-                      Production QA verified • High-resolution commercial export
+                      Production Quality Verified • High-resolution commercial export
                     </span>
                   </div>
                 </div>

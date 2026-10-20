@@ -122,7 +122,7 @@ const DEFAULT_SITE_CONTENT = {
     overlayOpacity: 0.05,
   },
   header: {
-    announcementBarText: "Now Booking Q4 Autonomous Retainers • Instant Zero-Fee UPI Direct Checkout",
+    announcementBarText: "Now Booking Creative Studio Retainers & Custom Commissions • Instant Direct Checkout",
     announcementActive: true,
     navigationItems: [
       { label: "Services", href: "/services" },

@@ -139,7 +139,7 @@ export default function MediaLibraryPage() {
                   folder,
                   date: d.uploadedAt ? new Date(d.uploadedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Recently Delivered",
                   driveFileId: d.driveFileId || `drive_${fileId.slice(0, 12)}`,
-                  resolution: d.version ? `Version ${d.version}` : "Studio Production Deliverable",
+                  resolution: d.resolution || "Studio Production Deliverable",
                   checksum: d.checksum || `sha256:${fileId.slice(0, 16)}...`,
                   thumbnail: d.previewUrl || `/api/drive/file/${fileId}`,
                   downloadUrl: d.previewUrl,
@@ -506,7 +506,7 @@ export default function MediaLibraryPage() {
                 <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
                 <span className="font-medium">{downloadSuccess}</span>
               </div>
-              <span className="text-[10px] font-mono text-[#15803D]">Sutra Cloud Vault v3</span>
+              <span className="text-[10px] font-mono text-[#15803D]">Sutra Studio Cloud Vault</span>
             </div>
           )}
 

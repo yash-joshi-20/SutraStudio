@@ -2136,7 +2136,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         },
         {
           step: 4,
-          title: "Art Director QA & Color Balance",
+          title: "Art Director Review & Color Balance",
           desc: "Rigorous quality review, brand color grading, typography placement, and contrast verification.",
         },
         {
@@ -2191,7 +2191,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         },
         {
           step: 4,
-          title: "Art Director QA & Timing Check",
+          title: "Art Director Review & Timing Check",
           desc: "Frame-by-frame pacing inspection, caption synchronization, and audio loudness compliance.",
         },
         {
@@ -2244,7 +2244,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         },
         {
           step: 4,
-          title: "Mesh & Performance QA",
+          title: "Mesh & Performance Calibration",
           desc: "Inspect draw calls, polygon count, material accuracy, and WebGL viewer compatibility.",
         },
         {
@@ -2296,7 +2296,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         },
         {
           step: 4,
-          title: "Cross-Device & WebXR QA",
+          title: "Cross-Device & WebXR Verification",
           desc: "Validate mobile gyroscope orientation, touchscreen pan/zoom, and desktop fullscreen controls.",
         },
         {
@@ -2351,7 +2351,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         },
         {
           step: 4,
-          title: "Art Director QA & Composition",
+          title: "Art Director Review & Composition",
           desc: "Review photographic composition, vanishing points, reflections, and material fidelity.",
         },
         {
@@ -2406,7 +2406,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         },
         {
           step: 4,
-          title: "Policy Compliance & Tracking QA",
+          title: "Policy Compliance & Tracking Verification",
           desc: "Verify Meta advertising policies, text-to-image ratios, CTA clarity, and UTM attribution.",
         },
         {
@@ -2459,7 +2459,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         },
         {
           step: 4,
-          title: "Cross-Device & Technical SEO QA",
+          title: "Cross-Device & Technical SEO Audit",
           desc: "Test mobile responsiveness, open graph meta tags, Lighthouse performance score (>90), and SSL.",
         },
         {
@@ -2507,7 +2507,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         },
         {
           step: 4,
-          title: "Security & Edge-Case QA",
+          title: "Security & Edge-Case Validation",
           desc: "Verify authentication guards, payment verification integrity, input sanitation, and role security.",
         },
         {
@@ -2555,7 +2555,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         },
         {
           step: 4,
-          title: "Device Viewport & Touch QA",
+          title: "Device Viewport & Touch Calibration",
           desc: "Test notch/dynamic island spacing, bottom sheet safe areas, tap targets, and performance.",
         },
         {
@@ -2608,7 +2608,7 @@ export function getServiceDetailSpec(service: CanonicalServiceItem): ServiceDeta
         },
         {
           step: 4,
-          title: "Editorial QA & Hashtag Optimization",
+          title: "Editorial Review & Hashtag Optimization",
           desc: "Review hashtag clusters, post timing schedules, and channel-specific best practices.",
         },
         {

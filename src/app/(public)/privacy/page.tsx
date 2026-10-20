@@ -22,7 +22,7 @@ export default function PrivacyPage() {
               Privacy Directive & Vault Isolation
             </h1>
             <p className="text-xs sm:text-sm text-[#64748B]">
-              Last updated: October 2026 • Version 1.4
+              Last updated: October 2026 • Official Privacy Policy
             </p>
           </div>
 

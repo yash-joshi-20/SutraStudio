@@ -2336,7 +2336,7 @@ export default function OrdersPage() {
                   placeholder={
                     orderType === "service"
                       ? `e.g. ${activeServiceDetails.name} — Luxury Brand Launch`
-                      : "e.g. Q4 Studio Retainer Brand Refresh"
+                      : "e.g. Studio Retainer Brand Refresh"
                   }
                   value={commissionTitle}
                   onChange={(e) => setCommissionTitle(e.target.value)}
@@ -3380,9 +3380,9 @@ export default function OrdersPage() {
                     {/* Deliverable Status Pills */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 text-[11px]">
                       <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70">
-                        <span className="text-[10px] text-[#94A3B8] font-bold block">Deliverable Version</span>
+                        <span className="text-[10px] text-[#94A3B8] font-bold block">Deliverable Release</span>
                         <span className="font-semibold text-[#0F172A]">
-                          v{inspectingOrder.revisionRound ? inspectingOrder.revisionRound + 1 : 1}.0 Master
+                          {inspectingOrder.revisionRound ? `Release Edition ${inspectingOrder.revisionRound + 1}` : "Primary Master Release"}
                         </span>
                       </div>
                       <div className="p-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB]/70">

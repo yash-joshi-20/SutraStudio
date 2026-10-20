@@ -284,7 +284,7 @@ export function PricingCatalogSection({
                         </div>
                         <div className="flex items-center gap-1.5 font-medium text-[#0F172A]">
                           <span className="w-4 h-4 rounded-full bg-[#5C3A1E] text-white text-[9px] flex items-center justify-center font-bold">4</span>
-                          <span>Rigorous Studio QA &amp; Color Calibration</span>
+                          <span>Rigorous Studio Quality &amp; Color Calibration</span>
                         </div>
                         <div className="flex items-center gap-1.5 font-medium text-[#0F172A]">
                           <span className="w-4 h-4 rounded-full bg-[#5C3A1E] text-white text-[9px] flex items-center justify-center font-bold">5</span>

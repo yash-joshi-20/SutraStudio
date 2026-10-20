@@ -1241,7 +1241,7 @@ export const SEED_CATALOG_PLANS: CatalogPlan[] = [
       "Brand relevance review & custom prompt engineering",
       "Complete captions, hooks & targeted hashtag bundles",
       "30-Day coordinated content calendar",
-      "Rigorous studio quality checks & QA on every deliverable",
+      "Rigorous studio quality checks & validation on every deliverable",
       "Organized private Google Drive Vault delivery",
       "1 consolidated revision round per deliverable",
     ],

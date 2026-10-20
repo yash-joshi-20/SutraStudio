@@ -22,7 +22,7 @@ export default function TermsPage() {
               Terms of Creative Engagement
             </h1>
             <p className="text-xs sm:text-sm text-[#64748B]">
-              Last updated: October 2026 • Version 2.1
+              Last updated: October 2026 • Official Terms of Engagement
             </p>
           </div>
 

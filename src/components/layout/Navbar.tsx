@@ -41,7 +41,7 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [announcement, setAnnouncement] = useState<{ active: boolean; text: string }>({
     active: true,
-    text: "Now Booking Q4 Autonomous Retainers • Instant Zero-Fee UPI Direct Checkout",
+    text: "Now Booking Creative Studio Retainers & Custom Commissions • Instant Direct Checkout",
   });
   const drawerRef = useRef<HTMLDivElement>(null);
 

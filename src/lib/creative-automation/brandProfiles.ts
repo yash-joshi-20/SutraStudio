@@ -12,14 +12,14 @@ export const DEFAULT_SUTRA_STUDIO_BRAND: BrandProfile = {
   id: "brand-sutra-flagship",
   clientUid: "admin-sutra-master",
   brandName: "Sutra Studio",
-  tagline: "Tradition Meets Autonomous Technology",
+  tagline: "Tradition Meets Contemporary Creative Engineering",
   industry: "Creative Technology & Digital Studio",
   region: "India / Global",
   website: "https://sutrastudio.com",
   targetAudience:
     "Design directors, agency founders, high-growth startups, luxury D2C brands, and modern developers seeking bespoke digital experiences and autonomous creative workflows.",
   productsAndServices: [
-    "AI Automation Pipeline & Creative Automation Studio",
+    "Creative Engineering & Brand Studio",
     "Digital Platform Engineering (Next.js 16, React 19, TypeScript)",
     "Interactive 3D Spatial Walkthroughs & Three.js 360° Viewers",
     "Luxury Brand Identity Systems & Motion Design",

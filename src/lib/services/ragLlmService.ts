@@ -157,7 +157,7 @@ export const MASTER_RAG_KNOWLEDGE_STORE: KnowledgeRecord[] = [
    • Brand relevance review & creative direction planning
    • Complete captions, hooks, and targeted hashtag sets
    • 30-Day coordinated content calendar
-   • Rigorous studio QA & 1 consolidated revision round per deliverable
+   • Rigorous studio quality reviews & 1 consolidated revision round per deliverable
    • Organized private Google Drive Vault delivery`,
     source: "Sutra Studio Commercial Pricing",
     status: "approved",

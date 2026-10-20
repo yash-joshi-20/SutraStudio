@@ -86,7 +86,7 @@ export async function POST(req: Request) {
       status: n8nResult.status,
       action: action || "dispatch",
       timestamp: new Date().toISOString(),
-      governance: "Sutra Studio Workflow Orchestrator v2.0",
+      governance: "Sutra Studio Workflow Orchestrator Master",
     });
   } catch (error) {
     return NextResponse.json(

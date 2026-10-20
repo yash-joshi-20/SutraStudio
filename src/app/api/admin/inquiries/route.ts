@@ -22,7 +22,7 @@ const INITIAL_DEMO_INQUIRIES = [
     parsedIntent: "High-Intent Commercial Inquiry: 4K Spatial Renders & Cinematic Video Ad",
     sentimentScore: 0.94,
     reasoningSummary: "Client requesting 5 luxury exterior renders and timeline for hospitality villa. Automatically quoted standalone 5x 4K render pack (₹499) and Starter package (₹1,999) with 24-48h SLA and zero-fee UPI settlement.",
-    dispatchRail: "Meta WhatsApp Cloud API (Graph v21.0 / Phone +91 82001 92781)",
+    dispatchRail: "Meta WhatsApp Cloud API (Phone +91 82001 92781)",
     pricingMentioned: { starter: "₹1,999", growth: "₹4,999", retainer: "₹9,999", upi: "yashjoshi7355-1@okicici" },
   },
   {
@@ -32,7 +32,7 @@ const INITIAL_DEMO_INQUIRIES = [
     maskedFrom: "pr***@heritagejewels.in",
     name: "Priya Mehta (Heritage Jewels)",
     query: "Looking for a monthly retainer for high-end 3D jewelry showcases, social media reels, and Meta ad creatives for our Diwali launch.",
-    response: "Namaste Priya! Our **Autonomous Growth Retainer (₹9,999/month)** is tailor-made for luxury brand campaigns. It provides daily active queue fulfillment, unlimited 8K renders, daily social drops, high-converting Meta ad packages, and dedicated art direction. Direct settlement can be completed to `yashjoshi7355-1@okicici` or through our studio dashboard.",
+    response: "Namaste Priya! Our **Growth Studio Retainer (₹9,999/month)** is tailor-made for luxury brand campaigns. It provides daily active queue fulfillment, unlimited 8K renders, daily social drops, high-converting Meta ad packages, and dedicated art direction. Direct settlement can be completed to `yashjoshi7355-1@okicici` or through our studio dashboard.",
     status: "Delivered",
     deliveryNote: "Delivered via Zoho SMTP (yashjoshi20@zohomail.in)",
     timestamp: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
@@ -56,7 +56,7 @@ const INITIAL_DEMO_INQUIRIES = [
     parsedIntent: "Gujarati Regional Inbound: 15 Spatial Renders + 3 Video Reels",
     sentimentScore: 0.91,
     reasoningSummary: "Gujarati commercial client inquiring about multi-asset growth package. Auto-translated intent and dispatched Gujarati response quoting Studio Growth tier (₹4,999) with direct UPI.",
-    dispatchRail: "Meta WhatsApp Cloud API (Graph v21.0 / Phone +91 82001 92781)",
+    dispatchRail: "Meta WhatsApp Cloud API (Phone +91 82001 92781)",
     pricingMentioned: { starter: "₹1,999", growth: "₹4,999", retainer: "₹9,999", upi: "yashjoshi7355-1@okicici" },
   },
 ];

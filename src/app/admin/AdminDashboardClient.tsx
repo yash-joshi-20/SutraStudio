@@ -504,7 +504,7 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
       responseSla: "All inquiries receive a response within 2 hours during studio business hours.",
     },
     header: {
-      announcementBarText: "Now Booking Q4 Autonomous Retainers • Instant Zero-Fee UPI Direct Checkout",
+      announcementBarText: "Now Booking Creative Studio Retainers & Custom Commissions • Instant Direct Checkout",
       announcementActive: true,
       navigationItems: [
         { label: "Services", href: "/services" },
@@ -5342,7 +5342,7 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
                               </div>
 
                               <div className="pt-2 border-t border-[#E5E1D8] flex items-center justify-between">
-                                <span className="text-[10px] text-[#8C827A]">{item.version || "v1.0"}</span>
+                                <span className="text-[10px] text-[#8C827A]">{item.version ? `Asset ${item.version}` : "Final Master"}</span>
                                 <a
                                   href={item.downloadUrl || item.previewUrl}
                                   target="_blank"

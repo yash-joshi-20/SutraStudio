@@ -510,7 +510,7 @@ export default async function ServiceDetailPage({
           <h2 className="text-xs font-bold uppercase tracking-wider text-[#5C3A1E] flex items-center gap-1.5">
             <Sparkles className="w-4 h-4 text-[#D4A35A]" />
             5-Step Production Process (Research → Creative Direction →
-            Production → Studio QA → Delivery Vault)
+            Production → Studio Review → Delivery Vault)
           </h2>
           <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             {spec.productionSteps.map((step) => (

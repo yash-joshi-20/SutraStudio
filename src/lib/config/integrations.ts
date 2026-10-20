@@ -362,7 +362,7 @@ export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
     name: "n8n Workflow Automation",
     group: "Automation",
     description: "Background orchestration engine handling W1-W8 automated order fulfillment, approval hooks, and monthly retainer dispatch.",
-    features: ["W1-W8 Orchestration", "Async Background Fulfillment", "Admin Approval Webhooks", "Discipline 12: AI Automation"],
+    features: ["W1-W8 Orchestration", "Async Background Fulfillment", "Admin Approval Webhooks", "Discipline 12: Creative Engineering"],
     priority: "HIGH",
     whereToGet: "Cloud n8n Dashboard (https://n8n.sutrastudios.in) or hosted instance",
     requirements: [

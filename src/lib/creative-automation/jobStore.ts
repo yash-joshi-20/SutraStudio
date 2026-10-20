@@ -501,9 +501,9 @@ if (MEMORY_JOB_CACHE.size === 0) {
   void CreativeJobStore.createJob({
     brandId: "brand-sutra-flagship",
     clientUid: "admin-sutra-master",
-    title: "Sutra Studio Autumn 2026 AI Automation Reel",
+    title: "Sutra Studio Autumn 2026 Creative Showcase Reel",
     brief: {
-      topic: "Autonomous Creative Automation",
+      topic: "Creative Studio Production",
       targetAudience: "Creative Agency Founders",
       keyMessage: "Deliver bespoke digital experiences in 48 hours without burning out.",
       tone: "luxury_atelier",

@@ -208,7 +208,7 @@ export const DYNAMIC_8_STEP_PIPELINE: WorkflowStepConfig[] = [
   {
     stepIndex: 7,
     stepId: "step-07-quality-assurance",
-    name: "Automated QA & Executive Gate",
+    name: "Quality Review & Executive Gate",
     description: "Inspect output existence, file integrity, resolution, aspect ratio, frame rate, negative constraints, and present for Studio Administrator review.",
     capabilityType: "prompt_enhancement",
     preferredCapabilityId: "cap-local-template-engine",
@@ -269,7 +269,7 @@ export const MASTER_WORKFLOW_TEMPLATES: WorkflowDefinition[] = [
   {
     id: "wf-dynamic-8-master",
     name: "8-Step Master Creative Production Engine",
-    description: "Flagship production pipeline: Brief → Direction → Shot Planning → Image Gen → Video Gen → Editing → QA Gate → Google Drive Vault Delivery.",
+    description: "Flagship production pipeline: Brief → Direction → Shot Planning → Image Gen → Video Gen → Editing → Quality Review Gate → Google Drive Vault Delivery.",
     category: "cinematic_video",
     isDefault: true,
     steps: DYNAMIC_8_STEP_PIPELINE,

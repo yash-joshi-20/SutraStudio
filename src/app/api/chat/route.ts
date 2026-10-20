@@ -57,7 +57,7 @@ function classifyPrompt(prompt: string) {
     return { service: "Meta Ads & Digital Marketing", serviceId: "meta-ads", workflowType: "marketing", confidence: 0.90 };
   }
   if (p.includes("automation") || p.includes("n8n") || p.includes("sync") || p.includes("webhook") || p.includes("ઓટોમેશન")) {
-    return { service: "AI Automation", serviceId: "ai-automation", workflowType: "automation", confidence: 0.93 };
+    return { service: "Creative Engineering", serviceId: "creative-engineering", workflowType: "automation", confidence: 0.93 };
   }
 
   return { service: "Image Creation", serviceId: "img-creation", workflowType: "image", confidence: 0.88 };
