@@ -107,3 +107,6 @@ n8n/
 
 # TypeScript build cache
 *.tsbuildinfo
+
+# Local Manual QA & Test Assets (Do not upload to GitHub)
+local-testing-assets/
