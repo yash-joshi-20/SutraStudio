@@ -205,9 +205,10 @@ async function callImageProvider(
     }
 
     case "pollinations": {
-      // Pollinations uses URL-based generation
+      // Use resilient media endpoint with authenticated key & local studio fallback
       const encodedPrompt = encodeURIComponent(params.prompt);
-      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${mainFormat.width}&height=${mainFormat.height}&nologo=true&seed=${Date.now()}`;
+      const appBase = process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudios.in";
+      const imageUrl = `${appBase}/api/media/image?prompt=${encodedPrompt}&w=${mainFormat.width}&h=${mainFormat.height}&seed=${Date.now()}`;
       
       return {
         success: true,

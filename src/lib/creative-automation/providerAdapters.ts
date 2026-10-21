@@ -176,7 +176,10 @@ export class PollinationsImageAdapter implements AIProviderAdapter {
     const seed = task.seed || Math.floor(Math.random() * 1000000);
 
     const encodedPrompt = encodeURIComponent(task.prompt);
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true`;
+    const apiKey = readEnv("POLLINATIONS_API_KEY") || readEnv("NEXT_PUBLIC_POLLINATIONS_KEY") || "";
+    const imageUrl = apiKey
+      ? `https://gen.pollinations.ai/image/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true&key=${apiKey}`
+      : `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true&model=turbo`;
 
     return {
       success: true,

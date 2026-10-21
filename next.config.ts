@@ -14,6 +14,10 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "gen.pollinations.ai",
+      },
+      {
+        protocol: "https",
         hostname: "raw.githubusercontent.com",
       },
       {

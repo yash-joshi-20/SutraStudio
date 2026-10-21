@@ -54,12 +54,11 @@ export async function runAgencySelfPromotionWorkflow(options?: {
   const finalTheme = options?.customTheme || concept.theme;
   const finalImagePrompt = options?.customPrompt || concept.imagePrompt;
   const encodedImagePrompt = encodeURIComponent(finalImagePrompt);
-  const imageUrl = `https://image.pollinations.ai/prompt/${encodedImagePrompt}?width=1200&height=800&model=flux&nologo=true&seed=${seedImage}`;
+  const fallbackImage = concept.curatedImageUrl || "/images/projects/proj-villa.webp";
+  const imageUrl = `/api/media/image?prompt=${encodedImagePrompt}&width=1200&height=800&fallback=${encodeURIComponent(fallbackImage)}&seed=${seedImage}`;
 
-  const encodedReelPrompt = encodeURIComponent(concept.reelPrompt);
-  const reelImageUrl = `https://image.pollinations.ai/prompt/${encodedReelPrompt}?width=1080&height=1920&model=flux&nologo=true&seed=${seedReel}`;
-  const videoUrl =
-    "https://assets.mixkit.co/videos/preview/mixkit-modern-apartment-with-panoramic-view-40742-large.mp4";
+  // Commercial video reel asset (authentic 9:16 vertical MP4 video)
+  const videoUrl = concept.curatedVideoUrl || "/videos/services/ai-video-mobile.mp4";
 
   const facebookPageId = readEnv("FACEBOOK_PAGE_ID") || "61594200943169";
   const instagramHandle = readEnv("INSTAGRAM_HANDLE") || "yashsutrastudio";
@@ -87,7 +86,7 @@ export async function runAgencySelfPromotionWorkflow(options?: {
     id: `pub_reel_${now + 1}`,
     title: concept.reelTitle,
     caption: `${concept.reelCaption}\n\nNarrative: "${concept.voiceoverScript}"\n${concept.hashtags.join(" ")}`,
-    mediaUrl: reelImageUrl,
+    mediaUrl: videoUrl,
     mediaType: "video",
     targetPage: "yashsutrastudio",
     targetIg: instagramHandle,

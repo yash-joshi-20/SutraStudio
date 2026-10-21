@@ -91,7 +91,7 @@ export async function POST(req: Request) {
       campaignType = "daily_trend_creator",
       platform = "instagram_reel",
       language = "english",
-      mediaUrl = "/videos/hero/hero-mobile.mp4",
+      mediaUrl = "/videos/services/ai-video-mobile.mp4",
       mediaType = "video",
       customPrompt = "",
     } = body;

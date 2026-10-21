@@ -123,22 +123,23 @@ export class InteriorDesignPipelineService {
       `luxury interior architecture of ${input.roomType.replace(/_/g, " ")}, ${input.aestheticStyle.replace(/_/g, " ")}, calacatta gold marble, white oak woodwork, brushed brass accents, 3000K warm natural lighting, Hasselblad 8k photography, bespoke editorial design`
     );
 
+    const appBase = process.env.NEXT_PUBLIC_APP_URL || "https://sutrastudios.in";
     const generatedRenders = [
       {
         viewAngle: "Primary Wide Angle Perspective",
-        url: `https://image.pollinations.ai/prompt/${basePrompt}%2C%20wide%20angle%20perspective?width=1920&height=1080&nologo=true&seed=${seed}`,
+        url: `${appBase}/api/media/image?prompt=${basePrompt}%2C%20wide%20angle%20perspective&discipline=interior-design&fallback=images/projects/proj-interior.webp&w=1920&h=1080&seed=${seed}`,
         resolution: "1920x1080 (FHD)",
         caption: `Spatial Overview of ${roomLabel}`,
       },
       {
         viewAngle: "Vignette & Material Junction Detail",
-        url: `https://image.pollinations.ai/prompt/${basePrompt}%2C%20close%20up%20architectural%20vignette%20detail?width=1080&height=1350&nologo=true&seed=${seed + 1}`,
+        url: `${appBase}/api/media/image?prompt=${basePrompt}%2C%20close%20up%20architectural%20vignette%20detail&discipline=interior-design&fallback=images/projects/proj-villa.webp&w=1080&h=1350&seed=${seed + 1}`,
         resolution: "1080x1350 (4:5 Editorial)",
         caption: `Material Interface Detail (Marble + Brass + Fluted Wood)`,
       },
     ];
 
-    const moodboardUrl = `https://image.pollinations.ai/prompt/${basePrompt}%2C%20architectural%20materials%20moodboard%20grid%20flatlay?width=1200&height=800&nologo=true&seed=${seed + 2}`;
+    const moodboardUrl = `${appBase}/api/media/image?prompt=${basePrompt}%2C%20architectural%20materials%20moodboard%20grid%20flatlay&discipline=interior-design&fallback=images/services/interior-design.webp&w=1200&h=800&seed=${seed + 2}`;
 
     // 4. Clearly define what requires physical human architect clearance
     const humanTeamActionRequired = {

@@ -351,7 +351,7 @@ export class N8nAutomationService {
       }
     }
     const imagePrompt = encodeURIComponent(imagePromptText);
-    const imagePreviewUrl = `https://image.pollinations.ai/prompt/${imagePrompt}?width=1200&height=800&nologo=true&seed=${promptSeed}`;
+    const imagePreviewUrl = `${appBase}/api/media/image?prompt=${imagePrompt}&seed=${promptSeed}&fallback=images/projects/proj-villa.webp&w=1200&h=800`;
 
     const imageDeliverable = {
       driveFileId: `drive_n8n_${runId}_img`,
@@ -440,7 +440,7 @@ export class N8nAutomationService {
       checksum: `sha256:${Math.random().toString(36).substring(2, 14)}`,
       fileSize: "24.6 MB",
       mimeType: "model/gltf-binary",
-      previewUrl: "https://image.pollinations.ai/prompt/luxury%20modern%20armchair%203d%20render%2C%20emerald%20velvet%20and%20brushed%20brass%2C%20studio%20lighting%2C%20isolated%20on%20warm%20ivory%20plinth%2C%20octane%20render%2C%208k?width=1200&height=800&nologo=true",
+      previewUrl: `${appBase}/images/projects/sutra-watch-3d.jpg`,
       downloadUrl: `${appBase}/videos/services/spatial-3d-desktop.mp4`,
       category: "draft",
       version: "v1.0",
@@ -477,7 +477,7 @@ export class N8nAutomationService {
 
     // Vector Logo & Identity Deliverables
     const logoPrompt = encodeURIComponent(`minimalist luxury vector logo emblem for ${brand}, modern geometric luxury mark, warm brass metallic lines on pure ivory background, clean typography, high end branding, vector symbol`);
-    const logoPreviewUrl = `https://image.pollinations.ai/prompt/${logoPrompt}?width=1000&height=1000&nologo=true&seed=${promptSeed}`;
+    const logoPreviewUrl = `${appBase}/brand/sutra-logo-primary.png`;
 
     const logoVectorDeliverable = {
       driveFileId: `drive_n8n_${runId}_logo_svg`,

@@ -36,6 +36,8 @@ import {
   DollarSign,
   Activity,
   Zap,
+  Maximize2,
+  X,
 } from "lucide-react";
 import type { GeneratedPromotionData } from "@/app/api/admin/promotions/generate/route";
 
@@ -68,60 +70,68 @@ interface MediaPreset {
 
 const PRESET_MEDIA: MediaPreset[] = [
   {
-    id: "hero_reel",
-    title: "Master Studio Showreel (Vertical 4K)",
-    url: "/videos/hero/hero-mobile.mp4",
-    type: "video",
-    thumbnailUrl: "/videos/hero/hero-poster.webp",
-    tag: "Flagship Showreel",
-  },
-  {
     id: "ai_video_reel",
-    title: "AI Video & Commercial CGI Motion",
+    title: "Commercial AI Video & Marketing Ad Reel",
     url: "/videos/services/ai-video-mobile.mp4",
     type: "video",
     thumbnailUrl: "/videos/services/ai-video-poster.webp",
-    tag: "Commercial Reel",
+    tag: "Commercial Ad Reel",
   },
   {
     id: "spatial_3d_reel",
-    title: "Spatial 3D Architecture & Lighting Reel",
+    title: "Spatial 3D Architecture & Luxury Real Estate",
     url: "/videos/services/spatial-3d-mobile.mp4",
     type: "video",
     thumbnailUrl: "/videos/services/spatial-3d-poster.webp",
-    tag: "3D Spatial CGI",
+    tag: "3D Spatial Ad",
   },
   {
-    id: "watch_cgi",
-    title: "Luxury Horology 3D Masterpiece",
-    url: "/images/projects/sutra-watch-3d.jpg",
-    type: "image",
-    thumbnailUrl: "/images/projects/sutra-watch-3d.jpg",
-    tag: "3D Product CGI",
+    id: "studio_reel",
+    title: "Sutra Studio Agency Commercial Showcase",
+    url: "/videos/studio/studio-reel-mobile.mp4",
+    type: "video",
+    thumbnailUrl: "/videos/studio/studio-poster.webp",
+    tag: "Agency Flagship Ad",
   },
   {
-    id: "cosmetic_cgi",
-    title: "Haute Cosmetic Photorealism",
-    url: "/images/projects/sutra-cosmetic-render.jpg",
-    type: "image",
-    thumbnailUrl: "/images/projects/sutra-cosmetic-render.jpg",
-    tag: "Luxury Visual",
+    id: "app_demo",
+    title: "Interactive Tech & Mobile App Commercial",
+    url: "/videos/app/app-demo-mobile.mp4",
+    type: "video",
+    thumbnailUrl: "/videos/app/app-demo-poster.webp",
+    tag: "Digital Flagship Ad",
   },
   {
     id: "villa_arch",
-    title: "Modern Architectural Villa Viz",
+    title: "Modern Architectural Villa Viz (4K Still)",
     url: "/images/projects/proj-villa.webp",
     type: "image",
     thumbnailUrl: "/images/projects/proj-villa.webp",
-    tag: "Architectural 4K",
+    tag: "Architectural 4K Ad",
   },
   {
-    id: "velocity_spatial",
-    title: "Koenigsegg Spatial Automotive CGI",
-    url: "/images/projects/koenigsegg-velocity.png",
+    id: "watch_cgi",
+    title: "Luxury Horology 3D Masterpiece (4K Still)",
+    url: "/images/projects/sutra-watch-3d.jpg",
     type: "image",
-    thumbnailUrl: "/images/projects/koenigsegg-velocity.png",
-    tag: "Automotive CGI",
+    thumbnailUrl: "/images/projects/sutra-watch-3d.jpg",
+    tag: "3D Product Ad",
+  },
+  {
+    id: "cosmetic_cgi",
+    title: "Haute Cosmetic Photorealism (4K Still)",
+    url: "/images/projects/sutra-cosmetic-render.jpg",
+    type: "image",
+    thumbnailUrl: "/images/projects/sutra-cosmetic-render.jpg",
+    tag: "Luxury Visual Ad",
+  },
+  {
+    id: "ads_campaign",
+    title: "High-ROAS Meta Ad Variations (4K Still)",
+    url: "/images/projects/proj-ads.webp",
+    type: "image",
+    thumbnailUrl: "/images/projects/proj-ads.webp",
+    tag: "Performance Ad",
   },
 ];
 
@@ -133,6 +143,9 @@ const CAMPAIGN_PRESETS = [
     badge: "Most Popular",
     desc: "30 Commercial Video Reels / Month. 48h turnaround, 4K rendering.",
     icon: Flame,
+    videoUrl: "/videos/services/ai-video-mobile.mp4",
+    imageUrl: "/images/projects/proj-villa.webp",
+    disciplineId: "visuals-motion",
   },
   {
     id: "starter_trend",
@@ -141,6 +154,9 @@ const CAMPAIGN_PRESETS = [
     badge: "High Conversion",
     desc: "15 Commercial Social Reels & Visual Carousels.",
     icon: Sparkles,
+    videoUrl: "/videos/studio/studio-reel-mobile.mp4",
+    imageUrl: "/images/projects/proj-ads.webp",
+    disciplineId: "digital-marketing-ads",
   },
   {
     id: "commercial_video_reels",
@@ -149,6 +165,9 @@ const CAMPAIGN_PRESETS = [
     badge: "Entry Service",
     desc: "Scroll-stopping CGI motion reels and product animations.",
     icon: VideoIcon,
+    videoUrl: "/videos/services/ai-video-mobile.mp4",
+    imageUrl: "/images/projects/sutra-watch-3d.jpg",
+    disciplineId: "3d-modeling",
   },
   {
     id: "spatial_3d_render",
@@ -157,6 +176,9 @@ const CAMPAIGN_PRESETS = [
     badge: "High Ticket",
     desc: "Photorealistic 4K interior & exterior architectural renders.",
     icon: Layers,
+    videoUrl: "/videos/services/spatial-3d-mobile.mp4",
+    imageUrl: "/images/projects/proj-interior.webp",
+    disciplineId: "interior-design",
   },
   {
     id: "brand_identity_launch",
@@ -165,6 +187,9 @@ const CAMPAIGN_PRESETS = [
     badge: "Atelier Suite",
     desc: "Timeless brand system uniting heritage Vedic proportion with code.",
     icon: Globe,
+    videoUrl: "/videos/studio/studio-reel-mobile.mp4",
+    imageUrl: "/images/projects/sutra-cosmetic-render.jpg",
+    disciplineId: "brand-identity",
   },
   {
     id: "custom",
@@ -173,6 +198,9 @@ const CAMPAIGN_PRESETS = [
     badge: "Custom Focus",
     desc: "Targeted self-promotion with your custom brief and offer.",
     icon: Sliders,
+    videoUrl: "/videos/services/ai-video-mobile.mp4",
+    imageUrl: "/images/projects/proj-villa.webp",
+    disciplineId: "visuals-motion",
   },
 ];
 
@@ -210,6 +238,45 @@ export function MetaPromotionStudio() {
   const [isSaved, setIsSaved] = useState(false);
   const [captionExpanded, setCaptionExpanded] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // High-Resolution Lightbox Modal State
+  const [lightboxMedia, setLightboxMedia] = useState<{
+    url: string;
+    type: "image" | "video";
+    title: string;
+    caption?: string;
+  } | null>(null);
+
+  const toggleMute = () => {
+    const nextMuted = !isMuted;
+    setIsMuted(nextMuted);
+    if (audioRef.current) {
+      if (!nextMuted) {
+        audioRef.current.currentTime = videoRef.current?.currentTime || 0;
+        audioRef.current.play().catch(() => {});
+      } else {
+        audioRef.current.pause();
+      }
+    }
+    if (videoRef.current) {
+      videoRef.current.muted = nextMuted;
+    }
+  };
+
+  const handleSelectCampaign = (campaignId: string) => {
+    setSelectedCampaign(campaignId);
+    const preset = CAMPAIGN_PRESETS.find((c) => c.id === campaignId);
+    if (preset) {
+      const matched = PRESET_MEDIA.find((m) => m.url === (preset as any).videoUrl);
+      if (matched) {
+        setSelectedMedia(matched);
+        setCustomMediaUrl("");
+      } else if ((preset as any).videoUrl) {
+        setCustomMediaUrl((preset as any).videoUrl);
+      }
+    }
+  };
 
   // Load saved promotions and meta campaigns on mount
   useEffect(() => {
@@ -235,15 +302,48 @@ export function MetaPromotionStudio() {
     setIsDispatchingDailyPromo(true);
     setActionNotice(null);
     try {
+      const activePreset = CAMPAIGN_PRESETS.find((c) => c.id === selectedCampaign);
       const res = await fetch("/api/admin/marketing/dispatch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
+        body: JSON.stringify({
+          disciplineId: (activePreset as any)?.disciplineId || "visuals-motion",
+          prompt: customPrompt.trim() || undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to dispatch daily self-promotion");
       setDailyPromoResult(data);
-      setActionNotice("✓ Success: Today's 4K Post & Video Reel synthesized & staged for Instagram & Facebook!");
+
+      // Automatically stage the real commercial video reel into phone mockup
+      if (data.videoReel?.mediaUrl) {
+        setCustomMediaUrl(data.videoReel.mediaUrl);
+        setPlatform("instagram_reel");
+        setIsPlaying(true);
+      }
+
+      // Automatically sync dynamic ad copy to the phone screen
+      if (data.concept) {
+        setCurrentPromotion({
+          id: data.runId,
+          campaignType: selectedCampaign,
+          platform: "instagram_reel",
+          language,
+          title: data.concept.imageTitle || data.imagePost?.title || "Daily Commercial Drop",
+          hook: data.concept.voiceoverScript || data.concept.imageTitle || "High-Velocity Commercial Visuals",
+          caption: data.imagePost?.caption || data.concept.imageCaption || "",
+          hashtags: data.concept.hashtags || [],
+          mediaUrl: data.videoReel?.mediaUrl || data.imagePost?.mediaUrl,
+          mediaType: "video",
+          ctaUrl: "https://sutrastudios.in/pricing",
+          whatsappUrl: `https://wa.me/918200192781?text=${encodeURIComponent(
+            `Hello Sutra Studio! I am reviewing today's 4K Commercial Drop: "${data.concept.imageTitle}". I want to book this for my brand.`
+          )}`,
+          createdAt: new Date().toISOString(),
+        });
+      }
+
+      setActionNotice("✓ Success: Today's 4K Post & Commercial Video Reel synthesized & staged for Instagram & Facebook!");
     } catch (err: any) {
       setActionNotice(`Error: ${err.message || err}`);
     } finally {
@@ -541,7 +641,7 @@ export function MetaPromotionStudio() {
                 <p className="text-[11px] text-[#64748B] line-clamp-1">
                   {dailyPromoResult.imagePost?.title || "Master 4K Commercial Visual"}
                 </p>
-                <div className="flex items-center gap-2 pt-1 text-[10px]">
+                <div className="flex items-center gap-2 pt-1 text-[10px] flex-wrap">
                   <a
                     href={dailyPromoResult.imagePost?.mediaUrl}
                     target="_blank"
@@ -550,6 +650,20 @@ export function MetaPromotionStudio() {
                   >
                     <Eye className="w-3 h-3" /> View 4K Master
                   </a>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLightboxMedia({
+                        url: dailyPromoResult.imagePost?.mediaUrl,
+                        type: "image",
+                        title: dailyPromoResult.imagePost?.title || "1x 4K Master Post",
+                        caption: dailyPromoResult.imagePost?.caption,
+                      });
+                    }}
+                    className="text-[#5C3A1E] hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+                  >
+                    <Maximize2 className="w-3 h-3 text-[#A98B57]" /> Quick View
+                  </button>
                 </div>
               </div>
 
@@ -565,14 +679,46 @@ export function MetaPromotionStudio() {
                 <p className="text-[11px] text-[#64748B] line-clamp-1">
                   {dailyPromoResult.videoReel?.title || "4K Kinetic Showreel"}
                 </p>
-                <div className="flex items-center gap-2 pt-1 text-[10px]">
+                <div className="flex items-center gap-2 pt-1 text-[10px] flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (dailyPromoResult.videoReel?.mediaUrl) {
+                        setCustomMediaUrl(dailyPromoResult.videoReel.mediaUrl);
+                        setPlatform("instagram_reel");
+                        setIsPlaying(true);
+                        setIsMuted(false);
+                        if (audioRef.current) {
+                          audioRef.current.currentTime = 0;
+                          audioRef.current.play().catch(() => {});
+                        }
+                      }
+                    }}
+                    className="text-[#A98B57] hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+                  >
+                    <Play className="w-3 h-3 fill-current" /> Preview in Mockup
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLightboxMedia({
+                        url: dailyPromoResult.videoReel?.mediaUrl,
+                        type: "video",
+                        title: dailyPromoResult.videoReel?.title || "1x Commercial Motion Reel",
+                        caption: dailyPromoResult.videoReel?.caption,
+                      });
+                    }}
+                    className="text-[#5C3A1E] hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+                  >
+                    <Maximize2 className="w-3 h-3 text-[#A98B57]" /> Fullscreen
+                  </button>
                   <a
                     href={dailyPromoResult.videoReel?.mediaUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[#A98B57] hover:underline flex items-center gap-1 font-semibold"
+                    className="text-[#64748B] hover:underline flex items-center gap-1 font-semibold"
                   >
-                    <Play className="w-3 h-3" /> Preview Reel Video
+                    <ExternalLink className="w-3 h-3" /> Open
                   </a>
                 </div>
               </div>
@@ -639,7 +785,7 @@ export function MetaPromotionStudio() {
                   <button
                     key={c.id}
                     type="button"
-                    onClick={() => setSelectedCampaign(c.id)}
+                    onClick={() => handleSelectCampaign(c.id)}
                     className={`p-3.5 rounded-xl text-left border transition-all cursor-pointer flex flex-col justify-between space-y-2.5 ${
                       isSelected
                         ? "bg-[#171717] text-white border-[#171717] shadow-sm ring-1 ring-[#A98B57]"
@@ -989,6 +1135,9 @@ export function MetaPromotionStudio() {
 
             {/* Screen Inner Display */}
             <div className="relative w-full aspect-[9/16] rounded-[34px] overflow-hidden bg-black flex flex-col justify-between text-white select-none">
+              {/* Synchronized Commercial Audio Soundtrack */}
+              <audio ref={audioRef} src="/audio/commercial-ambient.wav" loop />
+
               {/* Media Layer (Video or Image) */}
               <div className="absolute inset-0 z-0">
                 {activeMedia.type === "video" ? (
@@ -1010,27 +1159,62 @@ export function MetaPromotionStudio() {
                   />
                 )}
                 {/* Vignette Shadow for text readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/40 pointer-events-none" />
               </div>
+
+              {/* Tap to Unmute Overlay when Muted */}
+              {isMuted && (
+                <div
+                  onClick={toggleMute}
+                  className="absolute inset-0 z-10 flex items-center justify-center cursor-pointer pointer-events-auto"
+                >
+                  <div className="px-3.5 py-1.5 rounded-full bg-black/75 backdrop-blur-md border border-[#A98B57]/70 text-amber-200 text-[10px] font-bold flex items-center gap-1.5 shadow-xl animate-pulse hover:scale-105 transition-transform">
+                    <VolumeX className="w-3.5 h-3.5 text-[#A98B57]" />
+                    <span>🔊 Tap to Unmute Commercial Sound</span>
+                  </div>
+                </div>
+              )}
 
               {/* Top Bar inside Screen */}
               <div className="relative z-10 pt-7 px-4 flex items-center justify-between text-[11px] font-bold">
                 <span className="font-mono text-[10px] opacity-80">9:41</span>
-                <span className="font-bold tracking-wide text-xs">
-                  {platform === "meta_carousel" ? "Sutra Studio" : "Reels"}
-                </span>
+                <div className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="font-bold tracking-wide text-xs">
+                    {platform === "meta_carousel" ? "Sutra Studio" : "Reels"}
+                  </span>
+                </div>
                 <button
                   type="button"
-                  onClick={() => setIsMuted(!isMuted)}
-                  className="p-1.5 rounded-full bg-black/40 backdrop-blur-xs text-white/90 hover:bg-black/60 transition-colors"
-                  title={isMuted ? "Unmute" : "Mute"}
+                  onClick={toggleMute}
+                  className={`p-1.5 px-2.5 rounded-full backdrop-blur-xs text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                    isMuted
+                      ? "bg-black/60 text-white/90 hover:bg-black/80 border border-white/20"
+                      : "bg-[#A98B57] text-white shadow-sm ring-1 ring-amber-300"
+                  }`}
+                  title={isMuted ? "Unmute Commercial Audio" : "Mute Sound"}
                 >
-                  {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5 text-[#A98B57]" />}
+                  {isMuted ? (
+                    <>
+                      <VolumeX className="w-3.5 h-3.5" />
+                      <span>Muted</span>
+                    </>
+                  ) : (
+                    <>
+                      <Volume2 className="w-3.5 h-3.5 text-amber-200 animate-pulse" />
+                      <span className="flex items-center gap-0.5">
+                        <span className="w-0.5 h-2 bg-amber-200 rounded-full animate-bounce" />
+                        <span className="w-0.5 h-3 bg-amber-200 rounded-full animate-bounce [animation-delay:0.15s]" />
+                        <span className="w-0.5 h-1.5 bg-amber-200 rounded-full animate-bounce [animation-delay:0.3s]" />
+                      </span>
+                      <span>Sound On</span>
+                    </>
+                  )}
                 </button>
               </div>
 
               {/* Right Floating Actions (Like, Comment, Share, Audio) */}
-              <div className="relative z-10 self-end mr-3 mb-16 flex flex-col items-center gap-4 text-center">
+              <div className="relative z-10 self-end mr-3 mb-10 flex flex-col items-center gap-3.5 text-center">
                 {/* Like Button */}
                 <button
                   type="button"
@@ -1083,15 +1267,21 @@ export function MetaPromotionStudio() {
                   </div>
                 </button>
 
-                {/* Spinning Audio Disc */}
-                <div className="w-8 h-8 rounded-full border border-white/40 bg-neutral-900 flex items-center justify-center animate-spin">
+                {/* Audio Disc with Animation */}
+                <div
+                  onClick={toggleMute}
+                  className={`w-8 h-8 rounded-full border border-white/40 bg-neutral-900 flex items-center justify-center cursor-pointer ${
+                    !isMuted ? "animate-spin" : ""
+                  }`}
+                  title="Commercial Soundtrack"
+                >
                   <span className="text-[9px]">🎵</span>
                 </div>
               </div>
 
               {/* Bottom Profile Info & Caption Overlay */}
-              <div className="relative z-10 p-4 space-y-2 pb-6">
-                {/* Account Header */}
+              <div className="relative z-10 p-4 space-y-2 pb-5">
+                {/* Account Header with Verified & Sponsored Tag */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full bg-white p-0.5 border border-[#A98B57] overflow-hidden shrink-0 shadow-xs">
@@ -1104,11 +1294,16 @@ export function MetaPromotionStudio() {
                       />
                     </div>
                     <div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1.5">
                         <span className="font-bold text-xs tracking-tight">yashsutrastudio</span>
                         <CheckCircle2 className="w-3 h-3 text-[#A98B57] fill-[#A98B57]" />
+                        <span className="px-1.5 py-0.2 rounded text-[8px] font-bold bg-[#A98B57]/30 text-amber-200 border border-[#A98B57]/50 uppercase tracking-wider">
+                          Sponsored Ad
+                        </span>
                       </div>
-                      <span className="text-[9px] text-white/70 block font-mono">Original Audio</span>
+                      <span className="text-[9px] text-white/80 block font-mono">
+                        🎵 Sutra Commercial Audio • 108 BPM
+                      </span>
                     </div>
                   </div>
 
@@ -1117,11 +1312,19 @@ export function MetaPromotionStudio() {
                   </span>
                 </div>
 
+                {/* Dynamic Commercial Ad Value Proposition Banner */}
+                <div className="p-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/15 space-y-1">
+                  <div className="flex items-center justify-between text-[9px] text-amber-300 font-mono font-bold">
+                    <span>COMMERCIAL AD OFFER</span>
+                    <span className="text-white/70">48h Pipeline</span>
+                  </div>
+                  <p className="font-serif font-bold text-xs text-white leading-tight">
+                    {currentPromotion?.hook || "Vedic Proportions • 4K Cinematic Commercials • Spatial 3D"}
+                  </p>
+                </div>
+
                 {/* Caption / Hook Preview */}
                 <div className="text-xs leading-snug drop-shadow-sm space-y-1">
-                  <p className="font-semibold text-[11px] text-amber-200">
-                    {currentPromotion?.hook || "Experience 4K Cinematic Reels & 3D Spatial Renders with Sutra Studio."}
-                  </p>
                   <p className={`text-[10px] text-white/90 ${captionExpanded ? "" : "line-clamp-2"}`}>
                     {currentPromotion?.caption ||
                       "Elevate your brand with high-precision computational visual engineering. Guaranteed 48-hour delivery. Reserve your monthly retainer slot."}
@@ -1140,10 +1343,10 @@ export function MetaPromotionStudio() {
                   href={currentPromotion?.whatsappUrl || "https://wa.me/918200192781"}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-2 rounded-xl bg-gradient-to-r from-[#A98B57] to-[#D4AF37] text-black font-bold text-xs text-center flex items-center justify-center gap-1.5 shadow-md active:scale-98 transition-transform cursor-pointer"
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#A98B57] via-[#D4AF37] to-[#A98B57] text-[#171717] font-bold text-xs text-center flex items-center justify-center gap-2 shadow-lg active:scale-98 transition-transform cursor-pointer hover:brightness-105"
                 >
-                  <span>Book Creative Pipeline via WhatsApp</span>
-                  <ExternalLink className="w-3 h-3" />
+                  <span>Inquire on WhatsApp • 48h Turnaround</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               </div>
             </div>
@@ -1666,6 +1869,81 @@ export function MetaPromotionStudio() {
           </div>
         )}
       </div>
+
+      {/* FULLSCREEN LIGHTBOX PREVIEW MODAL */}
+      {lightboxMedia && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setLightboxMedia(null)}
+        >
+          <div
+            className="relative max-w-4xl w-full bg-[#171717] border border-[#A98B57]/40 rounded-2xl overflow-hidden shadow-2xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-4 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between text-white">
+              <div>
+                <h3 className="font-serif font-bold text-base text-amber-100">
+                  {lightboxMedia.title}
+                </h3>
+                <span className="text-[11px] text-neutral-400 font-mono">
+                  {lightboxMedia.type === "video" ? "9:16 Commercial Motion Reel" : "4K Master Commercial Visual"}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href={lightboxMedia.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-xs font-semibold text-amber-300 flex items-center gap-1.5 transition-colors"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Open Full Media</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setLightboxMedia(null)}
+                  className="p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Media Body */}
+            <div className="p-4 bg-black flex items-center justify-center min-h-[360px] max-h-[75vh] overflow-hidden">
+              {lightboxMedia.type === "video" ? (
+                <video
+                  src={lightboxMedia.url}
+                  controls
+                  autoPlay
+                  loop
+                  playsInline
+                  className="max-h-[70vh] rounded-xl object-contain shadow-lg"
+                />
+              ) : (
+                <img
+                  src={lightboxMedia.url}
+                  alt={lightboxMedia.title}
+                  className="max-h-[70vh] w-auto rounded-xl object-contain shadow-lg"
+                />
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            {lightboxMedia.caption && (
+              <div className="p-4 bg-neutral-900 border-t border-neutral-800 text-xs text-neutral-300 space-y-1">
+                <span className="font-bold text-amber-200 block text-[11px] uppercase tracking-wider font-mono">
+                  Ad Caption &amp; Narrative
+                </span>
+                <p className="whitespace-pre-line text-[11px] max-h-24 overflow-y-auto">
+                  {lightboxMedia.caption}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
