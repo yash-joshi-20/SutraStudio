@@ -2006,6 +2006,12 @@ export const SUTRA_SERVICES_CONFIG: ServiceDefinition[] = [
  */
 export const SERVICE_SLUG_ALIASES: Record<string, string> = {
   // Legacy aliases
+  "des-logo-design": "image-logo-concept",
+  "logo-design": "image-logo-concept",
+  "logo-concept": "image-logo-concept",
+  "logo": "image-logo-concept",
+  "reel": "video-10-15s-ai-reel",
+  "ai-reel": "video-10-15s-ai-reel",
   "visuals-and-motion": "image-creation",
   "visuals-motion": "image-creation",
   "img-creation": "image-creation",
@@ -2030,7 +2036,8 @@ export function findServiceById(id: string): CanonicalServiceItem | undefined {
   const cleanId = id.toLowerCase().trim();
   return (
     CANONICAL_SERVICES.find((s) => s.id.toLowerCase() === cleanId) ||
-    SUTRA_SERVICES_CONFIG.find((s) => s.id.toLowerCase() === cleanId)
+    SUTRA_SERVICES_CONFIG.find((s) => s.id.toLowerCase() === cleanId) ||
+    findServiceBySlug(cleanId)
   );
 }
 
@@ -2043,7 +2050,7 @@ export function findServiceBySlug(slugOrId: string): ServiceDefinition | undefin
   const canonicalSlug = SERVICE_SLUG_ALIASES[normalized] || normalized;
 
   // Search in disciplines first, then standalone catalog
-  return (
+  const found = (
     SUTRA_SERVICES_CONFIG.find(
       (s) =>
         s.slug.toLowerCase() === canonicalSlug ||
@@ -2059,7 +2066,79 @@ export function findServiceBySlug(slugOrId: string): ServiceDefinition | undefin
         s.id.toLowerCase() === normalized
     )
   );
+  if (found) return found;
+
+  // Fallback to display pricing fixed-price catalogue items (e.g. Logo Concept ₹999, 10-15s Reel ₹999)
+  try {
+    const { DISPLAY_FIXED_PRICE_ITEMS } = require("./displayPricing");
+    const displayMatch = DISPLAY_FIXED_PRICE_ITEMS?.find(
+      (it: any) =>
+        it.id.toLowerCase() === normalized ||
+        it.id.toLowerCase() === canonicalSlug ||
+        it.item.toLowerCase() === normalized
+    );
+    if (displayMatch) {
+      const isLogo = displayMatch.id.includes("logo");
+      const isReel = displayMatch.id.includes("reel") || displayMatch.serviceSlug.includes("video");
+      return {
+        id: displayMatch.id,
+        slug: displayMatch.id,
+        name: isLogo ? `Logo Concept (${displayMatch.item})` : `${displayMatch.item} (${displayMatch.serviceName})`,
+        category: isLogo ? "Design" : isReel ? "Video" : "Image",
+        tagline: `${displayMatch.item} — Fixed rate studio production`,
+        description: `Bespoke ${displayMatch.item} produced under senior art direction with standard SLA delivery.`,
+        numericPrice: displayMatch.price,
+        pricingType: displayMatch.unit?.includes("pack") ? "pack" : "fixed",
+        startingPrice: formatCurrencyINR(displayMatch.price),
+        priceDisplay: `${formatCurrencyINR(displayMatch.price)} ${displayMatch.unit || "per design"}`,
+        ctaText: "Order Now",
+        ctaHref: `/new-order?service=${displayMatch.serviceSlug}&deliverable=${displayMatch.id}`,
+        ctaTarget: `/new-order?service=${displayMatch.serviceSlug}&deliverable=${displayMatch.id}`,
+        deliverables: isLogo
+          ? [
+              "Bespoke Vector Logo Concepts (SVG, AI, PDF, Transparent PNG)",
+              "High-Resolution Brand Mark Variations",
+              "Luxury Typography & Palette Specifications",
+              "Full Commercial Copyright License",
+            ]
+          : isReel
+          ? [
+              "Commercial Motion Reel (9:16 Vertical Video)",
+              "Sound Design & Audio Track Mix",
+              "Kinetic Typography & Color Grading",
+              "Full Commercial Copyright License",
+            ]
+          : [
+              "High-Resolution Visual Master Graphic",
+              "Optimized Web & Social Formats",
+              "Brand Color Grading & Typography",
+              "Full Commercial Copyright License",
+            ],
+        quantity: 1,
+        duration: "2-3 Days",
+        revisionPolicy: "2 Consolidated Revision Rounds",
+        estimatedTurnaround: "2-3 Days",
+        turnaround: "2-3 Days",
+        exclusions: ["Raw project source files unless requested in custom quote"],
+        icon: isLogo ? "Palette" : isReel ? "Video" : "Camera",
+        thumbnail: isLogo
+          ? "/images/services/brand-identity.webp"
+          : isReel
+          ? "/images/services/ai-video.webp"
+          : "/images/services/commercial-visuals.webp",
+        badge: isLogo ? "Logo Atelier" : isReel ? "Reel Atelier" : "Studio Production",
+        mediaType: isReel ? "video" : "image",
+        mediaFormat: isReel ? "MP4 (9:16)" : "PNG / SVG",
+        pipelineEngine: isLogo ? "Vector Identity Atelier" : isReel ? "Video Motion Atelier" : "Visual Atelier",
+        workflow: isLogo ? "logo_design" : isReel ? "video_creation" : "image_creation",
+        active: true,
+      };
+    }
+  } catch {}
+
+  return undefined;
 }
+
 
 /**
  * Filter services by category

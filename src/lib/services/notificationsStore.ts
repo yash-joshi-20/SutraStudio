@@ -239,4 +239,54 @@ export class NotificationsStore {
     }
     return count;
   }
+
+  public static remove(id: string, userId?: string): boolean {
+    const list = globalAny.__SUTRA_NOTIFICATIONS__ as StudioNotification[];
+    const index = list.findIndex(
+      (n) =>
+        n.id === id &&
+        (!userId ||
+          n.userId === userId ||
+          (userId === "admin" && (n.userId === "admin" || n.userId === "usr_admin_001")))
+    );
+    if (index !== -1) {
+      const removed = list.splice(index, 1)[0];
+      if (isFirebaseAdminReady() && removed) {
+        try {
+          const db = adminDb();
+          db.collection("notifications").doc(removed.id).delete().catch(() => {});
+        } catch {}
+      }
+      return true;
+    }
+    return false;
+  }
+
+  public static clearAll(userId: string): number {
+    const list = globalAny.__SUTRA_NOTIFICATIONS__ as StudioNotification[];
+    const toRemove = list.filter(
+      (n) =>
+        n.userId === userId ||
+        (userId === "admin" && (n.userId === "admin" || n.userId === "usr_admin_001"))
+    );
+    globalAny.__SUTRA_NOTIFICATIONS__ = list.filter(
+      (n) =>
+        !(
+          n.userId === userId ||
+          (userId === "admin" && (n.userId === "admin" || n.userId === "usr_admin_001"))
+        )
+    );
+    if (isFirebaseAdminReady() && toRemove.length > 0) {
+      try {
+        const db = adminDb();
+        const batch = db.batch();
+        for (const item of toRemove) {
+          batch.delete(db.collection("notifications").doc(item.id));
+        }
+        batch.commit().catch(() => {});
+      } catch {}
+    }
+    return toRemove.length;
+  }
 }
+

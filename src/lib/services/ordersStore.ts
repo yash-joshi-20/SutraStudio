@@ -26,31 +26,20 @@ function ensureDataDir(): void {
 }
 
 export function isDummyOrder(order: Partial<FirestoreOrderRecord>): boolean {
-  if (!order) return true;
+  if (!order || !order.id) return true;
+  // If explicitly flagged as synthetic mock
+  if ((order as any)._isSyntheticMock === true) return true;
+
   const email = (order.clientEmail || "").toLowerCase().trim();
   const name = (order.clientName || "").toLowerCase().trim();
-  const uid = (order.clientUid || order.clientId || "").toLowerCase().trim();
 
-  if (!email && !name) return true;
-  if (email.includes("tester_") || email.endsWith("@sutrastudio.test")) return true;
-  if (email.includes("example.com") || email.includes("probe@test.dev")) return true;
-  if (email.startsWith("qa@") || email.startsWith("qa-")) return true;
-  if (email.includes("hacker@")) return true;
-  if (
-    email.includes("@heritageluxe.com") ||
-    email.includes("@brand.com") ||
-    email.includes("@studioarchitects.com") ||
-    email.includes("@heritage.com") ||
-    email.includes("@luxury.in")
-  ) {
-    return true;
-  }
-  if (/^client_[0-9]+@sutrastudio\.com$/i.test(email)) return true;
-  if (email === "client@sutrastudio.com" && (!order.utrNumber || order.status === "draft")) return true;
-  if (name.includes("test agency") || name.includes("qa test client") || name.includes("qa package")) return true;
-  if (uid.includes("test_") || uid.includes("usr_test")) return true;
+  // Only reject explicit test probes that have no actual order data
+  if (email.includes("probe@test.dev") || email.endsWith("@sutrastudio.test")) return true;
+  if (!email && !name && !order.title && !order.service) return true;
+
   return false;
 }
+
 
 function loadOrdersFromDisk(): FirestoreOrderRecord[] {
   try {

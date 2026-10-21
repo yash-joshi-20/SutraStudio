@@ -115,9 +115,9 @@ export default function HomePage() {
         <section
           className="relative overflow-hidden pt-6 pb-16 md:pt-12 md:pb-24 transition-colors"
           style={{
-            backgroundColor: heroData?.bgColor || undefined,
-            backgroundImage: heroData?.bgImage ? `url("${heroData.bgImage}")` : undefined,
-            backgroundSize: heroData?.bgImage ? "cover" : undefined,
+            backgroundColor: heroData?.bgColor || "",
+            backgroundImage: heroData?.bgImage ? `url("${heroData.bgImage}")` : "",
+            backgroundSize: heroData?.bgImage ? "cover" : "",
             backgroundPosition: "center",
           }}
         >

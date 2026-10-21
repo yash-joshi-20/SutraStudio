@@ -44,6 +44,9 @@ interface AdminOrderRecord {
   brandName?: string;
   packageName?: string;
   service?: string;
+  title?: string;
+  type?: string;
+  requirements?: string;
   totalAmount?: number;
   amountPaid?: number;
   utrNumber?: string;
@@ -216,6 +219,67 @@ export default function AdminOrdersPage() {
       }, 1500);
     } catch (e: any) {
       setDispatchStatus(`Verification error: ${e?.message || e}`);
+      setIsDispatching(false);
+    }
+  };
+
+  // Direct n8n Automation Dispatch (run or re-run workflow at any time)
+  const handleDirectDispatchN8n = async (order: AdminOrderRecord) => {
+    setIsDispatching(true);
+    setDispatchStatus("Dispatching order to n8n autonomous workflow pipeline...");
+
+    try {
+      const desc = `${order.service || ""} ${order.packageName || ""} ${order.requirements || ""}`.toLowerCase();
+      let workflowId = "SUTRA_MASTER_RENDER_LOCAL_HYBRID";
+      if (desc.includes("logo") || desc.includes("brand")) {
+        workflowId = "W1_logo_brand_identity";
+      } else if (desc.includes("reel") || desc.includes("video")) {
+        workflowId = "W2_short_video_engine";
+      } else if (order.type === "monthly_plan" || desc.includes("retainer")) {
+        workflowId = "W3_monthly_plan_content";
+      } else if (desc.includes("3d") || desc.includes("spatial")) {
+        workflowId = "W4_spatial_3d_render";
+      } else if (desc.includes("web") || desc.includes("dev")) {
+        workflowId = "W5_web_architecture";
+      }
+
+      const res = await fetch("/api/n8n/dispatch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          workflowId,
+          orderId: order.id,
+          service: order.service || order.packageName,
+          brief: order.requirements,
+          client: {
+            name: order.clientName,
+            email: order.clientEmail,
+            phone: order.clientPhone,
+            brandName: order.brandName,
+          },
+          isAdminDispatch: true,
+          force: true,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to dispatch to n8n.");
+      }
+
+      setDispatchStatus("✓ Successfully dispatched to n8n workflow pipeline! Assets vaulted.");
+      SyncManager.broadcast("ORDER_STATUS_CHANGED", {
+        orderId: order.id,
+        status: "in_production",
+      });
+      SyncManager.broadcast("NOTIFICATIONS_UPDATED", {});
+      fetchOrders(true);
+      setTimeout(() => {
+        setDispatchStatus(null);
+        setIsDispatching(false);
+      }, 1500);
+    } catch (e: any) {
+      setDispatchStatus(`Dispatch error: ${e?.message || e}`);
       setIsDispatching(false);
     }
   };
@@ -575,17 +639,7 @@ export default function AdminOrdersPage() {
                       <span>Inspect</span>
                     </button>
 
-                    {ord.status !== "in_production" && ord.status !== "completed" && ord.status !== "cancelled" && ord.status !== "refunded" ? (
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        className="text-xs py-2 px-3.5"
-                        onClick={() => handleVerifyAndDispatch(ord)}
-                        leftIcon={<Play className="w-3 h-3" />}
-                      >
-                        Dispatch n8n
-                      </Button>
-                    ) : (
+                    {ord.deliverables && ord.deliverables.length > 0 && (
                       <button
                         type="button"
                         onClick={() => setInspectingOrder(ord)}
@@ -595,6 +649,16 @@ export default function AdminOrdersPage() {
                         <span>View Assets</span>
                       </button>
                     )}
+
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="text-xs py-2 px-3.5"
+                      onClick={() => handleDirectDispatchN8n(ord)}
+                      leftIcon={<Play className="w-3 h-3 text-[#EADFCB]" />}
+                    >
+                      Dispatch n8n
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -818,16 +882,30 @@ export default function AdminOrdersPage() {
                   </Button>
 
                   <Button
-                    variant="primary"
+                    variant="secondary"
                     size="md"
                     disabled={isDispatching}
                     isLoading={isDispatching}
-                    onClick={() => handleVerifyAndDispatch(inspectingOrder)}
+                    onClick={() => handleDirectDispatchN8n(inspectingOrder)}
                     className="w-full sm:w-auto"
-                    leftIcon={<Play className="w-4 h-4" />}
+                    leftIcon={<Sparkles className="w-4 h-4 text-[#A98B57]" />}
                   >
-                    Verify Payment & Start Work
+                    Run n8n Automation
                   </Button>
+
+                  {inspectingOrder.paymentStatus !== "paid" && (
+                    <Button
+                      variant="primary"
+                      size="md"
+                      disabled={isDispatching}
+                      isLoading={isDispatching}
+                      onClick={() => handleVerifyAndDispatch(inspectingOrder)}
+                      className="w-full sm:w-auto"
+                      leftIcon={<Play className="w-4 h-4" />}
+                    >
+                      Verify Payment & Start Work
+                    </Button>
+                  )}
                 </div>
               </div>
             </Modal>

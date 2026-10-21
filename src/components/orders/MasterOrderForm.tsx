@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import { useAuth } from "@/lib/auth/authContext";
 import { Button } from "@/components/ui/Button";
 import { PaymentModal } from "@/components/checkout/PaymentModal";
 import { DynamicUPIQRCode } from "@/components/checkout/DynamicUPIQRCode";
@@ -62,6 +63,8 @@ export interface MasterOrderFormProps {
    * affects the charged amount (see docs/ai/PHASE2-ORDER-PRICING-MAPPING.md).
    */
   initialDeliverableId?: string;
+  initialBrief?: string;
+  initialBrandName?: string;
   onOrderSuccess?: (order: any) => void;
   className?: string;
 }
@@ -511,9 +514,12 @@ export function MasterOrderForm({
   initialTierId,
   initialQty,
   initialDeliverableId,
+  initialBrief,
+  initialBrandName,
   onOrderSuccess,
   className = "",
 }: MasterOrderFormProps) {
+  const { user } = useAuth();
   // Navigation Steps: 1: Service & Tier, 2: Client & Brand Info, 3: Service Parameters, 4: Review & Payment
   const [currentStep, setCurrentStep] = useState(1);
 
@@ -562,7 +568,7 @@ export function MasterOrderForm({
 
   // Step 2: Universal Base Inputs
   const [fullName, setFullName] = useState("");
-  const [brandName, setBrandName] = useState("");
+  const [brandName, setBrandName] = useState(initialBrandName || "");
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("+91 ");
   const [industry, setIndustry] = useState("Real Estate");
@@ -571,7 +577,25 @@ export function MasterOrderForm({
   const [brandLogoFile, setBrandLogoFile] = useState<File | null>(null);
   const [brandLogoPreview, setBrandLogoPreview] = useState<string>("");
   const [targetDeadline, setTargetDeadline] = useState("");
-  const [creativeBrief, setCreativeBrief] = useState("");
+  const [creativeBrief, setCreativeBrief] = useState(initialBrief || "");
+
+  // Auto-fill authenticated client credentials if empty
+  useEffect(() => {
+    if (user) {
+      if (!fullName && (user.displayName || (user as any).name)) {
+        setFullName(user.displayName || (user as any).name || "");
+      }
+      if (!email && user.email) {
+        setEmail(user.email);
+      }
+      if (!brandName && ((user as any).company || (user as any).brandName)) {
+        setBrandName((user as any).company || (user as any).brandName || "");
+      }
+      if (user.phone && whatsapp === "+91 ") {
+        setWhatsapp(user.phone);
+      }
+    }
+  }, [user]);
 
   // Step 3: Conditional Sub-Form Inputs
   // 3a. Meta Ads Launcher & Digital Marketing
@@ -636,6 +660,19 @@ export function MasterOrderForm({
   }, [activePackage]);
 
   const activeService = React.useMemo<IntakeServiceOption>(() => {
+    // If a specific item was selected from Packages & Pricing, resolve it directly:
+    if (selectedDeliverable) {
+      const canonical = findServiceBySlug(selectedDeliverable.id) || findServiceBySlug(selectedDeliverable.serviceSlug);
+      return {
+        id: selectedDeliverable.id,
+        title: `${canonical?.name || selectedDeliverable.serviceName} (${selectedDeliverable.item})`,
+        category: (CATEGORY_BY_CANONICAL[canonical?.category ?? "Image"] ?? "Creative & Brand") as any,
+        basePrice: selectedDeliverable.price,
+        turnaround: canonical?.turnaround || "2-3 Days Delivery",
+        description: `Bespoke ${selectedDeliverable.item} produced under senior studio art direction.`,
+        iconName: selectedDeliverable.id.includes("logo") ? "palette" : selectedDeliverable.serviceSlug.includes("video") ? "video" : "sparkles",
+      };
+    }
     // Deep-linked selection could not be resolved — show a neutral placeholder
     // instead of silently substituting another service (STEP 5).
     if (!selectedServiceId) {
@@ -776,6 +813,7 @@ export function MasterOrderForm({
         email: email.trim(),
         phone: whatsapp.trim(),
         brandName: brandName.trim(),
+        uid: user?.uid,
       },
       package: {
         tierId: resolvedTierId,
@@ -838,6 +876,8 @@ export function MasterOrderForm({
 
       // Backward compatible flat fields:
       source: "direct_order",
+      clientUid: user?.uid,
+      clientId: user?.uid,
       clientName: fullName.trim(),
       clientEmail: email.trim(),
       clientPhone: whatsapp.trim(),

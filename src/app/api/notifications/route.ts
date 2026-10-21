@@ -103,3 +103,63 @@ export async function POST(req: Request) {
     );
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const callerId = await requestUid(req);
+    const callerRole = await requestRole(req);
+    const url = new URL(req.url);
+    const requestedUserId = url.searchParams.get("userId");
+    const targetUserId =
+      requestedUserId ||
+      (callerRole === "admin" ? "usr_admin_001" : callerId || "usr_client_001");
+
+    const id = url.searchParams.get("id");
+    const clearAll = url.searchParams.get("clearAll") === "true";
+
+    if (clearAll) {
+      const count = NotificationsStore.clearAll(targetUserId);
+      return NextResponse.json({
+        success: true,
+        message: `Cleared ${count} notifications.`,
+        unreadCount: 0,
+      });
+    }
+
+    if (id) {
+      const removed = NotificationsStore.remove(id, targetUserId);
+      return NextResponse.json({
+        success: removed,
+        unreadCount: NotificationsStore.getUnreadCount(targetUserId),
+      });
+    }
+
+    const body = await req.json().catch(() => ({}));
+    if (body.clearAll) {
+      const count = NotificationsStore.clearAll(targetUserId);
+      return NextResponse.json({
+        success: true,
+        message: `Cleared ${count} notifications.`,
+        unreadCount: 0,
+      });
+    }
+    if (body.id) {
+      const removed = NotificationsStore.remove(body.id, targetUserId);
+      return NextResponse.json({
+        success: removed,
+        unreadCount: NotificationsStore.getUnreadCount(targetUserId),
+      });
+    }
+
+    return NextResponse.json(
+      { error: "Provide notification id or clearAll parameter." },
+      { status: 400 }
+    );
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: "Failed to delete notification.", details: err?.message },
+      { status: 500 }
+    );
+  }
+}
+

@@ -243,6 +243,8 @@ export default function OrdersPage() {
   const [initialMasterService, setInitialMasterService] = useState<string | undefined>(undefined);
   const [initialMasterTier, setInitialMasterTier] = useState<string | undefined>(undefined);
   const [initialMasterQty, setInitialMasterQty] = useState<number>(1);
+  const [initialMasterBrief, setInitialMasterBrief] = useState<string | undefined>(undefined);
+  const [initialMasterBrand, setInitialMasterBrand] = useState<string | undefined>(undefined);
   const [flowStep, setFlowStep] = useState<
     | "choose_type"
     | "services_select"
@@ -1874,6 +1876,31 @@ export default function OrdersPage() {
                           >
                             <Eye className="w-3.5 h-3.5" />
                             <span>Details</span>
+                          </button>
+
+                          {/* Order Again / Repeat Order */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const targetServiceId = ord.items?.[0]?.serviceId || (ord as any).serviceId || ord.service || "img-creation";
+                              const targetTierId = ord.items?.[0]?.planId || (ord as any).tierId || (ord as any).package;
+                              const targetQty = ord.items?.[0]?.quantity || (ord as any).quantity || 1;
+                              const targetBrief = ord.requirements || (ord as any).notes || ord.deliverablePreview || "";
+                              const targetBrand = (ord as any).brandName || "";
+
+                              setInitialMasterService(targetServiceId);
+                              setInitialMasterTier(targetTierId);
+                              setInitialMasterQty(targetQty);
+                              setInitialMasterBrief(targetBrief);
+                              setInitialMasterBrand(targetBrand);
+                              setIsMasterOrderModalOpen(true);
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#F8F5EF] transition-all cursor-pointer flex items-center gap-1.5 min-h-[36px]"
+                            title="Repeat this project with same specifications"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 text-[#A98B57]" />
+                            <span>Order Again</span>
                           </button>
 
                           {/* Completed Vault Master */}
@@ -3815,9 +3842,18 @@ export default function OrdersPage() {
                     <button
                       type="button"
                       onClick={() => {
-                        const targetId = inspectingOrder.package || inspectingOrder.service || "img-creation";
+                        const targetServiceId = inspectingOrder.items?.[0]?.serviceId || (inspectingOrder as any).serviceId || inspectingOrder.service || "img-creation";
+                        const targetTierId = inspectingOrder.items?.[0]?.planId || (inspectingOrder as any).tierId || inspectingOrder.package;
+                        const targetQty = inspectingOrder.items?.[0]?.quantity || (inspectingOrder as any).quantity || 1;
+                        const targetBrief = inspectingOrder.requirements || inspectingOrder.notes || inspectingOrder.deliverablePreview || "";
+                        const targetBrand = (inspectingOrder as any).brandName || "";
+
+                        setInitialMasterService(targetServiceId);
+                        setInitialMasterTier(targetTierId);
+                        setInitialMasterQty(targetQty);
+                        setInitialMasterBrief(targetBrief);
+                        setInitialMasterBrand(targetBrand);
                         setIsMasterOrderModalOpen(true);
-                        setInitialMasterService(targetId);
                         setInspectingOrder(null);
                       }}
                       className="px-3 py-1.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E] hover:border-[#D4A35A] hover:bg-[#F8F5EF] transition-all cursor-pointer flex items-center gap-1.5 min-h-[36px]"
@@ -3932,6 +3968,8 @@ export default function OrdersPage() {
                 initialServiceId={initialMasterService}
                 initialTierId={initialMasterTier}
                 initialQty={initialMasterQty}
+                initialBrief={initialMasterBrief}
+                initialBrandName={initialMasterBrand}
                 onOrderSuccess={() => {
                   setIsMasterOrderModalOpen(false);
                   loadOrders();

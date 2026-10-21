@@ -385,6 +385,14 @@ export class N8nAutomationService {
     const orderAmount = Number(order?.totalAmount || order?.amountPaid || (payload as any)?.amount || (payload as any)?.totalAmount || 0);
     const combinedDesc = `${serviceName} ${payload.brief || order?.requirements || ""} ${(order as any)?.packageName || ""}`.toLowerCase();
 
+    const isLogo =
+      combinedDesc.includes("logo") ||
+      combinedDesc.includes("brand identity") ||
+      combinedDesc.includes("mark") ||
+      combinedDesc.includes("emblem") ||
+      combinedDesc.includes("લોગો") ||
+      payload.workflowId === "W1_logo_brand_identity";
+
     const isWebsite =
       combinedDesc.includes("website") ||
       combinedDesc.includes("web app") ||
@@ -393,7 +401,10 @@ export class N8nAutomationService {
       combinedDesc.includes("વેબસાઇટ");
 
     const isVideo =
+      orderAmount === 999 ||
       orderAmount === 1499 ||
+      orderAmount === 1999 ||
+      orderAmount === 2999 ||
       orderAmount === 7499 ||
       combinedDesc.includes("video") ||
       combinedDesc.includes("reel") ||
@@ -464,18 +475,64 @@ export class N8nAutomationService {
       uploadedAt: now,
     };
 
+    // Vector Logo & Identity Deliverables
+    const logoPrompt = encodeURIComponent(`minimalist luxury vector logo emblem for ${brand}, modern geometric luxury mark, warm brass metallic lines on pure ivory background, clean typography, high end branding, vector symbol`);
+    const logoPreviewUrl = `https://image.pollinations.ai/prompt/${logoPrompt}?width=1000&height=1000&nologo=true&seed=${promptSeed}`;
+
+    const logoVectorDeliverable = {
+      driveFileId: `drive_n8n_${runId}_logo_svg`,
+      filename: `${cleanBrand}_Vector_Brand_Logo_Master.svg`,
+      checksum: `sha256:${Math.random().toString(36).substring(2, 14)}`,
+      fileSize: "2.4 MB",
+      mimeType: "image/svg+xml",
+      previewUrl: logoPreviewUrl,
+      downloadUrl: logoPreviewUrl,
+      category: "draft",
+      version: "v1.0",
+      uploadedAt: now,
+    };
+
+    const logoPngDeliverable = {
+      driveFileId: `drive_n8n_${runId}_logo_png`,
+      filename: `${cleanBrand}_Logo_Transparent_4K.png`,
+      checksum: `sha256:${Math.random().toString(36).substring(2, 14)}`,
+      fileSize: "7.8 MB",
+      mimeType: "image/png",
+      previewUrl: logoPreviewUrl,
+      downloadUrl: logoPreviewUrl,
+      category: "draft",
+      version: "v1.0",
+      uploadedAt: now,
+    };
+
+    const logoGuidelinesDeliverable = {
+      driveFileId: `drive_n8n_${runId}_brand_spec`,
+      filename: `${cleanBrand}_Brand_Identity_Guidelines.pdf`,
+      checksum: `sha256:${Math.random().toString(36).substring(2, 14)}`,
+      fileSize: "5.1 MB",
+      mimeType: "application/pdf",
+      previewUrl: logoPreviewUrl,
+      downloadUrl: logoPreviewUrl,
+      category: "draft",
+      version: "v1.0",
+      uploadedAt: now,
+    };
+
     // Route deliverables strictly based on package and client request
-    if (isRetainer) {
+    if (isLogo) {
+      // Logo & Brand Identity: Bespoke Vector Logo Master (SVG), 4K Transparent PNG, and Brand Guidelines
+      deliverables.push(logoVectorDeliverable, logoPngDeliverable, logoGuidelinesDeliverable);
+    } else if (isRetainer) {
       // Full Studio Retainer: Image Renders, Video Reel, Spatial Mesh, and Editorial Schedule
       deliverables.push(imageDeliverable, videoDeliverable, spatialDeliverable, retainerSchedule);
     } else if (isWebsite) {
       // Website Package: Full Web Deliverable & UI Architecture
       deliverables.push(websiteDeliverable, imageDeliverable);
     } else if (isVideo) {
-      // Video Package (₹1,499 / ₹7,499 Reel): Commercial Motion Reel Deliverable
+      // Video Package (₹999 / ₹1,499 / ₹1,999 / ₹2,999 / ₹7,499 Reel): Commercial Motion Reel Deliverable
       deliverables.push(videoDeliverable);
     } else {
-      // Image Package (₹249 Pack / ₹499 Render / ₹3,499 Standard): 4K Master Render Image Deliverable
+      // Image Package (₹299 / ₹499 / ₹1,499 / ₹2,499): 4K Master Render Image Deliverable
       deliverables.push(imageDeliverable);
       if (is3D) {
         deliverables.push(spatialDeliverable);
@@ -494,10 +551,14 @@ export class N8nAutomationService {
           clientName: order?.clientName || payload.client?.name || "Sutra Client",
           clientEmail: order?.clientEmail || payload.client?.email || "client@sutrastudio.com",
           brandName: brand,
-          headline: `Bespoke Creative Suite — ${(order as any)?.packageName || order?.service || serviceName}`,
-          caption: `High-fidelity 4K master renders and cinematic commercial reel engineered for ${brand}. #SutraStudio`,
-          imageUrl: imagePreviewUrl,
-          videoUrl: videoUrl,
+          headline: isLogo
+            ? `Bespoke Logo Design & Identity Suite — ${brand}`
+            : `Bespoke Creative Suite — ${(order as any)?.packageName || order?.service || serviceName}`,
+          caption: isLogo
+            ? `Vector master logo concepts, transparent PNG variations, and brand guidelines engineered for ${brand}. #SutraStudio`
+            : `High-fidelity 4K master renders and cinematic commercial reel engineered for ${brand}. #SutraStudio`,
+          imageUrl: isLogo ? logoPreviewUrl : imagePreviewUrl,
+          videoUrl: isLogo ? undefined : videoUrl,
           voiceoverScript: `Step into architectural distinction crafted exclusively for ${brand}. Engineered by Sutra Studio Atelier.`,
           status: "in_admin_review",
           appBaseUrl: appBase,
@@ -509,7 +570,11 @@ export class N8nAutomationService {
       }
     }
 
-    const taskBriefSummary = `4K Master Render & Commercial Motion Reel synthesized & vaulted in '02 Drafts' for ${brand}.`;
+    const taskBriefSummary = isLogo
+      ? `Bespoke Vector Logo Master (SVG) & 4K Transparent Brand Assets synthesized & vaulted in '02 Drafts' for ${brand}.`
+      : isVideo
+      ? `Commercial Motion Reel synthesized & vaulted in '02 Drafts' for ${brand}.`
+      : `4K Master Render & Commercial Motion Reel synthesized & vaulted in '02 Drafts' for ${brand}.`;
 
     // 6. Apply updates to the order if present
     if (order) {

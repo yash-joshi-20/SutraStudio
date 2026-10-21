@@ -11,6 +11,7 @@ import {
   Package,
   RotateCcw,
   Sparkles,
+  Trash2,
   X,
   CreditCard,
   AlertTriangle,
@@ -246,6 +247,62 @@ export function NotificationBell({
     }
   };
 
+  const handleDeleteNotification = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    soundSystem.play("tap");
+    const target = notifications.find((n) => n.id === id);
+    const wasUnread = target && !target.read;
+
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    if (wasUnread) {
+      setUnreadCount((c) => Math.max(0, c - 1));
+    }
+    SyncManager.broadcast("NOTIFICATIONS_UPDATED", {});
+
+    try {
+      await fetch(`/api/notifications?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+    } catch {
+      SyncManager.queueOfflineMutation({
+        endpoint: `/api/notifications?id=${encodeURIComponent(id)}`,
+        method: "DELETE",
+        body: {},
+        description: `Delete notification #${id}`,
+      });
+    }
+  };
+
+  const handleClearAllNotifications = async (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    soundSystem.play("action_success");
+    setIsLoading(true);
+    setNotifications([]);
+    setUnreadCount(0);
+    SyncManager.broadcast("NOTIFICATIONS_UPDATED", {});
+
+    try {
+      await fetch("/api/notifications?clearAll=true", {
+        method: "DELETE",
+      });
+    } catch {
+      SyncManager.queueOfflineMutation({
+        endpoint: "/api/notifications?clearAll=true",
+        method: "DELETE",
+        body: {},
+        description: "Clear all notifications",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOpenOrDismiss = async (item: StudioNotificationItem) => {
+    // When opened, mark as read and remove from active alerts list
+    await handleDeleteNotification(item.id);
+  };
+
+
   const getIcon = (type: string) => {
     switch (type) {
       case "order_delivered":
@@ -356,7 +413,20 @@ export function NotificationBell({
                 title="Mark all as read"
               >
                 <CheckCheck className="w-3.5 h-3.5" />
-                <span>Mark All Read</span>
+                <span>Mark Read</span>
+              </button>
+            )}
+
+            {notifications.length > 0 && (
+              <button
+                type="button"
+                onClick={handleClearAllNotifications}
+                disabled={isLoading}
+                className="text-[11px] font-semibold text-rose-300 hover:text-rose-100 hover:underline transition-colors cursor-pointer flex items-center gap-1"
+                title="Clear all notifications"
+              >
+                <Trash2 className="w-3 h-3" />
+                <span>Clear All</span>
               </button>
             )}
 
@@ -416,8 +486,8 @@ export function NotificationBell({
           displayedNotifications.map((item) => (
             <div
               key={item.id}
-              onClick={() => !item.read && handleMarkAsRead(item.id)}
-              className={`p-3.5 transition-colors cursor-pointer flex items-start gap-3 ${
+              onClick={() => handleOpenOrDismiss(item)}
+              className={`p-3.5 transition-colors cursor-pointer flex items-start gap-3 group relative ${
                 !item.read ? "bg-[#FFF9EE]/70 hover:bg-[#FFF9EE]" : "hover:bg-[#FAF9F5]"
               }`}
             >
@@ -425,7 +495,7 @@ export function NotificationBell({
                 {getIcon(item.type)}
               </div>
 
-              <div className="flex-1 space-y-1">
+              <div className="flex-1 space-y-1 pr-6">
                 <div className="flex items-center justify-between gap-1">
                   <span className="font-semibold text-xs text-[#0F172A] leading-tight">
                     {item.title}
@@ -451,9 +521,9 @@ export function NotificationBell({
                   {item.actionUrl && (
                     <Link
                       href={item.actionUrl}
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.stopPropagation();
-                        if (!item.read) handleMarkAsRead(item.id);
+                        await handleOpenOrDismiss(item);
                         setIsOpen(false);
                       }}
                       className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#5C3A1E] hover:text-[#D4A35A] transition-colors"
@@ -465,16 +535,15 @@ export function NotificationBell({
                 </div>
               </div>
 
-              {!item.read && (
-                <button
-                  type="button"
-                  onClick={(e) => handleMarkAsRead(item.id, e)}
-                  title="Mark as read"
-                  className="text-[#D4A35A] hover:text-[#5C3A1E] p-1 rounded transition-colors"
-                >
-                  <span className="w-2 h-2 rounded-full bg-[#D4A35A] block" />
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={(e) => handleDeleteNotification(item.id, e)}
+                title="Dismiss and remove notification"
+                aria-label="Dismiss notification"
+                className="absolute top-3 right-3 text-stone-400 hover:text-rose-600 hover:bg-rose-50 p-1 rounded-md transition-colors cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
           ))
         )}
