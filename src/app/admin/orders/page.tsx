@@ -33,6 +33,10 @@ import {
   Send,
   Mail,
   Folder,
+  Cpu,
+  Palette,
+  Check,
+  Wrench,
 } from "lucide-react";
 
 interface AdminOrderRecord {
@@ -138,6 +142,105 @@ function renderChannelBadge(source?: string, isDraft?: boolean) {
         </span>
       )}
     </div>
+  );
+}
+
+interface FulfillmentProfile {
+  mode: "autonomous" | "bespoke";
+  badgeLabel: string;
+  badgeClass: string;
+  category: string;
+  isN8nSupported: boolean;
+  stages: Array<{ name: string; percent: number }>;
+  description: string;
+}
+
+function getFulfillmentProfile(order: AdminOrderRecord): FulfillmentProfile {
+  const text = `${order.service || ""} ${order.packageName || ""} ${order.title || ""} ${order.requirements || ""}`.toLowerCase();
+
+  const isBespoke =
+    text.includes("website") ||
+    text.includes("web app") ||
+    text.includes("landing-page") ||
+    text.includes("web-development") ||
+    text.includes("app development") ||
+    text.includes("mobile app") ||
+    text.includes("360") ||
+    text.includes("virtual tour") ||
+    text.includes("meta ads") ||
+    text.includes("advertising campaign") ||
+    text.includes("interior") ||
+    text.includes("architectural") ||
+    text.includes("floorplan");
+
+  if (isBespoke) {
+    return {
+      mode: "bespoke",
+      badgeLabel: "Studio Bespoke",
+      badgeClass: "bg-purple-50 text-purple-700 border-purple-200",
+      category: "Bespoke Engineering & Physical Craft",
+      isN8nSupported: false,
+      stages: [
+        { name: "Requirements & Architecture Confirmed", percent: 25 },
+        { name: "Craftsman Production & Asset Drafting", percent: 50 },
+        { name: "Quality Review & Preview Staging", percent: 75 },
+        { name: "Vaulted in Google Drive & Delivered", percent: 100 },
+      ],
+      description: "Custom artisan development & manual studio staging required (Code, BIM CAD, or Live Ad Account).",
+    };
+  }
+
+  return {
+    mode: "autonomous",
+    badgeLabel: "Autonomous (n8n)",
+    badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    category: "Programmatic AI Pipeline",
+    isN8nSupported: true,
+    stages: [
+      { name: "Brief Ingested & Creative Seed Generated", percent: 25 },
+      { name: "Autonomous Pipeline Synthesis Running", percent: 50 },
+      { name: "Master Fidelity Quality Inspection", percent: 75 },
+      { name: "Assets Vaulted in Drive & Client Released", percent: 100 },
+    ],
+    description: "Automated synthesis pipeline compatible with n8n webhook and local autonomous engine.",
+  };
+}
+
+function calculateProgress(order: AdminOrderRecord): {
+  percent: number;
+  stageName: string;
+  completedIndex: number;
+  totalStages: number;
+} {
+  const profile = getFulfillmentProfile(order);
+  const totalStages = profile.stages.length;
+
+  if (order.status === "completed" || order.status === "approved") {
+    return { percent: 100, stageName: profile.stages[3].name, completedIndex: 4, totalStages };
+  }
+  if (order.status === "draft_delivered" || (order.deliverables && order.deliverables.length > 0)) {
+    return { percent: 75, stageName: profile.stages[2].name, completedIndex: 3, totalStages };
+  }
+  if (order.status === "in_production") {
+    return { percent: 50, stageName: profile.stages[1].name, completedIndex: 2, totalStages };
+  }
+  return { percent: 25, stageName: profile.stages[0].name, completedIndex: 1, totalStages };
+}
+
+function renderFulfillmentBadge(order: AdminOrderRecord) {
+  const profile = getFulfillmentProfile(order);
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${profile.badgeClass}`}
+      title={profile.description}
+    >
+      {profile.isN8nSupported ? (
+        <Cpu className="w-2.5 h-2.5 shrink-0" />
+      ) : (
+        <Palette className="w-2.5 h-2.5 shrink-0" />
+      )}
+      <span>{profile.badgeLabel}</span>
+    </span>
   );
 }
 
@@ -484,7 +587,10 @@ export default function AdminOrdersPage() {
                         <span className="font-mono font-bold text-xs text-[#5C3A1E] block">
                           {ord.orderNumber || ord.code || ord.id}
                         </span>
-                        {renderChannelBadge(ord.source, Boolean(ord.isDraft || ord.status === "draft"))}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {renderChannelBadge(ord.source, Boolean(ord.isDraft || ord.status === "draft"))}
+                          {renderFulfillmentBadge(ord)}
+                        </div>
                       </div>
                       <Badge
                         variant={
@@ -582,7 +688,10 @@ export default function AdminOrdersPage() {
                       <span className="font-mono font-bold text-xs text-[#5C3A1E] block">
                         {ord.orderNumber || ord.code || ord.id}
                       </span>
-                      {renderChannelBadge(ord.source, Boolean(ord.isDraft || ord.status === "draft"))}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {renderChannelBadge(ord.source, Boolean(ord.isDraft || ord.status === "draft"))}
+                        {renderFulfillmentBadge(ord)}
+                      </div>
                       <Badge
                         variant={
                           ord.status === "in_production"
@@ -724,6 +833,113 @@ export default function AdminOrdersPage() {
 
                   {/* Order Details Footer */}
                 </div>
+
+                {/* Autonomous vs Studio Bespoke Pipeline & Live Milestone Progress */}
+                {(() => {
+                  const profile = getFulfillmentProfile(inspectingOrder);
+                  const progress = calculateProgress(inspectingOrder);
+
+                  return (
+                    <div className="p-4 rounded-xl bg-white border border-[#EADFCB] space-y-3 text-xs shadow-2xs">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${profile.badgeClass}`}>
+                            {profile.isN8nSupported ? (
+                              <Cpu className="w-3.5 h-3.5" />
+                            ) : (
+                              <Palette className="w-3.5 h-3.5" />
+                            )}
+                            <span>{profile.badgeLabel}</span>
+                          </span>
+                          <span className="text-[11px] font-semibold text-[#5C3A1E]">
+                            {profile.category}
+                          </span>
+                        </div>
+                        <span className="font-mono font-bold text-xs text-[#5C3A1E] bg-[#FAF6EE] px-2.5 py-0.5 rounded-full border border-[#D4A35A]/40">
+                          {progress.percent}% Completed
+                        </span>
+                      </div>
+
+                      {/* Visual Progress Bar */}
+                      <div className="space-y-1">
+                        <div className="h-2 w-full bg-[#FAF9F5] border border-[#EADFCB] rounded-full overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-500 ${
+                              progress.percent === 100
+                                ? "bg-[#2E7D4F]"
+                                : profile.isN8nSupported
+                                ? "bg-gradient-to-r from-[#D4A35A] to-[#2E7D4F]"
+                                : "bg-gradient-to-r from-[#9333EA] to-[#D4A35A]"
+                            }`}
+                            style={{ width: `${progress.percent}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between items-center text-[10px] text-[#64748B]">
+                          <span>Current Stage: <strong className="text-[#0F172A]">{progress.stageName}</strong></span>
+                          <span>Stage {progress.completedIndex} of {progress.totalStages}</span>
+                        </div>
+                      </div>
+
+                      {/* 4-Stage Milestone Breakdown */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1 text-[11px]">
+                        {profile.stages.map((stg, sIdx) => {
+                          const isDone = sIdx < progress.completedIndex;
+                          const isCurrent = sIdx === progress.completedIndex - 1;
+                          return (
+                            <div
+                              key={sIdx}
+                              className={`p-2 rounded-lg border flex items-center gap-2 transition-colors ${
+                                isDone
+                                  ? "bg-emerald-50/70 border-emerald-200 text-emerald-900"
+                                  : isCurrent
+                                  ? "bg-amber-50/80 border-amber-300 text-amber-950 font-semibold"
+                                  : "bg-[#FAF9F5] border-[#EADFCB] text-[#94A3B8]"
+                              }`}
+                            >
+                              <div
+                                className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 text-[9px] font-bold ${
+                                  isDone
+                                    ? "bg-[#2E7D4F] text-white"
+                                    : isCurrent
+                                    ? "bg-[#D4A35A] text-white"
+                                    : "bg-stone-200 text-stone-600"
+                                }`}
+                              >
+                                {isDone ? "✓" : sIdx + 1}
+                              </div>
+                              <span className="truncate text-[10px]">{stg.name}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Autonomous vs Bespoke Operational Notice */}
+                      <div
+                        className={`p-2.5 rounded-lg border text-[11px] leading-relaxed ${
+                          profile.isN8nSupported
+                            ? "bg-emerald-50/50 border-emerald-200 text-emerald-800"
+                            : "bg-purple-50/50 border-purple-200 text-purple-900"
+                        }`}
+                      >
+                        {profile.isN8nSupported ? (
+                          <div className="flex items-start gap-1.5">
+                            <Check className="w-3.5 h-3.5 shrink-0 text-[#2E7D4F] mt-0.5" />
+                            <div>
+                              <strong>Autonomous Service:</strong> Fully supported by SutraStudio automated n8n engine. Clicking &quot;Run n8n Automation&quot; below will synthesize the 4K render / vector assets and vault them directly to Google Drive.
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-start gap-1.5">
+                            <Wrench className="w-3.5 h-3.5 shrink-0 text-purple-700 mt-0.5" />
+                            <div>
+                              <strong>Studio Bespoke Fulfillment:</strong> This project involves custom code development, Matterport 360 photography, or live ad optimization. It cannot be generated via 1-click AI scripts. Prepare bespoke assets and upload them into the Drive Vault above.
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Google Drive Storage Vault (Admin Supervised) */}
                 <div className="p-3.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] space-y-2.5 text-xs">
@@ -976,17 +1192,44 @@ export default function AdminOrdersPage() {
                     Reject Payment
                   </Button>
 
-                  <Button
-                    variant="secondary"
-                    size="md"
-                    disabled={isDispatching}
-                    isLoading={isDispatching}
-                    onClick={() => handleDirectDispatchN8n(inspectingOrder)}
-                    className="w-full sm:w-auto"
-                    leftIcon={<Sparkles className="w-4 h-4 text-[#A98B57]" />}
-                  >
-                    Run n8n Automation
-                  </Button>
+                  {getFulfillmentProfile(inspectingOrder).isN8nSupported ? (
+                    <Button
+                      variant="secondary"
+                      size="md"
+                      disabled={isDispatching}
+                      isLoading={isDispatching}
+                      onClick={() => handleDirectDispatchN8n(inspectingOrder)}
+                      className="w-full sm:w-auto"
+                      leftIcon={<Sparkles className="w-4 h-4 text-[#A98B57]" />}
+                    >
+                      Run n8n Automation
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="secondary"
+                      size="md"
+                      onClick={() => {
+                        const targetDriveUrl =
+                          inspectingOrder.driveSubfolders?.finalDelivery?.link ||
+                          inspectingOrder.driveFolderLink ||
+                          (inspectingOrder.driveFolderId
+                            ? `https://drive.google.com/drive/folders/${inspectingOrder.driveFolderId}`
+                            : null);
+
+                        if (targetDriveUrl) {
+                          window.open(targetDriveUrl, "_blank", "noopener,noreferrer");
+                        } else {
+                          alert(
+                            "Studio Bespoke Service: Manual artisan craft is required for this service. Place final deliverables into the Google Drive vault."
+                          );
+                        }
+                      }}
+                      className="w-full sm:w-auto border-[#E5E1D8] text-[#171717] hover:border-[#A98B57]"
+                      leftIcon={<Wrench className="w-4 h-4 text-[#A98B57]" />}
+                    >
+                      Open Drive Vault (Bespoke)
+                    </Button>
+                  )}
 
                   {inspectingOrder.paymentStatus !== "paid" && (
                     <Button

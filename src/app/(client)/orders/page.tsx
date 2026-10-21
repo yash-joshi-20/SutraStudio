@@ -56,7 +56,12 @@ import { OrderReceiptModal, ReceiptOrderData } from "@/components/orders/OrderRe
 import { PaymentModal } from "@/components/checkout/PaymentModal";
 import { MasterOrderForm } from "@/components/orders/MasterOrderForm";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
-import { computeOrderProgress, type OrderProgressInfo } from "@/lib/services/orderProgress";
+import {
+  computeOrderProgress,
+  getFulfillmentProfile,
+  getMilestoneStages,
+  type OrderProgressInfo,
+} from "@/lib/services/orderProgress";
 import { uploadFileToDrive } from "@/lib/drive/useDriveUpload";
 import { soundSystem } from "@/lib/audio/soundSystem";
 import { AnimatedCheckSuccess, AnimatedReminderClock } from "@/components/ui/AnimatedStatusIcons";
@@ -1670,6 +1675,14 @@ export default function OrdersPage() {
                             <span className="text-xs text-[#94A3B8]">
                               • {ord.type === "monthly_plan" ? "Monthly Retainer" : ord.service}
                             </span>
+                            {(() => {
+                              const fulfillment = getFulfillmentProfile(ord.service, ord.title);
+                              return (
+                                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${fulfillment.badgeStyle}`}>
+                                  {fulfillment.badgeLabel}
+                                </span>
+                              );
+                            })()}
                             {ord.type === "service" && (
                               <span className="text-[11px] font-medium text-[#64748B] bg-[#F8F5EF] px-2 py-0.5 rounded-full border border-[#EADFCB]">
                                 Round {ord.revisionRound} of {ord.maxRevisions} Revisions
@@ -1700,7 +1713,7 @@ export default function OrdersPage() {
                       </div>
 
                       {/* Middle: Progress Tracker Bar (Reaches exactly 100% on Completed/Approved) */}
-                      <div className="space-y-1.5 p-3 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB]/80">
+                      <div className="space-y-2 p-3 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB]/80">
                         <div className="flex items-center justify-between text-xs">
                           <span className="font-semibold text-[#5C3A1E] flex items-center gap-1.5">
                             <span
@@ -1734,6 +1747,35 @@ export default function OrdersPage() {
                             style={{ width: `${Math.max(prog.percentage, 5)}%` }}
                           />
                         </div>
+
+                        {/* 4-Stage Milestone Breakdown */}
+                        {(() => {
+                          const fulfillment = getFulfillmentProfile(ord.service, ord.title);
+                          const stages = getMilestoneStages(prog.percentage, fulfillment.type === "autonomous");
+                          return (
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1">
+                              {stages.map((st) => (
+                                <div
+                                  key={st.id}
+                                  className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] border transition-colors ${
+                                    st.isComplete
+                                      ? "bg-[#F0FDF4] border-[#BBF7D0] text-[#166534]"
+                                      : st.isCurrent
+                                      ? "bg-[#FEFCE8] border-[#FEF08A] text-[#854D0E] font-semibold ring-1 ring-[#FDE047]"
+                                      : "bg-[#F8F5EF] border-[#EADFCB] text-[#94A3B8]"
+                                  }`}
+                                >
+                                  {st.isComplete ? (
+                                    <CheckCircle2 className="w-3 h-3 text-[#16A34A] shrink-0" />
+                                  ) : (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[#94A3B8] shrink-0" />
+                                  )}
+                                  <span className="truncate">{st.label}</span>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
 
                         {/* Monthly Retainer Cycle Progress & Days Remaining */}
                         {ord.type === "monthly_plan" && prog.daysRemaining !== undefined && (
@@ -3154,11 +3196,16 @@ export default function OrdersPage() {
               {/* Top Progress Header */}
               {(() => {
                 const prog = computeOrderProgress(inspectingOrder);
+                const fulfillment = getFulfillmentProfile(inspectingOrder.service, inspectingOrder.title);
+                const stages = getMilestoneStages(prog.percentage, fulfillment.type === "autonomous");
                 return (
                   <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-3 shadow-2xs">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         {renderStatusBadge(inspectingOrder.status, inspectingOrder.statusLabel)}
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${fulfillment.badgeStyle}`}>
+                          {fulfillment.badgeLabel}
+                        </span>
                         {inspectingOrder.paymentStatus === "paid" && (
                           <Badge variant="completed" size="sm" className="bg-[#EDF7F0] text-[#1B663E] border-[#C8E7D2]">
                             Paid
@@ -3201,6 +3248,35 @@ export default function OrdersPage() {
                           style={{ width: `${Math.max(prog.percentage, 5)}%` }}
                         />
                       </div>
+                    </div>
+
+                    {/* 4-Stage Milestone Breakdown */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1">
+                      {stages.map((st) => (
+                        <div
+                          key={st.id}
+                          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[10px] border transition-colors ${
+                            st.isComplete
+                              ? "bg-[#F0FDF4] border-[#BBF7D0] text-[#166534]"
+                              : st.isCurrent
+                              ? "bg-[#FEFCE8] border-[#FEF08A] text-[#854D0E] font-semibold ring-1 ring-[#FDE047]"
+                              : "bg-[#F8F5EF] border-[#EADFCB] text-[#94A3B8]"
+                          }`}
+                        >
+                          {st.isComplete ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
+                          ) : (
+                            <span className="w-2 h-2 rounded-full bg-[#94A3B8] shrink-0" />
+                          )}
+                          <span className="truncate">{st.label}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Operational Pipeline Notice */}
+                    <div className="p-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-[11px] text-[#64748B] flex items-center gap-2">
+                      <Sparkles className="w-3.5 h-3.5 text-[#A98B57] shrink-0" />
+                      <span>{fulfillment.pipelineDescription}</span>
                     </div>
 
                     {/* Monthly Details if Retainer */}

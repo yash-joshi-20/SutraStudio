@@ -213,6 +213,92 @@ export function computeOrderProgress(order: any): OrderProgressInfo {
   }
 }
 
+export interface FulfillmentProfile {
+  type: "autonomous" | "bespoke";
+  badgeLabel: string;
+  badgeStyle: string;
+  isN8nSupported: boolean;
+  pipelineDescription: string;
+}
+
+export function getFulfillmentProfile(serviceName?: string, serviceSlug?: string): FulfillmentProfile {
+  const s = ((serviceName || "") + " " + (serviceSlug || "")).toLowerCase();
+  
+  // Bespoke manual craft services
+  if (
+    s.includes("web") ||
+    s.includes("app") ||
+    s.includes("site") ||
+    s.includes("software") ||
+    s.includes("360") ||
+    s.includes("virtual tour") ||
+    s.includes("meta ad") ||
+    s.includes("campaign") ||
+    s.includes("interior") ||
+    s.includes("bim") ||
+    s.includes("cad") ||
+    s.includes("architectural")
+  ) {
+    return {
+      type: "bespoke",
+      badgeLabel: "Studio Bespoke (Craftsman)",
+      badgeStyle: "bg-amber-50 text-amber-800 border-amber-200",
+      isN8nSupported: false,
+      pipelineDescription: "Manual artisan delivery required. Bespoke craft vaulted to Google Drive.",
+    };
+  }
+
+  // Autonomous n8n-dispatchable services
+  return {
+    type: "autonomous",
+    badgeLabel: "Autonomous (n8n Ready)",
+    badgeStyle: "bg-emerald-50 text-emerald-800 border-emerald-200",
+    isN8nSupported: true,
+    pipelineDescription: "Autonomous synthesis & automated Google Drive asset packaging supported.",
+  };
+}
+
+export interface MilestoneStage {
+  id: string;
+  label: string;
+  percentageThreshold: number;
+  isComplete: boolean;
+  isCurrent: boolean;
+}
+
+export function getMilestoneStages(percentage: number, isAutonomous: boolean = true): MilestoneStage[] {
+  return [
+    {
+      id: "brief_intake",
+      label: "Brief & Assets Intake",
+      percentageThreshold: 25,
+      isComplete: percentage >= 25,
+      isCurrent: percentage > 0 && percentage < 50,
+    },
+    {
+      id: "production_sprint",
+      label: isAutonomous ? "Autonomous Synthesis Sprint" : "Artisan Craftsmanship Sprint",
+      percentageThreshold: 50,
+      isComplete: percentage >= 50,
+      isCurrent: percentage >= 50 && percentage < 75,
+    },
+    {
+      id: "qa_review",
+      label: "Creative QA & Draft Review",
+      percentageThreshold: 75,
+      isComplete: percentage >= 75,
+      isCurrent: percentage >= 75 && percentage < 100,
+    },
+    {
+      id: "vaulted",
+      label: "Vaulted in Google Drive",
+      percentageThreshold: 100,
+      isComplete: percentage >= 100,
+      isCurrent: percentage >= 100,
+    },
+  ];
+}
+
 export interface N8nWorkflowStage {
   id: string;
   name: string;
