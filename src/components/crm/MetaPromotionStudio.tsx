@@ -31,6 +31,11 @@ import {
   Trash2,
   ChevronRight,
   Tag,
+  Rocket,
+  Calendar,
+  DollarSign,
+  Activity,
+  Zap,
 } from "lucide-react";
 import type { GeneratedPromotionData } from "@/app/api/admin/promotions/generate/route";
 
@@ -186,6 +191,16 @@ export function MetaPromotionStudio() {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
+  // Self-Promotion Daily Drop & Meta Ads State
+  const [isDispatchingDailyPromo, setIsDispatchingDailyPromo] = useState(false);
+  const [dailyPromoResult, setDailyPromoResult] = useState<any | null>(null);
+  const [metaCampaigns, setMetaCampaigns] = useState<any[]>([]);
+  const [isLaunchingMetaAd, setIsLaunchingMetaAd] = useState(false);
+  const [metaAdBudget, setMetaAdBudget] = useState(500);
+  const [metaAdAudience, setMetaAdAudience] = useState("Founders, Luxury Brands & D2C");
+  const [isMetaAdModalOpen, setIsMetaAdModalOpen] = useState(false);
+  const [metaAdSuccessNotice, setMetaAdSuccessNotice] = useState<string | null>(null);
+
   // Phone Mockup Interactive States
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
@@ -195,10 +210,84 @@ export function MetaPromotionStudio() {
   const [captionExpanded, setCaptionExpanded] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  // Load saved promotions on mount
+  // Load saved promotions and meta campaigns on mount
   useEffect(() => {
     fetchSavedPromotions();
+    fetchMetaCampaigns();
   }, []);
+
+  const fetchMetaCampaigns = async () => {
+    try {
+      const res = await fetch("/api/admin/marketing/meta-ads");
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.campaigns)) {
+          setMetaCampaigns(data.campaigns);
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to load Meta campaigns:", e);
+    }
+  };
+
+  const handleDispatchDailyPromo = async () => {
+    setIsDispatchingDailyPromo(true);
+    setActionNotice(null);
+    try {
+      const res = await fetch("/api/admin/marketing/dispatch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to dispatch daily self-promotion");
+      setDailyPromoResult(data);
+      setActionNotice("✓ Success: Today's 4K Post & Video Reel synthesized & staged for Instagram & Facebook!");
+    } catch (err: any) {
+      setActionNotice(`Error: ${err.message || err}`);
+    } finally {
+      setIsDispatchingDailyPromo(false);
+    }
+  };
+
+  const handleLaunchStudioMetaAd = async () => {
+    setIsLaunchingMetaAd(true);
+    setMetaAdSuccessNotice(null);
+    try {
+      const headline = currentPromotion?.metaAdCopy?.headline || currentPromotion?.title || "Sutra Studio — 4K Commercial Visuals & 3D Spatial Design";
+      const caption = currentPromotion?.caption || "Where Indian aesthetic tradition meets high-precision creative technology. Inquire via WhatsApp.";
+      const creativeUrl = currentPromotion?.mediaUrl || activeMedia.url;
+
+      const res = await fetch("/api/admin/marketing/meta-ads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: `ORD-SELF-PROMO-${Date.now().toString().slice(-4)}`,
+          clientName: "Sutra Studio (Self-Promotion)",
+          clientEmail: "studio@sutrastudios.in",
+          brandName: "Sutra Studio Atelier",
+          tier: "Growth (₹7,999)",
+          budgetAmount: metaAdBudget,
+          headline,
+          caption,
+          creativeUrl,
+          targetPlacements: ["Instagram Feed", "Instagram Reels", "Facebook Feed"],
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to launch Meta Ad");
+      setMetaAdSuccessNotice(`✓ Campaign registered in Meta Ads Manager (Status: PAUSED for review)!`);
+      fetchMetaCampaigns();
+      setTimeout(() => {
+        setMetaAdSuccessNotice(null);
+        setIsMetaAdModalOpen(false);
+      }, 4000);
+    } catch (err: any) {
+      alert(`Meta Ad Launch Error: ${err.message || err}`);
+    } finally {
+      setIsLaunchingMetaAd(false);
+    }
+  };
 
   const fetchSavedPromotions = async () => {
     try {
@@ -378,6 +467,118 @@ export function MetaPromotionStudio() {
           </button>
         </div>
       )}
+
+      {/* ============================================================ */}
+      {/* TOP HERO: DAILY SELF-PROMOTION ENGINE (1x Post + 1x Reel)   */}
+      {/* ============================================================ */}
+      <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-[#FAF9F5] via-[#FFFDF9] to-[#F8F5EF] border border-[#E5E1D8] shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#171717] text-[#A98B57] flex items-center justify-center shrink-0 shadow-xs">
+              <Rocket className="w-5 h-5 text-[#A98B57]" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="font-serif font-bold text-base sm:text-lg text-[#171717]">
+                  Daily Self-Promotion Engine
+                </h2>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 border border-amber-200 text-[#5C3A1E]">
+                  Instagram &amp; Facebook Feed
+                </span>
+              </div>
+              <p className="text-xs text-[#64748B] mt-0.5">
+                Generate and stage today&apos;s 4K luxury master post + 9:16 commercial motion reel for Sutra Studio.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={isDispatchingDailyPromo}
+              onClick={handleDispatchDailyPromo}
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#171717] via-[#5C3A1E] to-[#171717] text-white font-serif font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs hover:shadow-md transition-all cursor-pointer disabled:opacity-60"
+            >
+              {isDispatchingDailyPromo ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#A98B57]" />
+                  <span>Synthesizing Daily 4K Drop...</span>
+                </>
+              ) : (
+                <>
+                  <Zap className="w-3.5 h-3.5 text-[#A98B57]" />
+                  <span>⚡ Dispatch Today&apos;s 4K Post &amp; Video Reel</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Live Staged Daily Output Card */}
+        {dailyPromoResult && (
+          <div className="p-4 rounded-xl bg-white border border-[#E5E1D8] shadow-2xs space-y-3 animate-fade-in">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-[#171717] flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span>Today&apos;s Drop Staged: {dailyPromoResult.concept?.disciplineName || "Creative Technology"}</span>
+              </span>
+              <span className="text-[10px] font-mono text-[#A98B57] bg-[#FAF9F5] px-2 py-0.5 rounded border border-[#E5E1D8]">
+                Run ID: {dailyPromoResult.runId}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="p-3 rounded-lg bg-[#FAF9F5] border border-[#E5E1D8] space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-[#171717] flex items-center gap-1">
+                    <ImageIcon className="w-3.5 h-3.5 text-[#A98B57]" /> 1x 4K Master Post
+                  </span>
+                  <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                    Ready
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#64748B] line-clamp-1">
+                  {dailyPromoResult.imagePost?.title || "Master 4K Commercial Visual"}
+                </p>
+                <div className="flex items-center gap-2 pt-1 text-[10px]">
+                  <a
+                    href={dailyPromoResult.imagePost?.mediaUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#A98B57] hover:underline flex items-center gap-1 font-semibold"
+                  >
+                    <Eye className="w-3 h-3" /> View 4K Master
+                  </a>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-lg bg-[#FAF9F5] border border-[#E5E1D8] space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-[#171717] flex items-center gap-1">
+                    <VideoIcon className="w-3.5 h-3.5 text-[#A98B57]" /> 1x Commercial Motion Reel
+                  </span>
+                  <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                    9:16 Video
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#64748B] line-clamp-1">
+                  {dailyPromoResult.videoReel?.title || "4K Kinetic Showreel"}
+                </p>
+                <div className="flex items-center gap-2 pt-1 text-[10px]">
+                  <a
+                    href={dailyPromoResult.videoReel?.mediaUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#A98B57] hover:underline flex items-center gap-1 font-semibold"
+                  >
+                    <Play className="w-3 h-3" /> Preview Reel Video
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Main 2-Column Grid: Left Controls / Right Live Smartphone Preview */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -855,6 +1056,15 @@ export function MetaPromotionStudio() {
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
+                onClick={() => setIsMetaAdModalOpen(!isMetaAdModalOpen)}
+                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-semibold flex items-center gap-1.5 hover:from-blue-700 hover:to-indigo-700 shadow-xs transition-all cursor-pointer"
+              >
+                <Rocket className="w-3.5 h-3.5 text-blue-200" />
+                <span>🚀 Launch as Meta Ad</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={handleSaveToVault}
                 className="px-3.5 py-2 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#5C3A1E] flex items-center gap-1.5 hover:bg-[#F0ECE1] transition-all cursor-pointer"
               >
@@ -883,6 +1093,136 @@ export function MetaPromotionStudio() {
               </a>
             </div>
           </div>
+
+          {/* Simple Meta Ads Campaign Launcher Panel */}
+          {isMetaAdModalOpen && (
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-50/70 via-indigo-50/50 to-white border border-blue-200/80 shadow-xs space-y-4 animate-fade-in">
+              <div className="flex items-center justify-between pb-3 border-b border-blue-200/60">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                    Ad
+                  </div>
+                  <div>
+                    <h3 className="font-serif font-bold text-sm text-[#171717]">
+                      Deploy Self-Promotion to Meta Ads Manager
+                    </h3>
+                    <p className="text-[11px] text-[#64748B]">
+                      Initializes an official campaign in Ads Manager under PAUSED status for safety review.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsMetaAdModalOpen(false)}
+                  className="text-xs text-[#64748B] hover:text-[#171717] cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {metaAdSuccessNotice && (
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-semibold flex items-center justify-between">
+                  <span>{metaAdSuccessNotice}</span>
+                  <a
+                    href="https://adsmanager.facebook.com/adsmanager"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline text-emerald-900 ml-2"
+                  >
+                    Open Ads Manager →
+                  </a>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                {/* 1. Daily Budget */}
+                <div className="p-3 rounded-xl bg-white border border-[#E5E1D8] space-y-1.5">
+                  <label className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider block">
+                    Daily Budget (INR):
+                  </label>
+                  <div className="grid grid-cols-3 gap-1">
+                    {[500, 1000, 2000].map((b) => (
+                      <button
+                        key={b}
+                        type="button"
+                        onClick={() => setMetaAdBudget(b)}
+                        className={`py-1.5 rounded-lg border text-center font-bold text-xs transition-all cursor-pointer ${
+                          metaAdBudget === b
+                            ? "bg-[#171717] text-white border-[#171717]"
+                            : "bg-[#FAF9F5] border-[#E5E1D8] text-[#171717] hover:border-[#A98B57]"
+                        }`}
+                      >
+                        ₹{b}
+                      </button>
+                    ))}
+                  </div>
+                  <span className="text-[10px] text-[#8C827A] block">Controlled spend cap</span>
+                </div>
+
+                {/* 2. Target Audience */}
+                <div className="p-3 rounded-xl bg-white border border-[#E5E1D8] space-y-1.5">
+                  <label className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider block">
+                    Target Niche:
+                  </label>
+                  <select
+                    value={metaAdAudience}
+                    onChange={(e) => setMetaAdAudience(e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#171717] focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="Founders, Luxury Brands & D2C">Founders, Luxury Brands &amp; D2C</option>
+                    <option value="Architects & Luxury Real Estate">Architects &amp; Luxury Real Estate</option>
+                    <option value="Jewelry, Horology & Haute Couture">Jewelry, Horology &amp; Haute Couture</option>
+                    <option value="Pan-India E-Commerce & Retail">Pan-India E-Commerce &amp; Retail</option>
+                  </select>
+                  <span className="text-[10px] text-[#8C827A] block">High-ticket demographic</span>
+                </div>
+
+                {/* 3. Placements & Safety */}
+                <div className="p-3 rounded-xl bg-white border border-[#E5E1D8] space-y-1.5">
+                  <label className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider block">
+                    Guard &amp; Placements:
+                  </label>
+                  <div className="text-[11px] font-medium text-[#171717] space-y-0.5">
+                    <div className="flex items-center gap-1 text-emerald-700">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Initial Status: PAUSED</span>
+                    </div>
+                    <p className="text-[10px] text-[#8C827A]">
+                      Instagram Reels, Stories, Facebook Feed
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-blue-200/60">
+                <span className="text-[11px] text-[#64748B]">
+                  Campaign Name: <code className="font-mono text-blue-900 bg-blue-100/60 px-1.5 py-0.5 rounded">[Sutra] {currentPromotion.title.slice(0, 35)}</code>
+                </span>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    disabled={isLaunchingMetaAd}
+                    onClick={handleLaunchStudioMetaAd}
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs hover:shadow-md transition-all cursor-pointer disabled:opacity-60"
+                  >
+                    {isLaunchingMetaAd ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Registering in Meta Ads Manager...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Rocket className="w-3.5 h-3.5" />
+                        <span>Confirm &amp; Register Campaign (PAUSED)</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* LEFT: SCRIPT / STORYBOARD BREAKDOWN */}
@@ -1094,6 +1434,109 @@ export function MetaPromotionStudio() {
           )}
         </div>
       )}
+
+      {/* ============================================================ */}
+      {/* ACTIVE SELF-PROMOTION META CAMPAIGNS ROSTER                  */}
+      {/* ============================================================ */}
+      <div className="p-5 sm:p-6 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Activity className="w-4 h-4 text-blue-600" />
+            <h3 className="font-serif font-bold text-base text-[#171717]">
+              Active Self-Promotion Meta Ad Campaigns
+            </h3>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-blue-50 text-blue-800 border border-blue-200">
+              {metaCampaigns.length} Campaigns
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <a
+              href="https://adsmanager.facebook.com/adsmanager"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#FAF9F5] border border-[#E5E1D8] text-[#171717] hover:border-blue-500 hover:text-blue-700 transition-all"
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
+              <span>Open Meta Ads Manager</span>
+            </a>
+          </div>
+        </div>
+
+        {metaCampaigns.length === 0 ? (
+          <div className="p-8 text-center text-xs text-[#64748B] bg-[#FAF9F5] rounded-xl border border-[#E5E1D8]">
+            No Meta Ad campaigns registered yet. Generate a promotion above and click &quot;🚀 Launch as Meta Ad&quot; to deploy your first self-promotion campaign.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-[#E5E1D8] text-[#8C827A] text-[10px] font-mono uppercase tracking-wider">
+                  <th className="py-2.5 px-3">Campaign / Order</th>
+                  <th className="py-2.5 px-3">Headline</th>
+                  <th className="py-2.5 px-3">Daily Budget</th>
+                  <th className="py-2.5 px-3">Placements</th>
+                  <th className="py-2.5 px-3">Status</th>
+                  <th className="py-2.5 px-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E5E1D8]/60">
+                {metaCampaigns.map((c) => (
+                  <tr key={c.campaignId} className="hover:bg-[#FAF9F5]/80 transition-colors">
+                    <td className="py-3 px-3">
+                      <span className="font-mono text-[11px] font-bold text-[#171717] block">
+                        {c.orderId}
+                      </span>
+                      <span className="text-[10px] text-[#8C827A] font-mono">
+                        {new Date(c.launchedAt).toLocaleDateString()}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3">
+                      <span className="font-semibold text-[#171717] block line-clamp-1 max-w-[220px]">
+                        {c.headline}
+                      </span>
+                      <span className="text-[10px] text-[#64748B] block truncate max-w-[220px]">
+                        {c.brandName}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 font-mono font-bold text-[#5C3A1E]">
+                      ₹{c.budgetAmount?.toLocaleString() || "500"}/day
+                    </td>
+                    <td className="py-3 px-3 text-[11px] text-[#64748B]">
+                      {Array.isArray(c.targetPlacements)
+                        ? c.targetPlacements.slice(0, 2).join(", ")
+                        : "Reels & Feed"}
+                    </td>
+                    <td className="py-3 px-3">
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          c.status === "active"
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            : "bg-amber-50 text-amber-700 border border-amber-200"
+                        }`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${c.status === "active" ? "bg-emerald-500" : "bg-amber-500"}`} />
+                        {c.status.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-right">
+                      <a
+                        href="https://adsmanager.facebook.com/adsmanager"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline"
+                      >
+                        <span>Manage</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
