@@ -138,12 +138,12 @@ export const SUTRA_PROJECTS: ProjectItem[] = [
     year: "2026",
     projectType: "Studio Concept",
     description:
-      "Studio creative lighting study exploring caustic glass refraction, fluid simulation, and golden rim highlights for luxury packaging.",
+      "Luxury fragrance packaging render featuring fluted crystal glass engraved NOIR ATELIER, glowing amber nectar, and brushed brass monogram accents with realistic caustic lighting.",
     badge: "Case Study",
     thumbnail: "/images/projects/proj-perfume.webp",
     deliverables: [
       "Product Rendering & Glass Caustics Study",
-      "Warm Gold Studio Lighting Pass",
+      "Brushed Brass & Crystal Refraction Tuning",
       "Packaging Presentation Deck",
     ],
     status: "Design Concept",
@@ -156,13 +156,13 @@ export const SUTRA_PROJECTS: ProjectItem[] = [
     year: "2026",
     projectType: "Studio Concept",
     description:
-      "Interactive 360-degree spatial tour prototype showcasing ambient sunset lighting, Calacatta marble, and teakwood architectural accents.",
+      "Immersive 360-degree spatial pavilion tour showcasing Calacatta Gold marble flooring, teakwood acoustic slats, and an infinity pool vista at dusk with interactive spatial hotspots.",
     badge: "360°",
     thumbnail: "/images/projects/proj-villa.webp",
     deliverables: [
-      "Equirectangular 360 Panoramic Node",
-      "Spatial Orbit & Hotspot Navigation",
-      "Architectural Interior Staging",
+      "Equirectangular 360 Panoramic VR Node",
+      "Spatial Hotspot & Orbit Navigation",
+      "Luxury Villa Architectural Staging",
     ],
     status: "Spatial Prototype",
   },
@@ -174,7 +174,7 @@ export const SUTRA_PROJECTS: ProjectItem[] = [
     year: "2026",
     projectType: "Studio Concept",
     description:
-      "High-precision 3D hard-surface modeling study examining brushed steel bevels, sapphire crystal reflections, and studio lighting passes for luxury timepieces.",
+      "Swiss chronomètre 3D visualization highlighting the hand-finished brushed steel case, tachymeter bezel, sapphire crystal reflections, and precision dial typography.",
     badge: "Interactive",
     thumbnail: "/images/projects/sutra-watch-3d.jpg",
     deliverables: [
@@ -193,7 +193,7 @@ export const SUTRA_PROJECTS: ProjectItem[] = [
     year: "2026",
     projectType: "Studio Concept",
     description:
-      "Commercial product key visual study on a raw travertine stone pedestal, featuring frosted amber glass, matte bronze caps, and warm architectural window shadows.",
+      "Sculptural commercial staging for Aura Botanicals Radiance Elixir, featuring authentic typography on frosted amber glass and an embossed gold foil presentation box on raw travertine.",
     badge: "Case Study",
     thumbnail: "/images/projects/sutra-cosmetic-render.jpg",
     deliverables: [
@@ -246,7 +246,7 @@ export const SUTRA_PROJECTS: ProjectItem[] = [
   },
   {
     id: "proj-haveli-interior",
-    title: "The Jali Sanctuary — Architectural Interior CGI",
+    title: "The Jali Sanctuary — Architectural Interior CGI & AutoCAD Blueprint",
     category: "Interior",
     client: "Heritage Architecture",
     year: "2026",
@@ -254,11 +254,11 @@ export const SUTRA_PROJECTS: ProjectItem[] = [
     badge: "Case Study",
     thumbnail: "/images/projects/proj-interior.webp",
     description:
-      "Photorealistic architectural interior visualization with sunlight tracing through handcrafted terracotta jali screens onto Calacatta marble.",
+      "Dual-perspective architectural presentation featuring an AutoCAD technical blueprint with millwork dimensions and a photorealistic 3D interior render with jali daylight casting across Calacatta marble.",
     deliverables: [
-      "4K Daylight & Sunset Perspective Views",
-      "Custom Teakwood & Brass Shader Tuning",
-      "High-Resolution Master Retouching",
+      "AutoCAD 2D Blueprint & Millwork Specifications",
+      "4K Daylight Interior CGI Render",
+      "Custom Teakwood & Brass Architectural Details",
     ],
     status: "Completed",
   },

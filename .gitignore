@@ -67,8 +67,8 @@ scripts/backups/env-backups/
 **/*.bak
 
 # Local disk stores & sensitive runtime data
-data/
 /data/
+!src/data/
 
 # Service Account Keys & Secrets
 *service-account*.json
