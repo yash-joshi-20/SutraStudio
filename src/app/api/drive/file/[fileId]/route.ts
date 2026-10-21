@@ -18,8 +18,11 @@ import {
   isGoogleNative,
   renameDriveFile,
   deleteDriveFile,
+  driveConfigured,
+  type DriveFileRecord,
 } from "@/lib/services/googleDriveService";
 import { AuditLogService } from "@/lib/services/auditLogService";
+import { OrdersStore } from "@/lib/services/ordersStore";
 
 export const dynamic = "force-dynamic";
 
@@ -30,20 +33,75 @@ function contentDisposition(name: string, inline: boolean): string {
   return `${inline ? "inline" : "attachment"}; filename="${ascii}"; filename*=UTF-8''${encoded}`;
 }
 
+async function resolveDriveOrOrderRecord(
+  fileId: string,
+  user: { uid: string; email?: string; role: string }
+): Promise<{
+  record: DriveFileRecord | null;
+  matchingDeliverable: any | null;
+  isAuthorized: boolean;
+}> {
+  const isAdmin = user.role === "admin";
+  let record = await getFileRecord(fileId);
+  let matchingDeliverable: any = null;
+
+  if (!record) {
+    const allOrders = OrdersStore.getAll();
+    const matchingOrder = allOrders.find((o) =>
+      o.deliverables?.some((d) => d.driveFileId === fileId)
+    );
+    if (matchingOrder) {
+      matchingDeliverable = matchingOrder.deliverables?.find((d) => d.driveFileId === fileId);
+      record = {
+        driveFileId: fileId,
+        folderId: matchingOrder.driveFolderId || "folder_root",
+        name: matchingDeliverable?.filename || `${fileId}.png`,
+        mimeType:
+          matchingDeliverable?.mimeType ||
+          (matchingDeliverable?.filename?.endsWith(".svg")
+            ? "image/svg+xml"
+            : matchingDeliverable?.filename?.endsWith(".mp4")
+            ? "video/mp4"
+            : matchingDeliverable?.filename?.endsWith(".pdf")
+            ? "application/pdf"
+            : "image/png"),
+        size: 5 * 1024 * 1024,
+        kind: "final_delivery",
+        orderId: matchingOrder.id,
+        clientId: matchingOrder.clientUid || matchingOrder.clientId || user.uid,
+        version: 1,
+        createdAt: matchingOrder.createdAt,
+        shareState: "shared",
+      };
+    }
+  }
+
+  // Ownership check: admin may inspect anything; client only files in their own account
+  if (!isAdmin) {
+    const isOwner =
+      record &&
+      (record.clientId === user.uid ||
+        record.clientId === user.email ||
+        (user.email && record.clientId?.toLowerCase() === user.email.toLowerCase()));
+
+    if (!record || !isOwner || record.state === "trashed") {
+      return { record: null, matchingDeliverable: null, isAuthorized: false };
+    }
+  }
+
+  return { record, matchingDeliverable, isAuthorized: true };
+}
+
 export async function HEAD(req: Request, { params }: { params: Promise<{ fileId: string }> }) {
   try {
     const { fileId } = await params;
     if (!fileId) return badRequest("Missing file id.");
 
     const user = await requireUser();
-    const isAdmin = user.role === "admin";
-    const record = await getFileRecord(fileId);
+    const { record, isAuthorized } = await resolveDriveOrOrderRecord(fileId, user);
 
-    // Ownership check: an admin may inspect anything; a client only files registered to their uid.
-    if (!isAdmin) {
-      if (!record || record.clientId !== user.uid || record.state === "trashed") {
-        return notFound("This file is not part of your account.");
-      }
+    if (!isAuthorized || !record) {
+      return notFound("This file is not part of your account.");
     }
 
     if (record && isGoogleNative(record.mimeType)) {
@@ -54,12 +112,12 @@ export async function HEAD(req: Request, { params }: { params: Promise<{ fileId:
     const inline = url.searchParams.get("download") !== "true";
 
     const headers = new Headers();
-    headers.set("Content-Type", record?.mimeType ?? "application/octet-stream");
-    headers.set("Content-Disposition", contentDisposition(record?.name ?? fileId, inline));
+    headers.set("Content-Type", record.mimeType ?? "application/octet-stream");
+    headers.set("Content-Disposition", contentDisposition(record.name ?? fileId, inline));
     headers.set("Cache-Control", "private, no-store, max-age=0");
     headers.set("X-Content-Type-Options", "nosniff");
     headers.set("Accept-Ranges", "bytes");
-    if (record?.size) headers.set("Content-Length", String(record.size));
+    if (record.size) headers.set("Content-Length", String(record.size));
 
     return new Response(null, { status: 200, headers });
   } catch (err) {
@@ -73,14 +131,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ fileId: 
     if (!fileId) return badRequest("Missing file id.");
 
     const user = await requireUser();
-    const isAdmin = user.role === "admin";
-    const record = await getFileRecord(fileId);
+    const { record, matchingDeliverable, isAuthorized } = await resolveDriveOrOrderRecord(fileId, user);
 
-    // Ownership check: an admin may open anything; a client only files registered to their uid.
-    if (!isAdmin) {
-      if (!record || record.clientId !== user.uid || record.state === "trashed") {
-        return notFound("This file is not part of your account.");
-      }
+    if (!isAuthorized || !record) {
+      return notFound("This file is not part of your account.");
     }
 
     if (record && isGoogleNative(record.mimeType)) {
@@ -93,8 +147,39 @@ export async function GET(req: Request, { params }: { params: Promise<{ fileId: 
     const inline = url.searchParams.get("download") !== "true";
     const range = req.headers.get("range");
 
-    const result = await openDriveDownload(fileId, range ?? undefined);
-    if (!result) return notFound("The file could no longer be found in Drive.");
+    let streamBody: any = null;
+    let streamStatus = 200;
+    let streamHeaders: Headers | null = null;
+
+    // 1. If Google Drive is configured, stream directly from Drive vault
+    if (driveConfigured()) {
+      try {
+        const result = await openDriveDownload(fileId, range ?? undefined);
+        if (result && result.stream) {
+          streamBody = result.stream;
+          streamStatus = result.status;
+          streamHeaders = result.headers;
+        }
+      } catch (err) {
+        console.warn("[Drive File Route] Drive download stream error:", err);
+      }
+    }
+
+    // 2. White-labeled fallback proxy (for simulated or draft preview assets)
+    if (!streamBody && (matchingDeliverable?.previewUrl || matchingDeliverable?.downloadUrl)) {
+      const fallbackUrl = matchingDeliverable.previewUrl || matchingDeliverable.downloadUrl;
+      try {
+        const proxyRes = await fetch(fallbackUrl);
+        if (proxyRes.ok && proxyRes.body) {
+          streamBody = proxyRes.body;
+          streamStatus = proxyRes.status;
+        }
+      } catch (err) {
+        console.warn("[Drive File Route] Fallback proxy error:", err);
+      }
+    }
+
+    if (!streamBody) return notFound("The file could no longer be found in the studio vault.");
 
     // Audit log file download / streaming
     try {
@@ -108,29 +193,28 @@ export async function GET(req: Request, { params }: { params: Promise<{ fileId: 
         what: "STATUS_UPDATED",
         targetType: "order",
         targetId: fileId,
-        targetTitle: record?.name || fileId,
-        note: `${user.role === "admin" ? "Admin" : "Client"} downloaded file "${record?.name || fileId}" (size: ${record?.size || "unknown"} bytes).`,
+        targetTitle: record.name || fileId,
+        note: `${user.role === "admin" ? "Admin" : "Client"} accessed vaulted file "${record.name || fileId}".`,
         type: "info",
       });
     } catch {}
 
     const headers = new Headers();
-    headers.set("Content-Type", record?.mimeType ?? "application/octet-stream");
-    headers.set("Content-Disposition", contentDisposition(record?.name ?? fileId, inline));
+    headers.set("Content-Type", record.mimeType ?? "application/octet-stream");
+    headers.set("Content-Disposition", contentDisposition(record.name ?? fileId, inline));
     headers.set("Cache-Control", "private, no-store, max-age=0");
     headers.set("X-Content-Type-Options", "nosniff");
 
-    // Forward Drive's byte-range negotiation so large files stream properly.
-    const contentLength = result.headers.get("content-length");
-    if (contentLength) headers.set("Content-Length", contentLength);
-    const contentRange = result.headers.get("content-range");
-    if (contentRange) headers.set("Content-Range", contentRange);
-    const acceptRanges = result.headers.get("accept-ranges");
-    if (acceptRanges) headers.set("Accept-Ranges", acceptRanges);
+    if (streamHeaders) {
+      const contentLength = streamHeaders.get("content-length");
+      if (contentLength) headers.set("Content-Length", contentLength);
+      const contentRange = streamHeaders.get("content-range");
+      if (contentRange) headers.set("Content-Range", contentRange);
+      const acceptRanges = streamHeaders.get("accept-ranges");
+      if (acceptRanges) headers.set("Accept-Ranges", acceptRanges);
+    }
 
-    if (!result.stream) return notFound("Drive returned no content for this file.");
-
-    return new Response(result.stream, { status: result.status, headers });
+    return new Response(streamBody, { status: streamStatus, headers });
   } catch (err) {
     return mapApiError(err);
   }

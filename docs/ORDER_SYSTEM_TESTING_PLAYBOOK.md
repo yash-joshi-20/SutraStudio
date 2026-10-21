@@ -2,10 +2,35 @@
 
 This document provides complete, copy-paste ready test datasets and a step-by-step walkthrough for manually verifying all ordering channels, services, packages, and admin automations in **SutraStudio**.
 
+> [!IMPORTANT]
+> **Canonical Production URLs & Relative Navigation**:
+> - **Production Domain**: `https://sutrastudios.in`
+> - **Local Development**: `http://localhost:3000`
+> - All links in this playbook use clean paths (e.g. `/new-order`, `/orders`, `/admin/orders`) that execute seamlessly on both `https://sutrastudios.in` and local development instances.
+
 > [!NOTE]
 > All sample assets mentioned below have been generated for you in the local directory:
 > `d:/SutraStudio/local-testing-assets/`
 > You can drag and drop these exact `.svg` files into the file upload inputs while placing your test orders.
+
+---
+
+## White-Label Media Delivery & Google Drive Storage Rules
+
+1. **First-Party Client URLs Only**:
+   - When clients preview, stream, or download deliverables (4K images, vertical reels, 3D meshes, brand PDFs), the URL **always originates from the studio domain**:
+     `https://sutrastudios.in/api/drive/file/{fileId}?download=true` (or `/api/drive/file/{fileId}`).
+   - **Zero Leaks**: Clients **never** see `drive.google.com` or raw Google Drive URLs. File streaming is reverse-proxied with authenticated multi-tenant security and audit logging.
+2. **Multi-Tier Structured Google Drive Storage**:
+   - Every client gets their own isolated folder: `Root > Clients > {ClientName}_{ClientId}/`
+   - Every order is provisioned with structured subfolders:
+     - `01 Client Assets`: Client brief uploads, reference logos, moodboards.
+     - `02 Drafts`: Intermediate AI renders, motion concepts, review files.
+     - `03 Final Delivery`: Approved vector master files (`.svg`), 4K PNGs, 60fps MP4s.
+     - `04 Revisions`: Historical iterations and revision requests.
+   - Retainers & packages are organized date-wise: `Root > Monthly > YYYY-MM > {Date}/`
+3. **Supervised Admin Storage Visibility**:
+   - The Studio Administrator can inspect and open the exact Google Drive folder and its 4 subfolders directly from the Admin Inspection Modal at `/admin/orders` via the **"Google Drive Storage Vault"** card.
 
 ---
 
@@ -19,7 +44,7 @@ This document provides complete, copy-paste ready test datasets and a step-by-st
 - [Scenario 6: 30-Day Monthly Retainer (Daily Trend Creator Flagship)](#scenario-6-30-day-monthly-retainer-flagship)
 - [Scenario 7: Commercial Motion Video / AI Reel](#scenario-7-commercial-motion-video--ai-reel)
 - [Scenario 8: How to Test Repeat Order ("Order Again")](#scenario-8-how-to-test-repeat-order-order-again)
-- [Scenario 9: Admin Verification, n8n Dispatch & Notification Clearance](#scenario-9-admin-verification-n8n-dispatch--notification-clearance)
+- [Scenario 9: Admin Verification, Drive Inspection & n8n Dispatch](#scenario-9-admin-verification-drive-inspection--n8n-dispatch)
 
 ---
 
@@ -29,7 +54,7 @@ This document provides complete, copy-paste ready test datasets and a step-by-st
 Verify that commissioning a Logo Concept delivers **Bespoke Vector Logo Assets (`.svg` and transparent `.png`)** and charges exactly **₹999**.
 
 ### B. Step-by-Step Instructions
-1. Navigate to `http://localhost:3000/pricing` or `http://localhost:3000/new-order?service=image-creation&deliverable=image-logo-concept`.
+1. Navigate to `/pricing` or `/new-order?service=image-creation&deliverable=image-logo-concept` on `https://sutrastudios.in` (or your local environment).
 2. In **Step 1 (Select Service)**:
    - Mode: **8 Studio Services**
    - Click on **Image Creation** or select **Logo concept** (shows ₹999 per concept).
@@ -65,7 +90,7 @@ Verify that commissioning a Logo Concept delivers **Bespoke Vector Logo Assets (
 Verify an individual service commission for an e-commerce handbag brand charging **₹499**.
 
 ### B. Step-by-Step Instructions
-1. Navigate to `http://localhost:3000/new-order?service=image-creation&deliverable=image-ai-product-visual`.
+1. Navigate to `/new-order?service=image-creation&deliverable=image-ai-product-visual`.
 2. In **Step 1**:
    - Deliverable: **AI product visual** (₹499 per image).
    - Quantity: `2` (Subtotal updates live to ₹998).
@@ -91,7 +116,7 @@ Verify an individual service commission for an e-commerce handbag brand charging
 Verify a digital web architecture commission charging canonical rate **₹4,999**.
 
 ### B. Step-by-Step Instructions
-1. Open `http://localhost:3000/new-order?service=website-development`.
+1. Open `/new-order?service=website-development`.
 2. In **Step 1**:
    - Service: **Website & Web App Development** (₹4,999).
    - Quantity: `1`. Click **Continue**.
@@ -121,7 +146,7 @@ Verify a digital web architecture commission charging canonical rate **₹4,999*
 Verify multi-discipline package commission for a franchise retail chain.
 
 ### B. Step-by-Step Instructions
-1. Navigate to `http://localhost:3000/new-order?package=pkg-branding-logo-bundle` (or switch to **Creative Packages & Retainers** in Step 1).
+1. Navigate to `/new-order?package=pkg-branding-logo-bundle` (or switch to **Creative Packages & Retainers** in Step 1).
 2. Select **Branding & Logo Identity Bundle** (₹4,999).
 3. In **Step 2**:
    - **Full Name**: `Kabir Singhania`
@@ -144,7 +169,7 @@ Verify multi-discipline package commission for a franchise retail chain.
 Verify spatial mesh and 3D interior design pipeline charging **₹1,499**.
 
 ### B. Step-by-Step Instructions
-1. Navigate to `http://localhost:3000/new-order?service=interior-design`.
+1. Navigate to `/new-order?service=interior-design`.
 2. In **Step 1**:
    - Service: **Interior Design & Arch Viz** (₹1,499).
    - Quantity: `1`.
@@ -173,7 +198,7 @@ Verify spatial mesh and 3D interior design pipeline charging **₹1,499**.
 Verify continuous 30-day creative engine subscription with 30 images + 30 short videos for **₹19,999/mo**.
 
 ### B. Step-by-Step Instructions
-1. Navigate to `http://localhost:3000/new-order?package=daily-trend-creator`.
+1. Navigate to `/new-order?package=daily-trend-creator`.
 2. Note that Step 1 renders:
    - Package: **Daily Trend Creator (Flagship)**
    - Price: **₹19,999 / month**
@@ -199,7 +224,7 @@ Verify continuous 30-day creative engine subscription with 30 images + 30 short 
 Verify commercial video generation with vertical 9:16 aspect ratio charging **₹999**.
 
 ### B. Step-by-Step Instructions
-1. Navigate to `http://localhost:3000/new-order?service=video-creation&deliverable=video-10-15s-ai-reel`.
+1. Navigate to `/new-order?service=video-creation&deliverable=video-10-15s-ai-reel`.
 2. Note that price is exactly **₹999**.
 3. In **Step 2**:
    - **Brand Name**: `Lumen Optics Eyewear`
@@ -214,8 +239,8 @@ Verify commercial video generation with vertical 9:16 aspect ratio charging **�
 
 ## Scenario 8: How to Test Repeat Order ("Order Again")
 
-1. Log into the client portal at `http://localhost:3000/login`.
-2. Visit `http://localhost:3000/orders`.
+1. Log into the client portal at `/login`.
+2. Visit `/orders`.
 3. Locate any past order card (e.g. your Logo Concept or Leather Bag order).
 4. **Action A (Card Button)**:
    - Click the **"Order Again"** button directly on the order card.
@@ -228,15 +253,18 @@ Verify commercial video generation with vertical 9:16 aspect ratio charging **�
 
 ---
 
-## Scenario 9: Admin Verification, n8n Dispatch & Notification Clearance
+## Scenario 9: Admin Verification, Drive Inspection & n8n Dispatch
 
-### A. Admin Ledger & Dispatch Test
+### A. Admin Ledger & Drive Vault Inspection
 1. Log in with an administrator account (`admin@sutrastudio.com` or via `/admin`).
-2. Visit `http://localhost:3000/admin/orders`.
+2. Visit `/admin/orders`.
 3. Locate the order placed in Scenario 1 (`Roast & Lotus Coffee Atelier`).
 4. In the order row:
-   - Click **"Inspect"** to view client brief, UTR reference, and uploaded assets.
-   - Click **"Run n8n Automation"** (or **"Verify Payment & Start Work"**).
+   - Click **"Inspect"** to open the order modal.
+   - **Inspect Google Drive Vault**: View the **"Google Drive Storage Vault"** card.
+     - Click **"Open in Drive"** to view the order's root folder in Google Drive.
+     - Click any subfolder link (`01 Client Assets`, `02 Drafts`, `03 Final Delivery`, `04 Revisions`) to inspect files in Drive.
+   - Click **"Dispatch n8n"** (or **"Verify Payment & Start Work"**).
 5. Watch the live dispatch status:
    - The status updates to `✓ Dispatched to n8n autonomous workflow pipeline! Assets vaulted.`
    - Status changes to `in_production` and deliverables are vaulted in Google Drive `02 Drafts`.
@@ -246,12 +274,15 @@ Verify commercial video generation with vertical 9:16 aspect ratio charging **�
      - `Roast_Lotus_Coffee_Atelier_Logo_Transparent_4K.png`
      - `Roast_Lotus_Coffee_Atelier_Brand_Identity_Guidelines.pdf`
 
-### B. Client Approval Test
-1. Return to `http://localhost:3000/orders` as the client.
+### B. Client Approval & First-Party White-Labeled Download
+1. Return to `/orders` as the client.
 2. Click **"Review Draft"** or **"Details"** on the order card.
 3. Switch to the **Vaulted Files** tab.
 4. Preview the vector logo concepts and click **"✓ Approve Deliverables"**.
-5. Order progress immediately moves to **100% Complete** with status **Approved**.
+5. Click **"Download Deliverable"**:
+   - The browser downloads the file directly from:
+     `https://sutrastudios.in/api/drive/file/{fileId}?download=true`
+   - Notice that the client **never sees `drive.google.com`** — the file streams with first-party headers, SSL, and authentic filename.
 
 ### C. Notification Dismissal Test
 1. Look at the top-right header: The **Notification Bell** icon pulses with an unread badge counter.

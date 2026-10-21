@@ -2,13 +2,19 @@
 
 This master technical document provides an end-to-end architectural explanation of the **SutraStudio Order Processing, Deliverable Generation, Storage, and Fulfillment Pipeline**.
 
+> [!IMPORTANT]
+> **Canonical Domain & Environment Rules**:
+> - **Primary Production Domain**: `https://sutrastudios.in`
+> - **Local Development**: `http://localhost:3000`
+> - **White-Label Deliverable Policy**: Clients **never** see `drive.google.com` links. All media assets stream through first-party URLs originating from the studio domain: `https://sutrastudios.in/api/drive/file/{fileId}?download=true`.
+
 ---
 
 ## 1. High-Level Architecture Overview
 
 ```mermaid
 flowchart TD
-    subgraph Frontend["Client & Public Portal"]
+    subgraph Frontend["Client & Public Portal (https://sutrastudios.in)"]
         A1["/pricing or /packages"] -->|Select Deliverable / Plan| B["MasterOrderForm (/new-order)"]
         A2["(client)/orders"] -->|Click 'Order Again'| B
         A3["Chat / WhatsApp Inbound"] -->|Deep Link Intent| B
@@ -21,12 +27,13 @@ flowchart TD
         E --> F1["Atomic Disk Vault: data/sutra_orders_store.json"]
         E --> F2["Cloud Vault: Firebase Firestore 'orders'"]
         E --> F3["Client Dossier: ClientsStore / 'clients'"]
-        E --> G["Google Drive Provisioning"]
-        G --> H["Order Vault: 01 Assets, 02 Drafts, 03 Final, 04 Revisions"]
+        E --> G["Google Drive Provisioning Engine"]
+        G --> H["Drive Storage Vault (Client / Order / Package / Date)"]
     end
 
-    subgraph AdminFulfillment["Admin Queue & Autonomous Automation"]
+    subgraph AdminFulfillment["Admin Queue & Supervised Automation"]
         E --> I["/admin/orders Dispatch Queue"]
+        I -->|Admin clicks 'Open in Drive'| DriveDirect["Direct Admin Google Drive Vault"]
         I -->|Admin clicks 'Dispatch n8n'| J["POST /api/n8n/dispatch"]
         J --> K["Autonomous Engine (n8n Webhook / Local Fallback)"]
         K -->|Logo Order| L1["Vector Logo Master (SVG) + 4K PNG + Guidelines PDF"]
@@ -37,9 +44,11 @@ flowchart TD
         L1 & L2 & L3 & L4 & L5 --> M["Vaulted into Drive '02 Drafts' & Firestore"]
     end
 
-    subgraph ClientReview["Client Inspection & Approval Loop"]
+    subgraph ClientDelivery["White-Labeled Client Delivery Loop"]
         M --> N["Notification Alert: Draft Ready"]
-        N --> O["Client Inspects in /orders -> Vaulted Files"]
+        N --> O["Client Portal: /orders -> Vaulted Files"]
+        O -->|Stream / Download| Proxy["GET https://sutrastudios.in/api/drive/file/{fileId}"]
+        Proxy -->|Streams Bytes (No Google URLs)| Client["Client Browser / Device"]
         O -->|Approve Deliverables| P["Status: Completed (100%) -> Final Delivery Vault"]
         O -->|Request Changes| Q["Status: Revision Requested -> '04 Revisions'"]
         O -->|Click Notification| R["Notification Auto-Dismissed / Removed"]
@@ -48,35 +57,53 @@ flowchart TD
 
 ---
 
-## 2. Where & How Data Is Stored (Lifetime Persistence)
+## 2. Where & How Data Is Stored (Firebase + Google Drive Synergy)
 
-The SutraStudio architecture uses a **resilient dual-tier storage strategy** ensuring zero data loss across browser refreshes, user logout/login sessions, server cold-starts, and container redeployments.
+SutraStudio utilizes a hybrid infrastructure where **Firebase** handles user identity, role-based access, and relational order metadata, while **Google Drive (5 TB Vault)** serves as the high-capacity, private binary object store.
 
-### A. Order Records & Metadata
-1. **Primary Database (Cloud)**:
-   - **Service**: Google Firebase Firestore
+### A. Order Records & Metadata (Firestore + Disk Vault)
+1. **Primary Database (Cloud Firestore)**:
    - **Collection**: `orders`
    - **Document ID**: `ord_<timestamp>` (e.g. `ord_1772654321000`)
-   - **Fields**: Order Number (`#ORD-XXXX`), code, client identity (`clientUid`, `clientId`, `clientEmail`, `clientName`, `clientPhone`), service details, verified items array, canonical numeric pricing, status (`pending_payment`, `in_production`, `draft_delivered`, `completed`), revision counters, payment details, and complete status transition history.
-2. **Local Atomic Persistence Vault (On-Premises / Server)**:
+   - **Fields**: Order Number (`#ORD-XXXX`), code, client identity (`clientUid`, `clientId`, `clientEmail`, `clientName`, `clientPhone`), service details, verified items array, canonical numeric pricing, status (`pending_verification`, `in_production`, `draft_delivered`, `completed`), revision counters, payment details, and complete status transition history.
+2. **Local Atomic Persistence Vault (Server)**:
    - **File Location**: `data/sutra_orders_store.json`
    - **Engine**: `OrdersStore` (`src/lib/services/ordersStore.ts`)
    - **Write Mechanism**: Memory map backed by atomic file-system writes (`fs.writeFileSync`).
-   - **Clean Storage Rule**: Genuine client orders are permanently retained and indexed by both `id` and `clientUid`.
+   - **Retention**: Real client orders are permanently retained and indexed by both `id` and `clientUid`.
 
 ### B. Client Profiles & Dossiers
 - **Service**: `ClientsStore` (`src/lib/services/clientsStore.ts`) & Firestore collection `clients`.
 - Automatically synchronized during order submission. Indexes lifetime orders, brand names, phone numbers, and company affiliation per authenticated `uid`.
 
-### C. Creative Files, Media Deliverables & Digital Assets
-All creative binary assets (images, videos, 3D meshes, code archives, PDF brand guides) are structured into **private Google Drive Vaults**:
-- **Root Project Vault**: Unique Google Drive folder per order (`drive_fld_sutra_001` or provisioned drive ID).
-- **Sub-folder Hierarchy**:
-  - `01 Client Assets`: Moodboards, raw logos, references uploaded by the client.
-  - `02 Drafts`: Intermediate AI renders, motion drafts, vector concepts for client review.
-  - `03 Final Delivery`: Approved master vectors, 4K production PNGs, 60fps MP4 masters.
-  - `04 Revisions`: Historical iteration files and revision change logs.
-- **Admin Review Vault**: Firestore collection `admin_deliverables` tracks high-resolution preview URLs, generation prompts, and staging states for senior director review.
+### C. Multi-Tier Google Drive Storage Architecture
+
+All media deliverables (images, video reels, 3D meshes, web bundles, PDF brand guides) are organized strictly in **Google Drive**:
+
+1. **Folder Hierarchy**:
+   - **Root Folder**: `SUTRA_STUDIO_VAULT` (Provisioned server-side under `drive.file` scope)
+   - **Client Level**: `Clients/{ClientName}_{ClientId}/`
+     - Isolated for each client so files never cross-mingle.
+   - **Order Level**: `{OrderNumber}_{ServiceName}/`
+     - Subfolders:
+       - `01 Client Assets`: Client brief uploads, logos, and references.
+       - `02 Drafts`: Intermediate AI renders, motion concepts, review files.
+       - `03 Final Delivery`: Approved vector master files (`.svg`), 4K PNGs, 60fps MP4s.
+       - `04 Revisions`: Historical iterations and revision requests.
+   - **Date & Package Level**:
+     - Retainer and recurring packages are organized by month and date: `Monthly/{YYYY-MM}/{Date}/`.
+
+2. **Admin Google Drive Storage Visibility**:
+   - In `/admin/orders`, clicking **"Inspect"** on any order displays the **"Google Drive Storage Vault"** card.
+   - The admin can click **"Open in Drive"** to immediately open the Google Drive folder in a new tab.
+   - Subfolder quick links allow one-click inspection of `01 Client Assets`, `02 Drafts`, `03 Final Delivery`, and `04 Revisions`.
+
+3. **White-Label Client Media Delivery (Zero Google Drive Leaks)**:
+   - When clients view or download deliverables, they **never see a Google Drive URL**.
+   - Instead, the URL is reverse-proxied through:
+     `https://sutrastudios.in/api/drive/file/{fileId}?download=true`
+   - The server verifies authenticated account ownership (`clientId === user.uid`), fetches the bytes from Drive server-to-server, and streams them with proper RFC 5987 headers (`Content-Disposition: attachment; filename="..."`, `Content-Type`, `Accept-Ranges: bytes`).
+   - To the client, the files appear as native downloads hosted directly on SutraStudio's cloud infrastructure.
 
 ---
 

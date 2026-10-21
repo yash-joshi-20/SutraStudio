@@ -193,13 +193,17 @@ export default function OrdersPage() {
     if (!fileIdOrUrl) return;
     setDownloadState((prev) => ({ ...prev, [fileIdOrUrl]: "downloading" }));
     try {
-      const isFullUrl =
-        fileIdOrUrl.startsWith("http://") ||
-        fileIdOrUrl.startsWith("https://") ||
-        fileIdOrUrl.startsWith("/");
-      const targetUrl = isFullUrl
-        ? fileIdOrUrl
-        : `/api/drive/file/${encodeURIComponent(fileIdOrUrl)}?download=true`;
+      let targetUrl = fileIdOrUrl;
+      if (fileIdOrUrl.includes("drive.google.com")) {
+        // Extract Google Drive file ID if present so client never leaves first-party domain
+        const match = fileIdOrUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || fileIdOrUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+        const driveId = match ? match[1] : "";
+        targetUrl = driveId
+          ? `/api/drive/file/${encodeURIComponent(driveId)}?download=true`
+          : fileIdOrUrl;
+      } else if (!fileIdOrUrl.startsWith("http://") && !fileIdOrUrl.startsWith("https://") && !fileIdOrUrl.startsWith("/")) {
+        targetUrl = `/api/drive/file/${encodeURIComponent(fileIdOrUrl)}?download=true`;
+      }
 
       const res = await fetch(targetUrl, { method: "HEAD" });
       if (!res.ok) {

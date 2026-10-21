@@ -32,6 +32,7 @@ import {
   MessageSquare,
   Send,
   Mail,
+  Folder,
 } from "lucide-react";
 
 interface AdminOrderRecord {
@@ -57,6 +58,15 @@ interface AdminOrderRecord {
   source?: string;
   isDraft?: boolean;
   confirmToken?: string;
+  driveFolderId?: string;
+  driveFolderPath?: string;
+  driveFolderLink?: string;
+  driveSubfolders?: {
+    clientAssets?: { id: string; name: string; link?: string };
+    drafts?: { id: string; name: string; link?: string };
+    finalDelivery?: { id: string; name: string; link?: string };
+    revisions?: { id: string; name: string; link?: string };
+  };
   attribution?: {
     utm_source?: string;
     utm_medium?: string;
@@ -713,6 +723,91 @@ export default function AdminOrdersPage() {
                   )}
 
                   {/* Order Details Footer */}
+                </div>
+
+                {/* Google Drive Storage Vault (Admin Supervised) */}
+                <div className="p-3.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] space-y-2.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Folder className="w-4 h-4 text-[#5C3A1E]" />
+                      <span className="font-bold text-[#0F172A]">
+                        Google Drive Storage Vault
+                      </span>
+                    </div>
+                    {(inspectingOrder.driveFolderLink || inspectingOrder.driveFolderId) && (
+                      <a
+                        href={
+                          inspectingOrder.driveFolderLink ||
+                          `https://drive.google.com/drive/folders/${inspectingOrder.driveFolderId}`
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#5C3A1E] hover:text-[#8B6508] bg-white px-2.5 py-1 rounded-lg border border-[#EADFCB] hover:border-[#D4A35A] transition-colors"
+                      >
+                        <ExternalLink className="w-3 h-3 text-[#A98B57]" />
+                        <span>Open in Drive</span>
+                      </a>
+                    )}
+                  </div>
+
+                  <div className="text-[11px] space-y-1.5 text-[#64748B]">
+                    <div className="flex items-center justify-between">
+                      <span>Client Vault Path:</span>
+                      <span className="font-mono text-[#0F172A] text-[10px] bg-white px-1.5 py-0.5 rounded border border-[#EADFCB]">
+                        {inspectingOrder.driveFolderPath ||
+                          `Clients/${inspectingOrder.clientName?.replace(/\s+/g, "_") || "Client"}/${inspectingOrder.orderNumber || inspectingOrder.id}`}
+                      </span>
+                    </div>
+
+                    {inspectingOrder.driveSubfolders && (
+                      <div className="grid grid-cols-2 gap-1.5 pt-1.5 border-t border-[#EADFCB]/60 text-[10px]">
+                        {inspectingOrder.driveSubfolders.clientAssets?.link && (
+                          <a
+                            href={inspectingOrder.driveSubfolders.clientAssets.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded-md bg-white border border-[#EADFCB] hover:border-[#D4A35A] truncate flex items-center gap-1 text-[#5C3A1E]"
+                          >
+                            <Folder className="w-2.5 h-2.5 shrink-0 text-[#A98B57]" />
+                            <span className="truncate">01 Client Assets</span>
+                          </a>
+                        )}
+                        {inspectingOrder.driveSubfolders.drafts?.link && (
+                          <a
+                            href={inspectingOrder.driveSubfolders.drafts.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded-md bg-white border border-[#EADFCB] hover:border-[#D4A35A] truncate flex items-center gap-1 text-[#5C3A1E]"
+                          >
+                            <Folder className="w-2.5 h-2.5 shrink-0 text-[#A98B57]" />
+                            <span className="truncate">02 Drafts</span>
+                          </a>
+                        )}
+                        {inspectingOrder.driveSubfolders.finalDelivery?.link && (
+                          <a
+                            href={inspectingOrder.driveSubfolders.finalDelivery.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded-md bg-white border border-[#EADFCB] hover:border-[#D4A35A] truncate flex items-center gap-1 text-[#5C3A1E]"
+                          >
+                            <Folder className="w-2.5 h-2.5 shrink-0 text-[#2E7D4F]" />
+                            <span className="truncate">03 Final Delivery</span>
+                          </a>
+                        )}
+                        {inspectingOrder.driveSubfolders.revisions?.link && (
+                          <a
+                            href={inspectingOrder.driveSubfolders.revisions.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded-md bg-white border border-[#EADFCB] hover:border-[#D4A35A] truncate flex items-center gap-1 text-[#5C3A1E]"
+                          >
+                            <Folder className="w-2.5 h-2.5 shrink-0 text-[#C27803]" />
+                            <span className="truncate">04 Revisions</span>
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Single Conversation History Thread */}
