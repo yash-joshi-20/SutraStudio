@@ -200,6 +200,7 @@ export function MetaPromotionStudio() {
   const [metaAdAudience, setMetaAdAudience] = useState("Founders, Luxury Brands & D2C");
   const [isMetaAdModalOpen, setIsMetaAdModalOpen] = useState(false);
   const [metaAdSuccessNotice, setMetaAdSuccessNotice] = useState<string | null>(null);
+  const [activeMobileTab, setActiveMobileTab] = useState<"config" | "preview">("config");
 
   // Phone Mockup Interactive States
   const [isPlaying, setIsPlaying] = useState(true);
@@ -482,7 +483,7 @@ export function MetaPromotionStudio() {
                 <h2 className="font-serif font-bold text-base sm:text-lg text-[#171717]">
                   Daily Self-Promotion Engine
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 border border-amber-200 text-[#5C3A1E]">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#FAF9F5] border border-[#E5E1D8] text-[#8C6D3B]">
                   Instagram &amp; Facebook Feed
                 </span>
               </div>
@@ -580,14 +581,42 @@ export function MetaPromotionStudio() {
         )}
       </div>
 
+      {/* Mobile / Tablet Responsive Mode Switcher */}
+      <div className="flex lg:hidden items-center p-1 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] shadow-2xs">
+        <button
+          type="button"
+          onClick={() => setActiveMobileTab("config")}
+          className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            activeMobileTab === "config"
+              ? "bg-[#171717] text-white shadow-xs"
+              : "text-[#64748B] hover:text-[#171717]"
+          }`}
+        >
+          <Sliders className="w-3.5 h-3.5" />
+          <span>1. Studio Controls (Steps 1–4)</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveMobileTab("preview")}
+          className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            activeMobileTab === "preview"
+              ? "bg-[#171717] text-white shadow-xs"
+              : "text-[#64748B] hover:text-[#171717]"
+          }`}
+        >
+          <Smartphone className="w-3.5 h-3.5 text-[#A98B57]" />
+          <span>2. Live Reel Mockup</span>
+        </button>
+      </div>
+
       {/* Main 2-Column Grid: Left Controls / Right Live Smartphone Preview */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* ============================================================ */}
         {/* LEFT COLUMN: CAMPAIGN CONFIGURATION & GENERATION (7 Cols)     */}
         {/* ============================================================ */}
-        <div className="lg:col-span-7 space-y-6">
+        <div className={`lg:col-span-7 space-y-6 ${activeMobileTab === "preview" ? "hidden lg:block" : "block"}`}>
           {/* STEP 1: SELECT CAMPAIGN TARGET */}
-          <div className="p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-3.5">
+          <div className="p-5 sm:p-6 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-[#171717] text-[#FAF9F5] text-[11px] font-bold flex items-center justify-center font-mono">
@@ -602,7 +631,7 @@ export function MetaPromotionStudio() {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {CAMPAIGN_PRESETS.map((c) => {
                 const Icon = c.icon;
                 const isSelected = selectedCampaign === c.id;
@@ -611,31 +640,59 @@ export function MetaPromotionStudio() {
                     key={c.id}
                     type="button"
                     onClick={() => setSelectedCampaign(c.id)}
-                    className={`p-3 rounded-xl text-left border transition-all cursor-pointer flex flex-col justify-between space-y-2 ${
+                    className={`p-3.5 rounded-xl text-left border transition-all cursor-pointer flex flex-col justify-between space-y-2.5 ${
                       isSelected
-                        ? "bg-[#171717] text-white border-[#171717] shadow-xs"
-                        : "bg-[#FAF9F5] border-[#E5E1D8] hover:border-[#A98B57] text-[#171717]"
+                        ? "bg-[#171717] text-white border-[#171717] shadow-sm ring-1 ring-[#A98B57]"
+                        : "bg-[#FAF9F5] border-[#E5E1D8] hover:border-[#A98B57] hover:bg-white text-[#171717]"
                     }`}
                   >
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-2">
-                        <Icon className={`w-4 h-4 ${isSelected ? "text-[#A98B57]" : "text-[#8C827A]"}`} />
+                    <div className="flex items-start justify-between gap-2 w-full">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                            isSelected ? "bg-white/10 text-[#D4AF37]" : "bg-[#F0ECE1] text-[#8C827A]"
+                          }`}
+                        >
+                          <Icon className="w-4 h-4" />
+                        </div>
                         <span className="font-bold text-xs truncate">{c.title}</span>
                       </div>
                       <span
-                        className={`text-[9px] font-mono px-1.5 py-0.5 rounded-md ${
-                          isSelected ? "bg-white/20 text-white" : "bg-white text-[#A98B57] border border-[#E5E1D8]"
+                        className={`text-[9px] font-mono px-2 py-0.5 rounded-full shrink-0 font-semibold ${
+                          isSelected
+                            ? "bg-amber-400/20 text-amber-300 border border-amber-400/30"
+                            : "bg-white text-[#A98B57] border border-[#E5E1D8]"
                         }`}
                       >
                         {c.badge}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-[11px] w-full pt-1 border-t border-white/10">
-                      <span className={`${isSelected ? "text-white/80" : "text-[#64748B]"} text-[10px]`}>
-                        {c.desc}
-                      </span>
-                      <span className={`font-serif font-bold shrink-0 ml-1 ${isSelected ? "text-amber-300" : "text-[#5C3A1E]"}`}>
+
+                    <p className={`text-[11px] leading-relaxed line-clamp-2 min-h-[32px] ${
+                      isSelected ? "text-white/80" : "text-[#64748B]"
+                    }`}>
+                      {c.desc}
+                    </p>
+
+                    <div className={`flex items-center justify-between text-[11px] w-full pt-2 border-t ${
+                      isSelected ? "border-white/10" : "border-[#E5E1D8]"
+                    }`}>
+                      <span className={`font-serif font-bold ${
+                        isSelected ? "text-amber-300" : "text-[#5C3A1E]"
+                      }`}>
                         {c.price}
+                      </span>
+                      <span className={`text-[10px] font-mono flex items-center gap-1 font-semibold ${
+                        isSelected ? "text-[#D4AF37]" : "text-[#8C827A]"
+                      }`}>
+                        {isSelected ? (
+                          <>
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#D4AF37]" />
+                            <span>Active</span>
+                          </>
+                        ) : (
+                          <span>Select →</span>
+                        )}
                       </span>
                     </div>
                   </button>
@@ -645,7 +702,7 @@ export function MetaPromotionStudio() {
           </div>
 
           {/* STEP 2: FORMAT & LANGUAGE SELECTORS */}
-          <div className="p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-4">
+          <div className="p-5 sm:p-6 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-[#171717] text-[#FAF9F5] text-[11px] font-bold flex items-center justify-center font-mono">
@@ -676,17 +733,23 @@ export function MetaPromotionStudio() {
                       key={f.id}
                       type="button"
                       onClick={() => setPlatform(f.id as any)}
-                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
                         isSelected
-                          ? "bg-[#5C3A1E] text-white border-[#5C3A1E] shadow-2xs"
-                          : "bg-[#FAF9F5] border-[#E5E1D8] text-[#171717] hover:border-[#A98B57]"
+                          ? "bg-[#171717] text-white border-[#171717] shadow-sm ring-1 ring-[#A98B57]"
+                          : "bg-[#FAF9F5] border-[#E5E1D8] text-[#171717] hover:border-[#A98B57] hover:bg-white"
                       }`}
                     >
                       <div className="flex items-center gap-1.5">
-                        <Icon className="w-3.5 h-3.5 text-[#A98B57]" />
-                        <span className="text-xs font-bold truncate">{f.label}</span>
+                        <Icon className={`w-3.5 h-3.5 ${isSelected ? "text-[#D4AF37]" : "text-[#A98B57]"}`} />
+                        <span className={`text-xs font-bold truncate ${isSelected ? "text-white" : "text-[#171717]"}`}>
+                          {f.label}
+                        </span>
                       </div>
-                      <span className="text-[9px] font-mono text-white/70 block mt-0.5">
+                      <span
+                        className={`text-[9px] font-mono block mt-1 font-medium ${
+                          isSelected ? "text-amber-200/90" : "text-[#78716C]"
+                        }`}
+                      >
                         {f.tag}
                       </span>
                     </button>
@@ -696,7 +759,7 @@ export function MetaPromotionStudio() {
             </div>
 
             {/* Language Switcher */}
-            <div className="space-y-1.5 pt-2 border-t border-[#E5E1D8]">
+            <div className="space-y-1.5 pt-3 border-t border-[#E5E1D8]">
               <label className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider block">
                 Content Language / Dialect:
               </label>
@@ -706,27 +769,38 @@ export function MetaPromotionStudio() {
                   { id: "gujarati", label: "ગુજરાતી", sub: "Gujarat / Ahmedabad" },
                   { id: "hindi", label: "हिन्दी", sub: "Pan-India D2C" },
                   { id: "hinglish", label: "Hinglish", sub: "Urban Viral" },
-                ].map((l) => (
-                  <button
-                    key={l.id}
-                    type="button"
-                    onClick={() => setLanguage(l.id as any)}
-                    className={`py-2 px-3 rounded-xl border text-center transition-all cursor-pointer ${
-                      language === l.id
-                        ? "bg-[#171717] text-white border-[#171717] font-bold"
-                        : "bg-[#FAF9F5] border-[#E5E1D8] text-[#171717] hover:border-[#A98B57]"
-                    }`}
-                  >
-                    <span className="text-xs block">{l.label}</span>
-                    <span className="text-[9px] font-mono opacity-70 block">{l.sub}</span>
-                  </button>
-                ))}
+                ].map((l) => {
+                  const isSelected = language === l.id;
+                  return (
+                    <button
+                      key={l.id}
+                      type="button"
+                      onClick={() => setLanguage(l.id as any)}
+                      className={`py-2 px-3 rounded-xl border text-center transition-all cursor-pointer ${
+                        isSelected
+                          ? "bg-[#171717] text-white border-[#171717] font-bold shadow-2xs ring-1 ring-[#A98B57]"
+                          : "bg-[#FAF9F5] border-[#E5E1D8] text-[#171717] hover:border-[#A98B57] hover:bg-white"
+                      }`}
+                    >
+                      <span className={`text-xs block font-bold ${isSelected ? "text-white" : "text-[#171717]"}`}>
+                        {l.label}
+                      </span>
+                      <span
+                        className={`text-[9px] font-mono block mt-0.5 ${
+                          isSelected ? "text-amber-200/80" : "text-[#78716C]"
+                        }`}
+                      >
+                        {l.sub}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
 
           {/* STEP 3: ATTACH MEDIA ASSET */}
-          <div className="p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-3.5">
+          <div className="p-5 sm:p-6 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-[#171717] text-[#FAF9F5] text-[11px] font-bold flex items-center justify-center font-mono">
@@ -757,35 +831,56 @@ export function MetaPromotionStudio() {
                         setSelectedMedia(m);
                         setCustomMediaUrl("");
                       }}
-                      className={`relative rounded-xl overflow-hidden border text-left p-1.5 transition-all cursor-pointer flex flex-col justify-between ${
+                      className={`group relative rounded-xl overflow-hidden border text-left p-1.5 transition-all cursor-pointer flex flex-col justify-between ${
                         isSelected
                           ? "ring-2 ring-[#A98B57] border-[#A98B57] bg-[#FAF9F5] shadow-xs"
-                          : "border-[#E5E1D8] bg-[#FFFDF9] hover:border-[#A98B57]"
+                          : "border-[#E5E1D8] bg-[#FFFDF9] hover:border-[#A98B57] hover:shadow-2xs"
                       }`}
                     >
                       <div className="relative h-20 w-full rounded-lg overflow-hidden bg-neutral-900 mb-1.5">
-                        {m.type === "video" ? (
-                          <div className="w-full h-full flex items-center justify-center bg-black/60 relative">
-                            <span className="absolute top-1 right-1 p-0.5 rounded bg-black/70 text-[9px] text-white font-mono flex items-center gap-0.5">
-                              <VideoIcon className="w-2.5 h-2.5 text-[#A98B57]" /> MP4
+                        {/* Poster Image Always Shown */}
+                        <img
+                          src={m.thumbnailUrl}
+                          alt={m.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.opacity = "0.6";
+                          }}
+                        />
+
+                        {/* Video Overlay with Play Icon & Badge */}
+                        {m.type === "video" && (
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center transition-colors group-hover:bg-black/30">
+                            <div className="w-6 h-6 rounded-full bg-black/70 backdrop-blur-xs text-white flex items-center justify-center border border-white/20 shadow-xs">
+                              <Play className="w-3 h-3 fill-white ml-0.5 text-white" />
+                            </div>
+                            <span className="absolute top-1 right-1 px-1.5 py-0.5 rounded bg-black/80 text-[8px] text-[#D4AF37] font-mono font-bold flex items-center gap-0.5 border border-white/10">
+                              <VideoIcon className="w-2 h-2" /> MP4
                             </span>
-                            <Play className="w-5 h-5 text-white/80" />
                           </div>
-                        ) : (
-                          <img
-                            src={m.thumbnailUrl}
-                            alt={m.title}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLElement).style.display = "none";
-                            }}
-                          />
+                        )}
+
+                        {/* Image 4K Badge */}
+                        {m.type === "image" && (
+                          <span className="absolute top-1 right-1 px-1.5 py-0.5 rounded bg-black/75 text-[8px] text-white font-mono font-semibold flex items-center gap-0.5 border border-white/10">
+                            <ImageIcon className="w-2 h-2 text-[#A98B57]" /> 4K
+                          </span>
+                        )}
+
+                        {/* Selected Checkmark Badge */}
+                        {isSelected && (
+                          <div className="absolute top-1 left-1 w-4 h-4 rounded-full bg-[#A98B57] text-white flex items-center justify-center shadow-xs">
+                            <Check className="w-2.5 h-2.5 stroke-[3]" />
+                          </div>
                         )}
                       </div>
-                      <span className="text-[10px] font-bold text-[#171717] truncate block" title={m.title}>
-                        {m.title}
-                      </span>
-                      <span className="text-[9px] font-mono text-[#A98B57] block">{m.tag}</span>
+
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] font-bold text-[#171717] line-clamp-1 block" title={m.title}>
+                          {m.title}
+                        </span>
+                        <span className="text-[9px] font-mono text-[#A98B57] font-semibold block">{m.tag}</span>
+                      </div>
                     </button>
                   );
                 })}
@@ -808,7 +903,7 @@ export function MetaPromotionStudio() {
           </div>
 
           {/* STEP 4: OPTIONAL CUSTOM PROMPT & GENERATION TRIGGER */}
-          <div className="p-5 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-4">
+          <div className="p-5 sm:p-6 rounded-2xl bg-[#FFFDF9] border border-[#E5E1D8] shadow-2xs space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-[#171717] text-[#FAF9F5] text-[11px] font-bold flex items-center justify-center font-mono">
@@ -833,7 +928,7 @@ export function MetaPromotionStudio() {
               type="button"
               disabled={isGenerating}
               onClick={handleGenerate}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#171717] via-[#5C3A1E] to-[#171717] text-white font-serif font-bold text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-60"
+              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#171717] via-[#2E241E] to-[#171717] text-white font-serif font-bold text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg hover:border-[#A98B57]/50 border border-transparent transition-all cursor-pointer disabled:opacity-60 active:scale-[0.99]"
             >
               {isGenerating ? (
                 <>
@@ -847,13 +942,28 @@ export function MetaPromotionStudio() {
                 </>
               )}
             </button>
+
+            {/* Mobile / Tablet Quick View Preview Button */}
+            <div className="lg:hidden pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveMobileTab("preview");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="w-full py-2.5 rounded-xl bg-[#FAF9F5] border border-[#A98B57] text-[#5C3A1E] font-serif font-bold text-xs flex items-center justify-center gap-2 hover:bg-[#F0ECE1] transition-all cursor-pointer"
+              >
+                <Smartphone className="w-4 h-4 text-[#A98B57]" />
+                <span>View Live Reel Preview on Phone ({platform === "meta_carousel" ? "Carousel" : "9:16 Reel"}) →</span>
+              </button>
+            </div>
           </div>
         </div>
 
         {/* ============================================================ */}
         {/* RIGHT COLUMN: LIVE INTERACTIVE SMARTPHONE PREVIEW (5 Cols)   */}
         {/* ============================================================ */}
-        <div className="lg:col-span-5 space-y-4">
+        <div className={`lg:col-span-5 space-y-4 lg:sticky lg:top-20 self-start ${activeMobileTab === "config" ? "hidden lg:block" : "block"}`}>
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
               <Smartphone className="w-4 h-4 text-[#A98B57]" />
@@ -861,9 +971,12 @@ export function MetaPromotionStudio() {
                 Live Meta Mobile Mockup
               </span>
             </div>
-            <span className="text-[10px] font-mono text-[#8C827A]">
-              {platform === "meta_carousel" ? "Feed Carousel" : "9:16 Vertical Reel"}
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-mono text-[#8C827A]">
+                {platform === "meta_carousel" ? "Feed Carousel" : "9:16 Vertical Reel"}
+              </span>
+            </div>
           </div>
 
           {/* REALISTIC SMARTPHONE CHASSIS */}
@@ -882,6 +995,7 @@ export function MetaPromotionStudio() {
                   <video
                     ref={videoRef}
                     src={activeMedia.url}
+                    poster={selectedMedia.thumbnailUrl}
                     loop
                     autoPlay
                     muted={isMuted}
@@ -924,7 +1038,7 @@ export function MetaPromotionStudio() {
                     setIsLiked(!isLiked);
                     setLikesCount((prev) => (isLiked ? prev - 1 : prev + 1));
                   }}
-                  className="flex flex-col items-center gap-1 group"
+                  className="flex flex-col items-center gap-1 group cursor-pointer"
                 >
                   <div
                     className={`w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-xs transition-transform active:scale-125 ${
@@ -958,7 +1072,7 @@ export function MetaPromotionStudio() {
                 <button
                   type="button"
                   onClick={() => setIsSaved(!isSaved)}
-                  className="flex flex-col items-center gap-1"
+                  className="flex flex-col items-center gap-1 cursor-pointer"
                 >
                   <div
                     className={`w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-xs ${
@@ -1015,7 +1129,7 @@ export function MetaPromotionStudio() {
                   <button
                     type="button"
                     onClick={() => setCaptionExpanded(!captionExpanded)}
-                    className="text-[9px] font-bold text-white/60 hover:text-white"
+                    className="text-[9px] font-bold text-white/60 hover:text-white cursor-pointer"
                   >
                     {captionExpanded ? "less" : "...more"}
                   </button>
@@ -1026,13 +1140,28 @@ export function MetaPromotionStudio() {
                   href={currentPromotion?.whatsappUrl || "https://wa.me/918200192781"}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-2 rounded-xl bg-gradient-to-r from-[#A98B57] to-[#D4AF37] text-black font-bold text-xs text-center flex items-center justify-center gap-1.5 shadow-md active:scale-98 transition-transform"
+                  className="w-full py-2 rounded-xl bg-gradient-to-r from-[#A98B57] to-[#D4AF37] text-black font-bold text-xs text-center flex items-center justify-center gap-1.5 shadow-md active:scale-98 transition-transform cursor-pointer"
                 >
                   <span>Book Creative Pipeline via WhatsApp</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
             </div>
+          </div>
+
+          {/* Mobile / Tablet Back to Controls Button */}
+          <div className="lg:hidden pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveMobileTab("config");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="w-full py-2.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-[#171717] font-serif font-bold text-xs flex items-center justify-center gap-2 hover:bg-[#F0ECE1] transition-all cursor-pointer"
+            >
+              <Sliders className="w-4 h-4 text-[#A98B57]" />
+              <span>← Back to Studio Controls (Steps 1–4)</span>
+            </button>
           </div>
         </div>
       </div>
