@@ -95,6 +95,7 @@ backups/
 SutraStudio-Full.zip
 SutraStudio-Project.zip
 # Private Reference Assets (Do not upload to GitHub)
+docs/internal/
 docs/*.jpg
 docs/*.jpeg
 docs/*.png
