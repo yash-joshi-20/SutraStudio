@@ -176,3 +176,35 @@ curl -X POST https://n8n.sutrastudios.in/webhook/sutra-master-dispatch \
   -H "Content-Type: application/json" \
   -d '{"mode": "client_order_fulfillment", "orderId": "ORD-TEST-001", "packageId": "commission-studio-growth", "client": {"brandName": "Aura Luxury Living"}, "brief": "Contemporary luxury villa furniture showcase"}'
 ```
+
+---
+
+### 9. Render માં કી ડિલીટ કેમ થઈ જાય છે? અને કાયમી ઉકેલ (Why Keys Get Deleted on Render & Permanent Fix)
+
+#### સમસ્યાનું મૂળ કારણ (Root Cause):
+Render પર n8n એક Docker કન્ટેનર તરીકે ચાલે છે. ડોકર કન્ટેનર **સ્ટેટલેસ (Stateless/Ephemeral)** હોય છે. 
+જ્યારે પણ Render સર્વિસ રિસ્ટાર્ટ થાય, સ્લીપમાંથી જાગે અથવા નવું ડિપ્લોય થાય, ત્યારે કન્ટેનર અંદર બનેલી બધી ફાઇલો (જેમ કે લોકલ ડેટાબેઝ કે `.env` ફાઇલ) આપમેળે ડિલીટ થઈ જાય છે!
+
+#### ૩ કાયમી ઉકેલ (3 Permanent Solutions):
+
+1. **ઉકેલ ૧ (Render Dashboard Environment Variables - 100% કાયમી)**:
+   - તમારા બ્રાઉઝરમાં Render ડેશબોર્ડ ખોલો: `https://dashboard.render.com`
+   - તમારી **`sutra-n8n`** સર્વિસ પર ક્લિક કરો.
+   - ડાબી બાજુથી **Environment** ટેબ પસંદ કરો.
+   - **Add Environment Variable** પર ક્લિક કરો અને નીચેના વેરિયેબલ્સ એડ કરો:
+     * `GEMINI_API_KEY` = `તમારી Google AI કી (AIzaSy...)`
+     * `N8N_BLOCK_ENV_ACCESS_IN_NODE` = `false`
+     * `SUTRA_STUDIO_URL` = `https://sutrastudios.in`
+     * `N8N_WEBHOOK_SECRET` = `sutra_secret_shared_token_2026`
+   - નીચે **Save Changes** પર ક્લિક કરો.
+   - **પરિણામ**: Render આ કી તેના સુરક્ષિત ક્લાઉડ સર્વરમાં સાચવે છે, તેથી ગમે તેટલી વાર રિસ્ટાર્ટ થાય તો પણ આ કી **ક્યારેય ડિલીટ નહીં થાય**!
+
+2. **ઉકેલ ૨ (Sutra Studio માંથી આપમેળે કી મોકલાય છે - Zero Setup in n8n)**:
+   - તમે જ્યારે પણ Sutra Studio Admin ડેશબોર્ડ (`https://sutrastudios.in/admin`) માંથી **"Run Pipeline"** કે **"Run Automation"** ક્લિક કરશો, ત્યારે Next.js પોતાની `GEMINI_API_KEY` સીધી જ n8n ને પેલોડમાં મોકલી આપે છે. n8n માં સેવ ના હોય તો પણ કામ ચાલુ રહેશે!
+
+3. **ઉકેલ ૩ (Render Persistent Disk)**:
+   - Render ડેશબોર્ડ &rarr; `sutra-n8n` &rarr; **Disks** ટેબ &rarr; **Add Disk**.
+   - Name: `n8n-data`
+   - Mount Path: `/home/node/.n8n`
+   - Size: `1 GB`
+   - આ કરવાથી n8n ના ક્રેડેન્શિયલ્સ અને ડેટાબેઝ ક્યારેય ડિલીટ નહીં થાય.
