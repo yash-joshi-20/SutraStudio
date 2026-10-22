@@ -4,6 +4,7 @@ import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
 import { AuditLogService } from "@/lib/services/auditLogService";
 import { readEnv } from "@/lib/config/env";
 import { assertAdminSession } from "@/lib/auth/requestRole";
+import { N8nAutomationService } from "@/lib/services/n8nService";
 
 export interface DeliverableRecord {
   deliverableId: string;
@@ -80,7 +81,7 @@ export async function POST(req: Request) {
     req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ||
     "";
 
-  const expectedSecret = readEnv("N8N_WEBHOOK_SECRET");
+  const expectedSecret = N8nAutomationService.getWebhookSecret();
 
   const secretsMatch = (aStr: string, bStr: string): boolean => {
     if (!aStr || !bStr) return false;
