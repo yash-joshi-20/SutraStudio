@@ -4048,6 +4048,7 @@ export default function OrdersPage() {
           >
             <div className="pt-2">
               <MasterOrderForm
+                isModal={true}
                 initialServiceId={initialMasterService}
                 initialTierId={initialMasterTier}
                 initialQty={initialMasterQty}

@@ -102,7 +102,7 @@ export function Modal({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 60 }}
             transition={{ type: "spring", damping: 30, stiffness: 350 }}
-            className={`fixed inset-x-0 bottom-0 rounded-t-3xl max-h-[92vh] overflow-y-auto z-50 p-6 sm:static sm:inset-auto sm:rounded-2xl sm:max-w-xl mx-auto ${maxWidthClasses} bg-[#FFFDF9] border border-[#EADFCB] shadow-2xl flex flex-col pb-safe`}
+            className={`fixed inset-x-0 bottom-0 rounded-t-3xl max-h-[94vh] overflow-y-auto z-50 p-4 sm:p-6 sm:static sm:inset-auto sm:rounded-2xl w-full mx-auto ${maxWidthClasses} bg-[#FFFDF9] border border-[#EADFCB] shadow-2xl flex flex-col pb-safe`}
           >
             {/* Mobile Drag Indicator Handle */}
             <div className="sm:hidden -mt-2 pb-3 flex justify-center cursor-grab active:cursor-grabbing">

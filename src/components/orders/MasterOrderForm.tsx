@@ -67,6 +67,7 @@ export interface MasterOrderFormProps {
   initialBrandName?: string;
   onOrderSuccess?: (order: any) => void;
   className?: string;
+  isModal?: boolean;
 }
 
 export interface IntakeServiceOption {
@@ -518,6 +519,7 @@ export function MasterOrderForm({
   initialBrandName,
   onOrderSuccess,
   className = "",
+  isModal = false,
 }: MasterOrderFormProps) {
   const { user } = useAuth();
   // Navigation Steps: 1: Service & Tier, 2: Client & Brand Info, 3: Service Parameters, 4: Review & Payment
@@ -930,26 +932,35 @@ export function MasterOrderForm({
     }
   };
 
+  const isFormInModal = Boolean(isModal);
+
   return (
-    <div className={`rounded-2xl sm:rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-sm overflow-hidden ${className}`}>
+    <div
+      className={
+        isFormInModal
+          ? `bg-transparent space-y-4 ${className}`
+          : `rounded-2xl sm:rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-sm overflow-hidden ${className}`
+      }
+    >
       {/* Top Stepper Header */}
-      <div className="p-4 sm:p-6 lg:p-8 bg-[#FAF9F5] border-b border-[#EADFCB]">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 sm:gap-4">
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-[10px] font-bold text-[#5C3A1E] uppercase tracking-wider mb-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
-              <span>Studio Commission Intake</span>
-            </div>
-            <h2 className="font-serif text-xl sm:text-2xl lg:text-3xl font-bold text-[#0F172A] leading-tight">
-              Commission a Creative Project
-            </h2>
-            <p className="text-xs text-[#64748B] mt-0.5">
-              Select your service, configure creative parameters, and initiate production.
-            </p>
+      {isFormInModal ? (
+        <div className="pb-3 border-b border-[#EADFCB] flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-[#5C3A1E]">
+              Step {currentStep} of 4:
+            </span>
+            <span className="text-xs font-medium text-[#0F172A]">
+              {currentStep === 1
+                ? "Service & Tier"
+                : currentStep === 2
+                ? "Brand Info"
+                : currentStep === 3
+                ? "Parameters"
+                : "Review & Pay"}
+            </span>
           </div>
 
-          {/* Stepper Indicator */}
-          <div className="flex items-center gap-2 self-start sm:self-auto bg-[#F8F5EF] sm:bg-transparent px-3 py-1.5 sm:p-0 rounded-full sm:rounded-none border sm:border-0 border-[#EADFCB]">
+          <div className="flex items-center gap-1.5">
             {[
               { num: 1, label: "Service" },
               { num: 2, label: "Brand" },
@@ -958,7 +969,7 @@ export function MasterOrderForm({
             ].map((step) => (
               <div
                 key={step.num}
-                className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full text-xs font-bold transition-all ${
+                className={`flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full text-[11px] font-bold transition-all ${
                   currentStep === step.num
                     ? "bg-[#5C3A1E] text-white shadow-xs"
                     : currentStep > step.num
@@ -967,17 +978,58 @@ export function MasterOrderForm({
                 }`}
                 title={`Step ${step.num}: ${step.label}`}
               >
-                {currentStep > step.num ? <Check className="w-3.5 h-3.5 stroke-[2.5]" /> : step.num}
+                {currentStep > step.num ? <Check className="w-3 h-3 stroke-[2.5]" /> : step.num}
               </div>
             ))}
-            <span className="text-xs font-semibold text-[#5C3A1E] sm:hidden ml-1">
-              Step {currentStep} of 4
-            </span>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="p-4 sm:p-6 lg:p-8 bg-[#FAF9F5] border-b border-[#EADFCB]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 sm:gap-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-[10px] font-bold text-[#5C3A1E] uppercase tracking-wider mb-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
+                <span>Studio Commission Intake</span>
+              </div>
+              <h2 className="font-serif text-xl sm:text-2xl lg:text-3xl font-bold text-[#0F172A] leading-tight">
+                Commission a Creative Project
+              </h2>
+              <p className="text-xs text-[#64748B] mt-0.5">
+                Select your service, configure creative parameters, and initiate production.
+              </p>
+            </div>
 
-      <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+            {/* Stepper Indicator */}
+            <div className="flex items-center gap-2 self-start sm:self-auto bg-[#F8F5EF] sm:bg-transparent px-3 py-1.5 sm:p-0 rounded-full sm:rounded-none border sm:border-0 border-[#EADFCB]">
+              {[
+                { num: 1, label: "Service" },
+                { num: 2, label: "Brand" },
+                { num: 3, label: "Scope" },
+                { num: 4, label: "Payment" },
+              ].map((step) => (
+                <div
+                  key={step.num}
+                  className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full text-xs font-bold transition-all ${
+                    currentStep === step.num
+                      ? "bg-[#5C3A1E] text-white shadow-xs"
+                      : currentStep > step.num
+                      ? "bg-[#2E7D4F] text-white"
+                      : "bg-[#F4EFE6] text-[#94A3B8]"
+                  }`}
+                  title={`Step ${step.num}: ${step.label}`}
+                >
+                  {currentStep > step.num ? <Check className="w-3.5 h-3.5 stroke-[2.5]" /> : step.num}
+                </div>
+              ))}
+              <span className="text-xs font-semibold text-[#5C3A1E] sm:hidden ml-1">
+                Step {currentStep} of 4
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className={isFormInModal ? "space-y-5 pt-1" : "p-4 sm:p-6 lg:p-8 space-y-6"}>
         {formError && (
           <div className="p-4 rounded-2xl bg-[#FEF2F2] border border-[#FECACA] text-xs text-[#991B1B] flex items-center gap-2 animate-in fade-in duration-200">
             <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0" />
@@ -2133,30 +2185,32 @@ export function MasterOrderForm({
                 </div>
 
                 {/* Direct UPI Payment & Order Placement Card */}
-                <div className="p-5 sm:p-6 rounded-2xl bg-[#FFFDF9] border-2 border-[#D4A35A] space-y-5 text-center">
+                <div className="p-3.5 sm:p-5 rounded-2xl bg-[#FFFDF9] border border-[#D4A35A]/60 shadow-warm-xs space-y-4 text-center max-w-xl mx-auto w-full">
                   <div className="space-y-1">
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[10px] font-mono font-bold text-[#5C3A1E] uppercase">
                       <QrCode className="w-3.5 h-3.5 text-[#D4A35A]" />
                       <span>Zero-Fee Dynamic UPI QR</span>
                     </div>
-                    <h4 className="font-serif text-lg font-bold text-[#0F172A]">
+                    <h4 className="font-serif text-base sm:text-lg font-bold text-[#0F172A]">
                       Instant QR Checkout or Direct Placement
                     </h4>
-                    <p className="text-xs text-[#64748B] max-w-md mx-auto">
+                    <p className="text-xs text-[#64748B] max-w-md mx-auto leading-relaxed">
                       Scan with Google Pay, PhonePe, Paytm, or BHIM. You can also place the order directly without scanning and pay upon studio invoice.
                     </p>
                   </div>
 
                   {/* Embedded Dynamic UPI QR Code */}
-                  <DynamicUPIQRCode
-                    amount={orderAmount}
-                    orderId={`STR-${Date.now().toString().slice(-4)}`}
-                    className="max-w-sm mx-auto shadow-xs border-amber-200/60"
-                  />
+                  <div className="w-full max-w-sm mx-auto">
+                    <DynamicUPIQRCode
+                      amount={orderAmount}
+                      orderId={`STR-${Date.now().toString().slice(-4)}`}
+                      className="shadow-2xs border-[#EADFCB]"
+                    />
+                  </div>
 
                   {/* Optional UTR Input */}
-                  <div className="max-w-sm mx-auto space-y-1.5 text-left">
-                    <label className="text-[11px] font-semibold text-[#0F172A] flex items-center justify-between">
+                  <div className="w-full max-w-sm mx-auto space-y-1.5 text-left">
+                    <label className="text-[11px] font-semibold text-[#0F172A] flex flex-wrap items-center justify-between gap-1">
                       <span>12-Digit UPI Transaction ID / UTR</span>
                       <span className="text-[10px] text-[#78716C] font-normal">(Optional if paying now)</span>
                     </label>
@@ -2174,22 +2228,22 @@ export function MasterOrderForm({
                   </div>
 
                   {/* Dual Action Buttons */}
-                  <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
+                  <div className="pt-1 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 sm:gap-3 w-full max-w-md mx-auto">
                     <Button
                       variant="primary"
                       size="md"
-                      className="w-full sm:flex-1 justify-center shadow-xs"
+                      className="w-full sm:flex-1 justify-center shadow-xs min-h-[44px]"
                       isLoading={isSubmitting}
                       disabled={isSubmitting}
                       onClick={() => handleFinalSubmit("upi_qr")}
                     >
-                      <span>Confirm & Place Order (₹{orderAmount.toLocaleString("en-IN")})</span>
+                      <span>Confirm &amp; Place Order (₹{orderAmount.toLocaleString("en-IN")})</span>
                     </Button>
 
                     <Button
                       variant="secondary"
                       size="md"
-                      className="w-full sm:w-auto justify-center text-xs"
+                      className="w-full sm:w-auto justify-center text-xs min-h-[44px]"
                       isLoading={isSubmitting}
                       disabled={isSubmitting}
                       onClick={() => handleFinalSubmit("online")}

@@ -1514,6 +1514,7 @@ export default function ClientDashboardPage() {
             maxWidth="2xl"
           >
             <MasterOrderForm
+              isModal={true}
               onOrderSuccess={(newOrd) => {
                 setIsCommissionModalOpen(false);
                 setViewMode("orders");

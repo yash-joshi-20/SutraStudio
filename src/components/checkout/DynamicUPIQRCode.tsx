@@ -47,37 +47,37 @@ export function DynamicUPIQRCode({
 
   return (
     <div
-      className={`flex flex-col items-center justify-center p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-4 text-center ${className}`}
+      className={`flex flex-col items-center justify-center p-3.5 sm:p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-3.5 sm:space-y-4 text-center w-full max-w-full overflow-hidden ${className}`}
     >
       {/* Luxury Gold / Stone Framed Dynamic QR Matrix */}
-      <div className="relative mx-auto bg-white p-4 sm:p-5 rounded-2xl shadow-xl border border-amber-200/60 flex flex-col items-center justify-center">
-        <div className="p-2 bg-white rounded-xl">
+      <div className="relative mx-auto bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-amber-200/80 flex flex-col items-center justify-center max-w-[220px] sm:max-w-[250px] w-full">
+        <div className="p-1 sm:p-1.5 bg-white rounded-xl flex items-center justify-center w-full">
           <QRCodeSVG
             value={upiUri}
-            size={208}
+            size={180}
             level="H"
             includeMargin={false}
             imageSettings={{
               src: "/brand/sutra-symbol.png",
               x: undefined,
               y: undefined,
-              height: 32,
-              width: 32,
+              height: 28,
+              width: 28,
               excavate: true,
             }}
-            className="w-48 h-48 sm:w-52 sm:h-52"
+            className="w-36 h-36 xs:w-40 xs:h-40 sm:w-44 sm:h-44 max-w-full h-auto aspect-square"
           />
         </div>
 
         {/* Live Scan Target Indicator */}
-        <div className="mt-2.5 flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[10px] font-mono text-[#5C3A1E]">
+        <div className="mt-2 flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[10px] font-mono text-[#5C3A1E]">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           <span>Scan with any UPI App</span>
         </div>
       </div>
 
       {/* Amount Display Prominently Below QR */}
-      <div className="space-y-1">
+      <div className="space-y-0.5">
         <span className="text-[10px] font-mono uppercase tracking-wider text-[#94A3B8] block">
           Amount Locked to QR
         </span>
@@ -93,22 +93,22 @@ export function DynamicUPIQRCode({
             Payee Name
           </span>
           <span className="text-xs sm:text-sm font-semibold text-[#0F172A] flex items-center justify-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-[#2E7D4F]" />
-            <span>{verifiedAccountLabel}</span>
+            <ShieldCheck className="w-4 h-4 text-[#2E7D4F] shrink-0" />
+            <span className="break-words">{verifiedAccountLabel}</span>
           </span>
         </div>
 
-        <div className="p-2.5 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] flex items-center justify-between gap-2 shadow-2xs">
-          <div className="text-left overflow-hidden">
+        <div className="p-2 sm:p-2.5 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] flex items-center justify-between gap-2 shadow-2xs w-full">
+          <div className="text-left overflow-hidden min-w-0 flex-1">
             <span className="text-[9px] font-mono text-[#94A3B8] block">Verified UPI ID</span>
-            <span className="font-mono text-xs font-bold text-[#5C3A1E] truncate block select-all">
+            <span className="font-mono text-xs font-bold text-[#5C3A1E] truncate block select-all" title={vpa}>
               {vpa}
             </span>
           </div>
           <button
             type="button"
             onClick={handleCopyUpi}
-            className="px-3 py-1.5 rounded-lg bg-[#FAF9F5] hover:bg-[#F4EFE6] border border-[#EADFCB] text-[#5C3A1E] transition-all text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-2xs"
+            className="px-2.5 py-1.5 rounded-lg bg-[#FAF9F5] hover:bg-[#F4EFE6] border border-[#EADFCB] text-[#5C3A1E] transition-all text-xs font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-2xs"
             title="Copy UPI ID"
           >
             {copiedUpi ? (
@@ -119,7 +119,7 @@ export function DynamicUPIQRCode({
             ) : (
               <>
                 <Copy className="w-3.5 h-3.5 text-[#A98B57]" />
-                <span>Copy UPI ID</span>
+                <span>Copy</span>
               </>
             )}
           </button>
@@ -130,10 +130,10 @@ export function DynamicUPIQRCode({
       {showIntentButton && (
         <a
           href={upiUri}
-          className="w-full py-3.5 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-xl text-center font-medium shadow-md hover:from-amber-700 hover:to-amber-800 transition-all flex items-center justify-center gap-2 text-xs sm:text-sm min-h-[48px] touch-manipulation cursor-pointer"
+          className="w-full py-3 bg-[#5C3A1E] hover:bg-[#432A15] text-white rounded-xl text-center font-medium shadow-xs transition-all flex items-center justify-center gap-2 text-xs sm:text-sm min-h-[44px] touch-manipulation cursor-pointer"
         >
-          <Smartphone className="w-4 h-4 text-amber-200" />
-          <span>Tap to Pay via GPay / PhonePe / Paytm</span>
+          <Smartphone className="w-4 h-4 text-[#D4A35A] shrink-0" />
+          <span className="font-semibold">Tap to Pay via UPI App</span>
         </a>
       )}
 
