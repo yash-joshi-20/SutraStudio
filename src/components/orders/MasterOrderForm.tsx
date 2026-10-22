@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth/authContext";
 import { Button } from "@/components/ui/Button";
 import { PaymentModal } from "@/components/checkout/PaymentModal";
 import { DynamicUPIQRCode } from "@/components/checkout/DynamicUPIQRCode";
+import { CustomDropdown } from "@/components/ui/CustomDropdown";
 import {
   PER_PROJECT_TIERS,
   MONTHLY_RETAINER_TIERS,
@@ -1084,16 +1085,18 @@ export function MasterOrderForm({
 
             {orderMode === "services" ? (
               <>
-                <div>
-                  <h3 className="font-serif text-lg font-semibold text-[#0F172A] mb-1">
-                    1. Select Studio Service (8 Disciplines)
-                  </h3>
-                  <p className="text-xs text-[#64748B]">
-                    Choose from 8 specialized creative technology & design disciplines with dedicated studio production.
-                  </p>
-                </div>
+                {!isFormInModal && (
+                  <div>
+                    <h3 className="font-serif text-lg font-semibold text-[#0F172A] mb-1">
+                      1. Select Studio Service (8 Disciplines)
+                    </h3>
+                    <p className="text-xs text-[#64748B]">
+                      Choose from 8 specialized creative technology &amp; design disciplines with dedicated studio production.
+                    </p>
+                  </div>
+                )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-3.5 w-full max-w-full">
                   {INTAKE_SERVICES.map((srv) => {
                     const isSelected = selectedServiceId === srv.id;
                     return (
@@ -1256,16 +1259,18 @@ export function MasterOrderForm({
               </>
             ) : (
               <>
-                <div>
-                  <h3 className="font-serif text-lg font-semibold text-[#0F172A] mb-1">
-                    1. Select Creative Package or Monthly Retainer
-                  </h3>
-                  <p className="text-xs text-[#64748B]">
-                    Choose a multi-discipline creative pack or activate a 30-day continuous studio partnership.
-                  </p>
-                </div>
+                {!isFormInModal && (
+                  <div>
+                    <h3 className="font-serif text-lg font-semibold text-[#0F172A] mb-1">
+                      1. Select Creative Package or Monthly Retainer
+                    </h3>
+                    <p className="text-xs text-[#64748B]">
+                      Choose a multi-discipline creative pack or activate a 30-day continuous studio partnership.
+                    </p>
+                  </div>
+                )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 w-full max-w-full">
                   {INTAKE_PACKAGES.map((pkg) => {
                     const isSelected = selectedPackageId === pkg.id;
                     return (
@@ -1275,7 +1280,7 @@ export function MasterOrderForm({
                           setSelectedPackageId(pkg.id);
                           setQuantity(1);
                         }}
-                        className={`p-4 sm:p-5 rounded-2xl border text-left cursor-pointer transition-all flex flex-col justify-between gap-3.5 sm:gap-4 relative select-none ${
+                        className={`p-3.5 sm:p-5 rounded-2xl border text-left cursor-pointer transition-all flex flex-col justify-between gap-3.5 sm:gap-4 relative select-none w-full max-w-full overflow-hidden ${
                           isSelected
                             ? "bg-[#FAF9F5] border-[#5C3A1E] ring-2 ring-[#5C3A1E] shadow-sm"
                             : "bg-[#FFFFFF] border-[#EADFCB] hover:border-[#D4A35A] hover:bg-[#FAF9F5] active:scale-[0.99]"
@@ -1459,14 +1464,16 @@ export function MasterOrderForm({
             ========================================================= */}
         {currentStep === 2 && (
           <div className="space-y-5">
-            <div>
-              <h3 className="font-serif text-lg font-semibold text-[#0F172A] mb-1">
-                2. Brand & Contact Information
-              </h3>
-              <p className="text-xs text-[#64748B]">
-                Tell us about your brand so our creative directors can tailor the visual language.
-              </p>
-            </div>
+            {!isFormInModal && (
+              <div>
+                <h3 className="font-serif text-lg font-semibold text-[#0F172A] mb-1">
+                  2. Brand &amp; Contact Information
+                </h3>
+                <p className="text-xs text-[#64748B]">
+                  Tell us about your brand so our creative directors can tailor the visual language.
+                </p>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -1530,19 +1537,20 @@ export function MasterOrderForm({
                 <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
                   Industry / Vertical
                 </label>
-                <select
+                <CustomDropdown
                   value={industry}
-                  onChange={(e) => setIndustry(e.target.value)}
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] transition-all duration-150 focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30 focus:outline-none cursor-pointer"
-                >
-                  <option value="Real Estate">Real Estate & Architecture</option>
-                  <option value="Luxury Retail">Luxury Retail & Jewelry</option>
-                  <option value="Hospitality">Hospitality & Resorts</option>
-                  <option value="Fashion">Fashion & Apparel</option>
-                  <option value="Tech/SaaS">Tech & Modern SaaS</option>
-                  <option value="E-Commerce">D2C & E-Commerce</option>
-                  <option value="Other">Other Creative Discipline</option>
-                </select>
+                  onChange={setIndustry}
+                  buttonClassName="!text-xs !py-2.5 !min-h-[44px]"
+                  options={[
+                    { label: "Real Estate & Architecture", value: "Real Estate" },
+                    { label: "Luxury Retail & Jewelry", value: "Luxury Retail" },
+                    { label: "Hospitality & Resorts", value: "Hospitality" },
+                    { label: "Fashion & Apparel", value: "Fashion" },
+                    { label: "Tech & Modern SaaS", value: "Tech/SaaS" },
+                    { label: "D2C & E-Commerce", value: "E-Commerce" },
+                    { label: "Other Creative Discipline", value: "Other" },
+                  ]}
+                />
               </div>
 
               <div>
@@ -1613,13 +1621,19 @@ export function MasterOrderForm({
 
               <div className="sm:col-span-2">
                 <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                  Target Launch / Delivery Date
+                  Production Timeline / Target Launch
                 </label>
-                <input
-                  type="date"
-                  value={targetDeadline}
-                  onChange={(e) => setTargetDeadline(e.target.value)}
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] transition-all duration-150 focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30 focus:outline-none"
+                <CustomDropdown
+                  value={targetDeadline || "Standard Studio Turnaround"}
+                  onChange={setTargetDeadline}
+                  buttonClassName="!text-xs !py-2.5 !min-h-[44px]"
+                  options={[
+                    { label: "Standard Studio Turnaround (Recommended)", value: "Standard Studio Turnaround", description: "Standard studio timeline as per discipline deliverables" },
+                    { label: "Urgent Priority (Within 7–10 Days)", value: "Urgent Priority (7-10 Days)", badge: "Priority" },
+                    { label: "Fast Track Express (Within 3–5 Days)", value: "Fast Track Express (3-5 Days)", badge: "Express" },
+                    { label: "Next Month Launch (30+ Days)", value: "Next Month Launch (30+ Days)" },
+                    { label: "Flexible Milestone Launch", value: "Flexible Milestone Launch" },
+                  ]}
                 />
               </div>
             </div>
@@ -1669,14 +1683,16 @@ export function MasterOrderForm({
             ========================================================= */}
         {currentStep === 3 && (
           <div className="space-y-5">
-            <div>
-              <h3 className="font-serif text-lg font-semibold text-[#0F172A] mb-1">
-                3. Technical & Creative Specifications
-              </h3>
-              <p className="text-xs text-[#64748B]">
-                Configure parameters tailored specifically to <strong>{activeService.title}</strong>.
-              </p>
-            </div>
+            {!isFormInModal && (
+              <div>
+                <h3 className="font-serif text-lg font-semibold text-[#0F172A] mb-1">
+                  3. Technical &amp; Creative Specifications
+                </h3>
+                <p className="text-xs text-[#64748B]">
+                  Configure parameters tailored specifically to <strong>{activeService.title}</strong>.
+                </p>
+              </div>
+            )}
 
             {/* 1. Meta Ads Launcher & Digital Marketing Accordion */}
             {isMetaAds && (
@@ -1864,30 +1880,32 @@ export function MasterOrderForm({
                     <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
                       Lighting Atmosphere Preference
                     </label>
-                    <select
+                    <CustomDropdown
                       value={lightingPref}
-                      onChange={(e) => setLightingPref(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
-                    >
-                      <option value="Warm Daylight Golden Hour">Warm Daylight Golden Hour</option>
-                      <option value="Moody Dusk / Twilight">Moody Dusk / Twilight</option>
-                      <option value="Bright Architectural Clean">Bright Architectural Clean</option>
-                      <option value="Dramatic Night Glow">Dramatic Night Luxury Glow</option>
-                    </select>
+                      onChange={setLightingPref}
+                      buttonClassName="!text-xs !py-2.5 !min-h-[44px]"
+                      options={[
+                        { label: "Warm Daylight Golden Hour", value: "Warm Daylight Golden Hour" },
+                        { label: "Moody Dusk / Twilight", value: "Moody Dusk / Twilight" },
+                        { label: "Bright Architectural Clean", value: "Bright Architectural Clean" },
+                        { label: "Dramatic Night Luxury Glow", value: "Dramatic Night Glow" },
+                      ]}
+                    />
                   </div>
 
                   <div>
                     <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
                       Master Render Resolution
                     </label>
-                    <select
+                    <CustomDropdown
                       value={outputResolution}
-                      onChange={(e) => setOutputResolution(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
-                    >
-                      <option value="4K UHD (3840x2160)">4K UHD (3840 x 2160)</option>
-                      <option value="8K Master (7680x4320)">8K Master Ultra-High Res</option>
-                    </select>
+                      onChange={setOutputResolution}
+                      buttonClassName="!text-xs !py-2.5 !min-h-[44px]"
+                      options={[
+                        { label: "4K UHD Commercial (3840×2160)", value: "4K UHD (3840x2160)", badge: "Standard" },
+                        { label: "8K Master Ultra-High Res", value: "8K Master (7680x4320)", badge: "Max Res" },
+                      ]}
+                    />
                   </div>
                 </div>
               </div>
@@ -1905,31 +1923,33 @@ export function MasterOrderForm({
                     <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
                       Domain Status
                     </label>
-                    <select
+                    <CustomDropdown
                       value={webDomainStatus}
-                      onChange={(e) => setWebDomainStatus(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
-                    >
-                      <option value="Own Domain (Configured)">Own Domain (Already Configured & Active)</option>
-                      <option value="Need Setup Assistance">Need Setup Assistance (Domain & DNS)</option>
-                      <option value="Staging Deployment Only">Staging Subdomain Only</option>
-                    </select>
+                      onChange={setWebDomainStatus}
+                      buttonClassName="!text-xs !py-2.5 !min-h-[44px]"
+                      options={[
+                        { label: "Own Domain (Already Configured & Active)", value: "Own Domain (Configured)" },
+                        { label: "Need Setup Assistance (Domain & DNS)", value: "Need Setup Assistance" },
+                        { label: "Staging Subdomain Only", value: "Staging Deployment Only" },
+                      ]}
+                    />
                   </div>
 
                   <div>
                     <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
                       Tech Stack Direction
                     </label>
-                    <select
+                    <CustomDropdown
                       value={techStack}
-                      onChange={(e) => setTechStack(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
-                    >
-                      <option value="Next.js + Tailwind CSS">Next.js App Router + Tailwind CSS</option>
-                      <option value="React + Vite">React + Vite High-Speed SPA</option>
-                      <option value="Webflow / Framer">Webflow / Framer Luxury CMS</option>
-                      <option value="Bespoke Custom">Bespoke Custom WebGL Experience</option>
-                    </select>
+                      onChange={setTechStack}
+                      buttonClassName="!text-xs !py-2.5 !min-h-[44px]"
+                      options={[
+                        { label: "Next.js App Router + Tailwind CSS", value: "Next.js + Tailwind CSS", badge: "Recommended" },
+                        { label: "React + Vite High-Speed SPA", value: "React + Vite" },
+                        { label: "Webflow / Framer Luxury CMS", value: "Webflow / Framer" },
+                        { label: "Bespoke Custom WebGL Experience", value: "Bespoke Custom" },
+                      ]}
+                    />
                   </div>
 
                   <div className="sm:col-span-2">
@@ -1952,15 +1972,16 @@ export function MasterOrderForm({
                     <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
                       Target Page Scope
                     </label>
-                    <select
+                    <CustomDropdown
                       value={pageCount}
-                      onChange={(e) => setPageCount(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
-                    >
-                      <option value="1-3 Landing Pages">1-3 High-Impact Landing Pages</option>
-                      <option value="4-7 Pages Full Site">4-7 Pages Complete Studio Website</option>
-                      <option value="8+ Pages Web App">8+ Pages Full Custom Application</option>
-                    </select>
+                      onChange={setPageCount}
+                      buttonClassName="!text-xs !py-2.5 !min-h-[44px]"
+                      options={[
+                        { label: "1–3 High-Impact Landing Pages", value: "1-3 Landing Pages" },
+                        { label: "4–7 Pages Complete Studio Website", value: "4-7 Pages Full Site" },
+                        { label: "8+ Pages Full Custom Application", value: "8+ Pages Web App" },
+                      ]}
+                    />
                   </div>
 
                   <div>
@@ -1972,7 +1993,7 @@ export function MasterOrderForm({
                       placeholder="e.g. https://www.figma.com/design/..."
                       value={figmaUrl}
                       onChange={(e) => setFigmaUrl(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
+                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -1991,27 +2012,33 @@ export function MasterOrderForm({
                     <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
                       Primary 30-Day Goals
                     </label>
-                    <select
+                    <CustomDropdown
                       value={retainerGoals}
-                      onChange={(e) => setRetainerGoals(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
-                    >
-                      <option value="Direct Sales & High ROAS Scaling">Direct Sales & High ROAS Scaling</option>
-                      <option value="Brand Awareness & Luxury Authority">Brand Awareness & Luxury Authority</option>
-                      <option value="Lead Generation & High-Ticket Inquiries">Lead Generation & High-Ticket Inquiries</option>
-                      <option value="Omnichannel Content Blitz (Reels + 3D)">Omnichannel Content Blitz (Reels + 3D)</option>
-                    </select>
+                      onChange={setRetainerGoals}
+                      buttonClassName="!text-xs !py-2.5 !min-h-[44px]"
+                      options={[
+                        { label: "Direct Sales & High ROAS Scaling", value: "Direct Sales & High ROAS Scaling" },
+                        { label: "Brand Awareness & Luxury Authority", value: "Brand Awareness & Luxury Authority" },
+                        { label: "Lead Generation & High-Ticket Inquiries", value: "Lead Generation & High-Ticket Inquiries" },
+                        { label: "Omnichannel Content Blitz (Reels + 3D)", value: "Omnichannel Content Blitz (Reels + 3D)" },
+                      ]}
+                    />
                   </div>
 
                   <div>
                     <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                      Preferred Retainer Start Date
+                      Preferred Retainer Kickoff
                     </label>
-                    <input
-                      type="date"
-                      value={retainerStartDate}
-                      onChange={(e) => setRetainerStartDate(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
+                    <CustomDropdown
+                      value={retainerStartDate || "Immediate Kickoff (Within 24–48 Hours)"}
+                      onChange={setRetainerStartDate}
+                      buttonClassName="!text-xs !py-2.5 !min-h-[44px]"
+                      options={[
+                        { label: "Immediate Kickoff (Within 24–48 Hours)", value: "Immediate Kickoff (Within 24-48h)", badge: "Instant" },
+                        { label: "1st of Upcoming Month", value: "1st of Upcoming Month" },
+                        { label: "15th of the Month", value: "15th of the Month" },
+                        { label: "Custom Schedule (Align with Creative Director)", value: "Custom Schedule" },
+                      ]}
                     />
                   </div>
 
@@ -2141,14 +2168,16 @@ export function MasterOrderForm({
               </div>
             ) : (
               <>
-                <div>
-                  <h3 className="font-serif text-lg font-semibold text-[#0F172A] mb-1">
-                    4. Scope Review & Zero-Fee UPI Checkout
-                  </h3>
-                  <p className="text-xs text-[#64748B]">
-                    Verify your commission summary, scan the dynamic UPI QR code, or place your order directly.
-                  </p>
-                </div>
+                {!isFormInModal && (
+                  <div>
+                    <h3 className="font-serif text-lg font-semibold text-[#0F172A] mb-1">
+                      4. Scope Review &amp; Zero-Fee UPI Checkout
+                    </h3>
+                    <p className="text-xs text-[#64748B]">
+                      Verify your commission summary, scan the dynamic UPI QR code, or place your order directly.
+                    </p>
+                  </div>
+                )}
 
                 {/* Scope Summary Box */}
                 <div className="p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-3 text-xs">
