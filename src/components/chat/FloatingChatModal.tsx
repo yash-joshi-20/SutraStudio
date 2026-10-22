@@ -1237,7 +1237,7 @@ export function FloatingChatModal() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Ask in English, ગુજરાતી or हिंदी..."
-                  className="flex-1 min-w-0 min-h-[42px] bg-[#FAF9F5] border border-[#E5E1D8] rounded-xl px-3 py-2 text-xs sm:text-xs text-[#171717] placeholder:text-[#94A3B8] placeholder:truncate focus:outline-none focus:bg-white focus:border-[#A98B57] focus:ring-1 focus:ring-[#A98B57] transition-all"
+                  className="flex-1 min-w-0 min-h-[42px] bg-[#FAF9F5] border border-[#E5E1D8] rounded-xl px-3 py-2 text-xs sm:text-xs text-[#171717] placeholder:text-[#94A3B8] placeholder:truncate focus:outline-none focus:bg-white focus:border-[#A98B57] focus:ring-0 transition-all"
                 />
 
                 <button
@@ -1309,7 +1309,7 @@ export function FloatingChatModal() {
                       placeholder="e.g. Rahul Sharma"
                       value={handoffForm.name}
                       onChange={(e) => setHandoffForm({ ...handoffForm, name: e.target.value })}
-                      className="w-full p-2.5 rounded-xl border border-[#E5E1D8] bg-white text-xs text-[#171717] focus:outline-none focus:border-[#A98B57] focus:ring-1 focus:ring-[#A98B57]"
+                      className="w-full p-2.5 rounded-xl border border-[#E5E1D8] bg-white text-xs text-[#171717] focus:outline-none focus:border-[#A98B57] focus:ring-0"
                     />
                   </div>
 
@@ -1322,7 +1322,7 @@ export function FloatingChatModal() {
                         placeholder="name@company.com"
                         value={handoffForm.email}
                         onChange={(e) => setHandoffForm({ ...handoffForm, email: e.target.value })}
-                        className="w-full p-2.5 rounded-xl border border-[#E5E1D8] bg-white text-xs text-[#171717] focus:outline-none focus:border-[#A98B57] focus:ring-1 focus:ring-[#A98B57]"
+                        className="w-full p-2.5 rounded-xl border border-[#E5E1D8] bg-white text-xs text-[#171717] focus:outline-none focus:border-[#A98B57] focus:ring-0"
                       />
                     </div>
                     <div>
@@ -1333,7 +1333,7 @@ export function FloatingChatModal() {
                         placeholder="+91 98000 00000"
                         value={handoffForm.phone}
                         onChange={(e) => setHandoffForm({ ...handoffForm, phone: e.target.value })}
-                        className="w-full p-2.5 rounded-xl border border-[#E5E1D8] bg-white text-xs text-[#171717] focus:outline-none focus:border-[#A98B57] focus:ring-1 focus:ring-[#A98B57]"
+                        className="w-full p-2.5 rounded-xl border border-[#E5E1D8] bg-white text-xs text-[#171717] focus:outline-none focus:border-[#A98B57] focus:ring-0"
                       />
                     </div>
                   </div>
@@ -1345,7 +1345,7 @@ export function FloatingChatModal() {
                       placeholder="e.g. Acme Luxury Residences"
                       value={handoffForm.company}
                       onChange={(e) => setHandoffForm({ ...handoffForm, company: e.target.value })}
-                      className="w-full p-2.5 rounded-xl border border-[#E5E1D8] bg-white text-xs text-[#171717] focus:outline-none focus:border-[#A98B57] focus:ring-1 focus:ring-[#A98B57]"
+                      className="w-full p-2.5 rounded-xl border border-[#E5E1D8] bg-white text-xs text-[#171717] focus:outline-none focus:border-[#A98B57] focus:ring-0"
                     />
                   </div>
 
@@ -1356,7 +1356,7 @@ export function FloatingChatModal() {
                       placeholder="Briefly describe what you'd like to build or discuss..."
                       value={handoffForm.message}
                       onChange={(e) => setHandoffForm({ ...handoffForm, message: e.target.value })}
-                      className="w-full p-2.5 rounded-xl border border-[#E5E1D8] bg-white text-xs text-[#171717] focus:outline-none focus:border-[#A98B57] focus:ring-1 focus:ring-[#A98B57] resize-none"
+                      className="w-full p-2.5 rounded-xl border border-[#E5E1D8] bg-white text-xs text-[#171717] focus:outline-none focus:border-[#A98B57] focus:ring-0 resize-none"
                     />
                   </div>
 

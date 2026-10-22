@@ -1486,7 +1486,7 @@ export function MasterOrderForm({
                   placeholder="e.g. Yash Joshi"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30 focus:outline-none"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:outline-none focus:ring-0"
                 />
               </div>
 
@@ -1500,7 +1500,7 @@ export function MasterOrderForm({
                   placeholder="e.g. Aura Noir Living"
                   value={brandName}
                   onChange={(e) => setBrandName(e.target.value)}
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30 focus:outline-none"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:outline-none focus:ring-0"
                 />
               </div>
 
@@ -1514,7 +1514,7 @@ export function MasterOrderForm({
                   placeholder="e.g. director@auranoir.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30 focus:outline-none"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:outline-none focus:ring-0"
                 />
               </div>
 
@@ -1529,7 +1529,7 @@ export function MasterOrderForm({
                   placeholder="+91 94280 00000"
                   value={whatsapp}
                   onChange={(e) => setWhatsapp(e.target.value)}
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs font-mono text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30 focus:outline-none"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs font-mono text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:outline-none focus:ring-0"
                 />
               </div>
 
@@ -1562,7 +1562,7 @@ export function MasterOrderForm({
                   placeholder="e.g. @auranoirliving or auranoir.com"
                   value={brandUrl}
                   onChange={(e) => setBrandUrl(e.target.value)}
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30 focus:outline-none"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:outline-none focus:ring-0"
                 />
               </div>
 
@@ -1603,7 +1603,7 @@ export function MasterOrderForm({
                       placeholder="https://drive.google.com/... or Figma asset link"
                       value={brandAssetUrl}
                       onChange={(e) => setBrandAssetUrl(e.target.value)}
-                      className="w-full sm:flex-1 min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30 focus:outline-none"
+                      className="w-full sm:flex-1 min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:outline-none focus:ring-0"
                     />
                   </div>
                   {brandLogoPreview && (
@@ -1653,7 +1653,7 @@ export function MasterOrderForm({
                 placeholder="Describe project vision, desired mood, lighting, color palettes, key references, or special deliverables needed..."
                 value={creativeBrief}
                 onChange={(e) => setCreativeBrief(e.target.value)}
-                className="w-full px-3.5 py-3 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 resize-y min-h-[110px] focus:outline-none focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30"
+                className="w-full px-3.5 py-3 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 resize-y min-h-[110px] focus:outline-none focus:border-[#D4A35A] focus:ring-0"
               />
             </div>
 
@@ -1961,7 +1961,7 @@ export function MasterOrderForm({
                       placeholder="e.g.&#10;https://apple.com&#10;https://stripe.com&#10;https://lincoln.com"
                       value={webBenchmarkUrls}
                       onChange={(e) => setWebBenchmarkUrls(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 resize-y min-h-[90px] focus:outline-none focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 resize-y min-h-[90px] focus:outline-none focus:border-[#D4A35A] focus:ring-0"
                     />
                     <p className="text-[10px] text-[#64748B] mt-1">
                       Paste 2 to 3 website links that represent the visual tone, interaction fidelity, or layout you admire.
@@ -1993,7 +1993,7 @@ export function MasterOrderForm({
                       placeholder="e.g. https://www.figma.com/design/..."
                       value={figmaUrl}
                       onChange={(e) => setFigmaUrl(e.target.value)}
-                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30 focus:outline-none"
+                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:outline-none focus:ring-0"
                     />
                   </div>
                 </div>
@@ -2051,7 +2051,7 @@ export function MasterOrderForm({
                       placeholder="Specify your flagship products, hero collections, key service benefits, or seasonal offers to highlight..."
                       value={retainerPriorityProducts}
                       onChange={(e) => setRetainerPriorityProducts(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 resize-y min-h-[90px] focus:outline-none focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 resize-y min-h-[90px] focus:outline-none focus:border-[#D4A35A] focus:ring-0"
                     />
                   </div>
                 </div>

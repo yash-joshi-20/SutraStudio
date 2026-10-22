@@ -171,12 +171,12 @@ main, section, header, footer, nav, article {
 
 .focus-ring {
   outline: none;
-  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  transition: border-color 0.15s ease;
 }
 
 .focus-ring:focus-visible {
   border-color: #D4A35A;
-  box-shadow: 0 0 0 3px rgba(212, 163, 90, 0.35);
+  box-shadow: none !important;
 }
 
 /* Universal Accessible Focus Visible: buttons and links get crisp offset outline */
@@ -186,13 +186,16 @@ button:focus-visible {
   outline-offset: 2px !important;
 }
 
-/* Form controls (inputs, selects, textareas) get a smooth, cohesive curved focus ring matching border-radius */
+/* Form controls (inputs, selects, textareas) get clean crisp border highlight with zero shadow outline */
+input:focus,
 input:focus-visible,
+select:focus,
 select:focus-visible,
+textarea:focus,
 textarea:focus-visible {
   outline: none !important;
   border-color: #D4A35A !important;
-  box-shadow: 0 0 0 3px rgba(212, 163, 90, 0.28) !important;
+  box-shadow: none !important;
 }
 
 /* Accessible Minimum Touch Target */
@@ -338,7 +341,7 @@ textarea:focus-visible {
 .field-control:focus {
   outline: none;
   border-color: var(--saffron);
-  box-shadow: 0 0 0 3px rgba(212, 163, 90, 0.28);
+  box-shadow: none !important;
 }
 
 .field-control:disabled {
@@ -352,7 +355,9 @@ textarea:focus-visible {
 }
 
 .field-control[aria-invalid="true"]:focus {
-  box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.2);
+  outline: none;
+  border-color: var(--status-error);
+  box-shadow: none !important;
 }
 
 .field-helper {

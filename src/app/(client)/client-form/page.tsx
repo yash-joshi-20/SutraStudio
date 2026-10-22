@@ -8,6 +8,7 @@ import { RouteGuard } from "@/components/auth/RouteGuard";
 import { useAuth } from "@/lib/auth/authContext";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { CustomDropdown } from "@/components/ui/CustomDropdown";
 import Link from "next/link";
 import {
   Building2,
@@ -811,20 +812,20 @@ export default function ClientFormPage() {
 
                         <div>
                           <label className="font-semibold block mb-1">Billing Period</label>
-                          <select
+                          <CustomDropdown
                             disabled={isLocked}
                             value={plan.billingPeriod}
-                            onChange={(e) => {
+                            onChange={(val) => {
                               const updated = [...pricingPlans];
-                              updated[idx].billingPeriod = e.target.value as any;
+                              updated[idx].billingPeriod = val as any;
                               setPricingPlans(updated);
                             }}
-                            className="w-full p-2.5 rounded-xl border border-[#EADFCB] bg-white"
-                          >
-                            <option value="monthly">Monthly</option>
-                            <option value="yearly">Yearly</option>
-                            <option value="one-time">One-Time Commission</option>
-                          </select>
+                            options={[
+                              { label: "Monthly", value: "monthly" },
+                              { label: "Yearly", value: "yearly" },
+                              { label: "One-Time Commission", value: "one-time" },
+                            ]}
+                          />
                         </div>
 
                         <div>

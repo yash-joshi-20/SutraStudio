@@ -136,9 +136,9 @@ export function CustomDropdown({
           disabled={disabled}
           onClick={() => !disabled && setIsOpen((prev) => !prev)}
           onKeyDown={handleKeyDown}
-          className={`w-full min-h-[46px] rounded-xl bg-[#FFFDF9] border border-[#EADFCB] px-4 py-2.5 text-left text-sm text-[#0F172A] shadow-xs transition-all duration-200 flex items-center justify-between gap-3 focus:outline-none focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/35 hover:border-[#D4A35A]/80 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
-            error ? "border-[#B42318] focus:ring-[#B42318]/20" : ""
-          } ${isOpen ? "border-[#D4A35A] ring-2 ring-[#D4A35A]/25" : ""} ${buttonClassName}`}
+          className={`w-full min-h-[46px] rounded-xl bg-[#FFFDF9] border border-[#EADFCB] px-4 py-2.5 text-left text-sm text-[#0F172A] transition-all duration-200 flex items-center justify-between gap-3 focus:outline-none focus:border-[#D4A35A] focus:ring-0 hover:border-[#D4A35A]/80 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+            error ? "border-[#B42318]" : ""
+          } ${isOpen ? "border-[#D4A35A]" : ""} ${buttonClassName}`}
         >
           <div className="flex items-center gap-2.5 truncate flex-1">
             {selectedOption?.icon && (

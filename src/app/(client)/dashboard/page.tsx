@@ -1418,7 +1418,7 @@ export default function ClientDashboardPage() {
                     placeholder="Specify the exact adjustments desired (e.g. increase lighting softness, refine Sanskrit typography kerning, adjust texture reflectiveness)..."
                     value={revisionNotes}
                     onChange={(e) => setRevisionNotes(e.target.value)}
-                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/20"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] focus:ring-0"
                   />
                   <div className="flex items-center justify-end gap-2">
                     <Button

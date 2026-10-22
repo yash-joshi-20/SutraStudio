@@ -611,7 +611,7 @@ export default function ClientProjectsPage() {
                       placeholder="Enter specific notes on ad hooks, audience targeting adjustment, or creative styling..."
                       value={revisionFeedback}
                       onChange={(e) => setRevisionFeedback(e.target.value)}
-                      className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/20"
+                      className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] focus:ring-0"
                     />
                     <div className="flex items-center justify-end gap-2">
                       <Button

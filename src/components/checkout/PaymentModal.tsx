@@ -425,10 +425,10 @@ Please verify payment receipt and commence studio production.`;
                     setUtrNumber(clean);
                     if (utrError) setUtrError("");
                   }}
-                  className={`w-full px-3.5 py-2.5 rounded-xl bg-[#FFFFFF] border text-xs font-mono tracking-wider text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-1 ${
+                  className={`w-full px-3.5 py-2.5 rounded-xl bg-[#FFFFFF] border text-xs font-mono tracking-wider text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-0 ${
                     utrError
-                      ? "border-red-400 focus:border-red-500 focus:ring-red-400"
-                      : "border-[#EADFCB] focus:border-[#D4A35A] focus:ring-[#D4A35A]"
+                      ? "border-red-400 focus:border-red-500"
+                      : "border-[#EADFCB] focus:border-[#D4A35A]"
                   }`}
                 />
                 {utrError ? (

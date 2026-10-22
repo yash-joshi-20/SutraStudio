@@ -56,6 +56,7 @@ import { OrderReceiptModal, ReceiptOrderData } from "@/components/orders/OrderRe
 import { PaymentModal } from "@/components/checkout/PaymentModal";
 import { MasterOrderForm } from "@/components/orders/MasterOrderForm";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { CustomDropdown } from "@/components/ui/CustomDropdown";
 import {
   computeOrderProgress,
   getFulfillmentProfile,
@@ -2438,25 +2439,22 @@ export default function OrdersPage() {
                             </label>
 
                             {field.type === "select" && (
-                              <select
+                              <CustomDropdown
                                 value={briefAnswers[field.key] ?? field.defaultValue ?? ""}
-                                onChange={(e) =>
+                                onChange={(val) =>
                                   setBriefAnswers({
                                     ...briefAnswers,
-                                    [field.key]: e.target.value,
+                                    [field.key]: val,
                                   })
                                 }
-                                className="w-full rounded-xl bg-[#FAF9F5] border border-[#EADFCB] px-3.5 py-2 text-xs text-[#0F172A] focus:border-[#D4A35A] focus:outline-none"
-                              >
-                                <option value="" disabled>
-                                  Select an option...
-                                </option>
-                                {field.options?.map((opt, i) => (
-                                  <option key={i} value={opt}>
-                                    {opt}
-                                  </option>
-                                ))}
-                              </select>
+                                placeholder="Select an option..."
+                                options={
+                                  field.options?.map((opt) => ({
+                                    label: opt,
+                                    value: opt,
+                                  })) ?? []
+                                }
+                              />
                             )}
 
                             {field.type === "textarea" && (
@@ -2472,7 +2470,7 @@ export default function OrdersPage() {
                                       [field.key]: e.target.value,
                                     })
                                   }
-                                  className="w-full rounded-xl bg-[#FAF9F5] border border-[#EADFCB] px-4 py-2.5 text-xs text-[#0F172A] focus:border-[#D4A35A] focus:outline-none focus:ring-2 focus:ring-[#D4A35A]/20"
+                                  className="w-full rounded-xl bg-[#FAF9F5] border border-[#EADFCB] px-4 py-2.5 text-xs text-[#0F172A] focus:border-[#D4A35A] focus:outline-none focus:ring-0"
                                 />
                                 <div className="flex justify-between text-[10px] text-[#94A3B8]">
                                   <span>{field.helpText}</span>
@@ -2572,7 +2570,7 @@ export default function OrdersPage() {
                     placeholder="Specify any additional guidelines, lighting atmosphere, specific deliverables, or target deadlines..."
                     value={requirements}
                     onChange={(e) => setRequirements(e.target.value)}
-                    className="w-full rounded-xl bg-[#FFFDF9] border border-[#EADFCB] px-4 py-2.5 text-xs text-[#0F172A] focus:border-[#D4A35A] focus:outline-none focus:ring-2 focus:ring-[#D4A35A]/20"
+                    className="w-full rounded-xl bg-[#FFFDF9] border border-[#EADFCB] px-4 py-2.5 text-xs text-[#0F172A] focus:border-[#D4A35A] focus:outline-none focus:ring-0"
                   />
                 </div>
 
@@ -2582,26 +2580,30 @@ export default function OrdersPage() {
                     <label className="block text-xs font-semibold uppercase tracking-wider text-[#0F172A]">
                       Production SLA
                     </label>
-                    <select
+                    <CustomDropdown
                       value={preferredTimeline}
-                      onChange={(e) => setPreferredTimeline(e.target.value)}
-                      className="w-full rounded-xl bg-[#FFFDF9] border border-[#EADFCB] px-3.5 py-2 text-xs text-[#0F172A] focus:border-[#D4A35A] focus:outline-none"
-                    >
-                      <option value="Standard Studio Staging">Standard Studio Staging</option>
-                      <option value="Priority Rush Production">Priority Rush Production</option>
-                      <option value="Expedited Director Review">Expedited Director Review</option>
-                    </select>
+                      onChange={setPreferredTimeline}
+                      options={[
+                        { label: "Standard Studio Staging", value: "Standard Studio Staging" },
+                        { label: "Priority Rush Production", value: "Priority Rush Production" },
+                        { label: "Expedited Director Review", value: "Expedited Director Review" },
+                      ]}
+                    />
                   </div>
                 ) : (
                   <div className="space-y-1.5">
                     <label className="block text-xs font-semibold uppercase tracking-wider text-[#0F172A]">
                       Target Kickoff Date
                     </label>
-                    <input
-                      type="date"
-                      value={targetKickoffDate}
-                      onChange={(e) => setTargetKickoffDate(e.target.value)}
-                      className="w-full rounded-xl bg-[#FFFDF9] border border-[#EADFCB] px-3.5 py-2 text-xs text-[#0F172A] focus:border-[#D4A35A] focus:outline-none"
+                    <CustomDropdown
+                      value={targetKickoffDate || "Immediate Kickoff (Within 24–48 Hours)"}
+                      onChange={setTargetKickoffDate}
+                      options={[
+                        { label: "Immediate Kickoff (Within 24–48 Hours)", value: "Immediate Kickoff (Within 24-48h)", badge: "Instant" },
+                        { label: "1st of Upcoming Month", value: "1st of Upcoming Month" },
+                        { label: "15th of Upcoming Month", value: "15th of Upcoming Month" },
+                        { label: "Custom Schedule (Align with Director)", value: "Custom Schedule" },
+                      ]}
                     />
                   </div>
                 )}
@@ -3871,7 +3873,7 @@ export default function OrdersPage() {
                     placeholder="Specify the exact adjustments desired (e.g. increase ambient lighting softness, refine Sanskrit typography kerning, adjust texture reflectiveness)..."
                     value={revisionNotes}
                     onChange={(e) => setRevisionNotes(e.target.value)}
-                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/20"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A] focus:ring-0"
                   />
 
                   <div className="flex items-center justify-end gap-2">
