@@ -1346,7 +1346,7 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
               </div>
 
               {/* CRM Navigation */}
-              <nav className="mt-4 flex-1 space-y-1.5 overflow-y-auto">
+              <nav className="mt-4 flex-1 min-h-0 space-y-1.5 overflow-y-auto pr-1 [scrollbar-width:thin] [scrollbar-color:#E5E1D8_transparent]">
                 {CRM_NAV.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeTab === item.id;
@@ -1518,10 +1518,11 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
         <aside
           className={`${
             sidebarCollapsed ? "w-20 px-2.5 py-4" : "w-64 p-4"
-          } shrink-0 border-r border-[#E5E1D8] bg-[#FFFDF9] min-h-screen flex flex-col justify-between hidden md:flex transition-all duration-300 ease-in-out sticky top-0 h-screen z-30 select-none`}
+          } shrink-0 border-r border-[#E5E1D8] bg-[#FFFDF9] min-h-screen flex flex-col justify-between hidden md:flex transition-all duration-300 ease-in-out sticky top-0 h-screen z-30 select-none overflow-y-auto`}
         >
-          <div>
+          <div className="flex-1 min-h-0 flex flex-col">
             {/* Brand Header & Toggle */}
+            <div className="shrink-0">
             {!sidebarCollapsed ? (
               <div className="pb-4 border-b border-[#E5E1D8] flex flex-col gap-2.5">
                 <div className="flex items-center justify-between">
@@ -1569,9 +1570,10 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
                 </button>
               </div>
             )}
+            </div>
 
             {/* CRM Navigation Links */}
-            <nav className="mt-4 space-y-1.5">
+            <nav className="mt-4 flex-1 min-h-0 overflow-y-auto space-y-1.5 pr-1 [scrollbar-width:thin] [scrollbar-color:#E5E1D8_transparent]">
               {CRM_NAV.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
@@ -1724,7 +1726,7 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
           </div>
 
           {/* Sidebar Footer */}
-          <div className="pt-4 border-t border-[#E5E1D8]">
+          <div className="pt-4 border-t border-[#E5E1D8] shrink-0 mt-auto">
             {!sidebarCollapsed ? (
               <div className="space-y-3">
                 <Link
