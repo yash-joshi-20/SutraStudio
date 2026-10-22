@@ -393,6 +393,7 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [cmsSidebarExpanded, setCmsSidebarExpanded] = useState<boolean>(true);
   const [clientsSidebarExpanded, setClientsSidebarExpanded] = useState<boolean>(true);
+  const desktopSidebarNavRef = React.useRef<HTMLElement>(null);
 
   // Orders State
   const [orders, setOrders] = useState<AdminOrderRecord[]>([]);
@@ -1516,11 +1517,16 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
         {/* DESKTOP PERSISTENT COLLAPSIBLE CRM SIDEBAR */}
         {/* ============================================================ */}
         <aside
+          onWheel={(e) => {
+            if (desktopSidebarNavRef.current && e.currentTarget === e.target) {
+              desktopSidebarNavRef.current.scrollTop += e.deltaY;
+            }
+          }}
           className={`${
             sidebarCollapsed ? "w-20 px-2.5 py-4" : "w-64 p-4"
-          } shrink-0 border-r border-[#E5E1D8] bg-[#FFFDF9] min-h-screen flex flex-col justify-between hidden md:flex transition-all duration-300 ease-in-out sticky top-0 h-screen z-30 select-none overflow-y-auto`}
+          } shrink-0 border-r border-[#E5E1D8] bg-[#FFFDF9] sticky top-0 self-start h-screen max-h-screen h-[100dvh] max-h-[100dvh] z-30 flex flex-col justify-between hidden md:flex transition-all duration-300 ease-in-out overflow-hidden`}
         >
-          <div className="flex-1 min-h-0 flex flex-col">
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
             {/* Brand Header & Toggle */}
             <div className="shrink-0">
             {!sidebarCollapsed ? (
@@ -1573,7 +1579,10 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
             </div>
 
             {/* CRM Navigation Links */}
-            <nav className="mt-4 flex-1 min-h-0 overflow-y-auto space-y-1.5 pr-1 [scrollbar-width:thin] [scrollbar-color:#E5E1D8_transparent]">
+            <nav
+              ref={desktopSidebarNavRef}
+              className="mt-3 flex-1 min-h-0 overflow-y-auto space-y-1.5 pr-1.5 overscroll-contain focus:outline-none [scrollbar-width:thin] [scrollbar-color:#A98B57_transparent]"
+            >
               {CRM_NAV.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
@@ -1799,7 +1808,7 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
                 Sutra CRM
               </span>
               <span className="text-[#E5E1D8] shrink-0">/</span>
-              <span className="text-xs sm:text-sm font-serif font-bold text-[#171717] capitalize truncate max-w-xs sm:max-w-md">
+              <span className="text-xs sm:text-sm font-serif font-bold text-[#171717] capitalize truncate max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl">
                 {activeTab === "overview"
                   ? "Studio Dashboard"
                   : activeTab === "orders"

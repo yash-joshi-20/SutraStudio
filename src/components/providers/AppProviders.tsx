@@ -36,7 +36,9 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
           <CustomCursor />
           {children}
           <FloatingChatModal />
-          <ScrollToTopArrow />
+          <Suspense fallback={null}>
+            <ScrollToTopArrow />
+          </Suspense>
           <OfflineBanner />
         </ToastProvider>
       </CmsThemeProvider>

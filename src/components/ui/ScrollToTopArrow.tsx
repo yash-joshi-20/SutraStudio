@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { ArrowUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { soundSystem } from "@/lib/audio/soundSystem";
@@ -8,14 +9,29 @@ import { soundSystem } from "@/lib/audio/soundSystem";
 /**
  * ScrollToTopArrow — Bespoke Studio Floating Arrow
  *
- * Appears when the user scrolls down, allowing swift, fluid return
- * to page header with studio sound feedback.
+ * Appears when the user scrolls down on public marketing pages,
+ * allowing swift, fluid return to page header with studio sound feedback.
+ * Strictly hidden on admin and client dashboard routes.
  */
 export function ScrollToTopArrow() {
+  const pathname = usePathname();
   const [isVisible, setIsVisible] = useState(false);
 
+  // Strictly hide on admin dashboard and client portal dashboard routes
+  const isDashboardRoute =
+    !pathname ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/client-dashboard") ||
+    pathname.startsWith("/orders") ||
+    pathname.startsWith("/invoices") ||
+    pathname.startsWith("/profile") ||
+    pathname.startsWith("/projects-client") ||
+    pathname.startsWith("/new-order") ||
+    pathname.startsWith("/chat");
+
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || isDashboardRoute) return;
 
     const handleScroll = () => {
       if (window.scrollY > 320) {
@@ -38,6 +54,10 @@ export function ScrollToTopArrow() {
       });
     }
   };
+
+  if (isDashboardRoute) {
+    return null;
+  }
 
   return (
     <AnimatePresence>

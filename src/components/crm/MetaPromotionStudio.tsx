@@ -567,32 +567,32 @@ export function MetaPromotionStudio() {
       {/* TOP HERO: DYNAMIC AI RESEARCH & PROMOTIONAL REEL ENGINE      */}
       {/* ============================================================ */}
       <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-[#FAF9F5] via-[#FFFDF9] to-[#F8F5EF] border border-[#E5E1D8] shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-3.5 min-w-0">
             <div className="w-10 h-10 rounded-xl bg-[#171717] text-[#A98B57] flex items-center justify-center shrink-0 shadow-xs">
               <Rocket className="w-5 h-5 text-[#A98B57]" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="font-serif font-bold text-base sm:text-lg text-[#171717]">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="font-serif font-bold text-base sm:text-lg text-[#171717] leading-snug">
                   Dynamic AI Research &amp; Meta Video Reel Engine
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#FAF9F5] border border-[#E5E1D8] text-[#8C6D3B]">
+                <span className="shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#FAF9F5] border border-[#E5E1D8] text-[#8C6D3B] whitespace-nowrap">
                   n8n &amp; Gemini Powered
                 </span>
               </div>
-              <p className="text-xs text-[#64748B] mt-0.5">
+              <p className="text-xs text-[#64748B] mt-1 max-w-2xl">
                 Researches latest industry trends, blends with Sutra Studio 4K services &amp; pricing, and generates dynamic reels &amp; ads.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               disabled={isRunningResearchPipeline}
               onClick={() => handleRunDynamicResearchPipeline()}
-              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#171717] via-[#5C3A1E] to-[#171717] text-white font-serif font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs hover:shadow-md transition-all cursor-pointer disabled:opacity-60"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#171717] via-[#5C3A1E] to-[#171717] text-white font-serif font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs hover:shadow-md transition-all cursor-pointer disabled:opacity-60 whitespace-nowrap"
             >
               {isRunningResearchPipeline ? (
                 <>

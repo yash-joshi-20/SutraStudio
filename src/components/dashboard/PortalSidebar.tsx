@@ -95,7 +95,7 @@ export function PortalSidebarInner({
   const desktopWidthClass = isCollapsed ? "w-20" : "w-64";
   const desktopClass = contained
     ? "flex flex-col h-full p-4 transition-all duration-300 ease-in-out"
-    : `${desktopWidthClass} shrink-0 border-r border-[#E5E1D8] bg-[#FFFDF9] min-h-screen p-4 flex flex-col justify-between hidden md:flex transition-all duration-300 ease-in-out sticky top-0 h-screen z-30 select-none overflow-y-auto`;
+    : `${desktopWidthClass} shrink-0 border-r border-[#E5E1D8] bg-[#FFFDF9] sticky top-0 self-start h-screen max-h-screen h-[100dvh] max-h-[100dvh] p-4 flex flex-col justify-between hidden md:flex transition-all duration-300 ease-in-out z-30 overflow-hidden`;
 
   return (
     <>
@@ -241,7 +241,7 @@ export function PortalSidebarInner({
 
       {/* Desktop / Tablet Persistent Collapsible Sidebar */}
       <aside className={desktopClass}>
-        <div className="flex-1 min-h-0 flex flex-col">
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
           {/* Brand Header & Toggle Button */}
           <div className="shrink-0">
           {!isCollapsed ? (
@@ -312,7 +312,7 @@ export function PortalSidebarInner({
           </div>
 
           {/* Navigation Items */}
-          <nav className="mt-4 flex-1 min-h-0 overflow-y-auto space-y-1.5 pr-1 [scrollbar-width:thin] [scrollbar-color:#E5E1D8_transparent]">
+          <nav className="mt-4 flex-1 min-h-0 overflow-y-auto space-y-1.5 pr-1.5 overscroll-contain focus:outline-none [scrollbar-width:thin] [scrollbar-color:#A98B57_transparent]">
             {navItems.map((item: any) => {
               const Icon = item.icon;
               let isActive = false;
