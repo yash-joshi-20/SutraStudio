@@ -38,6 +38,7 @@ import {
   Zap,
   Maximize2,
   X,
+  Search,
 } from "lucide-react";
 import type { GeneratedPromotionData } from "@/app/api/admin/promotions/generate/route";
 
@@ -222,6 +223,9 @@ export function MetaPromotionStudio() {
   // Self-Promotion Daily Drop & Meta Ads State
   const [isDispatchingDailyPromo, setIsDispatchingDailyPromo] = useState(false);
   const [dailyPromoResult, setDailyPromoResult] = useState<any | null>(null);
+  const [researchTopic, setResearchTopic] = useState("");
+  const [isRunningResearchPipeline, setIsRunningResearchPipeline] = useState(false);
+  const [researchResultData, setResearchResultData] = useState<any | null>(null);
   const [metaCampaigns, setMetaCampaigns] = useState<any[]>([]);
   const [isLaunchingMetaAd, setIsLaunchingMetaAd] = useState(false);
   const [metaAdBudget, setMetaAdBudget] = useState(500);
@@ -298,57 +302,47 @@ export function MetaPromotionStudio() {
     }
   };
 
-  const handleDispatchDailyPromo = async () => {
-    setIsDispatchingDailyPromo(true);
+  const handleRunDynamicResearchPipeline = async (customTopicText?: string) => {
+    setIsRunningResearchPipeline(true);
     setActionNotice(null);
     try {
-      const activePreset = CAMPAIGN_PRESETS.find((c) => c.id === selectedCampaign);
-      const res = await fetch("/api/admin/marketing/dispatch", {
+      const topicToQuery = customTopicText || researchTopic.trim() || undefined;
+      const res = await fetch("/api/admin/promotions/research-and-generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          disciplineId: (activePreset as any)?.disciplineId || "visuals-motion",
-          prompt: customPrompt.trim() || undefined,
+          topic: topicToQuery,
+          platform: "instagram_reel",
+          budget: metaAdBudget,
+          targetAudience: metaAdAudience,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to dispatch daily self-promotion");
-      setDailyPromoResult(data);
 
-      // Automatically stage the real commercial video reel into phone mockup
-      if (data.videoReel?.mediaUrl) {
-        setCustomMediaUrl(data.videoReel.mediaUrl);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Dynamic research pipeline execution failed");
+
+      setResearchResultData(data);
+      if (data.promotion) {
+        setCurrentPromotion(data.promotion);
+      }
+      if (data.dynamicMedia?.videoUrl) {
+        setCustomMediaUrl(data.dynamicMedia.videoUrl);
         setPlatform("instagram_reel");
         setIsPlaying(true);
       }
 
-      // Automatically sync dynamic ad copy to the phone screen
-      if (data.concept) {
-        setCurrentPromotion({
-          id: data.runId,
-          campaignType: selectedCampaign,
-          platform: "instagram_reel",
-          language,
-          title: data.concept.imageTitle || data.imagePost?.title || "Daily Commercial Drop",
-          hook: data.concept.voiceoverScript || data.concept.imageTitle || "High-Velocity Commercial Visuals",
-          caption: data.imagePost?.caption || data.concept.imageCaption || "",
-          hashtags: data.concept.hashtags || [],
-          mediaUrl: data.videoReel?.mediaUrl || data.imagePost?.mediaUrl,
-          mediaType: "video",
-          ctaUrl: "https://sutrastudios.in/pricing",
-          whatsappUrl: `https://wa.me/918200192781?text=${encodeURIComponent(
-            `Hello Sutra Studio! I am reviewing today's 4K Commercial Drop: "${data.concept.imageTitle}". I want to book this for my brand.`
-          )}`,
-          createdAt: new Date().toISOString(),
-        });
-      }
-
-      setActionNotice("✓ Success: Today's 4K Post & Commercial Video Reel synthesized & staged for Instagram & Facebook!");
+      setActionNotice(`✓ Success: AI researched "${data.research?.topic || "Market Trends"}" and dynamically synthesized a 4K commercial reel drop for Meta Ads!`);
+      setTimeout(() => setActionNotice(null), 5000);
     } catch (err: any) {
-      setActionNotice(`Error: ${err.message || err}`);
+      setActionNotice(`Research Pipeline Error: ${err.message || err}`);
     } finally {
-      setIsDispatchingDailyPromo(false);
+      setIsRunningResearchPipeline(false);
     }
+  };
+
+  const handleDispatchDailyPromo = async () => {
+    // Run the dynamic AI research & generation pipeline
+    await handleRunDynamicResearchPipeline();
   };
 
   const handleLaunchStudioMetaAd = async () => {
@@ -357,7 +351,7 @@ export function MetaPromotionStudio() {
     try {
       const headline = currentPromotion?.metaAdCopy?.headline || currentPromotion?.title || "Sutra Studio — 4K Commercial Visuals & 3D Spatial Design";
       const caption = currentPromotion?.caption || "Where Indian aesthetic tradition meets high-precision creative technology. Inquire via WhatsApp.";
-      const creativeUrl = currentPromotion?.mediaUrl || activeMedia.url;
+      const creativeUrl = currentPromotion?.mediaUrl || customMediaUrl.trim() || activeMedia?.url || "/videos/services/ai-video-mobile.mp4";
 
       const res = await fetch("/api/admin/marketing/meta-ads", {
         method: "POST",
@@ -570,7 +564,7 @@ export function MetaPromotionStudio() {
       )}
 
       {/* ============================================================ */}
-      {/* TOP HERO: DAILY SELF-PROMOTION ENGINE (1x Post + 1x Reel)   */}
+      {/* TOP HERO: DYNAMIC AI RESEARCH & PROMOTIONAL REEL ENGINE      */}
       {/* ============================================================ */}
       <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-[#FAF9F5] via-[#FFFDF9] to-[#F8F5EF] border border-[#E5E1D8] shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -581,14 +575,14 @@ export function MetaPromotionStudio() {
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="font-serif font-bold text-base sm:text-lg text-[#171717]">
-                  Daily Self-Promotion Engine
+                  Dynamic AI Research &amp; Meta Video Reel Engine
                 </h2>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#FAF9F5] border border-[#E5E1D8] text-[#8C6D3B]">
-                  Instagram &amp; Facebook Feed
+                  n8n &amp; Gemini Powered
                 </span>
               </div>
               <p className="text-xs text-[#64748B] mt-0.5">
-                Generate and stage today&apos;s 4K luxury master post + 9:16 commercial motion reel for Sutra Studio.
+                Researches latest industry trends, blends with Sutra Studio 4K services &amp; pricing, and generates dynamic reels &amp; ads.
               </p>
             </div>
           </div>
@@ -596,73 +590,135 @@ export function MetaPromotionStudio() {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              disabled={isDispatchingDailyPromo}
-              onClick={handleDispatchDailyPromo}
+              disabled={isRunningResearchPipeline}
+              onClick={() => handleRunDynamicResearchPipeline()}
               className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#171717] via-[#5C3A1E] to-[#171717] text-white font-serif font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs hover:shadow-md transition-all cursor-pointer disabled:opacity-60"
             >
-              {isDispatchingDailyPromo ? (
+              {isRunningResearchPipeline ? (
                 <>
                   <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#A98B57]" />
-                  <span>Synthesizing Daily 4K Drop...</span>
+                  <span>Researching Trends &amp; Synthesizing Reel...</span>
                 </>
               ) : (
                 <>
                   <Zap className="w-3.5 h-3.5 text-[#A98B57]" />
-                  <span>⚡ Dispatch Today&apos;s 4K Post &amp; Video Reel</span>
+                  <span>⚡ Run Dynamic Research &amp; Reel Pipeline</span>
                 </>
               )}
             </button>
           </div>
         </div>
 
-        {/* Live Staged Daily Output Card */}
-        {dailyPromoResult && (
+        {/* Dynamic Topic Search Bar & Quick Research Trend Pills */}
+        <div className="p-4 rounded-xl bg-white border border-[#E5E1D8] space-y-2.5">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="w-3.5 h-3.5 text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={researchTopic}
+                onChange={(e) => setResearchTopic(e.target.value)}
+                placeholder="Enter custom research topic (e.g. Why luxury jewelry brands need 3D CGI video reels in 2026)..."
+                className="w-full pl-9 pr-3 py-2 rounded-lg bg-[#FAF9F5] border border-[#E5E1D8] text-xs text-[#171717] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#A98B57]"
+              />
+            </div>
+            {researchTopic && (
+              <button
+                type="button"
+                onClick={() => setResearchTopic("")}
+                className="text-xs text-[#64748B] hover:text-[#171717] px-2 py-1"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          {/* Quick-Pick Trending Research Pills */}
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold text-[#8C827A] uppercase tracking-wider block">
+              1-Click Trending Research Topics:
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                "Why Luxury Brands are Replacing Physical Shoots with 4K CGI Reels",
+                "Selling Luxury Real Estate Before Construction with 3D Walkthroughs",
+                "High-ROAS Meta Ad 3-Second Hook Formula for Instagram",
+                "Haute Horology & Jewelry 3D Animation Pipelines",
+                "Vedic-Modern Brand Identity: Why Heritage Converts Higher",
+                "30 Commercial Video Reels / Month for D2C Founders",
+              ].map((topicItem, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  disabled={isRunningResearchPipeline}
+                  onClick={() => {
+                    setResearchTopic(topicItem);
+                    handleRunDynamicResearchPipeline(topicItem);
+                  }}
+                  className="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-[#FAF9F5] border border-[#E5E1D8] text-[#5C3A1E] hover:bg-[#F0ECE1] hover:border-[#A98B57] transition-all cursor-pointer text-left disabled:opacity-50"
+                >
+                  ⚡ {topicItem}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Live Staged Dynamic Research Output Card */}
+        {researchResultData && (
           <div className="p-4 rounded-xl bg-white border border-[#E5E1D8] shadow-2xs space-y-3 animate-fade-in">
             <div className="flex items-center justify-between text-xs">
               <span className="font-bold text-[#171717] flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span>Today&apos;s Drop Staged: {dailyPromoResult.concept?.disciplineName || "Creative Technology"}</span>
+                <span>Researched: {researchResultData.research?.topic || "Market Trends"}</span>
               </span>
               <span className="text-[10px] font-mono text-[#A98B57] bg-[#FAF9F5] px-2 py-0.5 rounded border border-[#E5E1D8]">
-                Run ID: {dailyPromoResult.runId}
+                Run ID: {researchResultData.runId}
               </span>
             </div>
+
+            {/* Research Summary Quote */}
+            {researchResultData.research?.summary && (
+              <div className="p-3 rounded-lg bg-[#FAF9F5] border-l-2 border-[#A98B57] text-xs text-[#5C3A1E] italic">
+                &ldquo;{researchResultData.research.summary}&rdquo;
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               <div className="p-3 rounded-lg bg-[#FAF9F5] border border-[#E5E1D8] space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-[#171717] flex items-center gap-1">
-                    <ImageIcon className="w-3.5 h-3.5 text-[#A98B57]" /> 1x 4K Master Post
+                    <ImageIcon className="w-3.5 h-3.5 text-[#A98B57]" /> Dynamic 4K AI Render
                   </span>
                   <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                    Ready
+                    Seed: {researchResultData.dynamicMedia?.seed || "Randomized"}
                   </span>
                 </div>
                 <p className="text-[11px] text-[#64748B] line-clamp-1">
-                  {dailyPromoResult.imagePost?.title || "Master 4K Commercial Visual"}
+                  {researchResultData.promotion?.title || "Dynamic 4K Ad Visual"}
                 </p>
                 <div className="flex items-center gap-2 pt-1 text-[10px] flex-wrap">
                   <a
-                    href={dailyPromoResult.imagePost?.mediaUrl}
+                    href={researchResultData.dynamicMedia?.imageUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-[#A98B57] hover:underline flex items-center gap-1 font-semibold"
                   >
-                    <Eye className="w-3 h-3" /> View 4K Master
+                    <Eye className="w-3 h-3" /> View 4K Render
                   </a>
                   <button
                     type="button"
                     onClick={() => {
                       setLightboxMedia({
-                        url: dailyPromoResult.imagePost?.mediaUrl,
+                        url: researchResultData.dynamicMedia?.imageUrl,
                         type: "image",
-                        title: dailyPromoResult.imagePost?.title || "1x 4K Master Post",
-                        caption: dailyPromoResult.imagePost?.caption,
+                        title: researchResultData.promotion?.title || "4K Master Render",
+                        caption: researchResultData.promotion?.caption,
                       });
                     }}
                     className="text-[#5C3A1E] hover:underline flex items-center gap-1 font-semibold cursor-pointer"
                   >
-                    <Maximize2 className="w-3 h-3 text-[#A98B57]" /> Quick View
+                    <Maximize2 className="w-3 h-3 text-[#A98B57]" /> Lightbox
                   </button>
                 </div>
               </div>
@@ -670,56 +726,44 @@ export function MetaPromotionStudio() {
               <div className="p-3 rounded-lg bg-[#FAF9F5] border border-[#E5E1D8] space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-[#171717] flex items-center gap-1">
-                    <VideoIcon className="w-3.5 h-3.5 text-[#A98B57]" /> 1x Commercial Motion Reel
+                    <VideoIcon className="w-3.5 h-3.5 text-[#A98B57]" /> 1x 4K Video Reel (9:16)
                   </span>
                   <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                    9:16 Video
+                    Active Video
                   </span>
                 </div>
                 <p className="text-[11px] text-[#64748B] line-clamp-1">
-                  {dailyPromoResult.videoReel?.title || "4K Kinetic Showreel"}
+                  {researchResultData.promotion?.hook || "Scroll-Stopping Visual Hook"}
                 </p>
                 <div className="flex items-center gap-2 pt-1 text-[10px] flex-wrap">
                   <button
                     type="button"
                     onClick={() => {
-                      if (dailyPromoResult.videoReel?.mediaUrl) {
-                        setCustomMediaUrl(dailyPromoResult.videoReel.mediaUrl);
+                      if (researchResultData.dynamicMedia?.videoUrl) {
+                        setCustomMediaUrl(researchResultData.dynamicMedia.videoUrl);
                         setPlatform("instagram_reel");
                         setIsPlaying(true);
                         setIsMuted(false);
-                        if (audioRef.current) {
-                          audioRef.current.currentTime = 0;
-                          audioRef.current.play().catch(() => {});
-                        }
                       }
                     }}
                     className="text-[#A98B57] hover:underline flex items-center gap-1 font-semibold cursor-pointer"
                   >
-                    <Play className="w-3 h-3 fill-current" /> Preview in Mockup
+                    <Play className="w-3 h-3 fill-current" /> Play in Phone
                   </button>
                   <button
                     type="button"
                     onClick={() => {
                       setLightboxMedia({
-                        url: dailyPromoResult.videoReel?.mediaUrl,
+                        url: researchResultData.dynamicMedia?.videoUrl,
                         type: "video",
-                        title: dailyPromoResult.videoReel?.title || "1x Commercial Motion Reel",
-                        caption: dailyPromoResult.videoReel?.caption,
+                        title: researchResultData.promotion?.title || "Commercial Video Reel",
+                        caption: researchResultData.promotion?.caption,
                       });
                     }}
                     className="text-[#5C3A1E] hover:underline flex items-center gap-1 font-semibold cursor-pointer"
                   >
                     <Maximize2 className="w-3 h-3 text-[#A98B57]" /> Fullscreen
                   </button>
-                  <a
-                    href={dailyPromoResult.videoReel?.mediaUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[#64748B] hover:underline flex items-center gap-1 font-semibold"
-                  >
-                    <ExternalLink className="w-3 h-3" /> Open
-                  </a>
                 </div>
               </div>
             </div>
@@ -1804,6 +1848,7 @@ export function MetaPromotionStudio() {
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-[#E5E1D8] text-[#8C827A] text-[10px] font-mono uppercase tracking-wider">
+                  <th className="py-2.5 px-3">Creative Media</th>
                   <th className="py-2.5 px-3">Campaign / Order</th>
                   <th className="py-2.5 px-3">Headline</th>
                   <th className="py-2.5 px-3">Daily Budget</th>
@@ -1815,6 +1860,42 @@ export function MetaPromotionStudio() {
               <tbody className="divide-y divide-[#E5E1D8]/60">
                 {metaCampaigns.map((c) => (
                   <tr key={c.campaignId} className="hover:bg-[#FAF9F5]/80 transition-colors">
+                    <td className="py-3 px-3">
+                      {c.creativeUrl ? (
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setLightboxMedia({
+                                url: c.creativeUrl,
+                                type: c.creativeUrl.endsWith(".mp4") || c.creativeUrl.endsWith(".mov") ? "video" : "image",
+                                title: c.headline,
+                                caption: c.caption,
+                              });
+                            }}
+                            className="group relative w-12 h-12 rounded-lg overflow-hidden bg-neutral-900 border border-[#E5E1D8] hover:border-[#A98B57] transition-all cursor-pointer shrink-0"
+                            title="Click to view/play creative"
+                          >
+                            {c.creativeUrl.endsWith(".mp4") || c.creativeUrl.endsWith(".mov") ? (
+                              <div className="w-full h-full flex items-center justify-center bg-black/60 text-[#D4AF37]">
+                                <Play className="w-4 h-4 fill-current ml-0.5" />
+                              </div>
+                            ) : (
+                              <img
+                                src={c.creativeUrl}
+                                alt={c.headline}
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                                onError={(e) => {
+                                  (e.target as HTMLElement).style.display = "none";
+                                }}
+                              />
+                            )}
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-[10px] text-[#94A3B8]">Auto-Staged</span>
+                      )}
+                    </td>
                     <td className="py-3 px-3">
                       <span className="font-mono text-[11px] font-bold text-[#171717] block">
                         {c.orderId}
