@@ -1479,7 +1479,7 @@ export function MasterOrderForm({
                   placeholder="e.g. Yash Joshi"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30 focus:outline-none"
                 />
               </div>
 
@@ -1493,7 +1493,7 @@ export function MasterOrderForm({
                   placeholder="e.g. Aura Noir Living"
                   value={brandName}
                   onChange={(e) => setBrandName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30 focus:outline-none"
                 />
               </div>
 
@@ -1507,7 +1507,7 @@ export function MasterOrderForm({
                   placeholder="e.g. director@auranoir.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30 focus:outline-none"
                 />
               </div>
 
@@ -1516,12 +1516,13 @@ export function MasterOrderForm({
                   WhatsApp Contact Number <span className="text-red-500">*</span>
                 </label>
                 <input
-                  type="text"
+                  type="tel"
+                  inputMode="tel"
                   required
                   placeholder="+91 94280 00000"
                   value={whatsapp}
                   onChange={(e) => setWhatsapp(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs font-mono text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs font-mono text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30 focus:outline-none"
                 />
               </div>
 
@@ -1532,7 +1533,7 @@ export function MasterOrderForm({
                 <select
                   value={industry}
                   onChange={(e) => setIndustry(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] transition-all duration-150 focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30 focus:outline-none cursor-pointer"
                 >
                   <option value="Real Estate">Real Estate & Architecture</option>
                   <option value="Luxury Retail">Luxury Retail & Jewelry</option>
@@ -1553,20 +1554,24 @@ export function MasterOrderForm({
                   placeholder="e.g. @auranoirliving or auranoir.com"
                   value={brandUrl}
                   onChange={(e) => setBrandUrl(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30 focus:outline-none"
                 />
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-[#0F172A] mb-1.5 flex items-center justify-between">
-                  <span>Brand Logo Upload (Vector SVG or Transparent PNG)</span>
-                  <span className="text-[10px] text-[#A98B57] font-medium">SVG / Transparent PNG / Vector</span>
-                </label>
-                <div className="border border-dashed border-[#EADFCB] hover:border-[#D4A35A] bg-[#FFFDF9] rounded-2xl p-4 transition-all">
-                  <div className="flex flex-col sm:flex-row items-center gap-3">
-                    <label className="cursor-pointer flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] hover:bg-[#F3EFE6] text-xs font-semibold text-[#0F172A] transition-all shrink-0">
-                      <Upload className="w-4 h-4 text-[#A98B57]" />
-                      <span>{brandLogoFile ? brandLogoFile.name : "Upload Logo Asset"}</span>
+                <div className="flex flex-wrap items-baseline justify-between gap-1 mb-1.5">
+                  <label className="text-xs font-semibold text-[#0F172A]">
+                    Brand Logo Asset <span className="font-normal text-[#64748B] text-[11px]">(Optional)</span>
+                  </label>
+                  <span className="text-[10px] text-[#A98B57] font-medium font-mono">
+                    SVG • PNG • AI • Drive
+                  </span>
+                </div>
+                <div className="border border-dashed border-[#EADFCB] hover:border-[#D4A35A] bg-[#FFFDF9] rounded-2xl p-3 sm:p-4 transition-all">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full">
+                    <label className="cursor-pointer flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] hover:bg-[#F3EFE6] text-xs font-semibold text-[#0F172A] transition-all shrink-0 min-h-[44px]">
+                      <Upload className="w-4 h-4 text-[#A98B57] shrink-0" />
+                      <span className="truncate max-w-[200px]">{brandLogoFile ? brandLogoFile.name : "Upload Logo Asset"}</span>
                       <input
                         type="file"
                         accept=".svg,.png,.ai,.eps,.pdf,image/svg+xml,image/png"
@@ -1584,22 +1589,22 @@ export function MasterOrderForm({
                         }}
                       />
                     </label>
-                    <span className="text-xs text-[#94A3B8]">or link:</span>
+                    <span className="text-xs text-[#94A3B8] text-center shrink-0 self-center">or link:</span>
                     <input
                       type="url"
                       placeholder="https://drive.google.com/... or Figma asset link"
                       value={brandAssetUrl}
                       onChange={(e) => setBrandAssetUrl(e.target.value)}
-                      className="flex-1 px-3.5 py-2.5 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                      className="w-full sm:flex-1 min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30 focus:outline-none"
                     />
                   </div>
                   {brandLogoPreview && (
                     <div className="mt-3 flex items-center gap-3 p-2 bg-[#FAF9F5] rounded-xl border border-[#EADFCB]/60">
-                      <div className="w-9 h-9 rounded-lg bg-white p-1 border border-[#EADFCB] flex items-center justify-center overflow-hidden">
+                      <div className="w-9 h-9 rounded-lg bg-white p-1 border border-[#EADFCB] flex items-center justify-center overflow-hidden shrink-0">
                         <img src={brandLogoPreview} alt="Brand Logo Preview" className="max-w-full max-h-full object-contain" />
                       </div>
                       <span className="text-xs font-medium text-[#2E7D4F] flex items-center gap-1">
-                        <Check className="w-3.5 h-3.5" /> Logo verified for studio asset vault
+                        <Check className="w-3.5 h-3.5 shrink-0" /> Logo verified for studio asset vault
                       </span>
                     </div>
                   )}
@@ -1614,22 +1619,27 @@ export function MasterOrderForm({
                   type="date"
                   value={targetDeadline}
                   onChange={(e) => setTargetDeadline(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] transition-all duration-150 focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30 focus:outline-none"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                Creative Brief & Requirements <span className="text-red-500">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-[#0F172A]">
+                  Creative Brief & Requirements <span className="text-red-500">*</span>
+                </label>
+                <span className="text-[10px] text-[#94A3B8] font-mono">
+                  {creativeBrief.length} chars
+                </span>
+              </div>
               <textarea
                 rows={4}
                 required
                 placeholder="Describe project vision, desired mood, lighting, color palettes, key references, or special deliverables needed..."
                 value={creativeBrief}
                 onChange={(e) => setCreativeBrief(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] focus:outline-none focus:border-[#D4A35A]"
+                className="w-full px-3.5 py-3 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 resize-y min-h-[110px] focus:outline-none focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30"
               />
             </div>
 
@@ -1931,7 +1941,7 @@ export function MasterOrderForm({
                       placeholder="e.g.&#10;https://apple.com&#10;https://stripe.com&#10;https://lincoln.com"
                       value={webBenchmarkUrls}
                       onChange={(e) => setWebBenchmarkUrls(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 resize-y min-h-[90px] focus:outline-none focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30"
                     />
                     <p className="text-[10px] text-[#64748B] mt-1">
                       Paste 2 to 3 website links that represent the visual tone, interaction fidelity, or layout you admire.
@@ -2014,7 +2024,7 @@ export function MasterOrderForm({
                       placeholder="Specify your flagship products, hero collections, key service benefits, or seasonal offers to highlight..."
                       value={retainerPriorityProducts}
                       onChange={(e) => setRetainerPriorityProducts(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 resize-y min-h-[90px] focus:outline-none focus:border-[#D4A35A] focus:ring-2 focus:ring-[#D4A35A]/30"
                     />
                   </div>
                 </div>

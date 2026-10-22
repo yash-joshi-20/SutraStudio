@@ -179,14 +179,20 @@ main, section, header, footer, nav, article {
   box-shadow: 0 0 0 3px rgba(212, 163, 90, 0.35);
 }
 
-/* Universal Accessible Focus Visible */
+/* Universal Accessible Focus Visible: buttons and links get crisp offset outline */
 a:focus-visible,
-button:focus-visible,
+button:focus-visible {
+  outline: 2px solid #D4A35A !important;
+  outline-offset: 2px !important;
+}
+
+/* Form controls (inputs, selects, textareas) get a smooth, cohesive curved focus ring matching border-radius */
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid #D4A35A !important;
-  outline-offset: 2px !important;
+  outline: none !important;
+  border-color: #D4A35A !important;
+  box-shadow: 0 0 0 3px rgba(212, 163, 90, 0.28) !important;
 }
 
 /* Accessible Minimum Touch Target */
