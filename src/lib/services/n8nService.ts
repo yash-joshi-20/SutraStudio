@@ -11,6 +11,7 @@ import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
 
 export interface N8nWorkflowPayload {
   workflowId:
+    | "SUTRA_MASTER_AUTOMATION_ENGINE"
     | "SUTRA_MASTER_RENDER_LOCAL_HYBRID"
     | "SUTRA_MASTER_DUAL_ENGINE"
     | "sutra-master-dispatch"
@@ -198,6 +199,7 @@ export class N8nAutomationService {
     }
     if (
       payload.workflowId &&
+      payload.workflowId !== "SUTRA_MASTER_AUTOMATION_ENGINE" &&
       payload.workflowId !== "SUTRA_MASTER_RENDER_LOCAL_HYBRID" &&
       payload.workflowId !== "SUTRA_MASTER_DUAL_ENGINE"
     ) {

@@ -106,11 +106,10 @@ META_GRAPH_ACCESS_TOKEN=EAAB...
 
 ---
 
-### 4. Master Workflow Files Inventory
+### 4. Single Master Workflow File / એક માત્ર માસ્ટર વર્કફ્લો ફાઇલ
 
-તમારા પ્રોજેક્ટમાં બે સ્થાને આ વર્કફ્લો ફાઇલ સેવ કરેલી છે:
-1. **Root Directory**: [`n8n_sutrastudio_master_dual_engine.json`](file:///d:/SutraStudio/n8n_sutrastudio_master_dual_engine.json)
-2. **n8n Folder**: [`n8n/SUTRA_MASTER_DUAL_ENGINE.json`](file:///d:/SutraStudio/n8n/SUTRA_MASTER_DUAL_ENGINE.json)
+તમામ જૂના અને વધારાના n8n json દૂર કરીને ફક્ત **એક જ માસ્ટર વર્કફ્લો ફાઇલ** રાખવામાં આવી છે:
+* **Master Workflow File**: [`SUTRA_MASTER_AUTOMATION_ENGINE.json`](file:///d:/SutraStudio/SUTRA_MASTER_AUTOMATION_ENGINE.json)
 
 ---
 
@@ -153,10 +152,10 @@ META_GRAPH_ACCESS_TOKEN=EAAB...
 1. તમારા n8n ડેશબોર્ડ પર લોગિન કરો: `https://n8n.sutrastudios.in`
 2. ડાબી બાજુથી **Workflows** પર ક્લિક કરો.
 3. જમણા ખૂણામાં **⋮ (Options)** પર ક્લિક કરીને **Import from File** પસંદ કરો.
-4. ફાઇલ સિલેક્ટ કરો: `n8n_sutrastudio_master_dual_engine.json` (અથવા `n8n/SUTRA_MASTER_DUAL_ENGINE.json`).
+4. ફાઇલ સિલેક્ટ કરો: `SUTRA_MASTER_AUTOMATION_ENGINE.json`
 5. વર્કફ્લો લોડ થઈ જશે!
 6. જમણી બાજુ ઉપર **Active** ટોગલ સ્વિચ ચાલુ કરો.
-7. હવે તમારું એન્જિન લાઈવ છે:
+7. હવે તમારું સિંગલ માસ્ટર એન્જિન લાઈવ છે:
    - દરરોજ 9:00 AM IST વાગ્યે પોતાની એજન્સીનું મેટા પ્રમોશન આપમેળે કરશે.
    - વેબસાઇટ પરથી કોઈ પણ ક્લાયન્ટ ઓર્ડર આવે ત્યારે 1-ક્લિકમાં તે જ વર્કફ્લો ક્લાયન્ટનું પેકેજ પૂરું કરશે!
 
