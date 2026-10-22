@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { generateChatResponse } from "@/lib/ai/llm";
 import { assertAdminSession } from "@/lib/auth/requestRole";
 import { readEnv } from "@/lib/config/env";
+import { N8nAutomationService } from "@/lib/services/n8nService";
 import type { GeneratedPromotionData } from "@/app/api/admin/promotions/generate/route";
 
 export const dynamic = "force-dynamic";
@@ -49,9 +50,12 @@ const TRENDING_RESEARCH_ANGLES = [
 ];
 
 export async function POST(req: Request) {
-  const sessionCheck = await assertAdminSession(req);
-  if (!sessionCheck.authorized) {
-    return sessionCheck.response;
+  const isSecretValid = N8nAutomationService.verifySecretHeader(req);
+  if (!isSecretValid) {
+    const sessionCheck = await assertAdminSession(req);
+    if (!sessionCheck.authorized) {
+      return sessionCheck.response;
+    }
   }
 
   try {

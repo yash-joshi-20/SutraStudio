@@ -4,8 +4,12 @@ import { OrdersStore } from "@/lib/services/ordersStore";
 import { assertAdminSession } from "@/lib/auth/requestRole";
 
 export async function POST(req: Request) {
-  const gate = await assertAdminSession(req);
-  if (!gate.authorized) return gate.response;
+  // Allow server-to-server automated triggers with x-sutra-secret header or verified admin session
+  const isSecretValid = N8nAutomationService.verifySecretHeader(req);
+  if (!isSecretValid) {
+    const gate = await assertAdminSession(req);
+    if (!gate.authorized) return gate.response;
+  }
 
   try {
     const payload = (await req.json()) as N8nWorkflowPayload;

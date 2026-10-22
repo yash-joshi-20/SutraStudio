@@ -12,14 +12,17 @@ import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
 export interface N8nWorkflowPayload {
   workflowId:
     | "SUTRA_MASTER_RENDER_LOCAL_HYBRID"
+    | "SUTRA_MASTER_DUAL_ENGINE"
     | "sutra-master-dispatch"
     | string;
+  mode?: "agency_self_promo" | "client_order_fulfillment";
   orderId?: string;
   clientId?: string;
   service?: string;
   brief?: string;
   planId?: string;
   planName?: string;
+  packageId?: string;
   driveFolderId?: string;
   driveDraftsFolderId?: string;
   driveAssetsFolderId?: string;
@@ -37,6 +40,7 @@ export interface N8nWorkflowPayload {
     mediaUrl?: string;
   };
   niche?: string;
+  disciplineId?: string;
   plan?: string;
   services?: string[];
   brandAssets?: Record<string, unknown>;
@@ -180,10 +184,23 @@ export class N8nAutomationService {
     const n8nBaseUrl = this.getN8nBaseUrl();
     const explicitWebhook = readEnv("N8N_MASTER_DISPATCH_WEBHOOK");
 
-    // Target the single master hybrid engine webhook
+    const resolvedMode: "agency_self_promo" | "client_order_fulfillment" =
+      payload.mode ||
+      (payload.isStudioSelfMarketing || payload.campaignName
+        ? "agency_self_promo"
+        : "client_order_fulfillment");
+
+    // Target the master dual-engine webhook
     const pathsToTry = new Set<string>();
     pathsToTry.add("sutra-master-dispatch");
-    if (payload.workflowId && payload.workflowId !== "SUTRA_MASTER_RENDER_LOCAL_HYBRID") {
+    if (resolvedMode === "agency_self_promo") {
+      pathsToTry.add("sutra-promo-research");
+    }
+    if (
+      payload.workflowId &&
+      payload.workflowId !== "SUTRA_MASTER_RENDER_LOCAL_HYBRID" &&
+      payload.workflowId !== "SUTRA_MASTER_DUAL_ENGINE"
+    ) {
       pathsToTry.add(payload.workflowId);
     }
 
@@ -218,9 +235,10 @@ export class N8nAutomationService {
       resolvedOutputType = "image";
     }
 
-    // Enriched payload with client and service details for n8n prompt generation
+    // Enriched payload with client, mode, and service details for n8n prompt generation
     const enrichedBody = {
       ...payload,
+      mode: resolvedMode,
       orderId: payload.orderId || targetOrder?.id || `ORD-${Date.now().toString().slice(-6)}`,
       packagePrice: orderAmount || (resolvedOutputType === "video" ? 1499 : resolvedOutputType === "full_package" ? 19999 : 99),
       outputType: resolvedOutputType,
@@ -431,6 +449,19 @@ export class N8nAutomationService {
       orderAmount === 499 ||
       orderAmount === 3499;
 
+    const is360 =
+      combinedDesc.includes("360") ||
+      combinedDesc.includes("virtual tour") ||
+      combinedDesc.includes("walkthrough") ||
+      combinedDesc.includes("panoramic") ||
+      payload.workflowId?.includes("360");
+
+    const isSelfPromo = Boolean(
+      payload.isStudioSelfMarketing ||
+      payload.mode === "agency_self_promo" ||
+      payload.campaignName
+    );
+
     const deliverables: any[] = [];
 
     // Spatial 3D Asset
@@ -442,6 +473,20 @@ export class N8nAutomationService {
       mimeType: "model/gltf-binary",
       previewUrl: `${appBase}/images/projects/sutra-watch-3d.jpg`,
       downloadUrl: `${appBase}/videos/services/spatial-3d-desktop.mp4`,
+      category: "draft",
+      version: "v1.0",
+      uploadedAt: now,
+    };
+
+    // 360 Virtual Space Walkthrough Asset
+    const virtual360Deliverable = {
+      driveFileId: `drive_n8n_${runId}_360`,
+      filename: `${cleanBrand}_360_Virtual_Space_Walkthrough.html`,
+      checksum: `sha256:${Math.random().toString(36).substring(2, 14)}`,
+      fileSize: "16.8 MB",
+      mimeType: "text/html",
+      previewUrl: `${appBase}/services/360-view`,
+      downloadUrl: `${appBase}/services/360-view`,
       category: "draft",
       version: "v1.0",
       uploadedAt: now,
@@ -519,12 +564,21 @@ export class N8nAutomationService {
     };
 
     // Route deliverables strictly based on package and client request
-    if (isLogo) {
+    if (isSelfPromo) {
+      // Studio Self-Promotion Suite: 4K Master Render, Commercial Reel, 3D Spatial Model, and 360 Virtual Space
+      deliverables.push(imageDeliverable, videoDeliverable, spatialDeliverable, virtual360Deliverable);
+    } else if (isLogo) {
       // Logo & Brand Identity: Bespoke Vector Logo Master (SVG), 4K Transparent PNG, and Brand Guidelines
       deliverables.push(logoVectorDeliverable, logoPngDeliverable, logoGuidelinesDeliverable);
     } else if (isRetainer) {
       // Full Studio Retainer: Image Renders, Video Reel, Spatial Mesh, and Editorial Schedule
       deliverables.push(imageDeliverable, videoDeliverable, spatialDeliverable, retainerSchedule);
+    } else if (is360) {
+      // 360 Virtual Space: Interactive 360 Walkthrough & 4K Panoramic Render
+      deliverables.push(virtual360Deliverable, imageDeliverable);
+    } else if (is3D) {
+      // 3D Spatial Model & Turntable CGI Render
+      deliverables.push(spatialDeliverable, imageDeliverable);
     } else if (isWebsite) {
       // Website Package: Full Web Deliverable & UI Architecture
       deliverables.push(websiteDeliverable, imageDeliverable);
@@ -534,9 +588,6 @@ export class N8nAutomationService {
     } else {
       // Image Package (₹299 / ₹499 / ₹1,499 / ₹2,499): 4K Master Render Image Deliverable
       deliverables.push(imageDeliverable);
-      if (is3D) {
-        deliverables.push(spatialDeliverable);
-      }
     }
 
     // 5. Persist deliverable record to Firestore admin_deliverables

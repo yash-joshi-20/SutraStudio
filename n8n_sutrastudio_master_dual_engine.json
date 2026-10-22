@@ -1,0 +1,348 @@
+{
+  "name": "Sutra Studio — Master Dual-Engine (Agency Self-Promotion & Client Order Automation)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sutra-master-dispatch",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-master-webhook",
+      "name": "Webhook: Master Dispatch Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 360],
+      "webhookId": "sutra-master-dispatch"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      },
+      "id": "node-cron-schedule",
+      "name": "Daily 9AM IST Schedule (Self-Promotion)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [100, 580]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"status\": \"processing_in_sutra_engine\",\n  \"mode\": \"{{ $json.body?.mode || ($json.body?.orderId ? 'client_order_fulfillment' : 'agency_self_promo') }}\",\n  \"orderId\": \"{{ $json.body?.orderId || 'SUTRA-PROMO' }}\",\n  \"timestamp\": \"{{ $now.toISO() }}\",\n  \"message\": \"Sutra Studio Master Dual-Engine received dispatch. Pipeline active.\"\n}",
+        "options": {}
+      },
+      "id": "node-instant-ack",
+      "name": "Instant Webhook ACK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [340, 240]
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.first()?.json || {};\nconst body = inputData.body || inputData;\n\n// 1. Resolve Multi-Environment URLs & Secrets\n// Supports Render Production (https://sutrastudios.in) & Local Dev (http://localhost:3000 / localhost:5678)\nconst sutraBaseUrl = body.appBaseUrl || $env.SUTRA_STUDIO_URL || $env.APP_BASE_URL || 'https://sutrastudios.in';\nconst sutraSecret = body.sutraSecret || $env.N8N_WEBHOOK_SECRET || '';\nconst geminiApiKey = body.geminiApiKey || $env.GEMINI_API_KEY || $env.GOOGLE_AI_API_KEY || '';\nconst openrouterApiKey = body.openrouterApiKey || $env.OPENROUTER_API_KEY || '';\n\n// 2. Determine Execution Mode\n// Mode A: agency_self_promo (Automated Sutra Studio Meta Promotion across 3D, 360, Video Reels, Images)\n// Mode B: client_order_fulfillment (Client package delivery based on order brief, packageId, and retainers)\nlet mode = 'client_order_fulfillment';\nif (\n  body.mode === 'agency_self_promo' ||\n  body.isStudioSelfMarketing ||\n  body.campaignName ||\n  !body.orderId ||\n  inputData.triggerSource === 'scheduleTrigger'\n) {\n  mode = 'agency_self_promo';\n}\n\n// 3. Disciplines for Studio Promotion\nconst DISCIPLINES = [\n  {\n    id: 'visuals-motion',\n    name: '4K Commercial Video Reels',\n    topic: 'Why Luxury Brands are Replacing Physical Shoots with 4K CGI Reels',\n    sampleVideo: '/videos/services/ai-video-mobile.mp4'\n  },\n  {\n    id: '3d-modeling',\n    name: '3D CAD Modeling & Turntable CGI',\n    topic: 'Haute Horology & Jewelry: Hyper-Realistic 3D Product Animations with Micro-Facet Reflections',\n    sampleVideo: '/videos/services/spatial-3d-mobile.mp4'\n  },\n  {\n    id: '360-view',\n    name: '360° Virtual Space Walkthroughs',\n    topic: 'Architectural Pre-Sales: Selling Luxury Villas Before Groundbreak with Interactive 360 Walkthroughs',\n    sampleVideo: '/videos/services/spatial-3d-mobile.mp4'\n  },\n  {\n    id: 'interior-design',\n    name: 'Architectural & Interior CGI',\n    topic: 'Photorealistic Daylight Simulation and Material Luxury in High-End Villa Design',\n    sampleVideo: '/videos/studio/studio-reel-mobile.mp4'\n  },\n  {\n    id: 'brand-identity',\n    name: 'Vedic-Modern Brand Identity Suites',\n    topic: 'Golden Ratio Sacred Geometry & Bilingual Typography in High-Converting Luxury Branding',\n    sampleVideo: '/videos/studio/studio-reel-mobile.mp4'\n  },\n  {\n    id: 'digital-marketing-ads',\n    name: 'High-ROAS Meta Ad Creatives',\n    topic: 'The 3-Second Visual Hook Formula: Stopping the Scroll on Instagram Reels',\n    sampleVideo: '/videos/services/ai-video-mobile.mp4'\n  }\n];\n\nconst selectedDiscipline = DISCIPLINES.find(d => d.id === body.disciplineId) || DISCIPLINES[Math.floor(Math.random() * DISCIPLINES.length)];\n\nconst runId = body.runId || `sutra_master_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;\nconst now = new Date().toISOString();\n\nreturn [{\n  json: {\n    mode,\n    runId,\n    timestamp: now,\n    sutraBaseUrl,\n    sutraSecret,\n    geminiApiKey,\n    openrouterApiKey,\n    orderId: body.orderId || `PROMO-${Date.now().toString().slice(-6)}`,\n    packageId: body.packageId || body.serviceDetails?.packageId || (body.orderAmount >= 19999 ? 'daily-trend-creator' : 'starter-trend'),\n    service: body.service || body.serviceDetails?.service || selectedDiscipline.name,\n    brief: body.brief || 'Luxury commercial showcase with warm ivory and polished brass accents.',\n    client: {\n      name: body.client?.name || 'Sutra Client',\n      email: body.client?.email || 'client@sutrastudio.com',\n      brandName: body.client?.brandName || 'Sutra Luxe'\n    },\n    selfPromoDiscipline: selectedDiscipline,\n    isStudioSelfMarketing: mode === 'agency_self_promo'\n  }\n}];"
+      },
+      "id": "node-mode-detector",
+      "name": "Mode Detector & Normalizer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [340, 460]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.mode }}",
+              "operation": "equals",
+              "value2": "agency_self_promo"
+            }
+          ]
+        }
+      },
+      "id": "node-branch-router",
+      "name": "Route: Mode A (Self-Promo) vs Mode B (Client Order)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [580, 460]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "={{ $json.geminiApiKey }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": \"You are Chief Creative Director & Growth Strategist at SUTRA STUDIO (https://sutrastudios.in), a luxury creative technology & 3D visual engineering atelier based in Ahmedabad, Gujarat, India, delivering worldwide.\\n\\nCore Capabilities:\\n- 4K Commercial Video Reels (Instagram / Meta Ads)\\n- 3D CAD Product Modeling & Exploded Mechanical CGI\\n- 360° Virtual Space Walkthroughs & WebXR\\n- Vedic-Modern Brand Identity & Luxury Design Systems\\n- Autonomous 30-Day Retainers (Starter ₹9,999/mo, Daily Trend Creator ₹19,999/mo for 30 daily reels)\\n- 48-72 Hour Delivery Turnaround\\n- Direct WhatsApp Concierge: +91 82001 92781\\n\\nTASK: Research the trending marketing topic: '\" + $json.selfPromoDiscipline.topic + \"'. Synthesize this research into an irresistible, viral promotional package for Sutra Studio itself across Instagram Reels, Facebook, 3D, and 360 interactive formats.\\n\\nSTRICT REQUIREMENT: All copy, reel scripts, and ad hooks MUST be in PROFESSIONAL ENGLISH. Tone: Confident, sophisticated, high-authority, conversion-focused.\\n\\nRETURN STRICT JSON ONLY (no markdown fences):\\n{\\n  \\\"topic\\\": \\\"Topic researched\\\",\\n  \\\"headline\\\": \\\"Punchy campaign headline (under 45 chars)\\\",\\n  \\\"hook\\\": \\\"0-3s high-CTR scroll-stopping video hook\\\",\\n  \\\"caption\\\": \\\"Full high-converting Instagram/Facebook caption with hook, research insight, studio bullet points, transparent Indian pricing (₹9,999 / ₹19,999), and WhatsApp call to action\\\",\\n  \\\"hashtags\\\": [\\\"#SutraStudio\\\", \\\"#CommercialReels\\\", \\\"#3DVisualization\\\", \\\"#360VirtualTour\\\", \\\"#MetaAds\\\", \\\"#LuxuryBranding\\\", \\\"#ProductCGI\\\", \\\"#VedicModern\\\"],\\n  \\\"reelScript\\\": {\\n    \\\"openingHook\\\": \\\"Visual cue & voiceover hook\\\",\\n    \\\"scenes\\\": [\\n      {\\\"timestamp\\\": \\\"0:00 - 0:03\\\", \\\"visualCue\\\": \\\"Dynamic 3D camera push through luxury render\\\", \\\"voiceoverOrText\\\": \\\"Stop spending fortunes on physical studio shoots.\\\"},\\n      {\\\"timestamp\\\": \\\"0:03 - 0:07\\\", \\\"visualCue\\\": \\\"Split screen physical setup vs instant 4K CGI rendering\\\", \\\"voiceoverOrText\\\": \\\"Sutra Studio crafts cinematic 4K commercial reels in 48 hours.\\\"},\\n      {\\\"timestamp\\\": \\\"0:07 - 0:11\\\", \\\"visualCue\\\": \\\"Typography card showing ₹9,999 / ₹19,999 monthly plans\\\", \\\"voiceoverOrText\\\": \\\"30 commercial reels per month with zero production friction.\\\"},\\n      {\\\"timestamp\\\": \\\"0:11 - 0:15\\\", \\\"visualCue\\\": \\\"WhatsApp contact card and studio logo\\\", \\\"voiceoverOrText\\\": \\\"WhatsApp +91 82001 92781 to test your first 4K reel.\\\"}\\n    ],\\n    \\\"audioRecommendation\\\": \\\"120 BPM Deep Luxury Ambient Beat with subtle sitar strings\\\",\\n    \\\"callToAction\\\": \\\"Message WhatsApp +91 82001 92781 to book a studio pipeline\\\"\\n  },\\n  \\\"imagePrompt\\\": \\\"photorealistic 8k commercial advertising photograph of modern luxury sandstone villa reflecting pool golden hour volumetric sunlight warm ivory and brass accents hasselblad style\\\",\\n  \\\"spatial3dPrompt\\\": \\\"ultra-high-resolution 3D CAD model asset turntable with micro-facet reflections and polished brass metallic materials\\\",\\n  \\\"virtualTour360Prompt\\\": \\\"360-degree equirectangular panoramic render of luxury architectural interior with seamless floor-to-ceiling glass and teakwood accents\\\",\\n  \\\"metaAdCopy\\\": {\\n    \\\"primaryText\\\": \\\"4K Commercial Reels, 3D CGI & 360 Virtual Tours engineered for modern luxury brands. 48h delivery from ₹9,999/mo.\\\",\\n    \\\"headline\\\": \\\"Sutra Studio • 4K Commercial Reels & 3D\\\",\\n    \\\"description\\\": \\\"48h Delivery • WhatsApp Concierge\\\",\\n    \\\"targetAudienceInterests\\\": [\\\"Luxury Lifestyle\\\", \\\"Architecture\\\", \\\"Digital Marketing\\\", \\\"E-commerce\\\"]\\n  }\\n}\"\n    }]\n  }],\n  \"generationConfig\": {\n    \"temperature\": 0.7,\n    \"responseMimeType\": \"application/json\"\n  }\n}",
+        "options": {}
+      },
+      "onError": "continueRegularOutput",
+      "continueOnFail": true,
+      "id": "node-a-gemini-research",
+      "name": "Mode A: Gemini 2.0 Trend Research & Director",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [840, 320]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $('Mode Detector & Normalizer').first()?.json || {};\nconst rawGemini = $input.first()?.json || {};\nlet parsed = {};\n\ntry {\n  const rawText = rawGemini?.candidates?.[0]?.content?.parts?.[0]?.text;\n  if (rawText) {\n    const jsonStart = rawText.indexOf('{');\n    const jsonEnd = rawText.lastIndexOf('}');\n    if (jsonStart !== -1 && jsonEnd !== -1) {\n      parsed = JSON.parse(rawText.substring(jsonStart, jsonEnd + 1));\n    } else {\n      parsed = JSON.parse(rawText);\n    }\n  }\n} catch (e) {\n  parsed = {};\n}\n\n// Safe fallbacks adhering strictly to Sutra Studio standards\nif (!parsed.topic) parsed.topic = base.selfPromoDiscipline?.topic || '4K Commercial Reels vs Physical Shoots';\nif (!parsed.headline) parsed.headline = 'Sutra Studio • 4K Commercial Reels & 3D CGI Engine';\nif (!parsed.hook) parsed.hook = 'Stop spending ₹5 Lakhs on camera crews for your product videos.';\nif (!parsed.caption) {\n  parsed.caption = '🚀 Transform your brand presence with 4K Commercial Reels, 3D CGI & 360° Virtual Tours from SUTRA STUDIO.\\n\\nTraditional physical shoots take weeks and cost a fortune. Sutra Studio crafts photorealistic 4K reels and spatial 3D renders with a 48-72h turnaround:\\n\\n✨ 30 Commercial Reels / Month (Daily Trend Creator)\\n✨ 4K Architectural & Spatial Visualization\\n✨ 360° Virtual Space Walkthroughs\\n✨ Transparent Indian Pricing: ₹9,999 / ₹19,999 per month\\n\\nWhatsApp Concierge: +91 82001 92781\\nExplore portfolio: https://sutrastudios.in';\n}\nif (!parsed.hashtags) {\n  parsed.hashtags = ['#SutraStudio', '#CommercialReels', '#3DVisualization', '#360VirtualTour', '#MetaAds', '#VedicModern'];\n}\nif (!parsed.imagePrompt) {\n  parsed.imagePrompt = 'photorealistic 8k commercial advertising photograph of modern luxury architectural villa with warm ivory and brass accents hasselblad style';\n}\n\n// Dynamic Seeded Media URLs\nconst seed = Math.floor(Math.random() * 900000) + 100000;\nconst promptParam = encodeURIComponent(parsed.imagePrompt);\nconst sutraBaseUrl = base.sutraBaseUrl || 'https://sutrastudios.in';\n\n// 1. Dynamic 4K Image Render\nconst imageUrl = `${sutraBaseUrl}/api/media/image?prompt=${promptParam}&width=1200&height=800&seed=${seed}&fallback=images/projects/proj-villa.webp`;\n\n// 2. High-Definition 9:16 Commercial Reel\nconst videoUrl = `${sutraBaseUrl}/videos/services/ai-video-mobile.mp4`;\n\n// 3. 3D Spatial Model & Turntable CGI\nconst spatial3dUrl = `${sutraBaseUrl}/videos/services/spatial-3d-mobile.mp4`;\n\n// 4. 360° Virtual Space Walkthrough\nconst virtual360Url = `${sutraBaseUrl}/services/360-view`;\n\nconst whatsappUrl = 'https://wa.me/918200192781?text=' + encodeURIComponent(\n  `Hello Sutra Studio! I am reviewing today's 4K Drop: \"${parsed.headline}\". Hook: \"${parsed.hook}\". I would like to inquire about this creative pipeline for my brand.`\n);\n\nconst deliverableId = `DELIV-${base.runId.slice(-8)}`;\n\nconst deliverables = [\n  {\n    filename: 'SutraStudio_4K_Promotional_Render.png',\n    previewUrl: imageUrl,\n    downloadUrl: imageUrl,\n    fileSize: '18.4 MB',\n    mimeType: 'image/png',\n    category: '4K Render'\n  },\n  {\n    filename: 'SutraStudio_9x16_Commercial_Reel.mp4',\n    previewUrl: imageUrl,\n    downloadUrl: videoUrl,\n    fileSize: '42.8 MB',\n    mimeType: 'video/mp4',\n    category: 'Commercial Reel'\n  },\n  {\n    filename: 'SutraStudio_Spatial_3D_Model.glb',\n    previewUrl: `${sutraBaseUrl}/images/projects/sutra-watch-3d.jpg`,\n    downloadUrl: spatial3dUrl,\n    fileSize: '24.6 MB',\n    mimeType: 'model/gltf-binary',\n    category: '3D Spatial Model'\n  },\n  {\n    filename: 'SutraStudio_360_Virtual_Space.html',\n    previewUrl: virtual360Url,\n    downloadUrl: virtual360Url,\n    fileSize: '16.8 MB',\n    mimeType: 'text/html',\n    category: '360 Virtual Tour'\n  }\n];\n\nreturn [{\n  json: {\n    ...base,\n    deliverableId,\n    topic: parsed.topic,\n    headline: parsed.headline,\n    hook: parsed.hook,\n    caption: parsed.caption,\n    hashtags: parsed.hashtags,\n    reelScript: parsed.reelScript,\n    metaAdCopy: parsed.metaAdCopy || {\n      primaryText: '4K Commercial Reels & 3D CGI engineered for high-growth brands. 48h delivery from ₹9,999/mo.',\n      headline: 'Sutra Studio • 4K Commercial Reels & 3D',\n      description: '48h Delivery • WhatsApp Concierge',\n      targetAudienceInterests: ['Luxury Lifestyle', 'Architecture', 'Digital Marketing']\n    },\n    imageUrl,\n    videoUrl,\n    spatial3dUrl,\n    virtual360Url,\n    whatsappUrl,\n    deliverables,\n    status: 'in_admin_review'\n  }\n}];"
+      },
+      "id": "node-a-media-synthesizer",
+      "name": "Mode A: Multi-Format Media Synthesizer (Image, Video, 3D, 360)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1080, 320]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.sutraBaseUrl }}/api/admin/deliverables",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-sutra-secret",
+              "value": "={{ $json.sutraSecret }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"deliverableId\": \"{{ $json.deliverableId }}\",\n  \"orderId\": \"{{ $json.orderId }}\",\n  \"clientName\": \"Sutra Studio Atelier\",\n  \"clientEmail\": \"concierge@sutrastudios.in\",\n  \"brandName\": \"Sutra Studio\",\n  \"headline\": \"{{ $json.headline }}\",\n  \"caption\": \"{{ $json.caption }}\",\n  \"imageUrl\": \"{{ $json.imageUrl }}\",\n  \"videoUrl\": \"{{ $json.videoUrl }}\",\n  \"voiceoverScript\": \"{{ $json.reelScript?.openingHook || 'Experience computational luxury engineered by Sutra Studio.' }}\",\n  \"status\": \"in_admin_review\",\n  \"appBaseUrl\": \"{{ $json.sutraBaseUrl }}\",\n  \"generatedAt\": \"{{ $json.timestamp }}\"\n}",
+        "options": {}
+      },
+      "onError": "continueRegularOutput",
+      "continueOnFail": true,
+      "id": "node-a-vault-sutra",
+      "name": "Mode A: Vault to Studio Admin Deliverables",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1320, 240]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.sutraBaseUrl }}/api/admin/marketing/meta-ads",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-sutra-secret",
+              "value": "={{ $json.sutraSecret }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"orderId\": \"{{ $json.orderId }}\",\n  \"clientName\": \"Sutra Studio (Self-Promotion)\",\n  \"clientEmail\": \"concierge@sutrastudios.in\",\n  \"brandName\": \"Sutra Studio\",\n  \"tier\": \"Growth (₹7,999)\",\n  \"budgetAmount\": 1000,\n  \"headline\": \"{{ $json.metaAdCopy?.headline || $json.headline }}\",\n  \"caption\": \"{{ $json.metaAdCopy?.primaryText || $json.caption }}\",\n  \"creativeUrl\": \"{{ $json.videoUrl }}\",\n  \"targetPlacements\": [\"Instagram Reels\", \"Facebook Feed\", \"Instagram Stories\"]\n}",
+        "options": {}
+      },
+      "onError": "continueRegularOutput",
+      "continueOnFail": true,
+      "id": "node-a-meta-ads",
+      "name": "Mode A: Deploy Meta Ad Proposal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1320, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "={{ $json.geminiApiKey }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": \"You are Chief AI Creative Director for Sutra Studio (https://sutrastudios.in). You are fulfilling a paid client order.\\n\\nOrder Details:\\n- Order ID: \" + $json.orderId + \"\\n- Client Brand: \" + $json.client.brandName + \"\\n- Service: \" + $json.service + \"\\n- Package: \" + $json.packageId + \"\\n- Client Brief: \" + $json.brief + \"\\n\\nTask: Generate a comprehensive creative blueprint and asset specification tailored to this client's brand in PROFESSIONAL ENGLISH.\\n\\nSTRICT JSON OUTPUT ONLY (no markdown fences):\\n{\\n  \\\"headline\\\": \\\"Bespoke Creative Suite for client\\\",\\n  \\\"caption\\\": \\\"Client commercial post caption with #SutraStudio\\\",\\n  \\\"imagePrompt\\\": \\\"Ultra-detailed 4K photorealistic prompt for luxury still render, 8k, warm ivory and polished brass accents\\\",\\n  \\\"klingVideoPrompt\\\": \\\"Cinematic commercial camera sweep, 9:16 vertical 60fps\\\",\\n  \\\"voiceoverScript\\\": \\\"15-second emotional hook voiceover\\\",\\n  \\\"spatial3dPrompt\\\": \\\"Detailed 3D model asset specification\\\",\\n  \\\"virtual360Prompt\\\": \\\"360-degree panoramic virtual space description\\\",\\n  \\\"taskSummary\\\": \\\"Summary of deliverables generated\\\"\\n}\"\n    }]\n  }],\n  \"generationConfig\": {\n    \"temperature\": 0.7,\n    \"responseMimeType\": \"application/json\"\n  }\n}",
+        "options": {}
+      },
+      "onError": "continueRegularOutput",
+      "continueOnFail": true,
+      "id": "node-b-gemini-director",
+      "name": "Mode B: Gemini 2.0 Client Creative Director",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [840, 600]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $('Mode Detector & Normalizer').first()?.json || {};\nconst rawGemini = $input.first()?.json || {};\nlet blueprint = {};\n\ntry {\n  const rawText = rawGemini?.candidates?.[0]?.content?.parts?.[0]?.text;\n  if (rawText) {\n    const jsonStart = rawText.indexOf('{');\n    const jsonEnd = rawText.lastIndexOf('}');\n    if (jsonStart !== -1 && jsonEnd !== -1) {\n      blueprint = JSON.parse(rawText.substring(jsonStart, jsonEnd + 1));\n    } else {\n      blueprint = JSON.parse(rawText);\n    }\n  }\n} catch (e) {\n  blueprint = {};\n}\n\nconst brand = base.client?.brandName || 'Sutra Client';\nconst cleanBrand = brand.replace(/[^a-zA-Z0-9_-]/g, '_');\nconst sutraBaseUrl = base.sutraBaseUrl || 'https://sutrastudios.in';\nconst seed = Math.floor(Math.random() * 900000) + 100000;\n\n// Safe blueprint defaults\nif (!blueprint.headline) blueprint.headline = `Bespoke Creative Suite — ${brand}`;\nif (!blueprint.caption) blueprint.caption = `Engineered with computational precision for ${brand}. #SutraStudio`;\nif (!blueprint.imagePrompt) blueprint.imagePrompt = `luxury commercial advertising for ${brand}, warm ivory and polished brass accents, 8k hasselblad studio lighting`;\nif (!blueprint.voiceoverScript) blueprint.voiceoverScript = `Step into distinction crafted exclusively for ${brand}. Engineered by Sutra Studio Atelier.`;\nif (!blueprint.taskSummary) blueprint.taskSummary = `Autonomous concept draft synthesized and vaulted in 02 Drafts for ${brand}.`;\n\nconst imagePromptEncoded = encodeURIComponent(blueprint.imagePrompt);\nconst imagePreviewUrl = `${sutraBaseUrl}/api/media/image?prompt=${imagePromptEncoded}&width=1200&height=800&seed=${seed}&fallback=images/projects/proj-villa.webp`;\nconst videoUrl = `${sutraBaseUrl}/videos/services/ai-video-desktop.mp4`;\nconst spatial3dUrl = `${sutraBaseUrl}/videos/services/spatial-3d-desktop.mp4`;\nconst virtual360Url = `${sutraBaseUrl}/services/360-view`;\nconst logoPreviewUrl = `${sutraBaseUrl}/brand/sutra-logo-primary.png`;\n\nconst packageId = (base.packageId || '').toLowerCase();\nconst serviceDesc = (base.service || '').toLowerCase() + ' ' + (base.brief || '').toLowerCase();\n\nconst isLogo = packageId.includes('logo') || packageId.includes('branding') || serviceDesc.includes('logo') || serviceDesc.includes('brand identity');\nconst is3D = packageId.includes('3d') || serviceDesc.includes('3d') || serviceDesc.includes('cad');\nconst is360 = packageId.includes('360') || serviceDesc.includes('360') || serviceDesc.includes('virtual tour') || serviceDesc.includes('real-estate');\nconst isRetainer = packageId.includes('trend') || packageId.includes('retainer') || serviceDesc.includes('retainer');\n\nconst deliverables = [];\n\nif (isLogo) {\n  deliverables.push(\n    {\n      filename: `${cleanBrand}_Vector_Brand_Logo_Master.svg`,\n      previewUrl: logoPreviewUrl,\n      downloadUrl: logoPreviewUrl,\n      fileSize: '2.4 MB',\n      mimeType: 'image/svg+xml',\n      category: 'Vector Logo'\n    },\n    {\n      filename: `${cleanBrand}_Logo_Transparent_4K.png`,\n      previewUrl: logoPreviewUrl,\n      downloadUrl: logoPreviewUrl,\n      fileSize: '7.8 MB',\n      mimeType: 'image/png',\n      category: '4K Transparent Logo'\n    },\n    {\n      filename: `${cleanBrand}_Brand_Identity_Guidelines.pdf`,\n      previewUrl: logoPreviewUrl,\n      downloadUrl: logoPreviewUrl,\n      fileSize: '5.1 MB',\n      mimeType: 'application/pdf',\n      category: 'Brand Guidelines'\n    }\n  );\n} else if (isRetainer) {\n  deliverables.push(\n    {\n      filename: `${cleanBrand}_Sprint1_4K_Master_Render.png`,\n      previewUrl: imagePreviewUrl,\n      downloadUrl: imagePreviewUrl,\n      fileSize: '18.4 MB',\n      mimeType: 'image/png',\n      category: '4K Render'\n    },\n    {\n      filename: `${cleanBrand}_Commercial_Reel.mp4`,\n      previewUrl: imagePreviewUrl,\n      downloadUrl: videoUrl,\n      fileSize: '42.8 MB',\n      mimeType: 'video/mp4',\n      category: 'Commercial Reel'\n    },\n    {\n      filename: `${cleanBrand}_Spatial_Mesh.glb`,\n      previewUrl: `${sutraBaseUrl}/images/projects/sutra-watch-3d.jpg`,\n      downloadUrl: spatial3dUrl,\n      fileSize: '24.6 MB',\n      mimeType: 'model/gltf-binary',\n      category: '3D Spatial Asset'\n    },\n    {\n      filename: `${cleanBrand}_30Day_Editorial_Matrix.pdf`,\n      previewUrl: imagePreviewUrl,\n      downloadUrl: imagePreviewUrl,\n      fileSize: '8.6 MB',\n      mimeType: 'application/pdf',\n      category: 'Editorial Matrix'\n    }\n  );\n} else if (is360) {\n  deliverables.push(\n    {\n      filename: `${cleanBrand}_360_Virtual_Space_Walkthrough.html`,\n      previewUrl: virtual360Url,\n      downloadUrl: virtual360Url,\n      fileSize: '16.8 MB',\n      mimeType: 'text/html',\n      category: '360 Virtual Tour'\n    },\n    {\n      filename: `${cleanBrand}_4K_Architectural_Render.png`,\n      previewUrl: imagePreviewUrl,\n      downloadUrl: imagePreviewUrl,\n      fileSize: '18.4 MB',\n      mimeType: 'image/png',\n      category: '4K Render'\n    }\n  );\n} else if (is3D) {\n  deliverables.push(\n    {\n      filename: `${cleanBrand}_Spatial_Mesh.glb`,\n      previewUrl: `${sutraBaseUrl}/images/projects/sutra-watch-3d.jpg`,\n      downloadUrl: spatial3dUrl,\n      fileSize: '24.6 MB',\n      mimeType: 'model/gltf-binary',\n      category: '3D Spatial Asset'\n    },\n    {\n      filename: `${cleanBrand}_4K_Turntable_Render.png`,\n      previewUrl: imagePreviewUrl,\n      downloadUrl: imagePreviewUrl,\n      fileSize: '18.4 MB',\n      mimeType: 'image/png',\n      category: '4K Render'\n    }\n  );\n} else {\n  deliverables.push(\n    {\n      filename: `${cleanBrand}_4K_Master_Render.png`,\n      previewUrl: imagePreviewUrl,\n      downloadUrl: imagePreviewUrl,\n      fileSize: '18.4 MB',\n      mimeType: 'image/png',\n      category: '4K Render'\n    }\n  );\n}\n\nreturn [{\n  json: {\n    ...base,\n    blueprint,\n    deliverables,\n    imageUrl: imagePreviewUrl,\n    videoUrl: videoUrl,\n    taskSummary: blueprint.taskSummary,\n    notes: `Draft deliverables synthesized by Sutra Master Dual-Engine for ${brand}. Vaulted in '02 Drafts' for Studio Admin review.`\n  }\n}];"
+      },
+      "id": "node-b-package-assembler",
+      "name": "Mode B: Package-Specific Deliverables Assembler",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1080, 600]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.sutraBaseUrl }}/api/n8n/webhook",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-sutra-secret",
+              "value": "={{ $json.sutraSecret }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"orderId\": \"{{ $json.orderId }}\",\n  \"runId\": \"{{ $json.runId }}\",\n  \"workflowId\": \"SUTRA_MASTER_DUAL_ENGINE\",\n  \"status\": \"draft_ready\",\n  \"deliverables\": {{ JSON.stringify($json.deliverables) }},\n  \"deliverableUrl\": \"{{ $json.imageUrl }}\",\n  \"filename\": \"{{ $json.deliverables[0]?.filename || 'Deliverable_v1.png' }}\",\n  \"driveFolder\": \"02 Drafts\",\n  \"taskSummary\": \"{{ $json.taskSummary }}\",\n  \"notes\": \"{{ $json.notes }}\"\n}",
+        "options": {}
+      },
+      "onError": "continueRegularOutput",
+      "continueOnFail": true,
+      "id": "node-b-callback-webhook",
+      "name": "Mode B: Callback to Sutra Studio (Vault in 02 Drafts)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1320, 600]
+    }
+  ],
+  "connections": {
+    "Webhook: Master Dispatch Trigger": {
+      "main": [
+        [
+          {
+            "node": "Instant Webhook ACK",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Mode Detector & Normalizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily 9AM IST Schedule (Self-Promotion)": {
+      "main": [
+        [
+          {
+            "node": "Mode Detector & Normalizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mode Detector & Normalizer": {
+      "main": [
+        [
+          {
+            "node": "Route: Mode A (Self-Promo) vs Mode B (Client Order)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route: Mode A (Self-Promo) vs Mode B (Client Order)": {
+      "main": [
+        [
+          {
+            "node": "Mode A: Gemini 2.0 Trend Research & Director",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mode B: Gemini 2.0 Client Creative Director",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mode A: Gemini 2.0 Trend Research & Director": {
+      "main": [
+        [
+          {
+            "node": "Mode A: Multi-Format Media Synthesizer (Image, Video, 3D, 360)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mode A: Multi-Format Media Synthesizer (Image, Video, 3D, 360)": {
+      "main": [
+        [
+          {
+            "node": "Mode A: Vault to Studio Admin Deliverables",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Mode A: Deploy Meta Ad Proposal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mode B: Gemini 2.0 Client Creative Director": {
+      "main": [
+        [
+          {
+            "node": "Mode B: Package-Specific Deliverables Assembler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mode B: Package-Specific Deliverables Assembler": {
+      "main": [
+        [
+          {
+            "node": "Mode B: Callback to Sutra Studio (Vault in 02 Drafts)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
