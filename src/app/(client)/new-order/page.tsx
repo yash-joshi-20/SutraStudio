@@ -97,7 +97,7 @@ function NewOrderContent() {
         </div>
 
         {/* Master Order Intake Form Container */}
-        <div className="rounded-3xl border border-[#EADFCB] bg-[#FFFDF9] p-6 sm:p-8 shadow-warm-lg">
+        <div className="w-full">
           <MasterOrderForm
             initialServiceId={serviceParam}
             initialTierId={packageParam}

@@ -931,16 +931,16 @@ export function MasterOrderForm({
   };
 
   return (
-    <div className={`rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-sm overflow-hidden ${className}`}>
+    <div className={`rounded-2xl sm:rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] shadow-sm overflow-hidden ${className}`}>
       {/* Top Stepper Header */}
-      <div className="p-6 sm:p-8 bg-[#FAF9F5] border-b border-[#EADFCB]">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="p-4 sm:p-6 lg:p-8 bg-[#FAF9F5] border-b border-[#EADFCB]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 sm:gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-[10px] font-bold text-[#5C3A1E] uppercase tracking-wider mb-2">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FFFDF9] border border-[#EADFCB] text-[10px] font-bold text-[#5C3A1E] uppercase tracking-wider mb-1.5">
               <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
               <span>Studio Commission Intake</span>
             </div>
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#0F172A]">
+            <h2 className="font-serif text-xl sm:text-2xl lg:text-3xl font-bold text-[#0F172A] leading-tight">
               Commission a Creative Project
             </h2>
             <p className="text-xs text-[#64748B] mt-0.5">
@@ -949,26 +949,35 @@ export function MasterOrderForm({
           </div>
 
           {/* Stepper Indicator */}
-          <div className="flex items-center gap-2">
-            {[1, 2, 3, 4].map((stepNum) => (
+          <div className="flex items-center gap-2 self-start sm:self-auto bg-[#F8F5EF] sm:bg-transparent px-3 py-1.5 sm:p-0 rounded-full sm:rounded-none border sm:border-0 border-[#EADFCB]">
+            {[
+              { num: 1, label: "Service" },
+              { num: 2, label: "Brand" },
+              { num: 3, label: "Scope" },
+              { num: 4, label: "Payment" },
+            ].map((step) => (
               <div
-                key={stepNum}
-                className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold transition-all ${
-                  currentStep === stepNum
+                key={step.num}
+                className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full text-xs font-bold transition-all ${
+                  currentStep === step.num
                     ? "bg-[#5C3A1E] text-white shadow-xs"
-                    : currentStep > stepNum
+                    : currentStep > step.num
                     ? "bg-[#2E7D4F] text-white"
                     : "bg-[#F4EFE6] text-[#94A3B8]"
                 }`}
+                title={`Step ${step.num}: ${step.label}`}
               >
-                {currentStep > stepNum ? <Check className="w-4 h-4 stroke-[2.5]" /> : stepNum}
+                {currentStep > step.num ? <Check className="w-3.5 h-3.5 stroke-[2.5]" /> : step.num}
               </div>
             ))}
+            <span className="text-xs font-semibold text-[#5C3A1E] sm:hidden ml-1">
+              Step {currentStep} of 4
+            </span>
           </div>
         </div>
       </div>
 
-      <div className="p-6 sm:p-8 space-y-6">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6">
         {formError && (
           <div className="p-4 rounded-2xl bg-[#FEF2F2] border border-[#FECACA] text-xs text-[#991B1B] flex items-center gap-2 animate-in fade-in duration-200">
             <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0" />
@@ -982,30 +991,34 @@ export function MasterOrderForm({
         {currentStep === 1 && (
           <div className="space-y-6">
             {/* Mode Switcher: Services vs Packages */}
-            <div className="flex p-1.5 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] max-w-md mx-auto shadow-2xs">
+            <div className="grid grid-cols-2 p-1.5 rounded-2xl bg-[#F8F5EF] border border-[#EADFCB] max-w-md mx-auto shadow-2xs gap-1.5">
               <button
                 type="button"
                 onClick={() => setOrderMode("services")}
-                className={`flex-1 py-2.5 px-3 sm:px-4 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 ${
+                className={`py-2 px-2 sm:px-4 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-center min-h-[44px] cursor-pointer ${
                   orderMode === "services"
                     ? "bg-[#5C3A1E] text-white shadow-xs"
-                    : "text-[#64748B] hover:text-[#0F172A]"
+                    : "text-[#64748B] hover:text-[#0F172A] hover:bg-white/50"
                 }`}
               >
-                <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
-                <span>8 Studio Services</span>
+                <Sparkles className="w-3.5 h-3.5 text-[#D4A35A] shrink-0" />
+                <span className="truncate sm:overflow-visible">
+                  <span className="hidden sm:inline">8 Studio </span>Services
+                </span>
               </button>
               <button
                 type="button"
                 onClick={() => setOrderMode("packages")}
-                className={`flex-1 py-2.5 px-3 sm:px-4 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 ${
+                className={`py-2 px-2 sm:px-4 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-center min-h-[44px] cursor-pointer ${
                   orderMode === "packages"
                     ? "bg-[#5C3A1E] text-white shadow-xs"
-                    : "text-[#64748B] hover:text-[#0F172A]"
+                    : "text-[#64748B] hover:text-[#0F172A] hover:bg-white/50"
                 }`}
               >
-                <Layers className="w-3.5 h-3.5 text-[#D4A35A]" />
-                <span>Creative Packages & Retainers</span>
+                <Layers className="w-3.5 h-3.5 text-[#D4A35A] shrink-0" />
+                <span className="truncate sm:overflow-visible">
+                  <span className="hidden sm:inline">Creative </span>Packages<span className="hidden md:inline"> &amp; Retainers</span>
+                </span>
               </button>
             </div>
 
@@ -1028,7 +1041,7 @@ export function MasterOrderForm({
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-3.5">
                   {INTAKE_SERVICES.map((srv) => {
                     const isSelected = selectedServiceId === srv.id;
                     return (
@@ -1038,14 +1051,14 @@ export function MasterOrderForm({
                           setSelectedServiceId(srv.id);
                           setQuantity(1);
                         }}
-                        className={`p-4 rounded-2xl border text-left cursor-pointer transition-all flex flex-col justify-between gap-3 ${
+                        className={`p-3.5 sm:p-4 rounded-2xl border text-left cursor-pointer transition-all flex flex-col justify-between gap-3 relative select-none ${
                           isSelected
-                            ? "bg-[#5C3A1E] text-white border-[#5C3A1E] shadow-sm"
-                            : "bg-[#FFFFFF] text-[#0F172A] border-[#EADFCB] hover:border-[#D4A35A] hover:bg-[#FAF9F5]"
+                            ? "bg-[#5C3A1E] text-white border-[#5C3A1E] shadow-sm ring-2 ring-[#5C3A1E]/30"
+                            : "bg-[#FFFFFF] text-[#0F172A] border-[#EADFCB] hover:border-[#D4A35A] hover:bg-[#FAF9F5] active:scale-[0.99]"
                         }`}
                       >
                         <div>
-                          <div className="flex items-center justify-between gap-2 mb-2">
+                          <div className="flex flex-wrap items-center justify-between gap-1.5 mb-2">
                             <span
                               className={`text-[10px] font-mono px-2 py-0.5 rounded-full uppercase tracking-wider ${
                                 isSelected
@@ -1056,18 +1069,25 @@ export function MasterOrderForm({
                               {srv.category}
                             </span>
                             <span
-                              className={`text-[11px] font-mono font-bold ${
+                              className={`text-xs font-mono font-bold shrink-0 ${
                                 isSelected ? "text-[#D4A35A]" : "text-[#5C3A1E]"
                               }`}
                             >
                               ₹{srv.basePrice.toLocaleString("en-IN")}
                             </span>
                           </div>
-                          <h4 className="font-serif font-bold text-sm leading-snug">
-                            {srv.title}
-                          </h4>
+                          <div className="flex items-start justify-between gap-2">
+                            <h4 className="font-serif font-bold text-sm leading-snug">
+                              {srv.title}
+                            </h4>
+                            {isSelected && (
+                              <span className="w-4 h-4 rounded-full bg-[#D4A35A] text-[#0F172A] flex items-center justify-center shrink-0 mt-0.5">
+                                <Check className="w-2.5 h-2.5 stroke-[3]" />
+                              </span>
+                            )}
+                          </div>
                           <p
-                            className={`text-xs mt-1 line-clamp-2 ${
+                            className={`text-xs mt-1.5 line-clamp-2 ${
                               isSelected ? "text-white/80" : "text-[#64748B]"
                             }`}
                           >
@@ -1076,11 +1096,12 @@ export function MasterOrderForm({
                         </div>
 
                         <div
-                          className={`text-[10px] font-mono pt-2 border-t ${
+                          className={`text-[10px] font-mono pt-2 border-t flex items-center justify-between ${
                             isSelected ? "border-white/20 text-white/70" : "border-[#EADFCB]/60 text-[#94A3B8]"
                           }`}
                         >
-                          {srv.turnaround}
+                          <span>Turnaround:</span>
+                          <span className="font-semibold">{srv.turnaround}</span>
                         </div>
                       </div>
                     );
@@ -1089,26 +1110,27 @@ export function MasterOrderForm({
 
                 {/* Service Selection Summary, Quantity & Live Subtotal */}
                 <div className="space-y-3">
-                  <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                      <span className="text-[10px] uppercase font-mono tracking-wider text-[#94A3B8] block mb-0.5">
+                  <div className="p-4 sm:p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="space-y-0.5">
+                      <span className="text-[10px] uppercase font-mono tracking-wider text-[#94A3B8] block">
                         Selected deliverable
                       </span>
-                      <span className="font-serif font-bold text-sm text-[#0F172A] block">
+                      <span className="font-serif font-bold text-base text-[#0F172A] block">
                         {activeService.title}
                       </span>
-                      <span className="text-xs text-[#64748B]">
-                        {activeService.turnaround} • {formatCurrencyINR(activeService.basePrice)} per unit • Standard studio production workflow
+                      <span className="text-xs text-[#64748B] block">
+                        {activeService.turnaround} • {formatCurrencyINR(activeService.basePrice)} per unit • Standard studio SLA
                       </span>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="inline-flex items-center gap-1 rounded-xl border border-[#EADFCB] bg-white p-1">
+
+                    <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 pt-3 border-t border-[#EADFCB]/60 sm:pt-0 sm:border-t-0 w-full sm:w-auto">
+                      <div className="inline-flex items-center gap-1 rounded-xl border border-[#EADFCB] bg-white p-1 shadow-2xs">
                         <button
                           type="button"
                           aria-label="Decrease quantity"
                           onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                           disabled={quantity <= 1}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#4A3B22] hover:bg-[#F4EFE6] disabled:opacity-40"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#4A3B22] hover:bg-[#F4EFE6] disabled:opacity-40 transition-colors"
                         >
                           <Minus className="w-4 h-4" />
                         </button>
@@ -1120,16 +1142,17 @@ export function MasterOrderForm({
                           aria-label="Increase quantity"
                           onClick={() => setQuantity((q) => Math.min(100, q + 1))}
                           disabled={quantity >= 100}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#4A3B22] hover:bg-[#F4EFE6] disabled:opacity-40"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#4A3B22] hover:bg-[#F4EFE6] disabled:opacity-40 transition-colors"
                         >
                           <Plus className="w-4 h-4" />
                         </button>
                       </div>
+
                       <div className="text-right">
                         <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">
                           Subtotal {quantity > 1 ? `(×${quantity})` : ""}
                         </span>
-                        <span className="font-serif font-bold text-lg text-[#5C3A1E]">
+                        <span className="font-serif font-bold text-base sm:text-lg text-[#5C3A1E] block">
                           {formatCurrencyINR(orderAmount)}
                         </span>
                         {quantity > 1 && (
@@ -1144,18 +1167,18 @@ export function MasterOrderForm({
                   {/* Display-only deliverable context from the Packages & Pricing
                       catalogue — indicative, never the authoritative charge (STEP 5) */}
                   {selectedDeliverable && (
-                    <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#D4A35A]/60 space-y-1.5">
+                    <div className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#D4A35A]/60 space-y-2">
                       <span className="inline-flex items-center gap-1.5 text-[9px] font-mono font-bold uppercase tracking-wider text-[#5C3A1E] bg-[#F8F5EF] border border-[#EADFCB] rounded-full px-2.5 py-1">
                         <Sparkles className="w-3 h-3 text-[#D4A35A]" />
                         Selected from Packages &amp; Pricing
                       </span>
-                      <div className="flex items-center justify-between gap-3 text-xs">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-3 text-xs">
                         <span className="text-[#64748B]">Catalogue deliverable</span>
                         <span className="font-semibold text-[#0F172A]">
                           {selectedDeliverable.item}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between gap-3 text-xs">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-3 text-xs">
                         <span className="text-[#64748B]">Catalogue display price</span>
                         <span className="font-mono font-semibold text-[#5C3A1E]">
                           {formatCurrencyINR(selectedDeliverable.price)}{" "}
@@ -1164,7 +1187,7 @@ export function MasterOrderForm({
                           </span>
                         </span>
                       </div>
-                      <p className="text-[11px] text-[#64748B] leading-relaxed pt-1 border-t border-[#EADFCB]/60">
+                      <p className="text-[11px] text-[#64748B] leading-relaxed pt-1.5 border-t border-[#EADFCB]/60">
                         Indicative catalogue price for comparison — this order is
                         placed for <strong className="text-[#5C3A1E]">{activeService.title}</strong> at
                         the studio&apos;s validated catalogue rate shown above, which the
@@ -1190,7 +1213,7 @@ export function MasterOrderForm({
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
                   {INTAKE_PACKAGES.map((pkg) => {
                     const isSelected = selectedPackageId === pkg.id;
                     return (
@@ -1200,30 +1223,37 @@ export function MasterOrderForm({
                           setSelectedPackageId(pkg.id);
                           setQuantity(1);
                         }}
-                        className={`p-5 rounded-2xl border text-left cursor-pointer transition-all flex flex-col justify-between gap-4 relative ${
+                        className={`p-4 sm:p-5 rounded-2xl border text-left cursor-pointer transition-all flex flex-col justify-between gap-3.5 sm:gap-4 relative select-none ${
                           isSelected
                             ? "bg-[#FAF9F5] border-[#5C3A1E] ring-2 ring-[#5C3A1E] shadow-sm"
-                            : "bg-[#FFFFFF] border-[#EADFCB] hover:border-[#D4A35A] hover:bg-[#FAF9F5]"
+                            : "bg-[#FFFFFF] border-[#EADFCB] hover:border-[#D4A35A] hover:bg-[#FAF9F5] active:scale-[0.99]"
                         }`}
                       >
-                        <div className="space-y-3">
+                        <div className="space-y-2.5 sm:space-y-3">
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-[10px] font-mono px-2 py-0.5 rounded-full uppercase tracking-wider bg-[#F8F5EF] text-[#64748B]">
                               {pkg.billingCycle === "monthly" ? "Monthly Retainer" : "One-Time Pack"}
                             </span>
-                            {pkg.popular && (
-                              <span className="bg-[#D4A35A] text-[#0F172A] text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">
-                                Most Popular
-                              </span>
-                            )}
+                            <div className="flex items-center gap-1.5">
+                              {pkg.popular && (
+                                <span className="bg-[#D4A35A] text-[#0F172A] text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">
+                                  Most Popular
+                                </span>
+                              )}
+                              {isSelected && (
+                                <span className="w-4 h-4 rounded-full bg-[#5C3A1E] text-white flex items-center justify-center shrink-0">
+                                  <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                </span>
+                              )}
+                            </div>
                           </div>
 
-                          <div className="flex justify-between items-baseline">
-                            <h4 className="font-serif font-bold text-base text-[#0F172A]">
+                          <div className="flex flex-col xs:flex-row xs:items-baseline xs:justify-between gap-1 sm:gap-2">
+                            <h4 className="font-serif font-bold text-base text-[#0F172A] leading-snug">
                               {pkg.title}
                             </h4>
-                            <div className="text-right">
-                              <span className="font-serif font-bold text-lg text-[#5C3A1E]">
+                            <div className="text-left xs:text-right shrink-0">
+                              <span className="font-serif font-bold text-base sm:text-lg text-[#5C3A1E]">
                                 ₹{pkg.price.toLocaleString("en-IN")}
                               </span>
                               {pkg.billingCycle === "monthly" && (
@@ -1240,13 +1270,13 @@ export function MasterOrderForm({
                             {pkg.features.map((feat, idx) => (
                               <li key={idx} className="flex items-start gap-2">
                                 <CheckCircle2 className="w-3.5 h-3.5 text-[#2E7D4F] shrink-0 mt-0.5" />
-                                <span className="text-[11px] text-[#334155]">{feat}</span>
+                                <span className="text-[11px] text-[#334155] leading-tight">{feat}</span>
                               </li>
                             ))}
                           </ul>
                         </div>
 
-                        <div className="pt-2 border-t border-[#EADFCB]/60 flex items-center justify-between text-[11px] font-mono text-[#78716C]">
+                        <div className="pt-2 border-t border-[#EADFCB]/60 flex flex-wrap items-center justify-between gap-1 text-[11px] font-mono text-[#78716C]">
                           <span>Studio Turnaround:</span>
                           <span className="font-semibold text-[#5C3A1E]">{pkg.turnaround}</span>
                         </div>
@@ -1258,39 +1288,39 @@ export function MasterOrderForm({
                 {/* Monthly plan details — name, price, quotas, revisions,
                     exclusions & billing frequency (STEP 5, requirement 3) */}
                 {activePackage?.billingCycle === "monthly" && (
-                  <div className="p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="p-4 sm:p-5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-[#EADFCB]/60">
                       <h4 className="font-serif text-base font-bold text-[#0F172A]">
                         {activePackage.title}
                       </h4>
-                      <span className="inline-flex items-center gap-1.5 text-[9px] font-mono font-bold uppercase tracking-wider text-[#5C3A1E] bg-[#FFFDF9] border border-[#EADFCB] rounded-full px-2.5 py-1">
+                      <span className="inline-flex items-center gap-1.5 text-[9px] font-mono font-bold uppercase tracking-wider text-[#5C3A1E] bg-[#FFFDF9] border border-[#EADFCB] rounded-full px-2.5 py-1 w-fit">
                         <Calendar className="w-3 h-3 text-[#D4A35A]" />
                         Billed every 30 days
                       </span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-xs">
-                      <div className="flex items-center justify-between gap-3 sm:border-r sm:border-[#EADFCB]/60 sm:pr-6">
+                      <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1 xs:gap-3 py-1 border-b border-[#EADFCB]/40 sm:border-b-0 sm:border-r sm:border-[#EADFCB]/60 sm:pr-6">
                         <span className="text-[#64748B]">Monthly price</span>
                         <span className="font-serif font-bold text-base text-[#5C3A1E]">
                           {formatCurrencyINR(activePackage.price)}
                           <span className="text-[10px] font-sans font-normal text-[#64748B]"> / month</span>
                         </span>
                       </div>
-                      <div className="flex items-center justify-between gap-3">
+                      <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1 xs:gap-3 py-1 border-b border-[#EADFCB]/40 sm:border-b-0">
                         <span className="text-[#64748B]">Included images</span>
                         <span className="font-semibold text-[#0F172A]">
                           {activeCanonicalMonthly?.includedServices.images ?? "—"} images per 30-day cycle
                         </span>
                       </div>
-                      <div className="flex items-center justify-between gap-3 sm:border-r sm:border-[#EADFCB]/60 sm:pr-6">
+                      <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1 xs:gap-3 py-1 border-b border-[#EADFCB]/40 sm:border-b-0 sm:border-r sm:border-[#EADFCB]/60 sm:pr-6">
                         <span className="text-[#64748B]">Included videos</span>
-                        <span className="font-semibold text-[#0F172A] text-right">
+                        <span className="font-semibold text-[#0F172A] xs:text-right">
                           {activeCanonicalMonthly?.includedServices.videos ?? "—"} videos,{" "}
                           {resolveMonthlyVideoDurationLimit(activeCanonicalMonthly)}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between gap-3">
+                      <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1 xs:gap-3 py-1">
                         <span className="text-[#64748B]">Billing frequency</span>
                         <span className="font-semibold text-[#0F172A]">
                           Monthly · {activeCanonicalMonthly?.duration ?? "30 days"} billing cycle
@@ -1326,7 +1356,7 @@ export function MasterOrderForm({
 
                 {/* One-time package confirmed scope & live subtotal */}
                 {activePackage && activePackage.billingCycle !== "monthly" && (
-                  <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex items-center justify-between gap-4">
+                  <div className="p-4 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                       <span className="font-serif font-bold text-sm text-[#0F172A] block">
                         {activePackage.title}
@@ -1335,7 +1365,7 @@ export function MasterOrderForm({
                         {formatCurrencyINR(activePackage.price)} per package • {activePackage.turnaround}
                       </span>
                     </div>
-                    <div className="text-right">
+                    <div className="text-left sm:text-right pt-2 border-t border-[#EADFCB]/60 sm:pt-0 sm:border-t-0 flex items-center justify-between sm:block">
                       <span className="text-[10px] uppercase font-mono text-[#94A3B8] block">
                         Subtotal
                       </span>
@@ -1355,12 +1385,16 @@ export function MasterOrderForm({
               </>
             )}
 
-            <div className="flex justify-end pt-2">
+            <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-3 pt-3 border-t border-[#EADFCB]/60">
+              <span className="text-xs text-[#64748B] text-center sm:text-left w-full sm:w-auto">
+                Step 1 of 4 • Select Service &amp; Tier
+              </span>
               <Button
                 variant="primary"
                 size="md"
                 onClick={handleNextStep}
                 withArrow
+                className="w-full sm:w-auto min-h-[44px] justify-center"
               >
                 Continue to Brand Info
               </Button>

@@ -2079,7 +2079,7 @@ export default function OrdersPage() {
             {/* STEP 2A: SELECT SERVICES & QUANTITIES */}
             {flowStep === "services_select" && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <h3 className="font-serif text-lg font-semibold text-[#0F172A]">
                       Select Studio Services
@@ -2093,6 +2093,7 @@ export default function OrdersPage() {
                     size="sm"
                     onClick={() => setFlowStep("choose_type")}
                     leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
+                    className="self-start sm:self-auto"
                   >
                     Change Structure
                   </Button>
@@ -2191,7 +2192,7 @@ export default function OrdersPage() {
                 )}
 
                 {/* Sticky Live Total Bar */}
-                <div className="p-3.5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-wrap items-center justify-between gap-3">
+                <div className="p-3.5 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <span className="text-[11px] text-[#64748B] block">
                       {selectedServicesCount} Service{selectedServicesCount === 1 ? "" : "s"} Selected
@@ -2206,6 +2207,7 @@ export default function OrdersPage() {
                     disabled={selectedServicesCount === 0}
                     onClick={() => setFlowStep("service_details")}
                     withArrow
+                    className="w-full sm:w-auto"
                   >
                     Continue to Brief (Step 2)
                   </Button>
@@ -2216,7 +2218,7 @@ export default function OrdersPage() {
             {/* STEP 1B: SELECT MONTHLY PLAN & BILLING CYCLE */}
             {flowStep === "plan_select" && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <h3 className="font-serif text-lg font-semibold text-[#0F172A]">
                       Select Monthly Retainer Plan
@@ -2230,6 +2232,7 @@ export default function OrdersPage() {
                     size="sm"
                     onClick={() => setFlowStep("choose_type")}
                     leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
+                    className="self-start sm:self-auto"
                   >
                     Change Structure
                   </Button>
