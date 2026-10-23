@@ -56,15 +56,40 @@ export default function ContactPage() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [inquiryId, setInquiryId] = useState("");
 
+  const validateField = (field: string, value: string): string => {
+    let err = "";
+    if (field === "name") {
+      if (!value.trim()) err = "Full name is required.";
+      else if (value.trim().length < 2) err = "Please enter your full name (at least 2 characters).";
+    } else if (field === "email") {
+      if (!value.trim()) err = "Work email address is required.";
+      else if (!/^\S+@\S+\.\S+$/.test(value.trim())) err = "A valid business email address is required.";
+    } else if (field === "message") {
+      if (!value.trim()) err = "Project brief is required.";
+      else if (value.trim().length < 15) err = "Please provide at least 15 characters describing your project scope.";
+    }
+
+    setFormErrors((prev) => {
+      if (err) return { ...prev, [field]: err };
+      if (prev[field]) {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      }
+      return prev;
+    });
+    return err;
+  };
+
   const validate = () => {
     const errors: Record<string, string> = {};
-    if (!formData.name.trim()) errors.name = "Full name is required.";
-    if (!formData.email.trim() || !/^\S+@\S+\.\S+$/.test(formData.email)) {
-      errors.email = "A valid business email address is required.";
-    }
-    if (!formData.message.trim() || formData.message.length < 15) {
-      errors.message = "Please provide at least 15 characters describing your project scope.";
-    }
+    const errName = validateField("name", formData.name);
+    if (errName) errors.name = errName;
+    const errEmail = validateField("email", formData.email);
+    if (errEmail) errors.email = errEmail;
+    const errMessage = validateField("message", formData.message);
+    if (errMessage) errors.message = errMessage;
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -340,9 +365,11 @@ export default function ContactPage() {
                         label="Your Full Name *"
                         placeholder="e.g. Yash Joshi"
                         value={formData.name}
-                        onChange={(e) =>
-                          setFormData({ ...formData, name: e.target.value })
-                        }
+                        onChange={(e) => {
+                          setFormData({ ...formData, name: e.target.value });
+                          if (formErrors.name) validateField("name", e.target.value);
+                        }}
+                        onBlur={(e) => validateField("name", e.target.value)}
                         error={formErrors.name}
                       />
                       <Input
@@ -350,9 +377,11 @@ export default function ContactPage() {
                         type="email"
                         placeholder="yash@company.com"
                         value={formData.email}
-                        onChange={(e) =>
-                          setFormData({ ...formData, email: e.target.value })
-                        }
+                        onChange={(e) => {
+                          setFormData({ ...formData, email: e.target.value });
+                          if (formErrors.email) validateField("email", e.target.value);
+                        }}
+                        onBlur={(e) => validateField("email", e.target.value)}
                         error={formErrors.email}
                       />
                     </div>
@@ -393,9 +422,11 @@ export default function ContactPage() {
                       rows={5}
                       placeholder="Describe your brand aesthetic, deliverable goals, timeline expectations, references, or specific requirements..."
                       value={formData.message}
-                      onChange={(e) =>
-                        setFormData({ ...formData, message: e.target.value })
-                      }
+                      onChange={(e) => {
+                        setFormData({ ...formData, message: e.target.value });
+                        if (formErrors.message) validateField("message", e.target.value);
+                      }}
+                      onBlur={(e) => validateField("message", e.target.value)}
                       error={formErrors.message}
                       helperText="Please include any details on intended deliverables, brand tone, or launch dates."
                     />

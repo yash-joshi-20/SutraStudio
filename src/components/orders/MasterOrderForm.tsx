@@ -26,6 +26,7 @@ import {
   DISPLAY_MONTHLY_PACKAGES,
   type FixedDisplayPriceItem,
 } from "@/config/displayPricing";
+import { soundSystem } from "@/lib/audio/soundSystem";
 import {
   Sparkles,
   CheckCircle2,
@@ -511,6 +512,7 @@ export function MasterOrderForm({
   const [createdOrder, setCreatedOrder] = useState<any | null>(null);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [formError, setFormError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Active Package & Service Details
   /** Currently selected intake package — `undefined` when nothing is selected. */
@@ -616,43 +618,136 @@ export function MasterOrderForm({
     return activeService.basePrice * Math.max(1, quantity);
   }, [orderMode, activePackage, activeService, quantity]);
 
+  // Field-level validator for real-time and step validation
+  const validateField = (field: string, val: string): string => {
+    let err = "";
+    if (field === "fullName") {
+      if (!val.trim()) {
+        err = "Full Name is required (minimum 2 characters)";
+      } else if (val.trim().length < 2) {
+        err = "Please enter your full name (minimum 2 characters)";
+      }
+    } else if (field === "brandName") {
+      if (!val.trim()) {
+        err = "Business / Brand Name is required";
+      } else if (val.trim().length < 2) {
+        err = "Please enter your brand name (minimum 2 characters)";
+      }
+    } else if (field === "email") {
+      if (!val.trim()) {
+        err = "Valid Email Address is required";
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val.trim())) {
+        err = "Please enter a valid email address (e.g. name@domain.com)";
+      }
+    } else if (field === "whatsapp") {
+      const digits = val.replace(/\D/g, "");
+      if (!val.trim() || digits.length < 10) {
+        err = "Please enter a valid 10-digit WhatsApp / mobile number";
+      }
+    } else if (field === "brandUrl") {
+      if (val.trim()) {
+        const isHandle = /^@[a-zA-Z0-9._]{2,}$/.test(val.trim());
+        const isUrl = /^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/.*)?$/i.test(val.trim());
+        if (!isHandle && !isUrl) {
+          err = "Please enter a valid website URL (https://...) or social handle (@username)";
+        }
+      }
+    } else if (field === "creativeBrief") {
+      if (!val.trim()) {
+        err = "Please enter creative notes or brief requirements";
+      } else if (val.trim().length < 10) {
+        err = "Please describe requirements with at least 10 characters";
+      }
+    } else if (field === "metaDestinationUrl") {
+      if (val.trim()) {
+        const isUrl = /^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/.*)?$/i.test(val.trim());
+        if (!isUrl) {
+          err = "Please enter a valid destination URL (e.g. https://yourbrand.com)";
+        }
+      }
+    } else if (field === "figmaUrl") {
+      if (val.trim()) {
+        const isUrl = /^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/.*)?$/i.test(val.trim());
+        if (!isUrl) {
+          err = "Please enter a valid Figma or benchmark URL (e.g. https://figma.com/...)";
+        }
+      }
+    } else if (field === "utrNumber") {
+      if (val.trim() && !/^[0-9A-Za-z]{12,16}$/.test(val.trim())) {
+        err = "UTR must be 12 to 16 alphanumeric characters (e.g. 428901234567)";
+      }
+    }
+
+    setFieldErrors((prev) => {
+      if (err) {
+        return { ...prev, [field]: err };
+      }
+      if (prev[field]) {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      }
+      return prev;
+    });
+
+    return err;
+  };
+
   // Validation before proceeding
   const handleNextStep = () => {
     setFormError("");
     if (currentStep === 1) {
-      // A customer-selected item is never silently replaced — if a deep-linked
-      // selection could not be resolved, the customer must choose explicitly.
       if (orderMode === "services" && !selectedServiceId) {
+        soundSystem.play("warning");
         setFormError("Please select a studio service to continue.");
         return;
       }
       if (orderMode === "packages" && !selectedPackageId) {
+        soundSystem.play("warning");
         setFormError("Please select a package to continue.");
         return;
       }
     }
     if (currentStep === 2) {
-      if (!fullName.trim()) {
-        setFormError("Full Name is required");
-        return;
-      }
-      if (!brandName.trim()) {
-        setFormError("Business / Brand Name is required");
-        return;
-      }
-      if (!email.trim() || !email.includes("@")) {
-        setFormError("Valid Email Address is required");
-        return;
-      }
-      if (!whatsapp.trim() || whatsapp.length < 8) {
-        setFormError("WhatsApp contact number is required");
-        return;
-      }
-      if (!creativeBrief.trim()) {
-        setFormError("Please enter creative notes or brief requirements");
+      const errs: Record<string, string> = {};
+      const errName = validateField("fullName", fullName);
+      if (errName) errs.fullName = errName;
+      const errBrand = validateField("brandName", brandName);
+      if (errBrand) errs.brandName = errBrand;
+      const errEmail = validateField("email", email);
+      if (errEmail) errs.email = errEmail;
+      const errPhone = validateField("whatsapp", whatsapp);
+      if (errPhone) errs.whatsapp = errPhone;
+      const errUrl = validateField("brandUrl", brandUrl);
+      if (errUrl) errs.brandUrl = errUrl;
+      const errBrief = validateField("creativeBrief", creativeBrief);
+      if (errBrief) errs.creativeBrief = errBrief;
+
+      if (Object.keys(errs).length > 0) {
+        setFieldErrors(errs);
+        soundSystem.play("warning");
+        setFormError("Please correct the errors highlighted below in red before proceeding.");
         return;
       }
     }
+    if (currentStep === 3) {
+      const errs: Record<string, string> = {};
+      if (isMetaAds && metaDestinationUrl.trim()) {
+        const errMetaUrl = validateField("metaDestinationUrl", metaDestinationUrl);
+        if (errMetaUrl) errs.metaDestinationUrl = errMetaUrl;
+      }
+      if (isWebDev && figmaUrl.trim()) {
+        const errFigma = validateField("figmaUrl", figmaUrl);
+        if (errFigma) errs.figmaUrl = errFigma;
+      }
+      if (Object.keys(errs).length > 0) {
+        setFieldErrors(errs);
+        soundSystem.play("warning");
+        setFormError("Please correct the parameters highlighted in red before proceeding.");
+        return;
+      }
+    }
+    setFieldErrors({});
     setCurrentStep((prev) => Math.min(prev + 1, 4));
   };
 
@@ -660,6 +755,16 @@ export function MasterOrderForm({
   const handleFinalSubmit = async (paymentChoice: "upi_qr" | "online") => {
     setIsSubmitting(true);
     setFormError("");
+
+    if (utrNumber.trim()) {
+      const errUtr = validateField("utrNumber", utrNumber);
+      if (errUtr) {
+        setIsSubmitting(false);
+        soundSystem.play("warning");
+        setFormError("Please enter a valid 12 to 16-character UTR or clear the field to proceed.");
+        return;
+      }
+    }
 
     const hasUtr = Boolean(utrNumber.trim());
     const paymentStatus = hasUtr ? "pending_verification" : "pending";
@@ -1349,7 +1454,12 @@ export function MasterOrderForm({
                 required
                 placeholder="e.g. Yash Joshi"
                 value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                onChange={(e) => {
+                  setFullName(e.target.value);
+                  if (fieldErrors.fullName) validateField("fullName", e.target.value);
+                }}
+                onBlur={(e) => validateField("fullName", e.target.value)}
+                error={fieldErrors.fullName}
               />
 
               <Input
@@ -1358,7 +1468,12 @@ export function MasterOrderForm({
                 required
                 placeholder="e.g. Aura Noir Living"
                 value={brandName}
-                onChange={(e) => setBrandName(e.target.value)}
+                onChange={(e) => {
+                  setBrandName(e.target.value);
+                  if (fieldErrors.brandName) validateField("brandName", e.target.value);
+                }}
+                onBlur={(e) => validateField("brandName", e.target.value)}
+                error={fieldErrors.brandName}
               />
 
               <Input
@@ -1367,7 +1482,12 @@ export function MasterOrderForm({
                 required
                 placeholder="e.g. director@auranoir.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (fieldErrors.email) validateField("email", e.target.value);
+                }}
+                onBlur={(e) => validateField("email", e.target.value)}
+                error={fieldErrors.email}
               />
 
               <Input
@@ -1377,7 +1497,13 @@ export function MasterOrderForm({
                 required
                 placeholder="+91 94280 00000"
                 value={whatsapp}
-                onChange={(e) => setWhatsapp(e.target.value)}
+                onChange={(e) => {
+                  setWhatsapp(e.target.value);
+                  if (fieldErrors.whatsapp) validateField("whatsapp", e.target.value);
+                }}
+                onBlur={(e) => validateField("whatsapp", e.target.value)}
+                error={fieldErrors.whatsapp}
+                helperText="10-digit WhatsApp number for order status updates"
               />
 
               <div>
@@ -1405,7 +1531,12 @@ export function MasterOrderForm({
                 type="text"
                 placeholder="e.g. @auranoirliving or auranoir.com"
                 value={brandUrl}
-                onChange={(e) => setBrandUrl(e.target.value)}
+                onChange={(e) => {
+                  setBrandUrl(e.target.value);
+                  if (fieldErrors.brandUrl) validateField("brandUrl", e.target.value);
+                }}
+                onBlur={(e) => validateField("brandUrl", e.target.value)}
+                error={fieldErrors.brandUrl}
               />
 
               <div className="sm:col-span-2">
@@ -1459,20 +1590,23 @@ export function MasterOrderForm({
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-semibold text-[#0F172A]">
-                  Creative Brief & Requirements <span className="text-red-500">*</span>
-                </label>
-                <span className="text-[10px] text-[#94A3B8] font-mono">
-                  {creativeBrief.length} chars
+                <span className="text-[10px] text-[#94A3B8] font-mono ml-auto">
+                  {creativeBrief.length} chars (min 10)
                 </span>
               </div>
-              <textarea
+              <Textarea
+                label="Creative Brief & Requirements *"
                 rows={4}
                 required
                 placeholder="Describe project vision, desired mood, lighting, color palettes, key references, or special deliverables needed..."
                 value={creativeBrief}
-                onChange={(e) => setCreativeBrief(e.target.value)}
-                className="w-full px-3.5 py-3 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 resize-y min-h-[110px] focus:outline-none focus:border-[#D4A35A] focus:ring-0"
+                onChange={(e) => {
+                  setCreativeBrief(e.target.value);
+                  if (fieldErrors.creativeBrief) validateField("creativeBrief", e.target.value);
+                }}
+                onBlur={(e) => validateField("creativeBrief", e.target.value)}
+                error={fieldErrors.creativeBrief}
+                helperText="Provide specific details about your project vision, lighting preferences, and brand aesthetic."
               />
             </div>
 
@@ -1547,7 +1681,12 @@ export function MasterOrderForm({
                     type="url"
                     placeholder="e.g. https://yourbrand.com/landing or https://wa.me/91..."
                     value={metaDestinationUrl}
-                    onChange={(e) => setMetaDestinationUrl(e.target.value)}
+                    onChange={(e) => {
+                      setMetaDestinationUrl(e.target.value);
+                      if (fieldErrors.metaDestinationUrl) validateField("metaDestinationUrl", e.target.value);
+                    }}
+                    onBlur={(e) => validateField("metaDestinationUrl", e.target.value)}
+                    error={fieldErrors.metaDestinationUrl}
                   />
 
                   <Input
@@ -1758,7 +1897,12 @@ export function MasterOrderForm({
                     type="url"
                     placeholder="e.g. https://www.figma.com/design/..."
                     value={figmaUrl}
-                    onChange={(e) => setFigmaUrl(e.target.value)}
+                    onChange={(e) => {
+                      setFigmaUrl(e.target.value);
+                      if (fieldErrors.figmaUrl) validateField("figmaUrl", e.target.value);
+                    }}
+                    onBlur={(e) => validateField("figmaUrl", e.target.value)}
+                    error={fieldErrors.figmaUrl}
                   />
                 </div>
               </div>
@@ -2014,10 +2158,18 @@ export function MasterOrderForm({
                       label="12-Digit UPI Transaction ID / UTR"
                       type="text"
                       value={utrNumber}
-                      onChange={(e) => setUtrNumber(e.target.value)}
+                      onChange={(e) => {
+                        const clean = e.target.value.replace(/[^0-9A-Za-z]/g, "").toUpperCase();
+                        setUtrNumber(clean);
+                        if (fieldErrors.utrNumber) validateField("utrNumber", clean);
+                      }}
+                      onBlur={(e) => {
+                        if (utrNumber.trim()) validateField("utrNumber", utrNumber);
+                      }}
+                      error={fieldErrors.utrNumber}
                       placeholder="e.g. 428910284910"
                       maxLength={16}
-                      helperText="Order will be submitted immediately whether you enter UTR now or choose to pay later."
+                      helperText="Submit UTR for instant verification or leave blank to pay on invoice."
                     />
                   </div>
 

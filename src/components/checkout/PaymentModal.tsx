@@ -408,6 +408,9 @@ Please verify payment receipt and commence studio production.`;
                   setUtrNumber(clean);
                   if (utrError) setUtrError("");
                 }}
+                onBlur={() => {
+                  if (utrNumber.trim()) validateUtr(utrNumber);
+                }}
                 error={utrError}
                 helperText="Found in your UPI app receipt or bank confirmation SMS"
               />

@@ -530,6 +530,7 @@ export function FloatingChatModal() {
     requirement: "",
     message: "",
   });
+  const [handoffErrors, setHandoffErrors] = useState<Record<string, string>>({});
   const [handoffSubmitted, setHandoffSubmitted] = useState(false);
   const [selectedChatOrder, setSelectedChatOrder] = useState<NonNullable<ChatMessage["orderDraft"]> | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -788,8 +789,29 @@ export function FloatingChatModal() {
     ]);
   };
 
+  const validateHandoff = (): boolean => {
+    const errs: Record<string, string> = {};
+    if (!handoffForm.name.trim() || handoffForm.name.trim().length < 2) {
+      errs.name = "Please enter your full name (at least 2 characters).";
+    }
+    if (!handoffForm.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(handoffForm.email.trim())) {
+      errs.email = "Please enter a valid email address (e.g. name@domain.com).";
+    }
+    const cleanPhone = handoffForm.phone.replace(/\D/g, "");
+    if (!handoffForm.phone.trim() || cleanPhone.length < 10) {
+      errs.phone = "Please enter a valid 10-digit phone / WhatsApp number.";
+    }
+    setHandoffErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
   const handleHandoffSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateHandoff()) {
+      soundSystem.play("warning");
+      return;
+    }
+
     try {
       await fetch("/api/leads", {
         method: "POST",
@@ -817,6 +839,7 @@ export function FloatingChatModal() {
       setTimeout(() => {
         setShowHandoffModal(false);
         setHandoffSubmitted(false);
+        setHandoffErrors({});
         setHandoffForm({ name: "", email: "", phone: "", company: "", requirement: "", message: "" });
       }, 2000);
     } catch {
@@ -1307,7 +1330,11 @@ export function FloatingChatModal() {
                     type="text"
                     placeholder="e.g. Rahul Sharma"
                     value={handoffForm.name}
-                    onChange={(e) => setHandoffForm({ ...handoffForm, name: e.target.value })}
+                    onChange={(e) => {
+                      setHandoffForm({ ...handoffForm, name: e.target.value });
+                      if (handoffErrors.name) setHandoffErrors((prev) => ({ ...prev, name: "" }));
+                    }}
+                    error={handoffErrors.name}
                   />
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1317,7 +1344,11 @@ export function FloatingChatModal() {
                       type="email"
                       placeholder="name@company.com"
                       value={handoffForm.email}
-                      onChange={(e) => setHandoffForm({ ...handoffForm, email: e.target.value })}
+                      onChange={(e) => {
+                        setHandoffForm({ ...handoffForm, email: e.target.value });
+                        if (handoffErrors.email) setHandoffErrors((prev) => ({ ...prev, email: "" }));
+                      }}
+                      error={handoffErrors.email}
                     />
                     <Input
                       label="Phone / WhatsApp *"
@@ -1325,7 +1356,11 @@ export function FloatingChatModal() {
                       type="tel"
                       placeholder="+91 98000 00000"
                       value={handoffForm.phone}
-                      onChange={(e) => setHandoffForm({ ...handoffForm, phone: e.target.value })}
+                      onChange={(e) => {
+                        setHandoffForm({ ...handoffForm, phone: e.target.value });
+                        if (handoffErrors.phone) setHandoffErrors((prev) => ({ ...prev, phone: "" }));
+                      }}
+                      error={handoffErrors.phone}
                     />
                   </div>
 

@@ -7,6 +7,7 @@ import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { useAuth } from "@/lib/auth/authContext";
 import { Button, Badge, Input, Textarea, FileUpload, CustomDropdown } from "@/components/ui";
+import { soundSystem } from "@/lib/audio/soundSystem";
 
 import Link from "next/link";
 import {
@@ -66,6 +67,45 @@ export default function ClientFormPage() {
   const [submissionId, setSubmissionId] = useState<string>("");
   const [status, setStatus] = useState<SubmissionStatus>("DRAFT");
   const [changesMessage, setChangesMessage] = useState<string>("");
+  const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
+
+  const validateStep = (step: number): boolean => {
+    const errs: Record<string, string> = {};
+    if (step === 1) {
+      if (!company.name.trim()) {
+        errs.companyName = "Company Name is required (minimum 2 characters).";
+      } else if (company.name.trim().length < 2) {
+        errs.companyName = "Please enter at least 2 characters for Company Name.";
+      }
+      if (company.websiteUrl?.trim()) {
+        if (!/^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/.*)?$/i.test(company.websiteUrl.trim())) {
+          errs.websiteUrl = "Please enter a valid website URL (e.g. https://company.com).";
+        }
+      }
+      if (company.foundedYear?.trim()) {
+        const yr = parseInt(company.foundedYear.trim(), 10);
+        if (isNaN(yr) || yr < 1800 || yr > new Date().getFullYear() + 1) {
+          errs.foundedYear = "Please enter a valid 4-digit year (e.g. 2024).";
+        }
+      }
+    } else if (step === 6) {
+      if (contact.email?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(contact.email.trim())) {
+        errs.contactEmail = "Please enter a valid email address.";
+      }
+      if (contact.phone?.trim()) {
+        const digits = contact.phone.replace(/\D/g, "");
+        if (digits.length < 10) {
+          errs.contactPhone = "Please enter a valid 10-digit phone number.";
+        }
+      }
+    }
+    setStepErrors(errs);
+    if (Object.keys(errs).length > 0) {
+      soundSystem.play("warning");
+      return false;
+    }
+    return true;
+  };
 
   // Step 1: Company
   const [company, setCompany] = useState<CompanyInfo>({
@@ -435,7 +475,11 @@ export default function ClientFormPage() {
                     disabled={isLocked}
                     type="text"
                     value={company.name}
-                    onChange={(e) => setCompany({ ...company, name: e.target.value })}
+                    onChange={(e) => {
+                      setCompany({ ...company, name: e.target.value });
+                      if (stepErrors.companyName) setStepErrors((prev) => ({ ...prev, companyName: "" }));
+                    }}
+                    error={stepErrors.companyName}
                     placeholder="e.g. Shri Ram Tech"
                   />
 
@@ -484,7 +528,11 @@ export default function ClientFormPage() {
                     disabled={isLocked}
                     type="text"
                     value={company.foundedYear}
-                    onChange={(e) => setCompany({ ...company, foundedYear: e.target.value })}
+                    onChange={(e) => {
+                      setCompany({ ...company, foundedYear: e.target.value });
+                      if (stepErrors.foundedYear) setStepErrors((prev) => ({ ...prev, foundedYear: "" }));
+                    }}
+                    error={stepErrors.foundedYear}
                     placeholder="e.g. 2022"
                   />
 
@@ -502,7 +550,11 @@ export default function ClientFormPage() {
                     disabled={isLocked}
                     type="url"
                     value={company.websiteUrl}
-                    onChange={(e) => setCompany({ ...company, websiteUrl: e.target.value })}
+                    onChange={(e) => {
+                      setCompany({ ...company, websiteUrl: e.target.value });
+                      if (stepErrors.websiteUrl) setStepErrors((prev) => ({ ...prev, websiteUrl: "" }));
+                    }}
+                    error={stepErrors.websiteUrl}
                     placeholder="https://shriramtech.com"
                   />
                 </div>
@@ -924,50 +976,50 @@ export default function ClientFormPage() {
                   <p className="text-xs text-[#64748B] mt-1">Official communication endpoints used by the client concierge.</p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                  <div>
-                    <label className="font-semibold block mb-1">Email Address *</label>
-                    <input
-                      disabled={isLocked}
-                      type="email"
-                      value={contact.email}
-                      onChange={(e) => setContact({ ...contact, email: e.target.value })}
-                      className="w-full p-2.5 rounded-xl border border-[#EADFCB] bg-[#FAF9F5]"
-                    />
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    label="Email Address *"
+                    disabled={isLocked}
+                    type="email"
+                    value={contact.email}
+                    onChange={(e) => {
+                      setContact({ ...contact, email: e.target.value });
+                      if (stepErrors.contactEmail) setStepErrors((prev) => ({ ...prev, contactEmail: "" }));
+                    }}
+                    error={stepErrors.contactEmail}
+                    placeholder="contact@company.com"
+                  />
 
-                  <div>
-                    <label className="font-semibold block mb-1">Phone Number *</label>
-                    <input
-                      disabled={isLocked}
-                      type="tel"
-                      value={contact.phone}
-                      onChange={(e) => setContact({ ...contact, phone: e.target.value })}
-                      className="w-full p-2.5 rounded-xl border border-[#EADFCB] bg-[#FAF9F5]"
-                    />
-                  </div>
+                  <Input
+                    label="Phone Number *"
+                    disabled={isLocked}
+                    type="tel"
+                    value={contact.phone}
+                    onChange={(e) => {
+                      setContact({ ...contact, phone: e.target.value });
+                      if (stepErrors.contactPhone) setStepErrors((prev) => ({ ...prev, contactPhone: "" }));
+                    }}
+                    error={stepErrors.contactPhone}
+                    placeholder="+91 98000 00000"
+                  />
 
-                  <div>
-                    <label className="font-semibold block mb-1">WhatsApp Business</label>
-                    <input
-                      disabled={isLocked}
-                      type="tel"
-                      value={contact.whatsapp || ""}
-                      onChange={(e) => setContact({ ...contact, whatsapp: e.target.value })}
-                      className="w-full p-2.5 rounded-xl border border-[#EADFCB] bg-[#FAF9F5]"
-                    />
-                  </div>
+                  <Input
+                    label="WhatsApp Business"
+                    disabled={isLocked}
+                    type="tel"
+                    value={contact.whatsapp || ""}
+                    onChange={(e) => setContact({ ...contact, whatsapp: e.target.value })}
+                    placeholder="+91 98000 00000"
+                  />
 
-                  <div>
-                    <label className="font-semibold block mb-1">Business Operating Hours</label>
-                    <input
-                      disabled={isLocked}
-                      type="text"
-                      value={contact.businessHours}
-                      onChange={(e) => setContact({ ...contact, businessHours: e.target.value })}
-                      className="w-full p-2.5 rounded-xl border border-[#EADFCB] bg-[#FAF9F5]"
-                    />
-                  </div>
+                  <Input
+                    label="Business Operating Hours"
+                    disabled={isLocked}
+                    type="text"
+                    value={contact.businessHours}
+                    onChange={(e) => setContact({ ...contact, businessHours: e.target.value })}
+                    placeholder="Monday - Saturday: 9:30 AM - 7:00 PM IST"
+                  />
 
                   <div className="sm:col-span-2">
                     <label className="font-semibold block mb-1">Office Street Address</label>
@@ -1140,7 +1192,12 @@ export default function ClientFormPage() {
                 </Button>
                 {currentStep < 8 && (
                   <Button
-                    onClick={() => setCurrentStep(Math.min(8, currentStep + 1))}
+                    onClick={() => {
+                      if (validateStep(currentStep)) {
+                        setStepErrors({});
+                        setCurrentStep(Math.min(8, currentStep + 1));
+                      }
+                    }}
                     variant="secondary"
                     size="sm"
                     withArrow
@@ -1164,9 +1221,12 @@ export default function ClientFormPage() {
                       Save Draft
                     </Button>
                     <Button
-                      onClick={() =>
-                        saveSubmission(status === "CHANGES_REQUESTED" ? "CLIENT_UPDATED" : "PENDING_REVIEW")
-                      }
+                      onClick={() => {
+                        if (!validateStep(1) || !validateStep(6)) {
+                          return;
+                        }
+                        saveSubmission(status === "CHANGES_REQUESTED" ? "CLIENT_UPDATED" : "PENDING_REVIEW");
+                      }}
                       variant="primary"
                       size="sm"
                       disabled={loading}
