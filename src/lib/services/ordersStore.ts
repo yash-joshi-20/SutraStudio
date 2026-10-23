@@ -3,7 +3,7 @@ import path from "node:path";
 import type { FirestoreOrderRecord } from "@/app/api/orders/route";
 import { NotificationsStore } from "./notificationsStore";
 import { computeOrderProgress, type OrderProgressInfo } from "@/lib/services/orderProgress";
-import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { adminDb, isFirebaseAdminReady } from "@/lib/db";
 
 /**
  * SUTRA STUDIO — Resilient Orders Store & Firestore Repository
@@ -232,7 +232,7 @@ export class OrdersStore {
       try {
         const db = adminDb();
         const snapshot = await db.collection("orders").limit(200).get();
-        snapshot.forEach((doc) => {
+        snapshot.forEach((doc: any) => {
           const data = doc.data() as FirestoreOrderRecord;
           if (data && data.id) {
             map.set(data.id, { ...(map.get(data.id) || {}), ...data, _persistedToFirestore: true });

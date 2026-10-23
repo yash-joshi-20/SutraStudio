@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { readEnv } from "@/lib/config/env";
-import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { adminDb, isFirebaseAdminReady } from "@/lib/db";
 import { EmailService } from "@/lib/services/emailProvider";
 import { assertAdminSession } from "@/lib/auth/requestRole";
 

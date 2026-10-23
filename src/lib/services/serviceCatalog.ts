@@ -10,7 +10,7 @@
  */
 
 import "server-only";
-import { adminDb } from "@/lib/firebase/admin";
+import { adminDb } from "@/lib/db";
 import {
   SEED_CATALOG_PLANS,
   SEED_CATALOG_SERVICES,

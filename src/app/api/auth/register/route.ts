@@ -12,7 +12,7 @@
  */
 
 import { NextResponse } from "next/server";
-import { adminAuth, isFirebaseAdminReady, adminMissingKeys } from "@/lib/firebase/admin";
+import { adminAuth, isFirebaseAdminReady, adminMissingKeys } from "@/lib/db";
 import {
   createProfileOnSignup,
   createSessionCookie,
@@ -192,7 +192,7 @@ export async function POST(req: Request) {
         email,
         displayName: name,
         role: "client",
-        emailVerified: Boolean(decoded.email_verified),
+        emailVerified: Boolean(decoded.emailVerified ?? decoded.email_verified),
         companyName,
         phone,
       },

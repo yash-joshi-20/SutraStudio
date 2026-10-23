@@ -5,7 +5,7 @@
  * share via expiring links and WhatsApp, social posting (Meta).
  */
 
-import { adminDb } from "@/lib/firebase/admin";
+import { adminDb } from "@/lib/db";
 import { readEnv, readPublicEnv } from "@/lib/config/env";
 import { safeGetEnv } from "@/lib/services/missingKeyRegistry";
 

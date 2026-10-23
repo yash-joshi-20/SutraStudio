@@ -4,8 +4,8 @@
  * Server-side proxy for the knowledge base, feedback inbox, common-question
  * insights and AI system settings.
  *
- * Why this exists: `AiKnowledgeService` imports `firebase-admin`, so the admin
- * portal could never call it from a browser. Everything now goes through this
+ * Why this exists: `AiKnowledgeService` accesses the server database, so the admin
+ * portal could never call it directly from a browser. Everything now goes through this
  * admin-gated route. The admin's uid and name are taken from the verified
  * session, never from the request body, so audit attribution cannot be forged.
  *

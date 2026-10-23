@@ -16,7 +16,7 @@
  */
 
 import crypto from "node:crypto";
-import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { adminDb, isFirebaseAdminReady } from "@/lib/db";
 import { OrdersStore } from "@/lib/services/ordersStore";
 import { SEED_CATALOG_SERVICES, SEED_CATALOG_PLANS } from "@/lib/services/catalogData";
 import { generateOrderNumber } from "@/lib/types/database";

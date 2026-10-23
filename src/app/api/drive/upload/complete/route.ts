@@ -12,7 +12,7 @@
 import { guarded, ok, forbidden, notFound, badRequest } from "@/lib/api/response";
 import { requireUser } from "@/lib/auth/session";
 import { OrdersStore, type FirestoreOrderRecord } from "@/lib/services/ordersStore";
-import { adminDb } from "@/lib/firebase/admin";
+import { adminDb } from "@/lib/db";
 import {
   getFileMetadata,
   saveFileRecord,

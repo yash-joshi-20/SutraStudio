@@ -213,7 +213,7 @@ export async function recordMissingKey(
   let shouldSendDailyAlert = false;
 
   try {
-    const { adminDb } = await import("@/lib/firebase/admin");
+    const { adminDb } = await import("@/lib/db");
     const docRef = adminDb().collection("integrationStatus").doc(key);
     const snap = await docRef.get();
 
@@ -324,7 +324,7 @@ export async function syncAllIntegrationsToFirestore(): Promise<void> {
   const statuses = getIntegrationStatuses();
 
   try {
-    const { adminDb } = await import("@/lib/firebase/admin");
+    const { adminDb } = await import("@/lib/db");
 
     for (const item of statuses) {
       for (const key of item.missingKeys) {

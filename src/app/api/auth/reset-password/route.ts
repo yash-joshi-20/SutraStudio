@@ -9,7 +9,7 @@
  */
 
 import { NextResponse } from "next/server";
-import { adminAuth, isFirebaseAdminReady, adminMissingKeys } from "@/lib/firebase/admin";
+import { adminAuth, isFirebaseAdminReady, adminMissingKeys } from "@/lib/db";
 import {
   createSessionCookie,
   requireUser,

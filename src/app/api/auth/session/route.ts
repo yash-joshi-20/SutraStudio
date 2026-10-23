@@ -7,7 +7,7 @@
 
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { isFirebaseAdminReady, isNotConfigured, adminMissingKeys } from "@/lib/firebase/admin";
+import { isFirebaseAdminReady, isNotConfigured, adminMissingKeys } from "@/lib/db";
 import {
   createSessionCookie,
   getSessionUser,
@@ -17,7 +17,7 @@ import {
 } from "@/lib/auth/session";
 import { badRequest, guarded, ok, sameOrigin } from "@/lib/api/response";
 import { getProfile } from "@/lib/services/profileStore";
-import { isNotConfigured as isDbNotConfigured } from "@/lib/firebase/db";
+import { isNotConfigured as isDbNotConfigured } from "@/lib/db";
 import { resolveClientDisplayName } from "@/lib/auth/nameUtils";
 
 export const dynamic = "force-dynamic";
@@ -112,7 +112,7 @@ export async function POST(req: Request) {
     const body = (await req.json().catch(() => ({}))) as { idToken?: string; rememberMe?: boolean };
     if (!body.idToken) return badRequest("Missing sign-in credential.");
 
-    const { adminAuth } = await import("@/lib/firebase/admin");
+    const { adminAuth } = await import("@/lib/db");
     let decoded;
     try {
       decoded = await adminAuth().verifyIdToken(body.idToken, true);

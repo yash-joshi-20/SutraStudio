@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { EmailService } from "@/lib/services/emailProvider";
 import { readEnv } from "@/lib/config/env";
-import { adminDb } from "@/lib/firebase/admin";
+import { adminDb } from "@/lib/db";
 import { checkRateLimit, getClientIp } from "@/lib/security/rateLimiter";
 
 export async function POST(req: Request) {

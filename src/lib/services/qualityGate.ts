@@ -4,7 +4,7 @@
  * revision counter, watermarked low-res previews until payment/approval.
  */
 
-import { adminDb } from "@/lib/firebase/admin";
+import { adminDb } from "@/lib/db";
 import type { GeneratedOutput } from "./aiPipeline";
 
 // ---------------------------------------------------------------------------

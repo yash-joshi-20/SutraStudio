@@ -8,7 +8,7 @@
  */
 
 import "server-only";
-import { adminDb } from "@/lib/firebase/admin";
+import { adminDb } from "@/lib/db";
 
 import {
   DEFAULT_SYSTEM_PROMPT,

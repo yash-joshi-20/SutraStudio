@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
-import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { adminDb, isFirebaseAdminReady } from "@/lib/db";
 import { AuditLogService } from "@/lib/services/auditLogService";
 import { readEnv } from "@/lib/config/env";
 import { assertAdminSession } from "@/lib/auth/requestRole";
@@ -41,7 +41,7 @@ export async function GET(req: Request) {
     if (isFirebaseAdminReady()) {
       try {
         const snap = await adminDb().collection("admin_deliverables").get();
-        deliverables = snap.docs.map((d: FirebaseFirestore.QueryDocumentSnapshot) => d.data() as DeliverableRecord);
+        deliverables = snap.docs.map((d: any) => d.data() as DeliverableRecord);
       } catch (err) {
         console.warn("[deliverables GET] Firestore query fallback:", err);
         deliverables = [...IN_MEMORY_DELIVERABLES];

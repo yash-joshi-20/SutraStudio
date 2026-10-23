@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { archiveOrderFolder } from "@/lib/services/googleDriveService";
-import { adminDb } from "@/lib/firebase/admin";
+import { adminDb } from "@/lib/db";
 import { requestRole } from "@/lib/auth/requestRole";
 
 export async function POST(req: Request) {

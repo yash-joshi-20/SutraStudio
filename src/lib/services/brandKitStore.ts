@@ -4,7 +4,7 @@
  * Every order and daily content job references a Brand Kit.
  */
 
-import { adminDb } from "@/lib/firebase/admin";
+import { adminDb } from "@/lib/db";
 
 // ---------------------------------------------------------------------------
 // Types

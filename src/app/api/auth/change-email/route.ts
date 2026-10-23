@@ -7,7 +7,7 @@
  */
 
 import { NextResponse } from "next/server";
-import { adminAuth, isFirebaseAdminReady, adminMissingKeys } from "@/lib/firebase/admin";
+import { adminAuth, isFirebaseAdminReady, adminMissingKeys } from "@/lib/db";
 import { requireUser } from "@/lib/auth/session";
 import {
   badRequest,

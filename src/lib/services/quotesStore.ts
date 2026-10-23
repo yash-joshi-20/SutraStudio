@@ -1,7 +1,7 @@
 import { OrdersStore } from "./ordersStore";
 import { NotificationsStore } from "./notificationsStore";
 import { FirestoreOrderRecord } from "@/app/api/orders/route";
-import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { adminDb, isFirebaseAdminReady } from "@/lib/db";
 
 /**
  * SUTRA STUDIO — Custom Quotes Engine
@@ -73,7 +73,7 @@ export class QuotesStore {
       const db = adminDb();
       const snapshot = await db.collection("quotes").get();
       const loaded: CustomQuoteRecord[] = [];
-      snapshot.forEach((doc) => {
+      snapshot.forEach((doc: any) => {
         loaded.push(doc.data() as CustomQuoteRecord);
       });
 

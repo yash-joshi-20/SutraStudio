@@ -10,7 +10,7 @@
 
 import { NextResponse } from "next/server";
 import { authorizeScheduledCall } from "@/lib/api/cronAuth";
-import { adminDb, serverTimestamp } from "@/lib/firebase/admin";
+import { adminDb, serverTimestamp } from "@/lib/db";
 import {
   listFileRecords,
   trashDriveFile,

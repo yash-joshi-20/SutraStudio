@@ -1,6 +1,6 @@
 import { OrdersStore, type FirestoreOrderRecord } from "@/lib/services/ordersStore";
 import { NotificationsStore } from "@/lib/services/notificationsStore";
-import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { adminDb, isFirebaseAdminReady } from "@/lib/db";
 
 /**
  * SUTRA STUDIO — Automation Quality Gate

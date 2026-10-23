@@ -7,7 +7,7 @@
 
 import "server-only";
 import { NextResponse } from "next/server";
-import { isNotConfigured, NotConfiguredError } from "@/lib/firebase/admin";
+import { isNotConfigured, NotConfiguredError } from "@/lib/db";
 import {
   AuthRequiredError,
   ForbiddenError,

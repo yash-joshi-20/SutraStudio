@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isFirebaseAdminReady, adminMissingKeys } from "@/lib/firebase/admin";
+import { isFirebaseAdminReady, adminMissingKeys } from "@/lib/db";
 import { notConfigured } from "@/lib/api/response";
 
 export const dynamic = "force-dynamic";

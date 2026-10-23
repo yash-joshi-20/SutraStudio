@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { adminDb, isFirebaseAdminReady } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth/serverAuth";
 import { checkRateLimit, getClientIp } from "@/lib/security/rateLimiter";
 
@@ -19,7 +19,7 @@ export async function GET(req: Request) {
 
     const snapshot = await adminDb().collection("leads").orderBy("createdAt", "desc").get();
     const leads: any[] = [];
-    snapshot.forEach((doc) => {
+    snapshot.forEach((doc: any) => {
       leads.push({ id: doc.id, ...doc.data() });
     });
 

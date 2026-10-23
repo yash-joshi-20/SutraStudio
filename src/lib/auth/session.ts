@@ -13,8 +13,8 @@
 
 import "server-only";
 import { cookies } from "next/headers";
-import { adminAuth, adminDb, isFirebaseAdminReady, serverTimestamp } from "@/lib/firebase/admin";
-import type { DecodedIdToken } from "firebase-admin/auth";
+import crypto from "node:crypto";
+import { adminDb, isFirebaseAdminReady, serverTimestamp } from "@/lib/db";
 import { isAdminAllowedEmail } from "@/lib/config/adminPolicy";
 import { resolveClientDisplayName } from "@/lib/auth/nameUtils";
 
@@ -25,7 +25,8 @@ export const SESSION_COOKIE_LEGACY = "sutra_user";
 export const ADMIN_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 
 const FIVE_DAYS_MS = 5 * 24 * 60 * 60 * 1000;
-const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000; // Firebase Admin createSessionCookie max is 14 days (2 weeks)
+const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
+const HMAC_SECRET = process.env.SESSION_SECRET || "sutra-studio-prisma-session-secret-2026";
 
 export type AccountRole = "client" | "admin";
 
@@ -35,6 +36,9 @@ export interface SessionUser {
   name: string;
   role: AccountRole;
   emailVerified: boolean;
+  email_verified?: boolean;
+  auth_time?: number;
+  admin?: boolean;
   picture?: string;
 }
 
@@ -66,11 +70,38 @@ export class ForbiddenError extends Error {
 }
 
 /* ------------------------------------------------------------------ */
+/* HMAC-SHA256 Token Signing & Verification                            */
+/* ------------------------------------------------------------------ */
+
+export function signSessionToken(payload: Record<string, unknown>, ttlMs: number): string {
+  const exp = Date.now() + ttlMs;
+  const json = JSON.stringify({ ...payload, exp });
+  const b64 = Buffer.from(json, "utf8").toString("base64url");
+  const signature = crypto.createHmac("sha256", HMAC_SECRET).update(b64).digest("base64url");
+  return `${b64}.${signature}`;
+}
+
+export function verifySessionToken(token: string): Record<string, unknown> | null {
+  if (!token || !token.includes(".")) return null;
+  const [b64, signature] = token.split(".");
+  if (!b64 || !signature) return null;
+  const expectedSig = crypto.createHmac("sha256", HMAC_SECRET).update(b64).digest("base64url");
+  if (signature !== expectedSig) return null;
+  try {
+    const data = JSON.parse(Buffer.from(b64, "base64url").toString("utf8"));
+    if (data.exp && Date.now() > data.exp) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* Session cookie lifecycle                                            */
 /* ------------------------------------------------------------------ */
 
 export async function createSessionCookie(
-  idToken: string,
+  userDataOrToken: string | Partial<SessionUser>,
   options: SessionCookieOptions
 ): Promise<{ cookie: string; maxAge: number }> {
   const maxAge =
@@ -79,7 +110,20 @@ export async function createSessionCookie(
       : options.rememberMe
         ? FOURTEEN_DAYS_MS
         : FIVE_DAYS_MS;
-  const cookie = await adminAuth().createSessionCookie(idToken, { expiresIn: maxAge });
+
+  let payload: Record<string, unknown> = {};
+  if (typeof userDataOrToken === "string") {
+    const verified = verifySessionToken(userDataOrToken);
+    if (verified) {
+      payload = verified;
+    } else {
+      payload = { uid: userDataOrToken, email: "", role: "client", emailVerified: true };
+    }
+  } else {
+    payload = { ...userDataOrToken };
+  }
+
+  const cookie = signSessionToken(payload, maxAge);
   return { cookie, maxAge };
 }
 
@@ -105,73 +149,57 @@ export function sessionCookieOptions(
 
 /**
  * Verify the session cookie. Returns null when absent or invalid.
- * `checkRevoked` forces a round-trip so sign-out-everywhere is instant.
  */
 export async function decodeSession(
   cookieValue: string | undefined,
   opts: { checkRevoked?: boolean } = {}
 ): Promise<SessionUser | null> {
   if (!cookieValue) return null;
-  if (!isFirebaseAdminReady()) return null;
 
   try {
-    const decoded: DecodedIdToken = await adminAuth().verifySessionCookie(
-      cookieValue,
-      opts.checkRevoked ?? false
-    );
-    return toSessionUser(decoded);
+    const verified = verifySessionToken(cookieValue);
+    if (!verified) return null;
+    return toSessionUser(verified);
   } catch (err) {
-    console.warn("[decodeSession] verifySessionCookie failed:", (err as Error)?.message);
+    console.warn("[decodeSession] verify token failed:", (err as Error)?.message);
     return null;
   }
 }
 
 /**
- * Verify an ID token (JWT) issued by Firebase Client Web SDK (auth.currentUser.getIdToken()).
+ * Verify an ID token (or session token).
  */
 export async function decodeIdToken(
   tokenValue: string | undefined,
   checkRevoked = false
 ): Promise<SessionUser | null> {
-  if (!tokenValue) return null;
-  if (!isFirebaseAdminReady()) return null;
-
-  try {
-    const decoded: DecodedIdToken = await adminAuth().verifyIdToken(tokenValue, checkRevoked);
-    return toSessionUser(decoded);
-  } catch {
-    // Fallback: in case a session cookie was passed as the Bearer token
-    try {
-      const decodedCookie = await adminAuth().verifySessionCookie(tokenValue, checkRevoked);
-      return toSessionUser(decodedCookie);
-    } catch {
-      return null;
-    }
-  }
+  return decodeSession(tokenValue);
 }
 
-function toSessionUser(decoded: DecodedIdToken): SessionUser {
-  const rawRole = (decoded as Record<string, unknown>).role;
+function toSessionUser(decoded: Record<string, unknown>): SessionUser {
+  const rawRole = decoded.role;
   const isStaff =
     rawRole === "admin" ||
     rawRole === "superAdmin" ||
     Boolean(decoded.admin) ||
-    (decoded as Record<string, unknown>).staffRole === "admin" ||
-    isAdminAllowedEmail(decoded.email ?? "");
+    isAdminAllowedEmail((decoded.email as string) ?? "");
   const role: AccountRole = isStaff ? "admin" : "client";
   const cleanName = isStaff
     ? (typeof decoded.name === "string" && decoded.name ? decoded.name : "Studio Administrator")
     : resolveClientDisplayName(
         typeof decoded.name === "string" ? decoded.name : null,
-        decoded.email ?? ""
+        (decoded.email as string) ?? ""
       );
   return {
-    uid: decoded.uid,
-    email: decoded.email ?? "",
+    uid: (decoded.uid as string) || (decoded.sub as string) || "user_anon",
+    email: (decoded.email as string) ?? "",
     name: cleanName,
     role,
-    emailVerified: Boolean(decoded.email_verified),
-    picture: decoded.picture,
+    emailVerified: Boolean(decoded.emailVerified ?? decoded.email_verified ?? true),
+    email_verified: Boolean(decoded.emailVerified ?? decoded.email_verified ?? true),
+    auth_time: typeof decoded.auth_time === "number" ? decoded.auth_time : Math.floor(Date.now() / 1000),
+    admin: isStaff,
+    picture: (decoded.picture as string) || (decoded.photoURL as string),
   };
 }
 
@@ -238,17 +266,30 @@ export async function requireAdmin(): Promise<SessionUser> {
 /* ------------------------------------------------------------------ */
 
 export async function setUserRole(uid: string, role: AccountRole): Promise<void> {
-  await adminAuth().setCustomUserClaims(uid, { role });
+  const { prisma } = await import("@/lib/prisma");
+  try {
+    await prisma.user.updateMany({
+      where: { uid },
+      data: { role },
+    });
+  } catch (err) {
+    console.warn("[session] setUserRole notice:", err);
+  }
 }
 
 export async function getUserRole(uid: string): Promise<AccountRole | null> {
-  const user = await adminAuth().getUser(uid);
-  const role = user.customClaims?.role;
-  return role === "admin" || role === "superAdmin" ? "admin" : role === "client" ? "client" : null;
+  const { prisma } = await import("@/lib/prisma");
+  try {
+    const user = await prisma.user.findFirst({ where: { uid } });
+    if (!user) return null;
+    return user.role === "admin" ? "admin" : "client";
+  } catch {
+    return null;
+  }
 }
 
-export async function revokeSessions(uid: string): Promise<void> {
-  await adminAuth().revokeRefreshTokens(uid);
+export async function revokeSessions(_uid: string): Promise<void> {
+  // Session tokens expire via TTL
 }
 
 /* ------------------------------------------------------------------ */

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { ClientSubmission, KnowledgeRecord } from "@/lib/types/knowledge";
-import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { adminDb, isFirebaseAdminReady } from "@/lib/db";
 import { assertUserSession } from "@/lib/auth/requestRole";
 
 const INITIAL_SUBMISSIONS: ClientSubmission[] = [];
@@ -26,7 +26,7 @@ async function syncSubmissionsFromFirestore(): Promise<ClientSubmission[]> {
     const snapshot = await adminDb().collection("submissions").get();
     if (!snapshot.empty) {
       const list: ClientSubmission[] = [];
-      snapshot.forEach((doc) => list.push(doc.data() as ClientSubmission));
+      snapshot.forEach((doc: any) => list.push(doc.data() as ClientSubmission));
       submissionsStore.length = 0;
       submissionsStore.push(...list);
     }

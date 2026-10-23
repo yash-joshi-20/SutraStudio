@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { isFirebaseAdminReady, adminDb } from "@/lib/firebase/admin";
+import { isFirebaseAdminReady, adminDb } from "@/lib/db";
 import type { FirestoreOrderRecord } from "@/app/api/orders/route";
 
 export interface ClientChatMessage {

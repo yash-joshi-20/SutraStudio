@@ -1,5 +1,5 @@
 import { StudioSettingsStore } from "./studioSettingsStore";
-import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { adminDb, isFirebaseAdminReady } from "@/lib/db";
 
 /**
  * SUTRA STUDIO — Master Coupon & Discount Engine
@@ -87,7 +87,7 @@ export class CouponsStore {
       const snapshot = await db.collection("coupons").get();
       if (!snapshot.empty) {
         const loaded: CouponRecord[] = [];
-        snapshot.forEach((doc) => {
+        snapshot.forEach((doc: any) => {
           loaded.push(doc.data() as CouponRecord);
         });
         globalAny.__SUTRA_COUPONS__ = loaded;

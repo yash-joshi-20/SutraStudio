@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { OrdersStore } from "@/lib/services/ordersStore";
-import { adminDb } from "@/lib/firebase/admin";
+import { adminDb } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/session";
 import { mapApiError } from "@/lib/api/response";
 import { AuditLogService } from "@/lib/services/auditLogService";

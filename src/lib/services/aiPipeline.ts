@@ -6,7 +6,7 @@
  * Each output records: final prompt, provider used, cost, timestamps.
  */
 
-import { adminDb } from "@/lib/firebase/admin";
+import { adminDb } from "@/lib/db";
 import { isEnvSet, type EnvKey } from "@/lib/config/env";
 
 // ---------------------------------------------------------------------------

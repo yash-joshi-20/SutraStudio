@@ -19,7 +19,7 @@ import {
   SOCIAL_PLATFORMS,
   LANGUAGES,
 } from "@/lib/services/profileStore";
-import { adminDb } from "@/lib/firebase/admin";
+import { adminDb } from "@/lib/db";
 import { isEnvSet, readEnv } from "@/lib/config/env";
 
 export const dynamic = "force-dynamic";

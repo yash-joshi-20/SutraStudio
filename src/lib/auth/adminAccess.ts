@@ -21,7 +21,7 @@ import {
   adminDb,
   isFirebaseAdminReady,
   serverTimestamp,
-} from "@/lib/firebase/admin";
+} from "@/lib/db";
 import { AuthRequiredError, ForbiddenError, SESSION_COOKIE } from "@/lib/auth/session";
 import {
   GENERIC_AUTH_FAILURE,
@@ -101,7 +101,7 @@ export async function recordAdminLoginFailure(email: string, ip: string): Promis
   if (!isFirebaseAdminReady()) return;
   try {
     const ref = adminDb().collection(ATTEMPTS_COLLECTION).doc(adminAttemptId(email, ip));
-    await adminDb().runTransaction(async (tx) => {
+    await (adminDb() as any).runTransaction(async (tx: any) => {
       const snap = await tx.get(ref);
       const previous = ((snap.data() as { failures?: number } | undefined)?.failures ?? 0) + 1;
       const lockNow = previous >= ADMIN_MAX_FAILED_ATTEMPTS;

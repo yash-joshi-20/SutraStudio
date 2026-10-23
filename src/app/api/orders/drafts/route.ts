@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebase/admin";
+import { adminDb } from "@/lib/db";
 import { requestRole, requestUid } from "@/lib/auth/requestRole";
 
 export interface OrderDraftData {

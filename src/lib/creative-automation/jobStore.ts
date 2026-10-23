@@ -5,7 +5,7 @@
  * exponential backoff retry handler, execution audit logging, and human approval gates.
  */
 
-import { adminDb } from "@/lib/firebase/admin";
+import { adminDb } from "@/lib/db";
 import {
   CreativeJob,
   JobStepRecord,
@@ -138,13 +138,13 @@ export class CreativeJobStore {
     try {
       const db = adminDb();
       if (db) {
-        let q: FirebaseFirestore.Query = db.collection(JOBS_COLLECTION);
+        let q: any = db.collection(JOBS_COLLECTION);
         if (filters?.clientUid) q = q.where("clientUid", "==", filters.clientUid);
         if (filters?.status) q = q.where("status", "==", filters.status);
         q = q.orderBy("updatedAt", "desc").limit(filters?.limit || 50);
 
         const snap = await q.get();
-        result = snap.docs.map((d) => d.data() as CreativeJob);
+        result = snap.docs.map((d: any) => d.data() as CreativeJob);
       }
     } catch {
       // Fall through to memory cache

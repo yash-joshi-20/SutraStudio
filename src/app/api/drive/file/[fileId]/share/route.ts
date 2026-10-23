@@ -10,7 +10,7 @@
 
 import { guarded, ok, badRequest } from "@/lib/api/response";
 import { authorizeDriveFile } from "@/lib/api/driveAccess";
-import { adminDb, serverTimestamp } from "@/lib/firebase/admin";
+import { adminDb, serverTimestamp } from "@/lib/db";
 import {
   shareFile,
   revokeFileShare,

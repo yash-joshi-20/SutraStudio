@@ -9,7 +9,7 @@
  * 5. Registers in Firestore marketing_publications and admin_deliverables
  */
 
-import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { adminDb, isFirebaseAdminReady } from "@/lib/db";
 import { readEnv } from "@/lib/config/env";
 import { AuditLogService } from "@/lib/services/auditLogService";
 import type { MarketingPublicationRecord } from "@/app/api/admin/marketing/publish/route";

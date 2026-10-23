@@ -1,6 +1,6 @@
 import { OrdersStore, type FirestoreOrderRecord } from "@/lib/services/ordersStore";
 import { N8nAutomationService } from "@/lib/services/n8nService";
-import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { adminDb, isFirebaseAdminReady } from "@/lib/db";
 import { NotificationsStore } from "@/lib/services/notificationsStore";
 
 /**

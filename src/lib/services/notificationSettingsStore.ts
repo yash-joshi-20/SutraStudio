@@ -3,7 +3,7 @@
  * Stores configurable reminder intervals and delivery channel preferences in Firestore/memory.
  */
 
-import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { adminDb, isFirebaseAdminReady } from "@/lib/db";
 
 export interface StudioNotificationSettings {
   monthlyReminderDays: number[]; // e.g. [5, 1]

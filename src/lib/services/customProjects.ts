@@ -6,7 +6,7 @@
  * → Change requests → Terms e-acceptance → Handover checklist
  */
 
-import { adminDb } from "@/lib/firebase/admin";
+import { adminDb } from "@/lib/db";
 
 // ---------------------------------------------------------------------------
 // Types

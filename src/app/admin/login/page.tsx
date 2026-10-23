@@ -22,14 +22,9 @@ import { TextField, FormAlert } from "@/components/ui/FormField";
 import { NotConfiguredState } from "@/components/ui/States";
 import { useAuth } from "@/lib/auth/authContext";
 import { Modal } from "@/components/ui/Modal";
-import { getFirebaseAuth, firebaseClientConfigured, applyPersistence } from "@/lib/firebase/client";
-import { signInWithEmailAndPassword } from "firebase/auth";
 import { ArrowLeft, ArrowRight, ShieldCheck, Terminal, CheckCircle2 } from "lucide-react";
 import { soundSystem } from "@/lib/audio/soundSystem";
 import { AnimatedWelcomeBadge } from "@/components/ui/AnimatedStatusIcons";
-
-const FIREBASE_NOT_CONFIGURED =
-  "Firebase is not configured. Missing environment key(s): NEXT_PUBLIC_FIREBASE_API_KEY, NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN, NEXT_PUBLIC_FIREBASE_PROJECT_ID.";
 
 function safeReturnTo(raw: string | null): string {
   if (!raw) return "/admin";
@@ -71,11 +66,7 @@ function AdminLoginForm() {
   const [resetLoading, setResetLoading] = useState(false);
   const [resetNotice, setResetNotice] = useState("");
 
-  const configured = firebaseClientConfigured();
-
-  useEffect(() => {
-    if (configured) void applyPersistence(true);
-  }, [configured]);
+  const configured = true;
 
   // Already signed in as admin - redirect immediately with loop protection circuit breaker
   useEffect(() => {

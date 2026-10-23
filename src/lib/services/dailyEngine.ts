@@ -6,7 +6,7 @@
  * carry-forward for missed days, failure alerts.
  */
 
-import { adminDb } from "@/lib/firebase/admin";
+import { adminDb } from "@/lib/db";
 import type { BrandKit } from "./brandKitStore";
 
 // ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { assertUserSession } from "@/lib/auth/requestRole";
-import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { adminDb, isFirebaseAdminReady } from "@/lib/db";
 
 export interface StudioFileRecord {
   id: string;
@@ -38,12 +38,12 @@ export async function GET(req: Request) {
 
   if (isFirebaseAdminReady()) {
     try {
-      let query: FirebaseFirestore.Query = adminDb().collection("files");
+      let query: any = adminDb().collection("files");
       if (effectiveClientId) {
         query = query.where("client_id", "==", effectiveClientId);
       }
       const snap = await query.get();
-      fileList = snap.docs.map((d) => d.data() as StudioFileRecord);
+      fileList = snap.docs.map((d: any) => d.data() as StudioFileRecord);
     } catch {
       fileList = IN_MEMORY_FILES;
     }

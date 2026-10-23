@@ -4,7 +4,7 @@
  * coupons toggle, and commission limits.
  */
 
-import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { adminDb, isFirebaseAdminReady } from "@/lib/db";
 
 export interface StudioSettings {
   enableGst: boolean;

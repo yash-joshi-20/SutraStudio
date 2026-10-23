@@ -5,7 +5,7 @@
 
 import { EmailService } from "./emailProvider";
 import { NotificationSettingsStore } from "./notificationSettingsStore";
-import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { adminDb, isFirebaseAdminReady } from "@/lib/db";
 
 export type NotificationType =
   | "order_placed"
@@ -86,13 +86,13 @@ export class NotificationsStore {
 
     try {
       const db = adminDb();
-      let query: FirebaseFirestore.Query = db.collection("notifications");
+      let query: any = db.collection("notifications");
       if (userId && userId !== "admin") {
         query = query.where("userId", "==", userId);
       }
       const snapshot = await query.get();
       const loaded: StudioNotification[] = [];
-      snapshot.forEach((doc) => {
+      snapshot.forEach((doc: any) => {
         loaded.push(doc.data() as StudioNotification);
       });
 

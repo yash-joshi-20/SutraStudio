@@ -494,7 +494,7 @@ export class EmailService {
     error?: string;
   }): Promise<void> {
     try {
-      const { adminDb } = await import("@/lib/firebase/admin");
+      const { adminDb } = await import("@/lib/db");
       await adminDb().collection("emailLogs").add({
         ...data,
         timestamp: new Date().toISOString(),

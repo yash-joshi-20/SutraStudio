@@ -17,7 +17,7 @@ import {
   type ClientFolderStructure,
   type DriveFolderStructure,
 } from "@/lib/services/googleDriveService";
-import { adminDb } from "@/lib/firebase/admin";
+import { adminDb } from "@/lib/db";
 import { OrdersStore } from "@/lib/services/ordersStore";
 import { requestRole, requestUid } from "@/lib/auth/requestRole";
 

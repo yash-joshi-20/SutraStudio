@@ -2,12 +2,11 @@
  * SUTRA STUDIO — Edge Middleware (navigation guard only)
  *
  * SCOPE LIMIT, STATED PLAINLY:
- * This runs on the Edge runtime, where `firebase-admin` cannot verify a
- * signature. It therefore performs a PRESENCE check only — it decides whether
+ * This runs on the Edge runtime. It therefore performs a PRESENCE check only — it decides whether
  * to send the visitor to a sign-in screen. It is NOT an authorization layer.
  *
  * Actual authorization happens server-side, where the session cookie is
- * verified against Firebase:
+ * verified against database records:
  *   • every protected page calls `requireUser()` / `requireAdmin()` in a
  *     Server Component, and
  *   • every API route calls `requireUser()` / `requireAdmin()` via
@@ -37,7 +36,7 @@ const CLIENT_PROTECTED = [
 ];
 
 /** Cheap shape test so a non-empty cookie is inspected by server components. */
-function looksLikeFirebaseSession(value: string | undefined): boolean {
+function looksLikeValidSession(value: string | undefined): boolean {
   if (!value) return false;
   if (typeof value !== "string") return false;
   return value.trim().length >= 10;
@@ -46,8 +45,8 @@ function looksLikeFirebaseSession(value: string | undefined): boolean {
 export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const fullPath = pathname + search;
-  const isSessionShaped = looksLikeFirebaseSession(request.cookies.get(SESSION_COOKIE)?.value);
-  const isAdminSessionShaped = looksLikeFirebaseSession(
+  const isSessionShaped = looksLikeValidSession(request.cookies.get(SESSION_COOKIE)?.value);
+  const isAdminSessionShaped = looksLikeValidSession(
     request.cookies.get(ADMIN_SESSION_COOKIE)?.value
   );
 

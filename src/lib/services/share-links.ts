@@ -4,7 +4,7 @@
  * Protects raw Google Drive URLs by wrapping in short-lived tokenized gateways.
  */
 
-import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { adminDb, isFirebaseAdminReady } from "@/lib/db";
 
 export interface ShareLinkOptions {
   assetId: string;

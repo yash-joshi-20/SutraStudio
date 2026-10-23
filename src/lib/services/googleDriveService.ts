@@ -22,9 +22,17 @@
 
 import "server-only";
 import { readEnv, isGoogleDriveConfigured } from "@/lib/config/env";
-import { NotConfiguredError, adminDb, serverTimestamp, fieldDelete, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import {
+  NotConfiguredError,
+  adminDb,
+  serverTimestamp,
+  fieldDelete,
+  isFirebaseAdminReady,
+  type DocumentSnapshot,
+  type QuerySnapshot,
+  type Query,
+} from "@/lib/db";
 import { NotificationsStore } from "@/lib/services/notificationsStore";
-import type { DocumentSnapshot, QuerySnapshot, Query } from "firebase-admin/firestore";
 import {
   DRIVE_CHUNK_BYTES,
   DRIVE_CLIENTS_FOLDER,
@@ -52,7 +60,7 @@ function fromSnap<T>(snap: DocumentSnapshot): T | null {
 }
 
 function fromQuery<T>(snap: QuerySnapshot): T[] {
-  return snap.docs.map((d) => ({ id: d.id, ...(d.data() ?? {}) }) as T);
+  return snap.docs.map((d: any) => ({ id: d.id, ...(d.data() ?? {}) }) as T);
 }
 
 // ---------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { adminDb, isFirebaseAdminReady } from "@/lib/db";
 import { AuditLogService } from "@/lib/services/auditLogService";
 import { assertAdminSession } from "@/lib/auth/requestRole";
 

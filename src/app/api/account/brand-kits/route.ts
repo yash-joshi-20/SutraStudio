@@ -11,8 +11,8 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/session";
 import { badRequest, guarded, notFound, ok, sameOrigin } from "@/lib/api/response";
-import { adminDb, serverTimestamp } from "@/lib/firebase/admin";
-import { toIso } from "@/lib/firebase/db";
+import { adminDb, serverTimestamp } from "@/lib/db";
+import { toIso } from "@/lib/db";
 import { INDUSTRIES, LANGUAGES } from "@/lib/services/profileStore";
 
 export const dynamic = "force-dynamic";

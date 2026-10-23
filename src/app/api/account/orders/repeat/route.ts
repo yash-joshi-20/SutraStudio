@@ -15,11 +15,11 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/session";
 import { badRequest, guarded, notFound, ok, sameOrigin } from "@/lib/api/response";
-import { adminDb, serverTimestamp } from "@/lib/firebase/admin";
-import { toIso } from "@/lib/firebase/db";
+import { adminDb, serverTimestamp } from "@/lib/db";
+import { toIso } from "@/lib/db";
 import { quoteOrder } from "@/lib/services/pricing";
 
-import { isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { isFirebaseAdminReady } from "@/lib/db";
 import { OrdersStore } from "@/lib/services/ordersStore";
 
 export const dynamic = "force-dynamic";

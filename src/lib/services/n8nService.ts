@@ -1,7 +1,7 @@
 import { OrdersStore } from "./ordersStore";
 import { FirestoreOrderRecord } from "@/app/api/orders/route";
 import { readEnv, readPublicEnv } from "@/lib/config/env";
-import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { adminDb, isFirebaseAdminReady } from "@/lib/db";
 
 /**
  * SUTRA STUDIO — n8n Autonomous Workflow Orchestration Service

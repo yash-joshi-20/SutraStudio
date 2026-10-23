@@ -5,7 +5,7 @@ import type { PaymentRecordDocument, PaymentRecordStatus } from "@/lib/types/dat
 import { OrdersStore } from "./ordersStore";
 import { NotificationsStore } from "./notificationsStore";
 import { AuditLogService } from "./auditLogService";
-import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { adminDb, isFirebaseAdminReady } from "@/lib/db";
 
 /**
  * SUTRA STUDIO — Unified UPI Payments Store

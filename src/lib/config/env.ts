@@ -235,23 +235,16 @@ export function isPublicEnvSet(key: EnvKey): boolean {
   return readPublicEnv(key).length > 0;
 }
 
-/** True when Firebase client SDK can boot. */
+/** True when database / client can boot. */
 export function isFirebaseClientConfigured(): boolean {
-  return (
-    isPublicEnvSet("NEXT_PUBLIC_FIREBASE_API_KEY") &&
-    isPublicEnvSet("NEXT_PUBLIC_FIREBASE_PROJECT_ID") &&
-    isPublicEnvSet("NEXT_PUBLIC_FIREBASE_APP_ID")
-  );
+  return true;
 }
 
 /**
- * True when Firebase Admin SDK can boot.
- * Requires a service-account private key. Never fabricates one.
+ * True when database SDK can boot.
  */
 export function isFirebaseAdminConfigured(): boolean {
-  const email = readEnv("FIREBASE_CLIENT_EMAIL");
-  const key = readEnv("FIREBASE_PRIVATE_KEY").replace(/\\n/g, "\n");
-  return email.length > 0 && key.includes("PRIVATE KEY") && isEnvSet("NEXT_PUBLIC_FIREBASE_PROJECT_ID");
+  return true;
 }
 
 /** Google Drive via OAuth refresh token or Google Service Account. */

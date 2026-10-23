@@ -4,7 +4,7 @@
  */
 
 import { NextResponse } from "next/server";
-import { isFirebaseAdminReady, isNotConfigured } from "@/lib/firebase/admin";
+import { isFirebaseAdminReady, isNotConfigured } from "@/lib/db";
 import {
   getSessionUser,
   revokeSessions,

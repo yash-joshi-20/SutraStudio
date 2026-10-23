@@ -10,7 +10,7 @@
 import { requireAdmin } from "@/lib/auth/session";
 import { guarded, ok } from "@/lib/api/response";
 import { getIntegrationStatuses, getIntegrationSummary } from "@/lib/config/integrations";
-import { adminDb } from "@/lib/firebase/admin";
+import { adminDb } from "@/lib/db";
 import { EmailService } from "@/lib/services/emailProvider";
 import {
   syncAllIntegrationsToFirestore,

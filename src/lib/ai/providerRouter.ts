@@ -15,7 +15,7 @@
  * 7. License Compliance Matrix: Commercial use & ownership transfer validation.
  */
 
-import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { adminDb, isFirebaseAdminReady } from "@/lib/db";
 import { isEnvSet } from "@/lib/config/env";
 import { recordMissingKey } from "@/lib/services/missingKeyRegistry";
 import {

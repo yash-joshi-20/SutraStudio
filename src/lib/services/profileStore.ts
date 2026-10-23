@@ -9,8 +9,8 @@
  */
 
 import "server-only";
-import { adminDb, serverTimestamp } from "@/lib/firebase/admin";
-import { toIso } from "@/lib/firebase/db";
+import { adminDb, serverTimestamp } from "@/lib/db";
+import { toIso } from "@/lib/db";
 import {
   computeProfileCompleteness,
   type SessionUser,
@@ -392,7 +392,7 @@ export async function updateProfile(
   // Keep the Auth display name in sync when the client edits it.
   if (typeof patch.displayName === "string" && patch.displayName !== current.displayName) {
     try {
-      const { adminAuth } = await import("@/lib/firebase/admin");
+      const { adminAuth } = await import("@/lib/db");
       await adminAuth().updateUser(session.uid, { displayName: patch.displayName });
     } catch {
       // Non-fatal: profile doc is the source of truth for the app.

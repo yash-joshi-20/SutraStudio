@@ -7,7 +7,7 @@
 import { OrdersStore } from "./ordersStore";
 import { NotificationsStore } from "./notificationsStore";
 import { AuditLogService } from "./auditLogService";
-import { adminDb, isFirebaseAdminReady } from "@/lib/firebase/admin";
+import { adminDb, isFirebaseAdminReady } from "@/lib/db";
 
 export interface ClientAdminNote {
   id: string;
@@ -108,7 +108,7 @@ export class ClientsStore {
       const db = adminDb();
       const snapshot = await db.collection("users").limit(200).get();
       const loaded: ClientProfileRecord[] = [];
-      snapshot.forEach((doc) => {
+      snapshot.forEach((doc: any) => {
         const d = doc.data();
         loaded.push({
           id: doc.id,

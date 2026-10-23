@@ -9,7 +9,7 @@
  */
 
 import { NextResponse } from "next/server";
-import { isFirebaseAdminReady, adminMissingKeys } from "@/lib/firebase/admin";
+import { isFirebaseAdminReady, adminMissingKeys } from "@/lib/db";
 import { guarded, notConfigured, ok, sameOrigin } from "@/lib/api/response";
 
 const GENERIC =
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { adminAuth } = await import("@/lib/firebase/admin");
+    const { adminAuth } = await import("@/lib/db");
     try {
       await adminAuth().verifyIdToken(body.idToken, true);
     } catch {

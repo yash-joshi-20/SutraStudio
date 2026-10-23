@@ -7,7 +7,7 @@
  * - Live step-by-step breakdown of active n8n workflows (W1, W2, W3, W5)
  *
  * No imports on purpose: this module is rendered in client components, so it
- * must stay free of firebase-admin, route handlers and in-memory stores.
+ * must stay free of server databases, route handlers and in-memory stores.
  */
 
 export interface OrderProgressInfo {
