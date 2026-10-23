@@ -5,9 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { PortalSidebar } from "@/components/dashboard/PortalSidebar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
-import { Button } from "@/components/ui/Button";
-import { Input, Badge } from "@/components/ui/Card";
-import { Modal } from "@/components/ui/Modal";
+import { Button, Input, Textarea, Badge, Modal } from "@/components/ui";
+
 import { SUTRA_SERVICES } from "@/data/servicesData";
 import { useAuth } from "@/lib/auth/authContext";
 import {
@@ -2561,18 +2560,13 @@ export default function OrdersPage() {
                   )}
 
                 {/* Scope & General Requirements */}
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-[#0F172A]">
-                    Overall Scope & Additional Instructions
-                  </label>
-                  <textarea
-                    rows={3}
-                    placeholder="Specify any additional guidelines, lighting atmosphere, specific deliverables, or target deadlines..."
-                    value={requirements}
-                    onChange={(e) => setRequirements(e.target.value)}
-                    className="w-full rounded-xl bg-[#FFFDF9] border border-[#EADFCB] px-4 py-2.5 text-xs text-[#0F172A] focus:border-[#D4A35A] focus:outline-none focus:ring-0"
-                  />
-                </div>
+                <Textarea
+                  label="Overall Scope & Additional Instructions"
+                  rows={3}
+                  placeholder="Specify any additional guidelines, lighting atmosphere, specific deliverables, or target deadlines..."
+                  value={requirements}
+                  onChange={(e) => setRequirements(e.target.value)}
+                />
 
                 {/* Timeline / Target Date */}
                 {orderType === "service" ? (

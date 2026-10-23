@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/Button";
 import { Badge, type BadgeVariant } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
 import { Avatar } from "@/components/ui/Avatar";
+import { Select } from "@/components/ui/Select";
+
 import { useAuth } from "@/lib/auth/authContext";
 import { SyncManager } from "@/lib/sync/syncService";
 import { MetaPromotionStudio } from "@/components/crm/MetaPromotionStudio";
@@ -3642,42 +3644,36 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
 
                       {/* Body Typography Font Family */}
                       <div className="space-y-2 p-4 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8]">
-                        <label className="text-xs font-bold text-[#171717] flex items-center gap-2">
-                          <Type className="w-3.5 h-3.5 text-[#A98B57]" />
-                          <span>Body Font Family:</span>
-                        </label>
-                        <select
+                        <Select
+                          label="Body Font Family"
                           value={cmsData?.theme?.bodyFont || "Outfit"}
                           onChange={(e) => updateCmsField("theme", "bodyFont", e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs font-semibold text-[#171717] focus:outline-none focus:border-[#A98B57]"
-                        >
-                          <option value="Outfit">Outfit (Modern Clean Geometric - Studio Default)</option>
-                          <option value="Inter">Inter (Precise Clean UI Standard)</option>
-                          <option value="Plus Jakarta Sans">Plus Jakarta Sans (Contemporary Atelier)</option>
-                          <option value="Roboto">Roboto (Crisp Editorial)</option>
-                          <option value="Lato">Lato (Balanced &amp; Warm)</option>
-                          <option value="Poppins">Poppins (Friendly &amp; Geometric)</option>
-                        </select>
+                          options={[
+                            { label: "Outfit (Modern Clean Geometric - Studio Default)", value: "Outfit" },
+                            { label: "Inter (Precise Clean UI Standard)", value: "Inter" },
+                            { label: "Plus Jakarta Sans (Contemporary Atelier)", value: "Plus Jakarta Sans" },
+                            { label: "Roboto (Crisp Editorial)", value: "Roboto" },
+                            { label: "Lato (Balanced & Warm)", value: "Lato" },
+                            { label: "Poppins (Friendly & Geometric)", value: "Poppins" },
+                          ]}
+                        />
                         <p className="text-[11px] text-[#8C827A]">Controls paragraphs, button labels, descriptions, and UI text.</p>
                       </div>
 
                       {/* Heading Typography Font Family */}
                       <div className="space-y-2 p-4 rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8]">
-                        <label className="text-xs font-bold text-[#171717] flex items-center gap-2">
-                          <Type className="w-3.5 h-3.5 text-[#A98B57]" />
-                          <span>Headings Font Family (Serif / Display):</span>
-                        </label>
-                        <select
+                        <Select
+                          label="Headings Font Family (Serif / Display)"
                           value={cmsData?.theme?.headingFont || "Playfair Display"}
                           onChange={(e) => updateCmsField("theme", "headingFont", e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E1D8] text-xs font-semibold text-[#171717] focus:outline-none focus:border-[#A98B57]"
-                        >
-                          <option value="Playfair Display">Playfair Display (Luxury Editorial Serif - Studio Default)</option>
-                          <option value="Cinzel">Cinzel (Classical Roman Architectural)</option>
-                          <option value="Cormorant Garamond">Cormorant Garamond (High-Fashion Heritage)</option>
-                          <option value="Bodoni Moda">Bodoni Moda (Couture Italian Display)</option>
-                          <option value="Outfit">Outfit (Contemporary Sans Display)</option>
-                        </select>
+                          options={[
+                            { label: "Playfair Display (Luxury Editorial Serif - Studio Default)", value: "Playfair Display" },
+                            { label: "Cinzel (Classical Roman Architectural)", value: "Cinzel" },
+                            { label: "Cormorant Garamond (High-Fashion Heritage)", value: "Cormorant Garamond" },
+                            { label: "Bodoni Moda (Couture Italian Display)", value: "Bodoni Moda" },
+                            { label: "Outfit (Contemporary Sans Display)", value: "Outfit" },
+                          ]}
+                        />
                         <p className="text-[11px] text-[#8C827A]">Controls H1, H2, H3 and display titles throughout the site.</p>
                       </div>
 
@@ -3806,20 +3802,21 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <select
+                    <div className="flex items-center gap-2 w-full md:w-auto min-w-[280px] sm:min-w-[340px]">
+                      <Select
                         id="client-selector"
                         value={selectedClientDropdownKey}
                         onChange={(e) => setSelectedClientDropdownKey(e.target.value)}
-                        className="w-full md:w-auto min-w-[280px] sm:min-w-[340px] px-3.5 py-2.5 rounded-xl bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#171717] focus:outline-none focus:border-[#A98B57] cursor-pointer shadow-2xs"
-                      >
-                        <option value="">— Show All Clients Grid ({clientsList.length} Total) —</option>
-                        {clientsList.map((c) => (
-                          <option key={c.key} value={c.key}>
-                            {c.name} ({c.email}) • {c.orders.length} order{c.orders.length !== 1 ? "s" : ""} • {c.chatMessages.length} AI chat{c.chatMessages.length !== 1 ? "s" : ""}
-                          </option>
-                        ))}
-                      </select>
+                        placeholder={`— Show All Clients Grid (${clientsList.length} Total) —`}
+                        options={[
+                          { label: `— Show All Clients Grid (${clientsList.length} Total) —`, value: "" },
+                          ...clientsList.map((c) => ({
+                            label: `${c.name} (${c.email}) • ${c.orders.length} order${c.orders.length !== 1 ? "s" : ""}`,
+                            value: c.key,
+                          })),
+                        ]}
+                        className="w-full"
+                      />
 
                       {selectedClientDropdownKey && (
                         <button

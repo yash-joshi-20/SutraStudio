@@ -41,6 +41,8 @@ import {
   Search,
 } from "lucide-react";
 import type { GeneratedPromotionData } from "@/app/api/admin/promotions/generate/route";
+import { Select } from "@/components/ui/Select";
+
 
 function InstagramIcon({ className = "w-4 h-4" }: { className?: string }) {
   return (
@@ -1537,19 +1539,17 @@ export function MetaPromotionStudio() {
 
                 {/* 2. Target Audience */}
                 <div className="p-3 rounded-xl bg-white border border-[#E5E1D8] space-y-1.5">
-                  <label className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider block">
-                    Target Niche:
-                  </label>
-                  <select
+                  <Select
+                    label="Target Niche"
                     value={metaAdAudience}
                     onChange={(e) => setMetaAdAudience(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-[#FAF9F5] border border-[#E5E1D8] text-xs font-semibold text-[#171717] focus:outline-none focus:border-blue-500"
-                  >
-                    <option value="Founders, Luxury Brands & D2C">Founders, Luxury Brands &amp; D2C</option>
-                    <option value="Architects & Luxury Real Estate">Architects &amp; Luxury Real Estate</option>
-                    <option value="Jewelry, Horology & Haute Couture">Jewelry, Horology &amp; Haute Couture</option>
-                    <option value="Pan-India E-Commerce & Retail">Pan-India E-Commerce &amp; Retail</option>
-                  </select>
+                    options={[
+                      "Founders, Luxury Brands & D2C",
+                      "Architects & Luxury Real Estate",
+                      "Jewelry, Horology & Haute Couture",
+                      "Pan-India E-Commerce & Retail",
+                    ]}
+                  />
                   <span className="text-[10px] text-[#8C827A] block">High-ticket demographic</span>
                 </div>
 

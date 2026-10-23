@@ -6,9 +6,8 @@ import { Footer } from "@/components/layout/Footer";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { useAuth } from "@/lib/auth/authContext";
-import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
-import { CustomDropdown } from "@/components/ui/CustomDropdown";
+import { Button, Badge, Input, Textarea, FileUpload, CustomDropdown } from "@/components/ui";
+
 import Link from "next/link";
 import {
   Building2,
@@ -430,102 +429,82 @@ export default function ClientFormPage() {
                   <p className="text-xs text-[#64748B] mt-1">Foundational brand facts for verified company intelligence.</p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                  <div>
-                    <label className="font-semibold block mb-1.5 text-[#0F172A]">Company Name *</label>
-                    <input
-                      disabled={isLocked}
-                      type="text"
-                      value={company.name}
-                      onChange={(e) => setCompany({ ...company, name: e.target.value })}
-                      placeholder="e.g. Shri Ram Tech"
-                      className="w-full p-3 rounded-xl border border-[#EADFCB] bg-[#FAF9F5] focus:outline-none focus:border-[#D4A35A] disabled:opacity-60"
-                    />
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    label="Company Name *"
+                    disabled={isLocked}
+                    type="text"
+                    value={company.name}
+                    onChange={(e) => setCompany({ ...company, name: e.target.value })}
+                    placeholder="e.g. Shri Ram Tech"
+                  />
 
-                  <div>
-                    <label className="font-semibold block mb-1.5 text-[#0F172A]">Company Tagline</label>
-                    <input
-                      disabled={isLocked}
-                      type="text"
-                      value={company.tagline}
-                      onChange={(e) => setCompany({ ...company, tagline: e.target.value })}
-                      placeholder="e.g. Pioneering AI & Cloud Solutions"
-                      className="w-full p-3 rounded-xl border border-[#EADFCB] bg-[#FAF9F5] focus:outline-none focus:border-[#D4A35A] disabled:opacity-60"
-                    />
-                  </div>
+                  <Input
+                    label="Company Tagline"
+                    disabled={isLocked}
+                    type="text"
+                    value={company.tagline}
+                    onChange={(e) => setCompany({ ...company, tagline: e.target.value })}
+                    placeholder="e.g. Pioneering AI & Cloud Solutions"
+                  />
 
                   <div className="sm:col-span-2">
-                    <label className="font-semibold block mb-1.5 text-[#0F172A]">Company Description</label>
-                    <textarea
+                    <Textarea
+                      label="Company Description"
                       disabled={isLocked}
                       rows={2}
                       value={company.description}
                       onChange={(e) => setCompany({ ...company, description: e.target.value })}
                       placeholder="Concise overview of what your company offers..."
-                      className="w-full p-3 rounded-xl border border-[#EADFCB] bg-[#FAF9F5] focus:outline-none focus:border-[#D4A35A] disabled:opacity-60"
                     />
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className="font-semibold block mb-1.5 text-[#0F172A]">About Company</label>
-                    <textarea
+                    <Textarea
+                      label="About Company"
                       disabled={isLocked}
                       rows={3}
                       value={company.about}
                       onChange={(e) => setCompany({ ...company, about: e.target.value })}
                       placeholder="Detailed company history, vision, and mission..."
-                      className="w-full p-3 rounded-xl border border-[#EADFCB] bg-[#FAF9F5] focus:outline-none focus:border-[#D4A35A] disabled:opacity-60"
                     />
                   </div>
 
-                  <div>
-                    <label className="font-semibold block mb-1.5 text-[#0F172A]">Industry</label>
-                    <input
-                      disabled={isLocked}
-                      type="text"
-                      value={company.industry}
-                      onChange={(e) => setCompany({ ...company, industry: e.target.value })}
-                      placeholder="e.g. Information Technology"
-                      className="w-full p-3 rounded-xl border border-[#EADFCB] bg-[#FAF9F5] focus:outline-none focus:border-[#D4A35A] disabled:opacity-60"
-                    />
-                  </div>
+                  <Input
+                    label="Industry"
+                    disabled={isLocked}
+                    type="text"
+                    value={company.industry}
+                    onChange={(e) => setCompany({ ...company, industry: e.target.value })}
+                    placeholder="e.g. Information Technology"
+                  />
 
-                  <div>
-                    <label className="font-semibold block mb-1.5 text-[#0F172A]">Founded Year</label>
-                    <input
-                      disabled={isLocked}
-                      type="text"
-                      value={company.foundedYear}
-                      onChange={(e) => setCompany({ ...company, foundedYear: e.target.value })}
-                      placeholder="e.g. 2022"
-                      className="w-full p-3 rounded-xl border border-[#EADFCB] bg-[#FAF9F5] focus:outline-none focus:border-[#D4A35A] disabled:opacity-60"
-                    />
-                  </div>
+                  <Input
+                    label="Founded Year"
+                    disabled={isLocked}
+                    type="text"
+                    value={company.foundedYear}
+                    onChange={(e) => setCompany({ ...company, foundedYear: e.target.value })}
+                    placeholder="e.g. 2022"
+                  />
 
-                  <div>
-                    <label className="font-semibold block mb-1.5 text-[#0F172A]">Company Size</label>
-                    <input
-                      disabled={isLocked}
-                      type="text"
-                      value={company.companySize}
-                      onChange={(e) => setCompany({ ...company, companySize: e.target.value })}
-                      placeholder="e.g. 50-100 Employees"
-                      className="w-full p-3 rounded-xl border border-[#EADFCB] bg-[#FAF9F5] focus:outline-none focus:border-[#D4A35A] disabled:opacity-60"
-                    />
-                  </div>
+                  <Input
+                    label="Company Size"
+                    disabled={isLocked}
+                    type="text"
+                    value={company.companySize}
+                    onChange={(e) => setCompany({ ...company, companySize: e.target.value })}
+                    placeholder="e.g. 50-100 Employees"
+                  />
 
-                  <div>
-                    <label className="font-semibold block mb-1.5 text-[#0F172A]">Official Website URL</label>
-                    <input
-                      disabled={isLocked}
-                      type="url"
-                      value={company.websiteUrl}
-                      onChange={(e) => setCompany({ ...company, websiteUrl: e.target.value })}
-                      placeholder="https://shriramtech.com"
-                      className="w-full p-3 rounded-xl border border-[#EADFCB] bg-[#FAF9F5] focus:outline-none focus:border-[#D4A35A] disabled:opacity-60"
-                    />
-                  </div>
+                  <Input
+                    label="Official Website URL"
+                    disabled={isLocked}
+                    type="url"
+                    value={company.websiteUrl}
+                    onChange={(e) => setCompany({ ...company, websiteUrl: e.target.value })}
+                    placeholder="https://shriramtech.com"
+                  />
                 </div>
               </div>
             )}
@@ -1089,17 +1068,33 @@ export default function ClientFormPage() {
                 </div>
 
                 {!isLocked && (
-                  <div className="border-2 border-dashed border-[#EADFCB] hover:border-[#D4A35A] rounded-2xl p-8 text-center bg-[#FAF9F5] transition-colors cursor-pointer relative">
-                    <input
-                      type="file"
-                      accept=".pdf,.doc,.docx,.txt"
-                      onChange={handleDocUpload}
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                    />
-                    <FileUp className="w-10 h-10 text-[#5C3A1E] mx-auto mb-2" />
-                    <h4 className="font-semibold text-sm">Upload Capability Deck or Whitepaper</h4>
-                    <p className="text-xs text-[#64748B] mt-1">Supports PDF, DOCX, TXT up to 25 MB</p>
-                  </div>
+                  <FileUpload
+                    label="Upload Capability Deck or Whitepaper"
+                    helperText="Supports PDF, DOCX, TXT up to 25 MB. Chunked and indexed into RAG upon Admin review."
+                    accept=".pdf,.doc,.docx,.txt"
+                    onChange={(file) => {
+                      if (file instanceof File) {
+                        const ext = (file.name.split(".").pop() || "pdf").toLowerCase();
+                        const docType: DocumentItem["type"] = (["pdf", "doc", "docx", "txt", "image"].includes(ext)
+                          ? ext
+                          : "pdf") as DocumentItem["type"];
+                        setDocuments([
+                          ...documents,
+                          {
+                            id: `doc-${Date.now()}`,
+                            name: file.name,
+                            type: docType,
+                            size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
+                            url: URL.createObjectURL(file),
+                            uploadedAt: new Date().toISOString().split("T")[0],
+                            extractedText: `Uploaded document content for ${file.name}. Pending Admin approval to be indexed into RAG Knowledge Base.`,
+                            chunksCount: 6,
+                            status: "uploaded",
+                          },
+                        ]);
+                      }
+                    }}
+                  />
                 )}
 
                 <div className="space-y-2">

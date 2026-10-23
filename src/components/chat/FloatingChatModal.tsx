@@ -26,8 +26,8 @@ import {
   QrCode,
   ArrowUpRight,
 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
+import { Button, Badge, Input, Textarea } from "@/components/ui";
+
 import { motion, AnimatePresence } from "framer-motion";
 import { PaymentModal } from "@/components/checkout/PaymentModal";
 import { useAuth } from "@/lib/auth/authContext";
@@ -1301,64 +1301,49 @@ export function FloatingChatModal() {
                 </div>
               ) : (
                 <form onSubmit={handleHandoffSubmit} className="space-y-3 text-xs">
-                  <div>
-                    <label className="font-semibold block mb-1 text-[#171717]">Your Full Name *</label>
-                    <input
+                  <Input
+                    label="Your Full Name *"
+                    required
+                    type="text"
+                    placeholder="e.g. Rahul Sharma"
+                    value={handoffForm.name}
+                    onChange={(e) => setHandoffForm({ ...handoffForm, name: e.target.value })}
+                  />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <Input
+                      label="Email Address *"
                       required
-                      type="text"
-                      placeholder="e.g. Rahul Sharma"
-                      value={handoffForm.name}
-                      onChange={(e) => setHandoffForm({ ...handoffForm, name: e.target.value })}
-                      className="w-full p-2.5 rounded-xl border border-[#E5E1D8] bg-white text-xs text-[#171717] focus:outline-none focus:border-[#A98B57] focus:ring-0"
+                      type="email"
+                      placeholder="name@company.com"
+                      value={handoffForm.email}
+                      onChange={(e) => setHandoffForm({ ...handoffForm, email: e.target.value })}
+                    />
+                    <Input
+                      label="Phone / WhatsApp *"
+                      required
+                      type="tel"
+                      placeholder="+91 98000 00000"
+                      value={handoffForm.phone}
+                      onChange={(e) => setHandoffForm({ ...handoffForm, phone: e.target.value })}
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="font-semibold block mb-1 text-[#171717]">Email Address *</label>
-                      <input
-                        required
-                        type="email"
-                        placeholder="name@company.com"
-                        value={handoffForm.email}
-                        onChange={(e) => setHandoffForm({ ...handoffForm, email: e.target.value })}
-                        className="w-full p-2.5 rounded-xl border border-[#E5E1D8] bg-white text-xs text-[#171717] focus:outline-none focus:border-[#A98B57] focus:ring-0"
-                      />
-                    </div>
-                    <div>
-                      <label className="font-semibold block mb-1 text-[#171717]">Phone / WhatsApp *</label>
-                      <input
-                        required
-                        type="tel"
-                        placeholder="+91 98000 00000"
-                        value={handoffForm.phone}
-                        onChange={(e) => setHandoffForm({ ...handoffForm, phone: e.target.value })}
-                        className="w-full p-2.5 rounded-xl border border-[#E5E1D8] bg-white text-xs text-[#171717] focus:outline-none focus:border-[#A98B57] focus:ring-0"
-                      />
-                    </div>
-                  </div>
+                  <Input
+                    label="Company / Brand Name"
+                    type="text"
+                    placeholder="e.g. Acme Luxury Residences"
+                    value={handoffForm.company}
+                    onChange={(e) => setHandoffForm({ ...handoffForm, company: e.target.value })}
+                  />
 
-                  <div>
-                    <label className="font-semibold block mb-1 text-[#171717]">Company / Brand Name</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Acme Luxury Residences"
-                      value={handoffForm.company}
-                      onChange={(e) => setHandoffForm({ ...handoffForm, company: e.target.value })}
-                      className="w-full p-2.5 rounded-xl border border-[#E5E1D8] bg-white text-xs text-[#171717] focus:outline-none focus:border-[#A98B57] focus:ring-0"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-semibold block mb-1 text-[#171717]">Project Requirement / Message</label>
-                    <textarea
-                      rows={3}
-                      placeholder="Briefly describe what you'd like to build or discuss..."
-                      value={handoffForm.message}
-                      onChange={(e) => setHandoffForm({ ...handoffForm, message: e.target.value })}
-                      className="w-full p-2.5 rounded-xl border border-[#E5E1D8] bg-white text-xs text-[#171717] focus:outline-none focus:border-[#A98B57] focus:ring-0 resize-none"
-                    />
-                  </div>
+                  <Textarea
+                    label="Project Requirement / Message"
+                    rows={3}
+                    placeholder="Briefly describe what you'd like to build or discuss..."
+                    value={handoffForm.message}
+                    onChange={(e) => setHandoffForm({ ...handoffForm, message: e.target.value })}
+                  />
 
                   <div className="pt-2">
                     <Button type="submit" variant="primary" size="md" className="w-full justify-center">

@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useAuth } from "@/lib/auth/authContext";
-import { Button } from "@/components/ui/Button";
+import { Button, Input, Textarea, FileUpload, CustomDropdown } from "@/components/ui";
 import { PaymentModal } from "@/components/checkout/PaymentModal";
 import { DynamicUPIQRCode } from "@/components/checkout/DynamicUPIQRCode";
-import { CustomDropdown } from "@/components/ui/CustomDropdown";
+
 import {
   PER_PROJECT_TIERS,
   MONTHLY_RETAINER_TIERS,
@@ -1343,65 +1343,45 @@ export function MasterOrderForm({
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                  Full Name / Point of Contact <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Yash Joshi"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:outline-none focus:ring-0"
-                />
-              </div>
+              <Input
+                label="Full Name / Point of Contact *"
+                type="text"
+                required
+                placeholder="e.g. Yash Joshi"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+              />
+
+              <Input
+                label="Business / Brand Name *"
+                type="text"
+                required
+                placeholder="e.g. Aura Noir Living"
+                value={brandName}
+                onChange={(e) => setBrandName(e.target.value)}
+              />
+
+              <Input
+                label="Email Address *"
+                type="email"
+                required
+                placeholder="e.g. director@auranoir.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+
+              <Input
+                label="WhatsApp Contact Number *"
+                type="tel"
+                inputMode="tel"
+                required
+                placeholder="+91 94280 00000"
+                value={whatsapp}
+                onChange={(e) => setWhatsapp(e.target.value)}
+              />
 
               <div>
-                <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                  Business / Brand Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Aura Noir Living"
-                  value={brandName}
-                  onChange={(e) => setBrandName(e.target.value)}
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:outline-none focus:ring-0"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                  Email Address <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  required
-                  placeholder="e.g. director@auranoir.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:outline-none focus:ring-0"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                  WhatsApp Contact Number <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="tel"
-                  inputMode="tel"
-                  required
-                  placeholder="+91 94280 00000"
-                  value={whatsapp}
-                  onChange={(e) => setWhatsapp(e.target.value)}
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs font-mono text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:outline-none focus:ring-0"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[#0F172A] mb-1.5">
                   Industry / Vertical
                 </label>
                 <CustomDropdown
@@ -1420,70 +1400,42 @@ export function MasterOrderForm({
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                  Website / Instagram Handle
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. @auranoirliving or auranoir.com"
-                  value={brandUrl}
-                  onChange={(e) => setBrandUrl(e.target.value)}
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:outline-none focus:ring-0"
-                />
-              </div>
+              <Input
+                label="Website / Instagram Handle"
+                type="text"
+                placeholder="e.g. @auranoirliving or auranoir.com"
+                value={brandUrl}
+                onChange={(e) => setBrandUrl(e.target.value)}
+              />
 
               <div className="sm:col-span-2">
-                <div className="flex flex-wrap items-baseline justify-between gap-1 mb-1.5">
-                  <label className="text-xs font-semibold text-[#0F172A]">
-                    Brand Logo Asset <span className="font-normal text-[#64748B] text-[11px]">(Optional)</span>
-                  </label>
-                  <span className="text-[10px] text-[#A98B57] font-medium font-mono">
-                    SVG • PNG • AI • Drive
-                  </span>
-                </div>
-                <div className="border border-dashed border-[#EADFCB] hover:border-[#D4A35A] bg-[#FFFDF9] rounded-2xl p-3 sm:p-4 transition-all">
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full">
-                    <label className="cursor-pointer flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#FAF9F5] border border-[#EADFCB] hover:bg-[#F3EFE6] text-xs font-semibold text-[#0F172A] transition-all shrink-0 min-h-[44px]">
-                      <Upload className="w-4 h-4 text-[#A98B57] shrink-0" />
-                      <span className="truncate max-w-[200px]">{brandLogoFile ? brandLogoFile.name : "Upload Logo Asset"}</span>
-                      <input
-                        type="file"
-                        accept=".svg,.png,.ai,.eps,.pdf,image/svg+xml,image/png"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            setBrandLogoFile(file);
-                            const reader = new FileReader();
-                            reader.onload = (ev) => {
-                              setBrandLogoPreview(ev.target?.result as string);
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                      />
-                    </label>
-                    <span className="text-xs text-[#94A3B8] text-center shrink-0 self-center">or link:</span>
-                    <input
-                      type="url"
-                      placeholder="https://drive.google.com/... or Figma asset link"
-                      value={brandAssetUrl}
-                      onChange={(e) => setBrandAssetUrl(e.target.value)}
-                      className="w-full sm:flex-1 min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:outline-none focus:ring-0"
-                    />
-                  </div>
-                  {brandLogoPreview && (
-                    <div className="mt-3 flex items-center gap-3 p-2 bg-[#FAF9F5] rounded-xl border border-[#EADFCB]/60">
-                      <div className="w-9 h-9 rounded-lg bg-white p-1 border border-[#EADFCB] flex items-center justify-center overflow-hidden shrink-0">
-                        <img src={brandLogoPreview} alt="Brand Logo Preview" className="max-w-full max-h-full object-contain" />
-                      </div>
-                      <span className="text-xs font-medium text-[#2E7D4F] flex items-center gap-1">
-                        <Check className="w-3.5 h-3.5 shrink-0" /> Logo verified for studio asset vault
-                      </span>
-                    </div>
-                  )}
-                </div>
+                <FileUpload
+                  label="Brand Logo Asset (Optional)"
+                  helperText="SVG • PNG • AI • PDF up to 25 MB"
+                  accept=".svg,.png,.ai,.eps,.pdf,image/svg+xml,image/png"
+                  value={brandLogoFile}
+                  previewUrl={brandLogoPreview}
+                  onChange={(file) => {
+                    if (file instanceof File) {
+                      setBrandLogoFile(file);
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        setBrandLogoPreview(ev.target?.result as string);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  onClear={() => {
+                    setBrandLogoFile(null);
+                    setBrandLogoPreview("");
+                  }}
+                  allowUrlInput
+                  urlValue={brandAssetUrl}
+                  onUrlChange={setBrandAssetUrl}
+                  urlPlaceholder="https://drive.google.com/... or Figma asset link"
+                  urlLabel="Or provide Drive / Figma link"
+                  compact
+                />
               </div>
 
               <div className="sm:col-span-2">
@@ -1574,90 +1526,55 @@ export function MasterOrderForm({
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                      Target Geo / Cities (or All India)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. All India, or Mumbai, Delhi NCR, Bangalore"
-                      value={metaTargetGeo}
-                      onChange={(e) => setMetaTargetGeo(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
-                    />
-                  </div>
+                  <Input
+                    label="Target Geo / Cities (or All India)"
+                    type="text"
+                    placeholder="e.g. All India, or Mumbai, Delhi NCR, Bangalore"
+                    value={metaTargetGeo}
+                    onChange={(e) => setMetaTargetGeo(e.target.value)}
+                  />
 
-                  <div>
-                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                      Target Audience Demographics & Age Bracket
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 25-45, HNI, Architecture & Luxury Buyers"
-                      value={metaAudienceDemographics}
-                      onChange={(e) => setMetaAudienceDemographics(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
-                    />
-                  </div>
+                  <Input
+                    label="Target Audience Demographics & Age Bracket"
+                    type="text"
+                    placeholder="e.g. 25-45, HNI, Architecture & Luxury Buyers"
+                    value={metaAudienceDemographics}
+                    onChange={(e) => setMetaAudienceDemographics(e.target.value)}
+                  />
 
-                  <div>
-                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                      Destination URL (Landing Page or WhatsApp)
-                    </label>
-                    <input
-                      type="url"
-                      placeholder="e.g. https://yourbrand.com/landing or https://wa.me/91..."
-                      value={metaDestinationUrl}
-                      onChange={(e) => setMetaDestinationUrl(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
-                    />
-                  </div>
+                  <Input
+                    label="Destination URL (Landing Page or WhatsApp)"
+                    type="url"
+                    placeholder="e.g. https://yourbrand.com/landing or https://wa.me/91..."
+                    value={metaDestinationUrl}
+                    onChange={(e) => setMetaDestinationUrl(e.target.value)}
+                  />
 
-                  <div>
-                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                      Core Promotional Offer / Angle
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Flat 20% Off / Free Architecture Consultation"
-                      value={metaOfferCopy}
-                      onChange={(e) => setMetaOfferCopy(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
-                    />
-                  </div>
+                  <Input
+                    label="Core Promotional Offer / Angle"
+                    type="text"
+                    placeholder="e.g. Flat 20% Off / Free Architecture Consultation"
+                    value={metaOfferCopy}
+                    onChange={(e) => setMetaOfferCopy(e.target.value)}
+                  />
 
-                  <div>
-                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                      Daily Ad Budget Allocation (₹)
-                    </label>
-                    <input
-                      type="number"
-                      placeholder="1500"
-                      value={metaDailyBudget}
-                      onChange={(e) => setMetaDailyBudget(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
-                    />
-                    <p className="text-[10px] text-[#94A3B8] mt-1">
-                      * Disclaimed: Ad spend is paid directly to Meta via your connected ad account.
-                    </p>
-                  </div>
+                  <Input
+                    label="Daily Ad Budget Allocation (₹)"
+                    type="number"
+                    placeholder="1500"
+                    value={metaDailyBudget}
+                    onChange={(e) => setMetaDailyBudget(e.target.value)}
+                    helperText="* Disclaimed: Ad spend is paid directly to Meta via your connected ad account."
+                  />
 
-                  <div>
-                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5 flex items-center justify-between">
-                      <span>Meta Business Manager / Partner ID</span>
-                      <span className="text-[10px] text-[#94A3B8] font-normal" title="15-16 digit Meta BM ID">Optional</span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 123456789012345 (15-16 digits)"
-                      value={metaPartnerId}
-                      onChange={(e) => setMetaPartnerId(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
-                    />
-                    <p className="text-[10px] text-[#64748B] mt-1">
-                      Allows Sutra Studio partner access to deploy campaigns directly into your Ads Manager.
-                    </p>
-                  </div>
+                  <Input
+                    label="Meta Business Manager / Partner ID"
+                    type="text"
+                    placeholder="e.g. 123456789012345 (15-16 digits)"
+                    value={metaPartnerId}
+                    onChange={(e) => setMetaPartnerId(e.target.value)}
+                    helperText="Allows Sutra Studio partner access to deploy campaigns directly into your Ads Manager."
+                  />
 
                   <div className="sm:col-span-2 pt-1 border-t border-[#EADFCB]/60">
                     <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
@@ -1702,46 +1619,31 @@ export function MasterOrderForm({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
-                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                      Multi-Angle Reference Photos OR Room Walkthrough Video Link
-                    </label>
-                    <input
+                    <Input
+                      label="Multi-Angle Reference Photos OR Room Walkthrough Video Link"
                       type="url"
                       placeholder="e.g. Google Drive / Dropbox link with Front, Side, Top photos or phone walkthrough video"
                       value={spatialReferenceUrls}
                       onChange={(e) => setSpatialReferenceUrls(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
-                    />
-                    <p className="text-[10px] text-[#64748B] mt-1">
-                      Include 3-angle product photos (Front, Side, Top) or an iPhone/Android walk-through of the space.
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                      Dimensions / Space Scale Notes
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 2,400 sq.ft., ceiling 10.5ft, or product dimensions (H x W x D in cm)"
-                      value={spatialDimensions}
-                      onChange={(e) => setSpatialDimensions(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
+                      helperText="Include 3-angle product photos (Front, Side, Top) or an iPhone/Android walk-through of the space."
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                      Floor Plan / CAD File Cloud Link (Optional)
-                    </label>
-                    <input
-                      type="url"
-                      placeholder="e.g. Drive link to .dwg / .dxf / .pdf"
-                      value={cadFileUrl}
-                      onChange={(e) => setCadFileUrl(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#FFFFFF] border border-[#EADFCB] text-xs text-[#0F172A]"
-                    />
-                  </div>
+                  <Input
+                    label="Dimensions / Space Scale Notes"
+                    type="text"
+                    placeholder="e.g. 2,400 sq.ft., ceiling 10.5ft, or product dimensions (H x W x D in cm)"
+                    value={spatialDimensions}
+                    onChange={(e) => setSpatialDimensions(e.target.value)}
+                  />
+
+                  <Input
+                    label="Floor Plan / CAD File Cloud Link (Optional)"
+                    type="url"
+                    placeholder="e.g. Drive link to .dwg / .dxf / .pdf"
+                    value={cadFileUrl}
+                    onChange={(e) => setCadFileUrl(e.target.value)}
+                  />
 
                   <div>
                     <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
@@ -1851,18 +1753,13 @@ export function MasterOrderForm({
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                      Figma UI / Design File Link (Optional)
-                    </label>
-                    <input
-                      type="url"
-                      placeholder="e.g. https://www.figma.com/design/..."
-                      value={figmaUrl}
-                      onChange={(e) => setFigmaUrl(e.target.value)}
-                      className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 focus:border-[#D4A35A] focus:outline-none focus:ring-0"
-                    />
-                  </div>
+                  <Input
+                    label="Figma UI / Design File Link (Optional)"
+                    type="url"
+                    placeholder="e.g. https://www.figma.com/design/..."
+                    value={figmaUrl}
+                    onChange={(e) => setFigmaUrl(e.target.value)}
+                  />
                 </div>
               </div>
             )}
@@ -1876,7 +1773,7 @@ export function MasterOrderForm({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#0F172A] mb-1.5">
                       Primary 30-Day Goals
                     </label>
                     <CustomDropdown
@@ -1893,7 +1790,7 @@ export function MasterOrderForm({
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#0F172A] mb-1.5">
                       Preferred Retainer Kickoff
                     </label>
                     <CustomDropdown
@@ -1910,15 +1807,12 @@ export function MasterOrderForm({
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                      Priority Products / Features to Highlight Throughout Month
-                    </label>
-                    <textarea
+                    <Textarea
+                      label="Priority Products / Features to Highlight Throughout Month"
                       rows={3}
                       placeholder="Specify your flagship products, hero collections, key service benefits, or seasonal offers to highlight..."
                       value={retainerPriorityProducts}
                       onChange={(e) => setRetainerPriorityProducts(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#FFFDF9] border border-[#EADFCB] text-xs text-[#0F172A] placeholder:text-[#94A3B8] transition-all duration-150 resize-y min-h-[90px] focus:outline-none focus:border-[#D4A35A] focus:ring-0"
                     />
                   </div>
                 </div>
@@ -2115,22 +2009,16 @@ export function MasterOrderForm({
                   </div>
 
                   {/* Optional UTR Input */}
-                  <div className="w-full max-w-sm mx-auto space-y-1.5 text-left">
-                    <label className="text-[11px] font-semibold text-[#0F172A] flex flex-wrap items-center justify-between gap-1">
-                      <span>12-Digit UPI Transaction ID / UTR</span>
-                      <span className="text-[10px] text-[#78716C] font-normal">(Optional if paying now)</span>
-                    </label>
-                    <input
+                  <div className="w-full max-w-sm mx-auto text-left">
+                    <Input
+                      label="12-Digit UPI Transaction ID / UTR"
                       type="text"
                       value={utrNumber}
                       onChange={(e) => setUtrNumber(e.target.value)}
                       placeholder="e.g. 428910284910"
                       maxLength={16}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#EADFCB] text-xs font-mono text-[#0F172A] focus:outline-none focus:border-[#D4A35A] placeholder:text-[#A8A29E]"
+                      helperText="Order will be submitted immediately whether you enter UTR now or choose to pay later."
                     />
-                    <p className="text-[10px] text-[#78716C]">
-                      Order will be submitted immediately whether you enter UTR now or choose to pay later.
-                    </p>
                   </div>
 
                   {/* Dual Action Buttons */}

@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { Modal } from "@/components/ui/Modal";
-import { Button } from "@/components/ui/Button";
+import { Button, Input, FileUpload } from "@/components/ui";
+
 import { STUDIO_PAYMENT_CONFIG } from "@/config/pricing";
 import { DynamicUPIQRCode } from "@/components/checkout/DynamicUPIQRCode";
 import {
@@ -142,21 +143,6 @@ export function PaymentModal({
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setReceiptFile(file);
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setReceiptPreview(reader.result as string);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        setReceiptPreview("");
-      }
-    }
-  };
 
   const validateUtr = (val: string): boolean => {
     const clean = val.trim();
@@ -410,63 +396,52 @@ Please verify payment receipt and commence studio production.`;
               </div>
 
               {/* 12-16 Digit UTR Input */}
-              <div>
-                <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                  12-Digit UPI Reference No. / UTR <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  maxLength={16}
-                  placeholder="e.g. 428901234567"
-                  value={utrNumber}
-                  onChange={(e) => {
-                    const clean = e.target.value.replace(/[^0-9A-Za-z]/g, "").toUpperCase();
-                    setUtrNumber(clean);
-                    if (utrError) setUtrError("");
-                  }}
-                  className={`w-full px-3.5 py-2.5 rounded-xl bg-[#FFFFFF] border text-xs font-mono tracking-wider text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-0 ${
-                    utrError
-                      ? "border-red-400 focus:border-red-500"
-                      : "border-[#EADFCB] focus:border-[#D4A35A]"
-                  }`}
-                />
-                {utrError ? (
-                  <p className="text-[11px] text-red-600 mt-1 flex items-center gap-1 font-medium">
-                    <AlertCircle className="w-3.5 h-3.5" />
-                    <span>{utrError}</span>
-                  </p>
-                ) : (
-                  <p className="text-[10px] text-[#94A3B8] mt-1 font-mono">
-                    Found in your UPI app receipt or bank confirmation SMS
-                  </p>
-                )}
-              </div>
+              <Input
+                label="12-Digit UPI Reference No. / UTR *"
+                type="text"
+                required
+                maxLength={16}
+                placeholder="e.g. 428901234567"
+                value={utrNumber}
+                onChange={(e) => {
+                  const clean = e.target.value.replace(/[^0-9A-Za-z]/g, "").toUpperCase();
+                  setUtrNumber(clean);
+                  if (utrError) setUtrError("");
+                }}
+                error={utrError}
+                helperText="Found in your UPI app receipt or bank confirmation SMS"
+              />
 
               {/* Screenshot Upload (Optional) */}
-              <div>
-                <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
-                  Payment Screenshot (Optional)
-                </label>
-                <div className="relative">
-                  <input
-                    type="file"
-                    accept="image/*,.pdf"
-                    onChange={handleFileChange}
-                    className="w-full text-xs text-[#64748B] file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#F4EFE6] file:text-[#5C3A1E] hover:file:bg-[#EADFCB] cursor-pointer"
-                  />
-                </div>
-                {receiptPreview && (
-                  <div className="mt-2 relative w-20 h-20 rounded-xl overflow-hidden border border-[#EADFCB]">
-                    <Image
-                      src={receiptPreview}
-                      alt="Receipt Preview"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                )}
-              </div>
+              <FileUpload
+                label="Payment Screenshot (Optional)"
+                helperText="Upload JPG, PNG or PDF receipt from UPI app"
+                accept="image/*,.pdf"
+                value={receiptFile}
+                previewUrl={receiptPreview}
+                onChange={(file) => {
+                  if (file instanceof File) {
+                    setReceiptFile(file);
+                    if (file.type.startsWith("image/")) {
+                      const reader = new FileReader();
+                      reader.onload = (e) => {
+                        setReceiptPreview(e.target?.result as string);
+                      };
+                      reader.readAsDataURL(file);
+                    } else {
+                      setReceiptPreview("");
+                    }
+                  } else {
+                    setReceiptFile(null);
+                    setReceiptPreview("");
+                  }
+                }}
+                onClear={() => {
+                  setReceiptFile(null);
+                  setReceiptPreview("");
+                }}
+                compact
+              />
 
               {/* Submit Button */}
               <div className="pt-2 space-y-2">
