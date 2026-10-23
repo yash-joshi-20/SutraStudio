@@ -14,7 +14,13 @@ import {
   formatCurrencyINR,
 } from "@/config/pricing";
 import { findServiceBySlug, type CanonicalServiceItem } from "@/config/services";
-import { findPackageById, type RetainerPackage } from "@/config/packages";
+import {
+  findPackageById,
+  type RetainerPackage,
+  APPROVED_MONTHLY_PACKAGES,
+  APPROVED_COMMISSION_PACKAGES,
+  APPROVED_STANDALONE_PACKAGES,
+} from "@/config/packages";
 import {
   DISPLAY_FIXED_PRICE_ITEMS,
   DISPLAY_MONTHLY_PACKAGES,
@@ -93,211 +99,72 @@ export interface IntakePackageOption {
   iconName: string;
 }
 
+const PACKAGE_ICON_MAP: Record<string, string> = {
+  "starter-trend": "sparkles",
+  "growth-trend": "layers",
+  "daily-trend-creator": "zap",
+  "commission-starter-image-video": "sparkles",
+  "commission-studio-growth": "layers",
+  "pkg-branding-logo-bundle": "palette",
+  "pkg-digital-marketing-bundle": "share",
+  "pkg-real-estate-viz-bundle": "building",
+  "pkg-business-web-launch-bundle": "monitor",
+  "branded-image-pack-5": "sparkles",
+  "promotional-reels-pack-3": "video",
+  "social-carousel-5-slides": "layers",
+  "basic-image-pack-3": "sparkles",
+  "branded-image-pack-3": "sparkles",
+  "branded-image-pack-10": "sparkles",
+  "basic-video-pack-3": "video",
+  "promotional-reels-pack-5": "video",
+  "promotional-reels-pack-10": "video",
+};
+
 /**
- * Package/retainer catalog options. The visible price of every option is
- * resolved from the canonical catalog (`@/config/packages`) at module load —
- * this file never states a price of its own.
+ * Package/retainer catalog options.
+ * Fully resolved from the canonical catalog (`@/config/packages`) —
+ * Single source of truth for packages, descriptions, turnaround, and features.
  */
-const INTAKE_PACKAGES_SOURCE: Omit<IntakePackageOption, "price">[] = [
-  // --- 1. 30-Day Retainer Packages (Screenshot 1) ---
-  {
-    id: "starter-trend",
-    title: "Starter Trend",
-    billingCycle: "monthly",
-    turnaround: "Scheduled Production Drops",
-    description: "Bi-daily active creative pipeline designed for emerging brands. Delivers 15 high-impact visual graphics and 15 commercial short videos across 30 days.",
-    iconName: "sparkles",
-    features: [
-      "15 Branded Social & Product Images across 30 days",
-      "15 Commercial Short Videos / Reels (up to 15s)",
-      "Trend topic research & brand relevance review",
-      "Custom tailored creative direction & concept planning",
-      "Post captions & hashtag recommendations",
-      "Organized private Google Drive Vault delivery",
-      "1 Consolidated Revision Round per Deliverable",
-    ],
-  },
-  {
-    id: "growth-trend",
-    title: "Growth Trend",
-    billingCycle: "monthly",
-    turnaround: "5 Assets / Week (Continuous)",
-    description: "Accelerated creative output for scaling digital brands. Delivers 20 visual assets and 20 commercial short videos with dedicated content calendar.",
-    iconName: "layers",
-    features: [
-      "20 Branded Social & Product Images across 30 days",
-      "20 Commercial Short Videos / Reels (15–30s)",
-      "Daily trending-topic research & brand alignment",
-      "Tailored creative direction & campaign planning",
-      "30-Day strategic editorial content calendar",
-      "Organized private Google Drive Vault archive",
-      "1 Consolidated Revision Round per Deliverable",
-    ],
-  },
-  {
-    id: "daily-trend-creator",
-    title: "Daily Trend Creator (Flagship)",
-    billingCycle: "monthly",
-    turnaround: "Continuous Daily Drops",
-    popular: true,
-    description: "Our flagship daily active creative queue. Delivers 1 custom image and 1 short video every day for 30 days, backed by daily trend research, customized creative direction, and full studio production.",
-    iconName: "zap",
-    features: [
-      "30 Images (1 Custom Image Delivered Daily)",
-      "30 Short Videos / Reels (1 Short Video Delivered Daily)",
-      "Daily trending-topic research tailored to your brand",
-      "Brand relevance review & creative direction planning",
-      "Complete captions, hooks & targeted hashtag bundles",
-      "Organized private Google Drive Vault Staging",
-      "1 Consolidated Revision Round per Deliverable",
-    ],
-  },
+export const INTAKE_PACKAGES: IntakePackageOption[] = [
+  // 1. 30-Day Monthly Retainers
+  ...APPROVED_MONTHLY_PACKAGES.filter((canonical) => canonical.active !== false).map((canonical) => ({
+    id: canonical.id,
+    title: canonical.name,
+    billingCycle: "monthly" as const,
+    price: canonical.numericPrice,
+    turnaround: canonical.turnaround || "Scheduled Production Drops",
+    description: canonical.description,
+    features: canonical.features || canonical.deliverables || [],
+    popular: !!canonical.popular,
+    iconName: PACKAGE_ICON_MAP[canonical.id] || "sparkles",
+  })),
 
-  // --- 2. Curated Multi-Service Bundles (Screenshot 2) ---
-  {
-    id: "commission-starter-image-video",
-    title: "Starter Creative Pack",
-    billingCycle: "one_time",
-    turnaround: "Dedicated Studio Staging",
-    description: "Essential launch suite containing 5 branded visuals and 1 cinematic promotional reel for fast social campaigns.",
-    iconName: "sparkles",
-    features: [
-      "5x Branded Visual Graphics",
-      "1x 15–30s Commercial Promo Reel",
-      "Private Google Drive Vault delivery",
-      "Full commercial usage rights",
-      "2 Consolidated Revision Rounds Included",
-    ],
-  },
-  {
-    id: "commission-studio-growth",
-    title: "Studio Growth Pack",
-    billingCycle: "one_time",
-    turnaround: "Dedicated Studio Staging",
-    popular: true,
-    description: "Multi-format creative production spanning 10 branded visuals, 3 commercial video reels, and 1 3D product view.",
-    iconName: "layers",
-    features: [
-      "10x Branded Visual Creatives",
-      "3x 15–30s Promotional Video Reels",
-      "1x 4K 3D Render from Model",
-      "Sound design & kinetic typography",
-      "Private Google Drive Vault staging",
-      "2 Consolidated Revision Rounds Included",
-    ],
-  },
-  {
-    id: "pkg-branding-logo-bundle",
-    title: "Branding & Logo Bundle",
-    billingCycle: "one_time",
-    turnaround: "Structured Milestone Staging",
-    description: "Complete brand foundation pack combining bespoke vector logo design, official color/typography style guide, and 5 branded launch graphics.",
-    iconName: "palette",
-    features: [
-      "Vector Logo Suite (SVG, PDF, PNG)",
-      "Brand Guidelines Deck (PDF)",
-      "5x Branded Visual Launch Graphics",
-      "Private Google Drive Vault archive",
-      "2 Consolidated Revision Rounds Included",
-    ],
-  },
-  {
-    id: "pkg-digital-marketing-bundle",
-    title: "Digital Marketing Campaign Bundle",
-    billingCycle: "one_time",
-    turnaround: "Structured Milestone Staging",
-    description: "High-converting paid advertising and organic launch bundle with targeted Meta campaign structure, 5 static creatives, and 3 motion reels.",
-    iconName: "share",
-    features: [
-      "Meta Ads Blueprint & Audience Architecture",
-      "5x High-Converting Ad Creative Images",
-      "3x Commercial Video Reels (15–30s)",
-      "Copywriting & Hook Matrix Deck",
-      "2 Consolidated Revision Rounds Included",
-    ],
-  },
-  {
-    id: "pkg-real-estate-viz-bundle",
-    title: "Real Estate & 3D Visualization Bundle",
-    billingCycle: "one_time",
-    turnaround: "Structured Milestone Staging",
-    description: "Complete spatial visualization suite for real estate developers and designers featuring 3D cutaways, interior CGI, and WebGL virtual tours.",
-    iconName: "building",
-    features: [
-      "1x 4K 3D Floor Plan Render",
-      "3x 4K Interior Perspective Views",
-      "Interactive 360° Virtual Tour with Hotspots",
-      "Photometric Lighting Passes & Private Drive Staging",
-      "2 Consolidated Revision Rounds Included",
-    ],
-  },
-  {
-    id: "pkg-business-web-launch-bundle",
-    title: "Business Website & Launch Bundle",
-    billingCycle: "one_time",
-    turnaround: "Structured Milestone Staging",
-    description: "Complete digital flagship: High-performance Next.js responsive website, SEO optimization, lead intake forms, and cloud deployment.",
-    iconName: "monitor",
-    features: [
-      "Modern 5-Page Responsive Web Application (Next.js)",
-      "High-Conversion Lead Capture & Contact Ingestion",
-      "Full Mobile & Desktop Responsive Optimization",
-      "Core Web Vitals & Technical SEO Architecture",
-      "Vercel Cloud Deployment & Domain DNS Link",
-    ],
-  },
+  // 2. Curated Multi-Service Bundles
+  ...APPROVED_COMMISSION_PACKAGES.filter((canonical) => canonical.active !== false).map((canonical) => ({
+    id: canonical.id,
+    title: canonical.name,
+    billingCycle: "one_time" as const,
+    price: canonical.numericPrice,
+    turnaround: canonical.turnaround || "Structured Milestone Staging",
+    description: canonical.description,
+    features: canonical.features || canonical.deliverables || [],
+    popular: !!canonical.popular,
+    iconName: PACKAGE_ICON_MAP[canonical.id] || "layers",
+  })),
 
-  // --- 3. Standalone Deliverable Packs ---
-  {
-    id: "branded-image-pack-5",
-    title: "Branded Image Pack (5 Images)",
-    billingCycle: "one_time",
-    turnaround: "Dedicated Studio Staging",
-    description: "Curated 5-image campaign bundle with brand color grading and commercial licensing.",
-    iconName: "sparkles",
-    features: [
-      "5x High-Resolution Branded Images",
-      "Custom Brand Typography & Color Palette",
-      "1 Consolidated Revision Round Across Pack",
-      "Full Commercial Copyright License",
-    ],
-  },
-  {
-    id: "promotional-reels-pack-3",
-    title: "Promotional Reels Pack (3 Reels)",
-    billingCycle: "one_time",
-    turnaround: "Dedicated Studio Staging",
-    description: "3 commercial promo reels with kinetic motion graphics, sound design, and vertical 9:16 master exports.",
-    iconName: "video",
-    features: [
-      "3x 15–30s Commercial Promo Reels",
-      "Kinetic Text & Sound Effects",
-      "Multi-Ratio Ad Formats (9:16 Vertical)",
-      "1 Consolidated Revision Round Across Pack",
-    ],
-  },
-  {
-    id: "social-carousel-5-slides",
-    title: "Social Carousel Pack (5 Slides)",
-    billingCycle: "one_time",
-    turnaround: "Dedicated Studio Staging",
-    description: "Seamless 5-slide educational or product storytelling carousel for Instagram & LinkedIn.",
-    iconName: "layers",
-    features: [
-      "5 Seamless Storytelling Slide Cards",
-      "Educational Framework & Headline Hooks",
-      "1 Consolidated Revision Round",
-      "1080×1350 High-Res Master Exports",
-    ],
-  },
+  // 3. Standalone Deliverable Packs
+  ...APPROVED_STANDALONE_PACKAGES.filter((canonical) => canonical.active !== false).map((canonical) => ({
+    id: canonical.id,
+    title: canonical.name,
+    billingCycle: "one_time" as const,
+    price: canonical.numericPrice,
+    turnaround: canonical.turnaround || "Dedicated Studio Staging",
+    description: canonical.description,
+    features: canonical.deliverables?.length ? canonical.deliverables : canonical.subBullets || [],
+    popular: !!canonical.popular,
+    iconName: PACKAGE_ICON_MAP[canonical.id] || "sparkles",
+  })),
 ];
-
-/** Canonical prices — single source of truth (this file holds no local price copy). */
-export const INTAKE_PACKAGES: IntakePackageOption[] = INTAKE_PACKAGES_SOURCE.flatMap((pkg) => {
-  const canonical = findPackageById(pkg.id);
-  if (!canonical || canonical.active === false) return [];
-  return [{ ...pkg, price: canonical.numericPrice }];
-});
 
 /**
  * Service options offered by the intake picker. Titles, descriptions,

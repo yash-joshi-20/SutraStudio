@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import {
   APPROVED_MONTHLY_PACKAGES,
+  APPROVED_COMMISSION_PACKAGES,
   APPROVED_STANDALONE_PACKAGES,
 } from "@/config/packages";
 import {
@@ -467,107 +468,202 @@ export function PricingCatalogSection({
       {/* =========================================================================
           SECTION C: ESSENTIAL DELIVERABLE PACKS
           ========================================================================= */}
+      {/* =========================================================================
+          SECTION C: CURATED BUNDLES & ESSENTIAL DELIVERABLE PACKS
+          ========================================================================= */}
       {activeTab === "packs" && (
-        <div className="w-full space-y-8">
-          <div className="text-center max-w-3xl mx-auto space-y-3">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#D4A35A]">
-              PRODUCTION BUNDLES
-            </span>
-            <h3 className="font-serif text-3xl sm:text-4xl font-semibold text-[#0F172A]">
-              Essential Deliverable Packs
-            </h3>
-            <p className="text-xs sm:text-sm text-[#64748B]">
-              Curated multi-asset packs engineered for rapid launch, campaign sprints, and brand refreshes.
-            </p>
-          </div>
+        <div className="w-full space-y-12">
+          {/* Subsection 1: Curated Multi-Service Bundles */}
+          <div className="space-y-8">
+            <div className="text-center max-w-3xl mx-auto space-y-3">
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#D4A35A]">
+                ONE-TIME PROJECTS
+              </span>
+              <h3 className="font-serif text-3xl sm:text-4xl font-semibold text-[#0F172A]">
+                Curated Studio Bundles
+              </h3>
+              <p className="text-xs sm:text-sm text-[#64748B]">
+                Complete multi-discipline campaign packages combining visuals, video reels, brand assets, and 3D visualization.
+              </p>
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto w-full">
-            {APPROVED_STANDALONE_PACKAGES.map((pkg) => (
-              <div
-                key={pkg.id}
-                className="rounded-3xl p-6 bg-[#FFFDF9] border border-[#EADFCB] hover:border-[#D4A35A] transition-all flex flex-col justify-between shadow-xs group"
-              >
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-serif font-bold text-lg text-[#0F172A] group-hover:text-[#5C3A1E] transition-colors">
-                      {pkg.name}
-                    </h4>
-                    <span className="font-serif font-bold text-xl text-[#5C3A1E]">
-                      {formatCurrencyINR(pkg.numericPrice)}
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-[#64748B] leading-relaxed line-clamp-2">
-                    {pkg.description}
-                  </p>
-
-                  {/* Deliverable Specifications */}
-                  <div className="p-3 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-1 text-xs">
-                    <div className="flex items-center justify-between font-semibold text-[#0F172A]">
-                      <span>Quantity:</span>
-                      <span className="text-[#5C3A1E] font-bold">{pkg.quantity} Deliverables</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto w-full">
+              {APPROVED_COMMISSION_PACKAGES.filter((p) => p.active !== false).map((pkg) => (
+                <div
+                  key={pkg.id}
+                  className={`rounded-3xl p-6 bg-[#FFFDF9] border transition-all flex flex-col justify-between shadow-xs group ${
+                    pkg.popular
+                      ? "border-2 border-[#D4A35A] ring-2 ring-[#D4A35A]/20"
+                      : "border-[#EADFCB] hover:border-[#D4A35A]"
+                  }`}
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-[#5C3A1E] font-semibold uppercase tracking-wider">
+                        ONE-TIME PACK
+                      </span>
+                      {pkg.popular && (
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A35A] bg-[#5C3A1E] px-2 py-0.5 rounded-full">
+                          Most Popular
+                        </span>
+                      )}
                     </div>
-                    <div className="flex items-center justify-between text-[11px] text-[#64748B]">
-                      <span>Price Display:</span>
-                      <span className="font-mono font-medium">{pkg.priceDisplay}</span>
+
+                    <div>
+                      <h4 className="font-serif font-bold text-xl text-[#0F172A] group-hover:text-[#5C3A1E] transition-colors">
+                        {pkg.name}
+                      </h4>
+                      <p className="font-serif font-bold text-2xl text-[#5C3A1E] mt-1">
+                        {formatCurrencyINR(pkg.numericPrice)}
+                      </p>
+                      <p className="text-xs text-[#64748B] leading-relaxed mt-2 line-clamp-2">
+                        {pkg.description}
+                      </p>
                     </div>
-                    <div className="flex items-center justify-between text-[11px] text-[#64748B]">
-                      <span>Turnaround SLA:</span>
+
+                    {/* Features list */}
+                    <div className="space-y-1.5 pt-2 border-t border-[#EADFCB]/60">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#A98B57] block">
+                        Included Deliverables:
+                      </span>
+                      <ul className="space-y-1 text-xs text-[#475569]">
+                        {(pkg.features || pkg.deliverables || []).slice(0, 5).map((feat, idx) => (
+                          <li key={idx} className="flex items-start gap-2">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#2E7D4F] shrink-0 mt-0.5" />
+                            <span className="leading-snug">{feat}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="pt-2 border-t border-[#EADFCB]/60 flex items-center justify-between text-[11px] text-[#64748B]">
+                      <span>Turnaround:</span>
                       <span className="font-medium text-[#0F172A]">{pkg.turnaround}</span>
                     </div>
                   </div>
 
-                  {/* Deliverable Checklist */}
-                  <div className="space-y-1.5 pt-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#A98B57] block">
-                      Included in Bundle:
-                    </span>
-                    <ul className="space-y-1 text-xs text-[#475569]">
-                      {pkg.deliverables.map((item, idx) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <Check className="w-3.5 h-3.5 text-[#2E7D4F] shrink-0 mt-0.5" />
-                          <span className="leading-snug">{item}</span>
-                        </li>
-                      ))}
-                    </ul>
+                  <div className="pt-5 mt-4 border-t border-[#EADFCB]/60 flex flex-col gap-3">
+                    <Link href={`/orders?package=${pkg.id}`} className="block w-full">
+                      <Button
+                        variant={pkg.popular ? "primary" : "secondary"}
+                        size="sm"
+                        className="w-full justify-center text-xs font-semibold"
+                        withArrow
+                      >
+                        {pkg.ctaText}
+                      </Button>
+                    </Link>
+                    <p className="text-xs text-[#64748B] text-center font-medium leading-relaxed">
+                      {pkg.turnaround} SLA • Google Drive Vault
+                    </p>
                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
-                  {/* Revision limits & Exclusions */}
-                  <div className="pt-2 border-t border-[#EADFCB]/60 space-y-1 text-[11px] text-[#64748B]">
+          {/* Subsection 2: Standalone Deliverable Packs */}
+          <div className="space-y-8 pt-8 border-t border-[#EADFCB]">
+            <div className="text-center max-w-3xl mx-auto space-y-3">
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#D4A35A]">
+                HIGH VELOCITY PACKS
+              </span>
+              <h3 className="font-serif text-3xl sm:text-4xl font-semibold text-[#0F172A]">
+                Essential Deliverable Packs
+              </h3>
+              <p className="text-xs sm:text-sm text-[#64748B]">
+                Curated multi-asset packs for rapid social media content drops, promo reels, and swipe carousels.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto w-full">
+              {APPROVED_STANDALONE_PACKAGES.map((pkg) => (
+                <div
+                  key={pkg.id}
+                  className="rounded-3xl p-6 bg-[#FFFDF9] border border-[#EADFCB] hover:border-[#D4A35A] transition-all flex flex-col justify-between shadow-xs group"
+                >
+                  <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <span>Revision Limit:</span>
-                      <span className="font-medium text-[#0F172A]">{pkg.revisionPolicy}</span>
+                      <h4 className="font-serif font-bold text-lg text-[#0F172A] group-hover:text-[#5C3A1E] transition-colors">
+                        {pkg.name}
+                      </h4>
+                      <span className="font-serif font-bold text-xl text-[#5C3A1E]">
+                        {formatCurrencyINR(pkg.numericPrice)}
+                      </span>
                     </div>
-                    {pkg.exclusions && pkg.exclusions.length > 0 && (
-                      <div className="pt-1 text-[10px] text-[#DC2626]">
-                        {pkg.exclusions.map((ex, idx) => (
-                          <p key={idx} className="flex items-center gap-1 truncate">
-                            <span className="font-bold">✕</span>
-                            <span>{ex}</span>
-                          </p>
-                        ))}
+
+                    <p className="text-xs text-[#64748B] leading-relaxed line-clamp-2">
+                      {pkg.description}
+                    </p>
+
+                    {/* Deliverable Specifications */}
+                    <div className="p-3 rounded-2xl bg-[#FAF9F5] border border-[#EADFCB] space-y-1 text-xs">
+                      <div className="flex items-center justify-between font-semibold text-[#0F172A]">
+                        <span>Quantity:</span>
+                        <span className="text-[#5C3A1E] font-bold">{pkg.quantity} Deliverables</span>
                       </div>
-                    )}
+                      <div className="flex items-center justify-between text-[11px] text-[#64748B]">
+                        <span>Price Display:</span>
+                        <span className="font-mono font-medium">{pkg.priceDisplay}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-[11px] text-[#64748B]">
+                        <span>Turnaround SLA:</span>
+                        <span className="font-medium text-[#0F172A]">{pkg.turnaround}</span>
+                      </div>
+                    </div>
+
+                    {/* Deliverable Checklist */}
+                    <div className="space-y-1.5 pt-1">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#A98B57] block">
+                        Included in Bundle:
+                      </span>
+                      <ul className="space-y-1 text-xs text-[#475569]">
+                        {pkg.deliverables.map((item, idx) => (
+                          <li key={idx} className="flex items-start gap-2">
+                            <Check className="w-3.5 h-3.5 text-[#2E7D4F] shrink-0 mt-0.5" />
+                            <span className="leading-snug">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Revision limits & Exclusions */}
+                    <div className="pt-2 border-t border-[#EADFCB]/60 space-y-1 text-[11px] text-[#64748B]">
+                      <div className="flex items-center justify-between">
+                        <span>Revision Limit:</span>
+                        <span className="font-medium text-[#0F172A]">{pkg.revisionPolicy}</span>
+                      </div>
+                      {pkg.exclusions && pkg.exclusions.length > 0 && (
+                        <div className="pt-1 text-[10px] text-[#DC2626]">
+                          {pkg.exclusions.map((ex, idx) => (
+                            <p key={idx} className="flex items-center gap-1 truncate">
+                              <span className="font-bold">✕</span>
+                              <span>{ex}</span>
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="pt-5 mt-4 border-t border-[#EADFCB]/60 flex flex-col gap-4">
+                    <Link href={`/orders?package=${pkg.id}`} className="block w-full">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="w-full justify-center text-xs font-semibold"
+                        withArrow
+                      >
+                        {pkg.ctaText}
+                      </Button>
+                    </Link>
+                    <p className="text-xs text-[#64748B] text-center font-medium leading-relaxed">
+                      {pkg.turnaround} SLA • Google Drive
+                    </p>
                   </div>
                 </div>
-
-                <div className="pt-5 mt-4 border-t border-[#EADFCB]/60 flex flex-col gap-4">
-                  <Link href={`/orders?package=${pkg.id}`} className="block w-full">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="w-full justify-center text-xs font-semibold"
-                      withArrow
-                    >
-                      {pkg.ctaText}
-                    </Button>
-                  </Link>
-                  <p className="text-xs text-[#64748B] text-center font-medium leading-relaxed">
-                    {pkg.turnaround} SLA • Google Drive
-                  </p>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       )}

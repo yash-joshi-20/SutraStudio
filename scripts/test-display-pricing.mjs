@@ -131,9 +131,9 @@ check("All 6 mandated scoped services exist with exact price ranges", () => {
 console.log("\n--> 2. Mandated monthly packages (Section B) exact match...");
 
 const EXPECTED_PACKAGES = [
-  ["starter-creative", "starter-trend", "Starter Creative", 9999, 12, 4, "up to 15 seconds each"],
-  ["growth-creative", "growth-trend", "Growth Creative", 14999, 20, 8, "up to 15–30 seconds each"],
-  ["daily-creative-pro", "daily-trend-creator", "Daily Creative Pro", 19999, 30, 30, "up to 10–15 seconds each"],
+  ["starter-creative", "starter-trend", "Starter Trend", 9999, 15, 15, "up to 15s"],
+  ["growth-creative", "growth-trend", "Growth Trend", 14999, 20, 20, "15–30s"],
+  ["daily-creative-pro", "daily-trend-creator", "Daily Trend Creator (Flagship)", 19999, 30, 30, "15–30s"],
 ];
 
 check("All 3 mandated monthly packages exist with exact quotas & prices", () => {
