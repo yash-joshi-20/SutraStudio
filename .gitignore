@@ -94,14 +94,11 @@ zip-backups/
 backups/
 SutraStudio-Full.zip
 SutraStudio-Project.zip
-# Private Reference Assets (Do not upload to GitHub)
-docs/internal/
-docs/*.jpg
-docs/*.jpeg
-docs/*.png
-docs/*.mp4
-docs/237868e8-ad3f-4ffe-b657-8a05d0d5695f.jpg
-docs/2026-10-14 20-17-02.mp4
+# Documentation & Master Prompt Packs (Local Only - Do not upload to GitHub)
+docs/
+/docs/
+SUTRA_STUDIO_UI_MASTER_PROMPT_PACK/
+/SUTRA_STUDIO_UI_MASTER_PROMPT_PACK/
 
 # Local n8n Workflows & Exports (Do not upload to GitHub)
 /n8n/
