@@ -25,23 +25,7 @@ import { Modal } from "@/components/ui/Modal";
 import { ArrowLeft, ArrowRight, ShieldCheck, Terminal, CheckCircle2 } from "lucide-react";
 import { soundSystem } from "@/lib/audio/soundSystem";
 import { AnimatedWelcomeBadge } from "@/components/ui/AnimatedStatusIcons";
-
-function safeReturnTo(raw: string | null): string {
-  if (!raw) return "/admin";
-  const trimmed = raw.trim();
-  if (!trimmed.startsWith("/") || trimmed.startsWith("//") || trimmed.startsWith("/\\")) return "/admin";
-  if (
-    trimmed === "/admin/login" ||
-    trimmed === "/login" ||
-    trimmed === "/register" ||
-    trimmed.startsWith("/admin/login?") ||
-    trimmed.startsWith("/login?") ||
-    trimmed.startsWith("/register?")
-  ) {
-    return "/admin";
-  }
-  return trimmed.startsWith("/admin") ? trimmed : "/admin";
-}
+import { safeReturnTo } from "@/lib/auth/authUtils";
 
 function AdminLoginForm() {
   const router = useRouter();

@@ -38,33 +38,7 @@ import {
   Star,
 } from "lucide-react";
 import { soundSystem } from "@/lib/audio/soundSystem";
-
-/** Only same-site, non-protocol-relative paths are ever honoured. */
-function safeReturnTo(raw: string | null, userRole?: string): string {
-  const fallback = userRole === "admin" ? "/admin" : "/dashboard";
-  if (!raw) return fallback;
-  const trimmed = raw.trim();
-  if (!trimmed.startsWith("/") || trimmed.startsWith("//") || trimmed.startsWith("/\\")) {
-    return fallback;
-  }
-  if (
-    trimmed === "/login" ||
-    trimmed === "/register" ||
-    trimmed === "/admin/login" ||
-    trimmed.startsWith("/login?") ||
-    trimmed.startsWith("/register?") ||
-    trimmed.startsWith("/admin/login?")
-  ) {
-    return fallback;
-  }
-  if (userRole === "admin") {
-    return trimmed;
-  }
-  if (trimmed.startsWith("/admin")) {
-    return "/dashboard";
-  }
-  return trimmed;
-}
+import { safeReturnTo } from "@/lib/auth/authUtils";
 
 function ClientLoginForm() {
   const router = useRouter();
