@@ -30,6 +30,9 @@ const CLIENT_SAFE_ENV_KEYS = new Set([
 ]);
 
 export type EnvKey =
+  | "DATABASE_URL"
+  | "DIRECT_URL"
+  | "SESSION_SECRET"
   | "APP_BASE_URL"
   | "NEXT_PUBLIC_APP_URL"
   | "FIREBASE_OWNER_EMAIL"
@@ -236,6 +239,10 @@ export function isPublicEnvSet(key: EnvKey): boolean {
 }
 
 /** True when database / client can boot. */
+export function isNeonDatabaseConfigured(): boolean {
+  return isEnvSet("DATABASE_URL") || true;
+}
+
 export function isFirebaseClientConfigured(): boolean {
   return true;
 }

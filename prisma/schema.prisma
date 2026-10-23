@@ -3,33 +3,34 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id            String   @id @default(cuid())
-  uid           String   @unique
-  email         String   @unique
-  passwordHash  String?
-  name          String
-  phone         String?
-  role          String   @default("client") // "client" | "admin"
-  photoURL      String?
-  emailVerified Boolean  @default(false)
-  company       String   @default("")
-  tier          String   @default("Standard")
-  status        String   @default("Active")
-  billingData   String?
-  driveFolderId String   @default("")
+  id              String   @id @default(cuid())
+  uid             String   @unique
+  email           String   @unique
+  passwordHash    String?
+  name            String
+  phone           String?
+  role            String   @default("client") // "client" | "admin"
+  photoURL        String?
+  emailVerified   Boolean  @default(false)
+  company         String   @default("")
+  tier            String   @default("Standard")
+  status          String   @default("Active")
+  billingData     String?  @db.Text
+  driveFolderId   String   @default("")
   driveFolderLink String?
-  adminNotes    String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  adminNotes      String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  orders        Order[]
-  payments      Payment[]
-  notifications Notification[]
+  orders          Order[]
+  payments        Payment[]
+  notifications   Notification[]
 }
 
 model Order {
@@ -46,9 +47,9 @@ model Order {
   status        String   @default("pending_verification")
   paymentStatus String   @default("pending_payment")
   turnaround    String?
-  brief         String?
+  brief         String?  @db.Text
   source        String   @default("web")
-  metadata      String?
+  metadata      String?  @db.Text
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -66,7 +67,7 @@ model Payment {
   status        String   @default("pending_verification")
   utr           String?
   receiptUrl    String?
-  metadata      String?
+  metadata      String?  @db.Text
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -78,7 +79,7 @@ model Notification {
   id        String   @id @default(cuid())
   userUid   String?
   title     String
-  message   String
+  message   String   @db.Text
   type      String   @default("system")
   read      Boolean  @default(false)
   link      String?
@@ -93,13 +94,13 @@ model Inquiry {
   email     String
   phone     String?
   service   String?
-  message   String?
+  message   String?  @db.Text
   status    String   @default("new")
   createdAt DateTime @default(now())
 }
 
 model KeyValue {
   key       String   @id
-  value     String
+  value     String   @db.Text
   updatedAt DateTime @updatedAt
 }

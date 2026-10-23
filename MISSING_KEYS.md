@@ -27,8 +27,8 @@ Total missing services: **7** / **20** configured.
 
 | Integration | Group | Ready Keys |
 |---|---|---|
-| **Firebase Web Client** | Core Platform | `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_APP_ID`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` |
-| **Firebase Admin (Server)** | Authentication | `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` |
+| **Neon Serverless PostgreSQL** | Core Platform | `DATABASE_URL`, `DIRECT_URL` |
+| **Prisma & Native Session Engine** | Authentication | `SESSION_SECRET` |
 | **UPI QR Payment Gateway** | Payments | `UPI_MERCHANT_VPA`, `UPI_MERCHANT_NAME`, `NEXT_PUBLIC_MERCHANT_UPI_VPA`, `NEXT_PUBLIC_MERCHANT_NAME` |
 | **Google Gemini AI** | AI Providers | `GEMINI_API_KEY` |
 | **FLUX / BFL Pro** | AI Providers | `BFL_API_KEY` |
