@@ -45,80 +45,80 @@ export function ChatPricingCatalog({
 
   return (
     <div
-      className={`rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8] p-3 text-[#171717] space-y-3 ${className}`}
+      className={`rounded-2xl bg-[#FAF9F5] border border-[#E5E1D8] p-2.5 sm:p-3 text-[#171717] space-y-2.5 w-full min-w-0 shadow-2xs ${className}`}
       role="region"
       aria-label="Studio Services and Packages Catalog"
     >
       {/* Header & Tab Selector */}
-      <div className="flex items-center justify-between pb-2 border-b border-[#E5E1D8]">
-        <div>
-          <span className="text-[10px] font-mono uppercase font-bold tracking-wider text-[#A98B57] block">
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[#E5E1D8] min-w-0">
+        <div className="min-w-0 flex-1">
+          <span className="text-[10px] font-mono uppercase font-bold tracking-wider text-[#A98B57] block truncate">
             Studio Rate Card
           </span>
-          <h4 className="font-serif font-bold text-xs text-[#171717]">
+          <h4 className="font-serif font-bold text-xs text-[#171717] truncate">
             {activeTab === "packages" ? "Packages & Retainers" : "8 Core Disciplines"}
           </h4>
         </div>
 
         {/* Tab Switcher Pills */}
-        <div className="flex items-center gap-1 bg-white p-0.5 rounded-xl border border-[#E5E1D8] text-[10px]">
+        <div className="flex items-center gap-1 bg-white p-0.5 rounded-xl border border-[#E5E1D8] text-[10px] shrink-0">
           <button
             type="button"
             onClick={() => setActiveTab("packages")}
-            className={`px-2 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+            className={`px-2 py-1 rounded-lg font-semibold transition-all cursor-pointer whitespace-nowrap ${
               activeTab === "packages"
                 ? "bg-[#5C3A1E] text-white shadow-2xs"
                 : "text-[#64748B] hover:text-[#171717]"
             }`}
           >
-            Packages &amp; Retainers
+            Packages
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("services")}
-            className={`px-2 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+            className={`px-2 py-1 rounded-lg font-semibold transition-all cursor-pointer whitespace-nowrap ${
               activeTab === "services"
                 ? "bg-[#5C3A1E] text-white shadow-2xs"
                 : "text-[#64748B] hover:text-[#171717]"
             }`}
           >
-            Individual Services
+            Services
           </button>
         </div>
       </div>
 
       {/* Tab 1: Studio Services */}
       {activeTab === "services" && (
-        <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+        <div className="space-y-2 max-h-72 sm:max-h-80 overflow-y-auto overflow-x-hidden pr-0.5 [scrollbar-width:thin] [scrollbar-color:#E5E1D8_transparent]">
           {INTAKE_SERVICES.map((srv) => (
             <div
               key={srv.id}
-              className="p-2.5 rounded-xl bg-white border border-[#E5E1D8] hover:border-[#A98B57] transition-all space-y-1.5 shadow-2xs"
+              className="p-2.5 rounded-xl bg-white border border-[#E5E1D8] hover:border-[#A98B57] transition-all space-y-1.5 shadow-2xs min-w-0 w-full"
             >
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#FAF9F5] text-[#A98B57] font-semibold uppercase">
+              <div className="flex items-start justify-between gap-2 min-w-0">
+                <div className="min-w-0 flex-1">
+                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#FAF9F5] text-[#A98B57] font-semibold uppercase inline-block">
                     {srv.category}
                   </span>
-                  <h5 className="font-bold text-[11px] text-[#171717] mt-0.5 truncate">
+                  <h5 className="font-bold text-[11px] sm:text-xs text-[#171717] mt-0.5 break-words">
                     {srv.title}
                   </h5>
                 </div>
-                <div className="text-right shrink-0">
-                  <span className="font-serif font-bold text-xs text-[#5C3A1E] block">
+                <div className="text-right shrink-0 whitespace-nowrap pl-1">
+                  <span className="font-serif font-bold text-xs sm:text-sm text-[#5C3A1E] block">
                     From {formatCurrencyINR(srv.basePrice)}
                   </span>
-                  <span className="text-[9px] text-[#64748B] font-mono">
+                  <span className="text-[9px] text-[#64748B] font-mono block">
                     {srv.turnaround}
                   </span>
                 </div>
               </div>
 
-              <p className="text-[10px] text-[#64748B] line-clamp-2 leading-relaxed">
+              <p className="text-[10px] text-[#64748B] leading-relaxed break-words">
                 {srv.description}
               </p>
 
-              <div className="flex items-center justify-between pt-1 border-t border-[#E5E1D8]/60">
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1.5 border-t border-[#E5E1D8]/60 min-w-0">
                 {onOpenFullForm && (
                   <button
                     type="button"
@@ -131,7 +131,7 @@ export function ChatPricingCatalog({
                         turnaround: srv.turnaround,
                       })
                     }
-                    className="text-[10px] text-[#64748B] hover:text-[#171717] flex items-center gap-1 cursor-pointer"
+                    className="text-[10px] text-[#64748B] hover:text-[#171717] flex items-center gap-1 cursor-pointer shrink-0 py-0.5"
                   >
                     <span>Studio Form</span>
                     <ExternalLink className="w-2.5 h-2.5" />
@@ -151,7 +151,7 @@ export function ChatPricingCatalog({
                       description: srv.description,
                     })
                   }
-                  className="ml-auto inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#5C3A1E] text-white text-[10px] font-bold hover:bg-[#462B16] transition-all cursor-pointer shadow-2xs"
+                  className="ml-auto inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg bg-[#5C3A1E] text-white text-[10px] font-bold hover:bg-[#462B16] transition-all cursor-pointer shadow-2xs shrink-0"
                 >
                   <span>Order Now ({formatCurrencyINR(srv.basePrice)})</span>
                   <ArrowRight className="w-2.5 h-2.5 text-[#D4A35A]" />
@@ -164,34 +164,34 @@ export function ChatPricingCatalog({
 
       {/* Tab 2: Packages & Retainers */}
       {activeTab === "packages" && (
-        <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+        <div className="space-y-2 max-h-72 sm:max-h-80 overflow-y-auto overflow-x-hidden pr-0.5 [scrollbar-width:thin] [scrollbar-color:#E5E1D8_transparent]">
           {INTAKE_PACKAGES.map((pkg) => (
             <div
               key={pkg.id}
-              className={`p-2.5 rounded-xl border transition-all space-y-1.5 shadow-2xs ${
+              className={`p-2.5 rounded-xl border transition-all space-y-1.5 shadow-2xs min-w-0 w-full ${
                 pkg.popular
                   ? "bg-[#FFFDF9] border-[#D4A35A] ring-1 ring-[#D4A35A]/30"
                   : "bg-white border-[#E5E1D8] hover:border-[#A98B57]"
               }`}
             >
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
+              <div className="flex items-start justify-between gap-2 min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#FAF9F5] text-[#5C3A1E] font-semibold uppercase">
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#FAF9F5] text-[#5C3A1E] font-semibold uppercase inline-block">
                       {pkg.billingCycle === "monthly" ? "30-Day Retainer" : "Deliverable Pack"}
                     </span>
                     {pkg.popular && (
-                      <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-[#D4A35A] text-[#171717] uppercase">
+                      <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-[#D4A35A] text-[#171717] uppercase inline-block">
                         Flagship
                       </span>
                     )}
                   </div>
-                  <h5 className="font-bold text-[11px] text-[#171717] mt-0.5 truncate">
+                  <h5 className="font-bold text-[11px] sm:text-xs text-[#171717] mt-0.5 break-words">
                     {pkg.title}
                   </h5>
                 </div>
-                <div className="text-right shrink-0">
-                  <span className="font-serif font-bold text-xs text-[#5C3A1E] block">
+                <div className="text-right shrink-0 whitespace-nowrap pl-1">
+                  <span className="font-serif font-bold text-xs sm:text-sm text-[#5C3A1E] block">
                     {formatCurrencyINR(pkg.price)}
                   </span>
                   {pkg.billingCycle === "monthly" && (
@@ -202,22 +202,22 @@ export function ChatPricingCatalog({
                 </div>
               </div>
 
-              <p className="text-[10px] text-[#64748B] line-clamp-2 leading-relaxed">
+              <p className="text-[10px] text-[#64748B] leading-relaxed break-words">
                 {pkg.description}
               </p>
 
               {pkg.features && pkg.features.length > 0 && (
-                <ul className="text-[9px] text-[#475569] space-y-0.5 pt-0.5">
+                <ul className="text-[9px] text-[#475569] space-y-0.5 pt-0.5 min-w-0">
                   {pkg.features.slice(0, 2).map((feat, i) => (
-                    <li key={i} className="flex items-center gap-1 truncate">
-                      <CheckCircle2 className="w-2.5 h-2.5 text-[#2E7D4F] shrink-0" />
-                      <span className="truncate">{feat}</span>
+                    <li key={i} className="flex items-start gap-1 min-w-0">
+                      <CheckCircle2 className="w-2.5 h-2.5 text-[#2E7D4F] shrink-0 mt-0.5" />
+                      <span className="break-words leading-tight flex-1 min-w-0">{feat}</span>
                     </li>
                   ))}
                 </ul>
               )}
 
-              <div className="flex items-center justify-between pt-1 border-t border-[#E5E1D8]/60">
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1.5 border-t border-[#E5E1D8]/60 min-w-0">
                 {onOpenFullForm && (
                   <button
                     type="button"
@@ -230,7 +230,7 @@ export function ChatPricingCatalog({
                         turnaround: pkg.turnaround,
                       })
                     }
-                    className="text-[10px] text-[#64748B] hover:text-[#171717] flex items-center gap-1 cursor-pointer"
+                    className="text-[10px] text-[#64748B] hover:text-[#171717] flex items-center gap-1 cursor-pointer shrink-0 py-0.5"
                   >
                     <span>Studio Form</span>
                     <ExternalLink className="w-2.5 h-2.5" />
@@ -250,7 +250,7 @@ export function ChatPricingCatalog({
                       description: pkg.description,
                     })
                   }
-                  className="ml-auto inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#5C3A1E] text-white text-[10px] font-bold hover:bg-[#462B16] transition-all cursor-pointer shadow-2xs"
+                  className="ml-auto inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg bg-[#5C3A1E] text-white text-[10px] font-bold hover:bg-[#462B16] transition-all cursor-pointer shadow-2xs shrink-0"
                 >
                   <span>Order Package ({formatCurrencyINR(pkg.price)})</span>
                   <ArrowRight className="w-2.5 h-2.5 text-[#D4A35A]" />

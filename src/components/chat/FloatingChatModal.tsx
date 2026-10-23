@@ -171,13 +171,17 @@ function parseInlineMarkdown(text: string): React.ReactNode {
  */
 function FormattedMessageContent({ text, isUser }: { text: string; isUser: boolean }) {
   if (isUser) {
-    return <span className="whitespace-pre-line leading-relaxed">{text}</span>;
+    return (
+      <span className="whitespace-pre-line leading-relaxed break-words [overflow-wrap:anywhere] min-w-0 block">
+        {text}
+      </span>
+    );
   }
 
   const lines = text.split("\n");
 
   return (
-    <div className="space-y-1.5 leading-relaxed text-xs text-[#171717]">
+    <div className="space-y-1.5 leading-relaxed text-xs text-[#171717] break-words [overflow-wrap:anywhere] min-w-0">
       {lines.map((line, idx) => {
         const trimmed = line.trim();
         if (!trimmed) {
@@ -190,14 +194,14 @@ function FormattedMessageContent({ text, isUser }: { text: string; isUser: boole
 
         if (trimmed.startsWith("### ")) {
           return (
-            <h4 key={idx} className="font-serif font-bold text-xs text-[#171717] mt-2 mb-0.5">
+            <h4 key={idx} className="font-serif font-bold text-xs text-[#171717] mt-2 mb-0.5 break-words">
               {parseInlineMarkdown(trimmed.replace(/^###\s*/, ""))}
             </h4>
           );
         }
         if (trimmed.startsWith("## ")) {
           return (
-            <h3 key={idx} className="font-serif font-bold text-sm text-[#171717] mt-2.5 mb-1">
+            <h3 key={idx} className="font-serif font-bold text-sm text-[#171717] mt-2.5 mb-1 break-words">
               {parseInlineMarkdown(trimmed.replace(/^##\s*/, ""))}
             </h3>
           );
@@ -206,9 +210,11 @@ function FormattedMessageContent({ text, isUser }: { text: string; isUser: boole
         if (/^[•\-*+]\s+/.test(trimmed)) {
           const content = trimmed.replace(/^[•\-*+]\s+/, "");
           return (
-            <div key={idx} className="flex items-start gap-2 pl-0.5">
+            <div key={idx} className="flex items-start gap-2 pl-0.5 min-w-0">
               <span className="text-[#A98B57] font-bold text-xs mt-0.5 select-none shrink-0">•</span>
-              <span className="flex-1 leading-relaxed">{parseInlineMarkdown(content)}</span>
+              <span className="flex-1 leading-relaxed break-words [overflow-wrap:anywhere] min-w-0">
+                {parseInlineMarkdown(content)}
+              </span>
             </div>
           );
         }
@@ -216,17 +222,19 @@ function FormattedMessageContent({ text, isUser }: { text: string; isUser: boole
         const numberMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
         if (numberMatch) {
           return (
-            <div key={idx} className="flex items-start gap-2 pl-0.5 mt-1">
+            <div key={idx} className="flex items-start gap-2 pl-0.5 mt-1 min-w-0">
               <span className="font-bold text-[#5C3A1E] text-xs shrink-0 select-none">
                 {numberMatch[1]}.
               </span>
-              <span className="flex-1 leading-relaxed">{parseInlineMarkdown(numberMatch[2])}</span>
+              <span className="flex-1 leading-relaxed break-words [overflow-wrap:anywhere] min-w-0">
+                {parseInlineMarkdown(numberMatch[2])}
+              </span>
             </div>
           );
         }
 
         return (
-          <p key={idx} className="leading-relaxed">
+          <p key={idx} className="leading-relaxed break-words [overflow-wrap:anywhere] min-w-0">
             {parseInlineMarkdown(line)}
           </p>
         );
@@ -886,7 +894,7 @@ export function FloatingChatModal() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.98 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-[4.5rem] sm:bottom-6 right-2 sm:right-6 z-[var(--z-modal)] w-[calc(100vw-1rem)] sm:w-[420px] h-[560px] max-h-[calc(100dvh-5.5rem)] sm:max-h-[calc(100vh-3rem)] bg-[#FAF9F5] border border-[#E5E1D8] rounded-3xl shadow-2xl flex flex-col overflow-hidden text-[#171717]"
+            className="fixed bottom-[4.5rem] sm:bottom-6 right-2 sm:right-6 z-[var(--z-modal)] w-[calc(100vw-1rem)] sm:w-[440px] h-[580px] max-h-[calc(100dvh-5.5rem)] sm:max-h-[calc(100vh-3rem)] bg-[#FAF9F5] border border-[#E5E1D8] rounded-3xl shadow-2xl flex flex-col overflow-hidden text-[#171717]"
           >
             {/* Header */}
             <div className="px-4 py-3 bg-[#171717] text-[#FAF9F5] flex items-center justify-between border-b border-[#A98B57]/30 shrink-0">
@@ -936,7 +944,7 @@ export function FloatingChatModal() {
             </div>
 
             {/* Quick Action Chips */}
-            <div className="px-3 py-2 bg-white/80 border-b border-[#E5E1D8] flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+            <div className="px-3 py-2 bg-white/90 backdrop-blur-xs border-b border-[#E5E1D8] flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0 touch-pan-x">
               {QUICK_ACTIONS.map((action, idx) => (
                 <button
                   key={idx}
@@ -953,11 +961,12 @@ export function FloatingChatModal() {
               ))}
             </div>
 
-            {/* Messages Body */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
+            {/* Messages Body — Pure Vertical Scroll (WhatsApp-style) */}
+            <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 space-y-3.5 overscroll-contain [scrollbar-width:thin] [scrollbar-color:#E5E1D8_transparent]">
               {messages.map((msg) => {
                 const isBot = msg.sender === "bot";
                 const isSystem = msg.sender === "system";
+                const hasRichCard = Boolean(msg.serviceCatalog || msg.pricingCatalog || msg.orderDraft);
 
                 if (isSystem) {
                   return (
@@ -972,9 +981,9 @@ export function FloatingChatModal() {
                 return (
                   <div
                     key={msg.id}
-                    className={`flex flex-col ${isBot ? "items-start" : "items-end"} gap-1`}
+                    className={`flex flex-col ${isBot ? "items-start" : "items-end"} gap-1 w-full min-w-0`}
                   >
-                    <div className={`flex items-start gap-2 ${isBot ? "" : "flex-row-reverse"}`}>
+                    <div className={`flex items-start gap-2 w-full min-w-0 ${isBot ? "" : "flex-row-reverse"}`}>
                       {isBot && (
                         <div className="w-6 h-6 rounded-full border border-[#A98B57]/50 shrink-0 bg-[#171717] mt-0.5 shadow-2xs flex items-center justify-center p-1">
                           <img
@@ -985,23 +994,25 @@ export function FloatingChatModal() {
                         </div>
                       )}
                       <div
-                        className={`max-w-[85%] rounded-2xl p-3 text-xs leading-relaxed shadow-xs relative group ${
-                          isBot
-                            ? "bg-white border border-[#E5E1D8] text-[#171717] rounded-tl-xs"
-                            : "bg-[#5C3A1E] text-white rounded-tr-xs"
+                        className={`rounded-2xl p-3 text-xs leading-relaxed shadow-xs relative group min-w-0 break-words ${
+                          hasRichCard
+                            ? "w-full max-w-full sm:max-w-[96%] bg-white border border-[#E5E1D8] text-[#171717] rounded-tl-xs"
+                            : isBot
+                            ? "max-w-[88%] sm:max-w-[82%] bg-white border border-[#E5E1D8] text-[#171717] rounded-tl-xs"
+                            : "max-w-[88%] sm:max-w-[82%] bg-[#5C3A1E] text-white rounded-tr-xs"
                         }`}
                       >
                       {/* Attached images / files */}
                       {msg.attachments && msg.attachments.length > 0 && (
-                        <div className="mb-2 space-y-1.5">
+                        <div className="mb-2 space-y-1.5 min-w-0">
                           {msg.attachments.map((att, i) => (
-                            <div key={i} className="flex items-center gap-2 p-1.5 rounded-lg bg-black/10 border border-white/10 text-[11px]">
+                            <div key={i} className="flex items-center gap-2 p-1.5 rounded-lg bg-black/10 border border-white/10 text-[11px] min-w-0">
                               {att.dataUrl ? (
-                                <img src={att.dataUrl} alt={att.name} className="w-12 h-12 object-cover rounded-md" />
+                                <img src={att.dataUrl} alt={att.name} className="w-12 h-12 object-cover rounded-md shrink-0" />
                               ) : (
-                                <FileText className="w-4 h-4 text-[#D4A35A]" />
+                                <FileText className="w-4 h-4 text-[#D4A35A] shrink-0" />
                               )}
-                              <div className="truncate">
+                              <div className="min-w-0 flex-1">
                                 <p className="font-medium truncate">{att.name}</p>
                                 <p className="text-[9px] opacity-75">{att.size}</p>
                               </div>
@@ -1014,7 +1025,7 @@ export function FloatingChatModal() {
 
                       {/* Unified Services & Packages Pricing Catalog Component */}
                       {(msg.serviceCatalog || msg.pricingCatalog) && (
-                        <div className="mt-3">
+                        <div className="mt-3 w-full min-w-0">
                           <ChatPricingCatalog
                             onSelectItem={(item) => handleQuickOrderFromChat(item)}
                             onOpenFullForm={(item) => {
@@ -1029,30 +1040,30 @@ export function FloatingChatModal() {
 
                       {/* Order Draft Interactive Checkout Card */}
                       {msg.orderDraft && (
-                        <div className="mt-3 p-3 rounded-xl bg-[#FAF9F5] border border-[#A98B57]/40 text-[#171717] space-y-2">
-                          <div className="flex items-center justify-between border-b border-[#E5E1D8] pb-1.5">
+                        <div className="mt-3 p-3 rounded-xl bg-[#FAF9F5] border border-[#A98B57]/40 text-[#171717] space-y-2 min-w-0 w-full shadow-2xs">
+                          <div className="flex flex-wrap items-center justify-between gap-1 border-b border-[#E5E1D8] pb-1.5 min-w-0">
                             <span className="font-serif font-bold text-xs text-[#5C3A1E]">
                               Order #{msg.orderDraft.orderNumber}
                             </span>
-                            <Badge variant="outline" className="text-[9px] bg-white border-[#A98B57]/50 text-[#A98B57]">
+                            <Badge variant="outline" className="text-[9px] bg-white border-[#A98B57]/50 text-[#A98B57] shrink-0">
                               {msg.orderDraft.paid ? "Paid" : "Pending Payment"}
                             </Badge>
                           </div>
-                          <div className="text-[11px] space-y-0.5">
-                            <div className="flex justify-between">
-                              <span className="text-[#64748B]">Service:</span>
-                              <span className="font-medium">{msg.orderDraft.service}</span>
+                          <div className="text-[11px] space-y-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2 min-w-0">
+                              <span className="text-[#64748B] shrink-0">Service:</span>
+                              <span className="font-medium text-right break-words flex-1 min-w-0">{msg.orderDraft.service}</span>
                             </div>
-                            <div className="flex justify-between">
-                              <span className="text-[#64748B]">Total Amount:</span>
-                              <span className="font-bold text-[#5C3A1E]">
+                            <div className="flex items-center justify-between gap-2 min-w-0">
+                              <span className="text-[#64748B] shrink-0">Total Amount:</span>
+                              <span className="font-bold text-[#5C3A1E] text-right whitespace-nowrap">
                                 ₹{msg.orderDraft.totalAmount.toLocaleString("en-IN")}
                               </span>
                             </div>
                           </div>
 
                           {!msg.orderDraft.paid ? (
-                            <div className="space-y-1.5 pt-1">
+                            <div className="space-y-1.5 pt-1 min-w-0">
                               <Button
                                 variant="primary"
                                 size="sm"
@@ -1060,14 +1071,14 @@ export function FloatingChatModal() {
                                   setSelectedChatOrder(msg.orderDraft!);
                                   setIsPaymentModalOpen(true);
                                 }}
-                                className="w-full text-xs justify-center gap-1.5 !bg-[#5C3A1E] hover:!bg-[#462B16] text-white shadow-xs"
+                                className="w-full text-xs justify-center gap-1.5 !bg-[#5C3A1E] hover:!bg-[#462B16] text-white shadow-xs py-2 whitespace-normal break-words"
                               >
-                                <QrCode className="w-3.5 h-3.5 text-[#D4A35A]" />
+                                <QrCode className="w-3.5 h-3.5 text-[#D4A35A] shrink-0" />
                                 <span>Pay by UPI QR (₹{msg.orderDraft.totalAmount.toLocaleString("en-IN")})</span>
                               </Button>
                             </div>
                           ) : (
-                            <div className="space-y-1.5 pt-1">
+                            <div className="space-y-1.5 pt-1 min-w-0">
                               <div className="flex items-center gap-1 text-[11px] text-[#2E7D4F] font-semibold">
                                 <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                                 <span>Order Registered • In Studio Queue</span>
@@ -1079,7 +1090,7 @@ export function FloatingChatModal() {
                                   setIsOpen(false);
                                   router.push("/orders");
                                 }}
-                                className="w-full text-xs justify-center gap-1.5 border-[#5C3A1E]/30 text-[#5C3A1E] hover:bg-[#FAF9F5]"
+                                className="w-full text-xs justify-center gap-1.5 border-[#5C3A1E]/30 text-[#5C3A1E] hover:bg-[#FAF9F5] py-2 whitespace-normal break-words"
                               >
                                 View Order in Dashboard →
                               </Button>
@@ -1090,12 +1101,12 @@ export function FloatingChatModal() {
 
                       {/* Speaker & Copy Actions (Gemini-style inline action toolbar) */}
                       {isBot && (
-                        <div className="mt-2.5 pt-1.5 border-t border-[#E5E1D8]/60 flex items-center gap-1.5 text-[11px] text-[#64748B]">
+                        <div className="mt-2.5 pt-1.5 border-t border-[#E5E1D8]/60 flex flex-wrap items-center gap-1.5 text-[11px] text-[#64748B] min-w-0">
                           <button
                             type="button"
                             onClick={() => handleSpeakMessage(msg.id, msg.text)}
                             title={speakingMsgId === msg.id ? "Stop voice playback" : "Read aloud (Voice)"}
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md transition-all cursor-pointer select-none ${
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md transition-all cursor-pointer select-none shrink-0 ${
                               speakingMsgId === msg.id
                                 ? "bg-[#5C3A1E] text-[#FAF9F5] font-medium shadow-xs"
                                 : "bg-[#FAF9F5] border border-[#E5E1D8] hover:bg-[#F4F1EA] hover:text-[#171717] text-[#5C3A1E]"
@@ -1118,7 +1129,7 @@ export function FloatingChatModal() {
                             type="button"
                             onClick={() => handleCopy(msg.id, msg.text)}
                             title="Copy response"
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#FAF9F5] border border-[#E5E1D8] hover:bg-[#F4F1EA] hover:text-[#171717] text-[#5C3A1E] transition-all cursor-pointer select-none"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#FAF9F5] border border-[#E5E1D8] hover:bg-[#F4F1EA] hover:text-[#171717] text-[#5C3A1E] transition-all cursor-pointer select-none shrink-0"
                           >
                             {copiedId === msg.id ? (
                               <>
@@ -1137,7 +1148,9 @@ export function FloatingChatModal() {
                       </div>
                     </div>
 
-                    <span className="text-[9px] text-[#94A3B8] px-1">{msg.time}</span>
+                    <span className={`text-[9.5px] text-[#94A3B8] px-1 select-none ${isBot ? "self-start pl-8" : "self-end pr-1"}`}>
+                      {msg.time}
+                    </span>
                   </div>
                 );
               })}
