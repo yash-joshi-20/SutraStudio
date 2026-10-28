@@ -8,7 +8,12 @@ import { defineConfig as ormConfig } from '@prisma/orm-postgres/config';
 export default definePrismaConfig({
   composer: composer({
     entry: "./module.ts",
-    extensions: [prismaCloud(), nextjsBuild()],
+    extensions: [
+      prismaCloud({
+        region: (process.env['PRISMA_REGION'] as any) || "us-east-1",
+      }),
+      nextjsBuild(),
+    ],
     state: prismaState(),
   }),
   orm: ormConfig({
