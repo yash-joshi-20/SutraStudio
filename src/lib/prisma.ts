@@ -1,7 +1,7 @@
 /**
- * SUTRA STUDIO — Database Client Singleton (Prisma + Neon PostgreSQL)
+ * SUTRA STUDIO — Database Client Singleton (Prisma + PostgreSQL)
  *
- * Provides connection pooling and robust access to Neon Serverless PostgreSQL.
+ * Provides connection pooling and robust access to PostgreSQL.
  */
 
 import { PrismaClient } from "@prisma/client";
