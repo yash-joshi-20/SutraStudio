@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "postinstall": "prisma generate",
     "dev": "next dev --webpack",
     "build": "cross-env NODE_ENV=production next build",
     "start": "next start",
