@@ -1,4 +1,3 @@
-// use prisma-8
 generator client {
   provider = "prisma-client-js"
 }
