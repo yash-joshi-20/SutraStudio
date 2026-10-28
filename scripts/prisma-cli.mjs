@@ -6,11 +6,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const prismaBin = path.resolve(__dirname, '../node_modules/prisma/dist/prisma.js');
 
 const rawArgs = process.argv.slice(2);
-// If 'deploy' is called with positional 'module.ts', strip it because Prisma 8 CLI expects 0 arguments for deploy.
+// If 'deploy' is called with positional 'module.ts' or './module.ts', strip it because Prisma 8 CLI expects 0 positional arguments for deploy.
 const cleanArgs = [];
 for (let i = 0; i < rawArgs.length; i++) {
   const arg = rawArgs[i];
-  if (arg === 'module.ts' && rawArgs.includes('deploy')) {
+  if ((arg === 'module.ts' || arg === './module.ts') && rawArgs.includes('deploy')) {
     continue;
   }
   cleanArgs.push(arg);
