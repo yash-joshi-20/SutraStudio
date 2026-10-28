@@ -302,7 +302,7 @@ function createCollection(collectionName: string): DbCollectionRef {
       try {
         if (collectionName === "orders") {
           const orders = await prisma.order.findMany({ take: 200, orderBy: { createdAt: "desc" } });
-          const docs = orders.map((o) => {
+          const docs = orders.map((o: any) => {
             const meta = o.metadata ? JSON.parse(o.metadata) : {};
             return {
               id: o.id,
@@ -327,7 +327,7 @@ function createCollection(collectionName: string): DbCollectionRef {
           take: 200,
         });
 
-        const docs = items.map((it) => {
+        const docs = items.map((it: any) => {
           const id = it.key.replace(prefix, "");
           return {
             id,
