@@ -11,6 +11,6 @@ export const web = compute({
   }),
 });
 
-export default module("sutrastudio", ({ provision }) => {
+export default module("sutra-studio-app", ({ provision }) => {
   provision(web);
 });

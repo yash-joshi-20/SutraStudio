@@ -114,3 +114,5 @@ local-testing-assets/
 *.db-journal
 *.sqlite
 *.sqlite-journal
+
+.prisma-composer/
