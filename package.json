@@ -26,7 +26,7 @@
     "get-drive-token": "npx tsx scripts/get-drive-refresh-token.ts",
     "capture-assets": "npx tsx scripts/capture-live-assets.ts",
     "contract:emit": "prisma contract emit",
-    "postinstall": "prisma contract emit"
+    "postinstall": "npx --yes prisma contract emit || true"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
