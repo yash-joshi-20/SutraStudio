@@ -291,7 +291,7 @@ export default async function ServiceDetailPage({
                       <ArrowUpRight className="w-4 h-4" />
                     </Link>
                     <Link
-                      href="/packages"
+                      href="/pricing#packages"
                       className="inline-flex items-center justify-center gap-2 w-full rounded-xl border border-[#EADFCB] bg-[#FFFDF9] px-5 py-3 text-sm font-semibold text-[#4A3B22] transition-colors hover:border-[#D4A35A]"
                     >
                       <Package className="w-4 h-4 text-[#A98B57]" />
@@ -647,7 +647,7 @@ export default async function ServiceDetailPage({
                   <ArrowUpRight className="w-4 h-4" />
                 </Link>
                 <Link
-                  href="/packages"
+                  href="/pricing#packages"
                   className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#EADFCB] bg-[#FFFDF9] px-6 py-3.5 text-sm font-semibold text-[#4A3B22] transition-colors hover:border-[#D4A35A]"
                 >
                   <Package className="w-4 h-4 text-[#A98B57]" />

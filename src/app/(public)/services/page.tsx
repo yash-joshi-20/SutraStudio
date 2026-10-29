@@ -542,13 +542,13 @@ export default function ServicesPage() {
               <p className="text-sm text-[#64748B] max-w-xl mx-auto leading-relaxed">
                 This page shows what each service delivers. Exact prices,
                 package inclusions and monthly retainer details live on our
-                dedicated Packages and Pricing pages.
+                dedicated Packages & Pricing page.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
               <Link
-                href="/packages"
+                href="/pricing#packages"
                 className="group p-6 rounded-2xl bg-[#FFFDF9] border border-[#EADFCB] shadow-xs hover:border-[#D4A35A] transition-all flex items-start justify-between gap-4"
               >
                 <div className="space-y-1.5">
@@ -934,7 +934,7 @@ export default function ServicesPage() {
                   see full pricing
                 </Link>{" "}
                 or{" "}
-                <Link href="/packages" className="underline hover:text-[#5C3A1E]">
+                <Link href="/pricing#packages" className="underline hover:text-[#5C3A1E]">
                   browse packages
                 </Link>
                 .

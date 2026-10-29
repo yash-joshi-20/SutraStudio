@@ -109,7 +109,7 @@ export default async function PackageDetailPage({
             Home
           </Link>
           <ChevronRight className="w-3.5 h-3.5 shrink-0" />
-          <Link href="/packages" className="hover:text-[#5C3A1E] shrink-0">
+          <Link href="/pricing#packages" className="hover:text-[#5C3A1E] shrink-0">
             Packages
           </Link>
           <ChevronRight className="w-3.5 h-3.5 shrink-0" />
@@ -439,7 +439,7 @@ export default async function PackageDetailPage({
                 </h3>
               </div>
               <Link
-                href="/packages"
+                href="/pricing#packages"
                 className="text-xs font-semibold text-[#5C3A1E] hover:underline flex items-center gap-1"
               >
                 <span>View Full Catalog</span>

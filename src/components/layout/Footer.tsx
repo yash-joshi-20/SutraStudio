@@ -31,7 +31,7 @@ export function Footer() {
     { label: "Heritage & Philosophy", href: "/about" },
     { label: "Craft & Technology", href: "/studio" },
     { label: "Curated Projects", href: "/projects" },
-    { label: "Production Packages", href: "/packages" },
+    { label: "Production Packages", href: "/pricing#packages" },
     { label: "Pricing & Retainers", href: "/pricing" },
     { label: "Mobile App Experience", href: "/mobile-app" },
   ];

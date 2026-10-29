@@ -90,7 +90,7 @@ function NewOrderContent() {
               Browse Services
             </Link>
             <span>•</span>
-            <Link href="/packages" className="hover:text-[#5C3A1E] font-medium underline">
+            <Link href="/pricing#packages" className="hover:text-[#5C3A1E] font-medium underline">
               Browse Packages
             </Link>
           </div>

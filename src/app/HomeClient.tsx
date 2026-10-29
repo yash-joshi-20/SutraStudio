@@ -437,7 +437,7 @@ export default function HomePage() {
                     Explore All Services
                   </Button>
                 </Link>
-                <Link href="/packages">
+                <Link href="/pricing#packages">
                   <Button variant="secondary" size="md" className="text-xs font-medium">
                     Browse Packages
                   </Button>
@@ -779,7 +779,7 @@ export default function HomePage() {
                     View All Services
                   </Button>
                 </Link>
-                <Link href="/packages">
+                <Link href="/pricing#packages">
                   <Button variant="secondary" size="md" className="whitespace-nowrap">
                     Browse Packages
                   </Button>

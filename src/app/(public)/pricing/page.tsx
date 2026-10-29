@@ -445,6 +445,7 @@ export default function PricingPage() {
         {/* =========================================================================
             SECTION B — MONTHLY PACKAGES (RECURRING, INR PER 30 DAYS)
             ========================================================================= */}
+        <div id="packages" className="scroll-mt-24" />
         <section
           id="monthly-packages"
           className="py-14 sm:py-16 bg-[#FFFDF9] border-b border-[#EADFCB]"
