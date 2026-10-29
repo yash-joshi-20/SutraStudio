@@ -173,12 +173,33 @@ function createCollection(collectionName: string): DbCollectionRef {
                 where: { OR: [{ id: docId }, { uid: docId }] },
               });
               if (user) {
-                const billing = user.billingData ? JSON.parse(user.billingData) : undefined;
+                let billingMeta: Record<string, unknown> = {};
+                if (user.billingData) {
+                  try {
+                    billingMeta = JSON.parse(user.billingData);
+                  } catch {
+                    billingMeta = {};
+                  }
+                }
                 const notes = user.adminNotes ? JSON.parse(user.adminNotes) : [];
+                const billingObj =
+                  (billingMeta.billing as Record<string, unknown>) ||
+                  (billingMeta.billingAddress as Record<string, unknown>) ||
+                  billingMeta;
                 return {
                   id: user.uid,
                   exists: true,
-                  data: () => ({ ...user, billingAddress: billing, adminNotes: notes }),
+                  data: () => ({
+                    ...billingMeta,
+                    ...user,
+                    displayName: user.name,
+                    name: user.name,
+                    companyName: user.company,
+                    company: user.company,
+                    billing: billingObj,
+                    billingAddress: billingObj,
+                    adminNotes: notes,
+                  }),
                   ref: docRef,
                 };
               }
@@ -236,6 +257,106 @@ function createCollection(collectionName: string): DbCollectionRef {
               return;
             }
 
+            if (collectionName === "users" || collectionName === "clients") {
+              const existingUser = await prisma.user.findFirst({
+                where: { OR: [{ id: docId }, { uid: docId }] },
+              });
+
+              let currentMeta: Record<string, unknown> = {};
+              if (existingUser?.billingData) {
+                try {
+                  currentMeta = JSON.parse(existingUser.billingData);
+                } catch {
+                  currentMeta = {};
+                }
+              }
+
+              const newBillingObj = data.billing || data.billingAddress || {};
+              const existingBilling =
+                (currentMeta.billing as Record<string, unknown>) ||
+                (currentMeta.billingAddress as Record<string, unknown>) ||
+                {};
+              const mergedBilling = options?.merge
+                ? { ...existingBilling, ...newBillingObj }
+                : newBillingObj;
+
+              const mergedMeta: Record<string, unknown> = options?.merge
+                ? {
+                    ...currentMeta,
+                    ...data,
+                    billing: mergedBilling,
+                    billingAddress: mergedBilling,
+                  }
+                : {
+                    ...data,
+                    billing: mergedBilling,
+                    billingAddress: mergedBilling,
+                  };
+
+              delete mergedMeta.id;
+              delete mergedMeta.createdAt;
+              delete mergedMeta.updatedAt;
+
+              const name = (data.displayName || data.name || existingUser?.name || "Studio Client").trim();
+              const phone =
+                data.phone !== undefined
+                  ? data.phone
+                    ? String(data.phone).trim()
+                    : null
+                  : (existingUser?.phone ?? null);
+              const company = (data.companyName || data.company || existingUser?.company || "").trim();
+              const tier = data.tier || existingUser?.tier || "Standard";
+              const status = data.status ? (data.status === "suspended" || data.status === "Disabled" || data.status === "disabled" ? "Disabled" : data.status === "under_review" || data.status === "Under Review" ? "Under Review" : "Active") : (existingUser?.status ?? "Active");
+              const photoURL = data.photoURL !== undefined ? data.photoURL : (existingUser?.photoURL ?? null);
+              const driveFolderId = data.driveFolderId || existingUser?.driveFolderId || "";
+              const driveFolderLink = data.driveFolderLink || existingUser?.driveFolderLink || null;
+              const emailVerified =
+                data.emailVerified !== undefined
+                  ? Boolean(data.emailVerified)
+                  : (existingUser?.emailVerified ?? false);
+              const adminNotes = data.adminNotes ? JSON.stringify(data.adminNotes) : (existingUser?.adminNotes ?? null);
+
+              if (existingUser) {
+                await prisma.user.update({
+                  where: { id: existingUser.id },
+                  data: {
+                    name,
+                    phone,
+                    company,
+                    tier,
+                    status,
+                    photoURL,
+                    driveFolderId,
+                    driveFolderLink,
+                    emailVerified,
+                    billingData: JSON.stringify(mergedMeta),
+                    ...(adminNotes ? { adminNotes } : {}),
+                  },
+                });
+              } else if (data.email) {
+                const targetUid = data.uid || docId;
+                await prisma.user.create({
+                  data: {
+                    uid: targetUid,
+                    email: String(data.email).trim().toLowerCase(),
+                    name,
+                    phone,
+                    company,
+                    tier,
+                    status,
+                    photoURL,
+                    driveFolderId,
+                    driveFolderLink,
+                    emailVerified,
+                    billingData: JSON.stringify(mergedMeta),
+                    adminNotes,
+                    role: data.role === "admin" ? "admin" : "client",
+                  },
+                });
+              }
+              return;
+            }
+
             const current = options?.merge ? (await this.get()).data() : {};
             const merged = { ...current, ...data };
             await prisma.keyValue.upsert({
@@ -256,6 +377,9 @@ function createCollection(collectionName: string): DbCollectionRef {
           try {
             if (collectionName === "orders") {
               await prisma.order.deleteMany({ where: { id: docId } });
+            }
+            if (collectionName === "users" || collectionName === "clients") {
+              await prisma.user.deleteMany({ where: { OR: [{ id: docId }, { uid: docId }] } });
             }
             await prisma.keyValue.deleteMany({ where: { key } });
           } catch (err) {
@@ -309,6 +433,49 @@ function createCollection(collectionName: string): DbCollectionRef {
               exists: true,
               data: () => ({ ...o, ...meta }),
               ref: this.doc(o.id),
+            };
+          });
+          return {
+            empty: docs.length === 0,
+            size: docs.length,
+            docs,
+            forEach(fn: (doc: any) => void) {
+              docs.forEach(fn);
+            },
+          };
+        }
+
+        if (collectionName === "users" || collectionName === "clients") {
+          const users = await prisma.user.findMany({ take: 200, orderBy: { createdAt: "desc" } });
+          const docs = users.map((u: any) => {
+            let meta: Record<string, unknown> = {};
+            if (u.billingData) {
+              try {
+                meta = JSON.parse(u.billingData);
+              } catch {
+                meta = {};
+              }
+            }
+            const notes = u.adminNotes ? JSON.parse(u.adminNotes) : [];
+            const billingObj =
+              (meta.billing as Record<string, unknown>) ||
+              (meta.billingAddress as Record<string, unknown>) ||
+              meta;
+            return {
+              id: u.uid,
+              exists: true,
+              data: () => ({
+                ...meta,
+                ...u,
+                displayName: u.name,
+                name: u.name,
+                companyName: u.company,
+                company: u.company,
+                billing: billingObj,
+                billingAddress: billingObj,
+                adminNotes: notes,
+              }),
+              ref: this.doc(u.uid),
             };
           });
           return {
@@ -443,7 +610,7 @@ export function adminAuth() {
         await prisma.user.updateMany({
           where: { OR: [{ id: uid }, { uid }] },
           data: {
-            ...(patch.displayName ? { displayName: patch.displayName, name: patch.displayName } : {}),
+            ...(patch.displayName ? { name: patch.displayName } : {}),
             ...(patch.email ? { email: patch.email } : {}),
             ...(patch.role ? { role: patch.role } : {}),
           },

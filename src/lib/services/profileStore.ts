@@ -9,6 +9,7 @@
  */
 
 import "server-only";
+import { prisma } from "@/lib/prisma";
 import { adminDb, serverTimestamp } from "@/lib/db";
 import { toIso } from "@/lib/db";
 import {
@@ -300,15 +301,22 @@ function label(field: string) {
 /* ------------------------------------------------------------------ */
 
 export function serialiseProfile(id: string, data: Record<string, unknown>): UserProfile & { id: string } {
+  const billingObj =
+    (data.billing as Record<string, unknown>) ??
+    (data.billingAddress as Record<string, unknown>) ??
+    {};
   return {
     id,
     uid: (data.uid as string) ?? id,
     email: (data.email as string) ?? "",
-    displayName: (data.displayName as string) ?? "",
+    displayName: (data.displayName as string) ?? (data.name as string) ?? "",
     phone: (data.phone as string) ?? "",
-    companyName: (data.companyName as string) ?? "",
+    companyName: (data.companyName as string) ?? (data.company as string) ?? "",
     role: data.role === "admin" ? "admin" : "client",
-    status: data.status === "suspended" ? "suspended" : "active",
+    status:
+      data.status === "suspended" || data.status === "Disabled" || data.status === "disabled"
+        ? "suspended"
+        : "active",
     emailVerified: Boolean(data.emailVerified),
     locale: (data.locale as string) ?? "en",
     timezone: (data.timezone as string) ?? "Asia/Kolkata",
@@ -327,7 +335,7 @@ export function serialiseProfile(id: string, data: Record<string, unknown>): Use
       state: "",
       postalCode: "",
       country: "India",
-      ...((data.billing as Record<string, unknown>) ?? {}),
+      ...billingObj,
     },
     gstEnabled: Boolean(data.gstEnabled),
     driveFolderId: (data.driveFolderId as string) ?? "",
@@ -343,15 +351,89 @@ export function serialiseProfile(id: string, data: Record<string, unknown>): Use
 }
 
 export async function getProfile(uid: string) {
+  try {
+    const user = await prisma.user.findFirst({
+      where: { OR: [{ uid }, { id: uid }] },
+    });
+    if (user) {
+      let meta: Record<string, unknown> = {};
+      if (user.billingData) {
+        try {
+          meta = JSON.parse(user.billingData);
+        } catch {
+          meta = {};
+        }
+      }
+      const rawBilling =
+        (meta.billing as Record<string, unknown>) ||
+        (meta.billingAddress as Record<string, unknown>) ||
+        {};
+      const merged = {
+        ...meta,
+        uid: user.uid,
+        id: user.id,
+        email: user.email,
+        displayName: user.name || (meta.displayName as string) || "",
+        name: user.name || (meta.displayName as string) || "",
+        phone: user.phone || (meta.phone as string) || "",
+        companyName: user.company || (meta.companyName as string) || "",
+        company: user.company || (meta.companyName as string) || "",
+        role: user.role === "admin" ? "admin" : "client",
+        status:
+          user.status === "Disabled" || user.status === "disabled" || user.status === "suspended"
+            ? "suspended"
+            : "active",
+        emailVerified: Boolean(user.emailVerified),
+        driveFolderId: user.driveFolderId || (meta.driveFolderId as string) || "",
+        driveFolderLink: user.driveFolderLink || (meta.driveFolderLink as string) || "",
+        billing: rawBilling,
+        billingAddress: rawBilling,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      };
+      return serialiseProfile(user.uid, merged);
+    }
+  } catch (err) {
+    console.warn(`[profileStore] direct prisma getProfile(${uid}) fallback:`, err);
+  }
+
   const snap = await adminDb().collection(PROFILES).doc(uid).get();
   if (!snap.exists) return null;
   return serialiseProfile(snap.id, snap.data() ?? {});
 }
 
 export async function listProfiles(limit = 100) {
+  try {
+    const users = await prisma.user.findMany({
+      take: limit,
+      orderBy: { createdAt: "desc" },
+    });
+    if (users.length > 0) {
+      return users.map((u: Record<string, unknown>) => {
+        let meta: Record<string, unknown> = {};
+        if (u.billingData) {
+          try {
+            meta = JSON.parse(String(u.billingData));
+          } catch {
+            meta = {};
+          }
+        }
+        return serialiseProfile(String(u.uid), {
+          ...meta,
+          ...u,
+          displayName: u.name,
+          name: u.name,
+          companyName: u.company,
+          company: u.company,
+        });
+      });
+    }
+  } catch (err) {
+    console.warn(`[profileStore] listProfiles fallback:`, err);
+  }
   const q = adminDb().collection(PROFILES).orderBy("createdAt", "desc").limit(limit);
   const snap = await q.get();
-  return snap.docs.map((d) => serialiseProfile(d.id, d.data() ?? {}));
+  return snap.docs.map((d: { id: string; data: () => Record<string, unknown> }) => serialiseProfile(d.id, d.data() ?? {}));
 }
 
 export async function updateProfile(
@@ -361,50 +443,163 @@ export async function updateProfile(
 ): Promise<{ profile: ReturnType<typeof serialiseProfile>; issues: FieldIssue[] }> {
   const issues = assertNoProtectedFields(payload);
   if (issues.length) {
-    const snap = await adminDb().collection(PROFILES).doc(session.uid).get();
-    return { profile: serialiseProfile(session.uid, snap.data() ?? { uid: session.uid }), issues };
+    const current = await getProfile(session.uid);
+    return {
+      profile: current || serialiseProfile(session.uid, { uid: session.uid, email: session.email }),
+      issues,
+    };
   }
 
   const { patch, issues: fieldIssues } = validateProfilePatch(payload, opts);
   if (fieldIssues.length) {
-    const snap = await adminDb().collection(PROFILES).doc(session.uid).get();
-    return { profile: serialiseProfile(session.uid, snap.data() ?? { uid: session.uid }), issues: fieldIssues };
+    const current = await getProfile(session.uid);
+    return {
+      profile: current || serialiseProfile(session.uid, { uid: session.uid, email: session.email }),
+      issues: fieldIssues,
+    };
   }
   if (Object.keys(patch).length === 0) {
-    const snap = await adminDb().collection(PROFILES).doc(session.uid).get();
-    return { profile: serialiseProfile(session.uid, snap.data() ?? { uid: session.uid }), issues: [] };
+    const current = await getProfile(session.uid);
+    return {
+      profile: current || serialiseProfile(session.uid, { uid: session.uid, email: session.email }),
+      issues: [],
+    };
   }
 
-  const ref = adminDb().collection(PROFILES).doc(session.uid);
-  const current = (await ref.get()).data() ?? {};
-  const merged = { ...current, ...patch };
+  // Find or bootstrap user in PostgreSQL User table
+  let user = await prisma.user.findFirst({
+    where: { OR: [{ uid: session.uid }, { id: session.uid }] },
+  });
 
-  await ref.set(
-    {
-      ...patch,
-      profileCompleteness: computeProfileCompleteness(merged as Partial<UserProfile>),
-      onboardingComplete: computeProfileCompleteness(merged as Partial<UserProfile>) >= 80,
-      updatedAt: serverTimestamp(),
-    },
-    { merge: true }
-  );
+  if (!user && session.email) {
+    const { syncAuthenticatedClientUser } = await import("@/lib/auth/userPersistence");
+    await syncAuthenticatedClientUser({
+      uid: session.uid,
+      email: session.email,
+      name: session.name,
+      emailVerified: session.emailVerified,
+    });
+    user = await prisma.user.findFirst({
+      where: { OR: [{ uid: session.uid }, { id: session.uid }] },
+    });
+  }
 
-  // Keep the Auth display name in sync when the client edits it.
-  if (typeof patch.displayName === "string" && patch.displayName !== current.displayName) {
+  if (!user) {
+    throw new Error(`Cannot update profile: user record for UID ${session.uid} not found.`);
+  }
+
+  let currentMeta: Record<string, unknown> = {};
+  if (user.billingData) {
+    try {
+      currentMeta = JSON.parse(user.billingData);
+    } catch {
+      currentMeta = {};
+    }
+  }
+
+  const existingBilling = (currentMeta.billing as Record<string, unknown>) || {};
+  const patchBilling = (patch.billing as Record<string, unknown>) || {};
+  const mergedBilling = {
+    ...existingBilling,
+    ...patchBilling,
+  };
+
+  const mergedMeta: Record<string, unknown> = {
+    ...currentMeta,
+    ...patch,
+    billing: mergedBilling,
+  };
+
+  const displayName =
+    typeof patch.displayName === "string" && patch.displayName.trim()
+      ? patch.displayName.trim()
+      : user.name;
+  const phone =
+    patch.phone !== undefined
+      ? patch.phone
+        ? String(patch.phone).trim()
+        : null
+      : user.phone;
+  const company =
+    patch.companyName !== undefined
+      ? String(patch.companyName).trim()
+      : user.company;
+
+  const profileForCompleteness = {
+    displayName,
+    phone: phone || "",
+    companyName: company,
+    website: (mergedMeta.website as string) || "",
+    industry: (mergedMeta.industry as string) || "",
+    brandColors: (mergedMeta.brandColors as string[]) || [],
+    referenceLinks: (mergedMeta.referenceLinks as string[]) || [],
+    billing: mergedBilling,
+  };
+
+  const completeness = computeProfileCompleteness(profileForCompleteness as Partial<UserProfile>);
+  mergedMeta.profileCompleteness = completeness;
+  mergedMeta.onboardingComplete = completeness >= 80;
+
+  const updateData: Record<string, unknown> = {
+    name: displayName,
+    phone,
+    company,
+    billingData: JSON.stringify(mergedMeta),
+  };
+
+  const updatedUser = await prisma.user.update({
+    where: { id: user.id },
+    data: updateData,
+  });
+
+  // Keep the Auth display name in sync when the client edits it
+  if (typeof patch.displayName === "string" && patch.displayName !== user.name) {
     try {
       const { adminAuth } = await import("@/lib/db");
       await adminAuth().updateUser(session.uid, { displayName: patch.displayName });
     } catch {
-      // Non-fatal: profile doc is the source of truth for the app.
+      // Non-fatal: profile doc is the source of truth for the app
     }
   }
 
-  const snap = await ref.get();
-  return { profile: serialiseProfile(snap.id, snap.data() ?? {}), issues: [] };
+  // Keep ClientsStore in-memory cache in sync
+  try {
+    const { ClientsStore } = await import("@/lib/services/clientsStore");
+    const existing = ClientsStore.findById(updatedUser.uid);
+    if (existing) {
+      existing.name = updatedUser.name;
+      existing.phone = updatedUser.phone || "";
+      existing.company = updatedUser.company;
+      existing.billingAddress = mergedBilling as Record<string, string>;
+    }
+  } catch {
+    // Non-fatal cache sync
+  }
+
+  const refreshedProfile = await getProfile(updatedUser.uid);
+  return {
+    profile: refreshedProfile || serialiseProfile(updatedUser.uid, { ...mergedMeta, ...updatedUser }),
+    issues: [],
+  };
 }
 
 /** Admin-only: set suspension / role flags. Never exposed to clients. */
 export async function adminSetStatus(uid: string, status: "active" | "suspended", reason = "") {
+  try {
+    const user = await prisma.user.findFirst({
+      where: { OR: [{ uid }, { id: uid }] },
+    });
+    if (user) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          status: status === "active" ? "Active" : "Disabled",
+        },
+      });
+    }
+  } catch (err) {
+    console.warn(`[profileStore] adminSetStatus prisma notice:`, err);
+  }
   await adminDb().collection(PROFILES).doc(uid).set(
     { status, suspendedReason: status === "suspended" ? reason : "", updatedAt: serverTimestamp() },
     { merge: true }

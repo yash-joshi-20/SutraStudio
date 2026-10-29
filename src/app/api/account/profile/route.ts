@@ -20,7 +20,7 @@ import {
   LANGUAGES,
 } from "@/lib/services/profileStore";
 import { adminDb } from "@/lib/db";
-import { isEnvSet, readEnv } from "@/lib/config/env";
+import { isEnvSet } from "@/lib/config/env";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +37,17 @@ async function gstEnabledGlobally(): Promise<boolean> {
 export async function GET() {
   return guarded(async () => {
     const session = await requireUser();
-    const profile = await getProfile(session.uid);
+    let profile = await getProfile(session.uid);
+    if (!profile && session.email) {
+      const { syncAuthenticatedClientUser } = await import("@/lib/auth/userPersistence");
+      await syncAuthenticatedClientUser({
+        uid: session.uid,
+        email: session.email,
+        name: session.name,
+        emailVerified: session.emailVerified,
+      });
+      profile = await getProfile(session.uid);
+    }
     if (!profile) return notFound("Profile not found for this account.");
     return ok({
       profile,
