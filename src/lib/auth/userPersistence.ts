@@ -6,7 +6,26 @@
  */
 
 import { prisma } from "@/lib/prisma";
-import type { User } from "@prisma/client";
+
+export interface ClientUserRecord {
+  id: string;
+  uid: string;
+  email: string;
+  name: string;
+  phone?: string | null;
+  role: string;
+  photoURL?: string | null;
+  emailVerified: boolean;
+  company: string;
+  tier: string;
+  status: string;
+  billingData?: string | null;
+  driveFolderId: string;
+  driveFolderLink?: string | null;
+  adminNotes?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export interface SyncUserData {
   uid?: string | null;
@@ -28,7 +47,7 @@ export interface SyncUserData {
  * 4. Never overwrites an admin user role to client.
  * 5. Updates user profile metadata (name, photoURL, phone, emailVerified) when provided.
  */
-export async function syncAuthenticatedClientUser(data: SyncUserData): Promise<User> {
+export async function syncAuthenticatedClientUser(data: SyncUserData): Promise<ClientUserRecord> {
   const cleanEmail = (data.email || "").trim().toLowerCase();
   if (!cleanEmail) {
     throw new Error("Cannot persist user: valid email is required.");
@@ -42,14 +61,14 @@ export async function syncAuthenticatedClientUser(data: SyncUserData): Promise<U
   const requestedRole = data.role === "admin" ? "admin" : "client";
 
   // Step 1: Idempotent lookup by UID or Email
-  const existingUser = await prisma.user.findFirst({
+  const existingUser = (await prisma.user.findFirst({
     where: {
       OR: [
         { uid: targetUid },
         { email: cleanEmail },
       ],
     },
-  });
+  })) as ClientUserRecord | null;
 
   // Step 2: If user already exists, update and reuse
   if (existingUser) {
@@ -78,15 +97,17 @@ export async function syncAuthenticatedClientUser(data: SyncUserData): Promise<U
       updateData.emailVerified = true;
     }
 
-    return await prisma.user.update({
+    const updated = (await prisma.user.update({
       where: { id: existingUser.id },
       data: updateData,
-    });
+    })) as unknown as ClientUserRecord;
+
+    return updated;
   }
 
   // Step 3: Insert fresh user with concurrency retry
   try {
-    return await prisma.user.create({
+    const created = (await prisma.user.create({
       data: {
         uid: targetUid,
         email: cleanEmail,
@@ -97,18 +118,21 @@ export async function syncAuthenticatedClientUser(data: SyncUserData): Promise<U
         emailVerified,
         status: "Active",
       },
-    });
+    })) as unknown as ClientUserRecord;
+
+    return created;
   } catch (err: any) {
     // Handle concurrent insertion (Postgres unique constraint violation P2002)
     if (err?.code === "P2002") {
-      const concurrentUser = await prisma.user.findFirst({
+      const concurrentUser = (await prisma.user.findFirst({
         where: {
           OR: [
             { uid: targetUid },
             { email: cleanEmail },
           ],
         },
-      });
+      })) as ClientUserRecord | null;
+
       if (concurrentUser) {
         return concurrentUser;
       }
