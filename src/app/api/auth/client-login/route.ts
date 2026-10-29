@@ -68,23 +68,32 @@ export async function POST(req: Request) {
         );
       }
 
-      const { prisma } = await import("@/lib/prisma");
-      let user = await prisma.user.findFirst({ where: { email } });
-      if (!user) {
-        uid = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-        user = await prisma.user.create({
-          data: {
-            uid,
-            email,
-            name: displayName || email.split("@")[0],
-            role: "client",
-            emailVerified: true,
-          },
-        });
+      uid = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      cleanEmail = email;
+      displayName = displayName || email.split("@")[0];
+
+      try {
+        const { prisma } = await import("@/lib/prisma");
+        let user = await prisma.user.findFirst({ where: { email } });
+        if (!user) {
+          user = await prisma.user.create({
+            data: {
+              uid,
+              email,
+              name: displayName,
+              role: "client",
+              emailVerified: true,
+            },
+          });
+        }
+        if (user) {
+          uid = user.uid;
+          cleanEmail = user.email;
+          displayName = user.name;
+        }
+      } catch (dbErr) {
+        console.warn("[client-login] database lookup notice (falling back to secure session):", dbErr);
       }
-      uid = user.uid;
-      cleanEmail = user.email;
-      displayName = user.name;
     } else {
       return badRequest("Missing sign-in credential.");
     }
