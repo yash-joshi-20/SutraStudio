@@ -404,6 +404,7 @@ export class OrdersStore {
     utrNumber?: string;
     amountPaid?: number;
     paymentMethod?: string;
+    targetStatus?: FirestoreOrderRecord["status"];
     source?: "checkout" | "webhook" | "refund" | "admin" | "client_portal" | "admin_portal";
     razorpayPaymentId?: string;
     razorpayOrderId?: string;
@@ -413,8 +414,11 @@ export class OrdersStore {
     if (!order) return undefined;
 
     const now = new Date().toISOString();
-    order.status = "paid";
-    order.statusLabel = "Payment Verified — In Studio Queue";
+    order.status = params.targetStatus || "paid";
+    order.statusLabel =
+      order.status === "in_production"
+        ? "Payment Verified — In Studio Production Queue"
+        : "Payment Verified — In Studio Queue";
     order.paymentStatus = "paid";
     const refCode = params.utrNumber || params.paymentId || params.razorpayPaymentId || `pay_${Date.now()}`;
     if (params.utrNumber) (order as any).utrNumber = params.utrNumber;
@@ -483,6 +487,7 @@ export class OrdersStore {
     utrNumber?: string;
     amountPaid?: number;
     paymentMethod?: string;
+    targetStatus?: FirestoreOrderRecord["status"];
     source?: "checkout" | "webhook" | "refund" | "admin" | "client_portal" | "admin_portal";
     razorpayPaymentId?: string;
     razorpayOrderId?: string;

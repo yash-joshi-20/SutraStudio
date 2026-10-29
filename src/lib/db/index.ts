@@ -168,6 +168,30 @@ function createCollection(collectionName: string): DbCollectionRef {
                   ref: docRef,
                 };
               }
+            } else if (collectionName === "payments") {
+              const payment = await prisma.payment.findUnique({ where: { id: docId } });
+              if (payment) {
+                let meta: Record<string, unknown> = {};
+                if (payment.metadata) {
+                  try {
+                    meta = JSON.parse(payment.metadata);
+                  } catch {
+                    meta = {};
+                  }
+                }
+                return {
+                  id: payment.id,
+                  exists: true,
+                  data: () => ({
+                    ...meta,
+                    ...payment,
+                    amountINR: payment.amount,
+                    utrNumber: payment.utr,
+                    paymentMethod: payment.method,
+                  }),
+                  ref: docRef,
+                };
+              }
             } else if (collectionName === "users" || collectionName === "clients") {
               const user = await prisma.user.findFirst({
                 where: { OR: [{ id: docId }, { uid: docId }] },
@@ -231,11 +255,49 @@ function createCollection(collectionName: string): DbCollectionRef {
         async set(data: any, options?: { merge?: boolean }) {
           try {
             if (collectionName === "orders") {
+              const rawClientUid = (data.clientUid || data.clientId || data.userId || "").trim();
+              const clientEmail = (data.clientEmail || data.email || "").trim().toLowerCase();
+              let resolvedClientUid = rawClientUid;
+
+              if (!resolvedClientUid && clientEmail) {
+                const existingUser = await prisma.user.findFirst({ where: { email: clientEmail } });
+                if (existingUser) {
+                  resolvedClientUid = existingUser.uid;
+                } else {
+                  resolvedClientUid = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+                }
+              }
+
+              if (!resolvedClientUid) {
+                resolvedClientUid = "usr_client_default";
+              }
+
+              // Ensure the parent User exists to satisfy foreign key Order.clientUid -> User.uid
+              const userRecord = await prisma.user.findFirst({
+                where: { OR: [{ uid: resolvedClientUid }, { email: clientEmail || undefined }] },
+              });
+
+              if (!userRecord) {
+                await prisma.user.create({
+                  data: {
+                    uid: resolvedClientUid,
+                    email: clientEmail || `${resolvedClientUid}@sutrastudio.com`,
+                    name: (data.clientName || "Studio Client").trim(),
+                    phone: data.clientPhone || data.phone || null,
+                    company: (data.companyName || data.company || "").trim(),
+                    role: "client",
+                    status: "Active",
+                  },
+                });
+              } else {
+                resolvedClientUid = userRecord.uid;
+              }
+
               const orderData = {
                 orderNumber: data.orderNumber || data.code || `ORD-${docId.slice(-4)}`,
-                clientUid: data.clientUid || data.clientId || data.userId || "anonymous",
+                clientUid: resolvedClientUid,
                 clientName: data.clientName || "Studio Client",
-                clientEmail: data.clientEmail || data.email || "client@sutrastudio.com",
+                clientEmail: clientEmail || `${resolvedClientUid}@sutrastudio.com`,
                 service: data.service || "Creative Service",
                 packageName: data.packageName || null,
                 packageId: data.packageId || null,
@@ -253,6 +315,53 @@ function createCollection(collectionName: string): DbCollectionRef {
                 where: { id: docId },
                 update: orderData,
                 create: { id: docId, ...orderData },
+              });
+              return;
+            }
+
+            if (collectionName === "payments") {
+              const amount = Number(data.amountINR || data.amount || 0);
+              const method = data.method || data.paymentMethod || "upi_qr";
+              const status = data.status || "pending_verification";
+              const utr = data.utrNumber || data.utr || null;
+              const receiptUrl = data.screenshotUrl || data.receiptUrl || null;
+              const orderId = data.orderId || null;
+              const clientEmail = (data.clientEmail || data.email || "").trim().toLowerCase() || null;
+              let clientUid = (data.clientUid || data.clientId || "").trim() || null;
+
+              let validOrderId: string | null = null;
+              if (orderId) {
+                const ord = await prisma.order.findUnique({ where: { id: orderId } });
+                if (ord) {
+                  validOrderId = ord.id;
+                  if (!clientUid) clientUid = ord.clientUid;
+                }
+              }
+
+              let validClientUid: string | null = null;
+              if (clientUid) {
+                const usr = await prisma.user.findFirst({ where: { uid: clientUid } });
+                if (usr) {
+                  validClientUid = usr.uid;
+                }
+              }
+
+              const paymentData = {
+                amount,
+                method,
+                status,
+                utr,
+                receiptUrl,
+                orderId: validOrderId,
+                clientUid: validClientUid,
+                clientEmail,
+                metadata: JSON.stringify(data),
+              };
+
+              await prisma.payment.upsert({
+                where: { id: docId },
+                update: paymentData,
+                create: { id: docId, ...paymentData },
               });
               return;
             }
@@ -378,6 +487,9 @@ function createCollection(collectionName: string): DbCollectionRef {
             if (collectionName === "orders") {
               await prisma.order.deleteMany({ where: { id: docId } });
             }
+            if (collectionName === "payments") {
+              await prisma.payment.deleteMany({ where: { id: docId } });
+            }
             if (collectionName === "users" || collectionName === "clients") {
               await prisma.user.deleteMany({ where: { OR: [{ id: docId }, { uid: docId }] } });
             }
@@ -476,6 +588,40 @@ function createCollection(collectionName: string): DbCollectionRef {
                 adminNotes: notes,
               }),
               ref: this.doc(u.uid),
+            };
+          });
+          return {
+            empty: docs.length === 0,
+            size: docs.length,
+            docs,
+            forEach(fn: (doc: any) => void) {
+              docs.forEach(fn);
+            },
+          };
+        }
+
+        if (collectionName === "payments") {
+          const payments = await prisma.payment.findMany({ take: 200, orderBy: { createdAt: "desc" } });
+          const docs = payments.map((p: any) => {
+            let meta: Record<string, unknown> = {};
+            if (p.metadata) {
+              try {
+                meta = JSON.parse(p.metadata);
+              } catch {
+                meta = {};
+              }
+            }
+            return {
+              id: p.id,
+              exists: true,
+              data: () => ({
+                ...meta,
+                ...p,
+                amountINR: p.amount,
+                utrNumber: p.utr,
+                paymentMethod: p.method,
+              }),
+              ref: this.doc(p.id),
             };
           });
           return {

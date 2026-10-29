@@ -413,6 +413,29 @@ export class PaymentsStore {
 
     savePaymentsToDisk(list);
 
+    // Transactional ACID sync in PostgreSQL: atomically transitions Payment and Order
+    try {
+      const { prisma } = await import("@/lib/prisma");
+      await prisma.$transaction(async (tx) => {
+        await tx.payment.updateMany({
+          where: { OR: [{ id: payment.id }, { orderId: payment.orderId }] },
+          data: {
+            status: "paid",
+          },
+        });
+        await tx.order.updateMany({
+          where: { id: payment.orderId },
+          data: {
+            paymentStatus: "paid",
+            status: "in_production",
+            amountPaid: payment.amountINR,
+          },
+        });
+      });
+    } catch (txErr) {
+      console.warn("[PaymentsStore] Transactional payment verification warning:", txErr);
+    }
+
     if (isFirebaseAdminReady()) {
       try {
         const db = adminDb();
@@ -431,6 +454,7 @@ export class PaymentsStore {
         orderId: order.id,
         amountPaid: payment.amountINR,
         paymentMethod: "UPI_QR",
+        targetStatus: "in_production",
         source: "admin_portal",
       });
 
