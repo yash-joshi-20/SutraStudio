@@ -121,9 +121,10 @@ export async function syncAuthenticatedClientUser(data: SyncUserData): Promise<C
     })) as unknown as ClientUserRecord;
 
     return created;
-  } catch (err: any) {
+  } catch (err: unknown) {
     // Handle concurrent insertion (Postgres unique constraint violation P2002)
-    if (err?.code === "P2002") {
+    const prismaErr = err as { code?: string } | null;
+    if (prismaErr?.code === "P2002") {
       const concurrentUser = (await prisma.user.findFirst({
         where: {
           OR: [
