@@ -1,15 +1,5 @@
 import { module } from "@prisma/composer";
-import { compute } from "@prisma/composer-prisma-cloud";
-import nextjsBuild from "@prisma/composer/nextjs";
-
-export const web = compute({
-  name: "web",
-  deps: {},
-  build: nextjsBuild({
-    module: import.meta.url,
-    appDir: ".",
-  }),
-});
+import web from "./service";
 
 export default module("sutrastudio", ({ provision }) => {
   provision(web);
