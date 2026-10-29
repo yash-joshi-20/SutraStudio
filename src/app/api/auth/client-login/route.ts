@@ -2,10 +2,10 @@
  * POST /api/auth/client-login
  *
  * Authenticates client accounts via Prisma database and issues an HTTP-only session cookie.
+ * Persists client identity idempotently to the PostgreSQL User model.
  */
 
 import { NextResponse } from "next/server";
-import { isFirebaseAdminReady, adminMissingKeys } from "@/lib/db";
 import {
   createSessionCookie,
   sessionCookieOptions,
@@ -13,9 +13,13 @@ import {
   safeReturnTo,
   createProfileOnSignup,
 } from "@/lib/auth/session";
-import { badRequest, clientIp, guarded, notConfigured, ok, sameOrigin } from "@/lib/api/response";
+import { badRequest, clientIp, guarded, ok, sameOrigin } from "@/lib/api/response";
 import { isAdminAllowedEmail } from "@/lib/auth/adminAccess";
 import { resolveClientDisplayName } from "@/lib/auth/nameUtils";
+import { syncAuthenticatedClientUser } from "@/lib/auth/userPersistence";
+import type { ClientProfileRecord } from "@/lib/services/clientsStore";
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 interface LoginBody {
   email?: string;
@@ -44,6 +48,8 @@ export async function POST(req: Request) {
     let uid = "";
     let cleanEmail = email;
     let displayName = body.displayName || "";
+    let photoURL: string | null = null;
+    let emailVerified = true;
 
     if (body.idToken) {
       const { decodeIdToken } = await import("@/lib/auth/session");
@@ -57,6 +63,8 @@ export async function POST(req: Request) {
       uid = decoded.uid;
       cleanEmail = (decoded.email || "").toLowerCase();
       displayName = decoded.name || displayName;
+      photoURL = (decoded.picture as string) || (decoded as any).photoURL || null;
+      emailVerified = Boolean(decoded.emailVerified ?? decoded.email_verified ?? true);
     } else if (email) {
       if (isAdminAllowedEmail(email)) {
         return NextResponse.json(
@@ -68,43 +76,65 @@ export async function POST(req: Request) {
         );
       }
 
-      uid = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      if (!EMAIL_REGEX.test(email)) {
+        return badRequest("Enter a valid email address.");
+      }
+
       cleanEmail = email;
       displayName = displayName || email.split("@")[0];
-
-      try {
-        const { prisma } = await import("@/lib/prisma");
-        let user = await prisma.user.findFirst({ where: { email } });
-        if (!user) {
-          user = await prisma.user.create({
-            data: {
-              uid,
-              email,
-              name: displayName,
-              role: "client",
-              emailVerified: true,
-            },
-          });
-        }
-        if (user) {
-          uid = user.uid;
-          cleanEmail = user.email;
-          displayName = user.name;
-        }
-      } catch (dbErr) {
-        console.warn("[client-login] database lookup notice (falling back to secure session):", dbErr);
-      }
+      emailVerified = true;
     } else {
       return badRequest("Missing sign-in credential.");
     }
 
+    if (!cleanEmail) {
+      return badRequest("A valid email address is required.");
+    }
+
     const resolvedName = resolveClientDisplayName(displayName, cleanEmail);
+
+    // Persist authenticated client identity to PostgreSQL User model
+    let dbUser;
+    try {
+      dbUser = await syncAuthenticatedClientUser({
+        uid: uid || null,
+        email: cleanEmail,
+        name: resolvedName,
+        photoURL,
+        emailVerified,
+        role: "client",
+      });
+    } catch (dbErr: any) {
+      console.error("[client-login] database persistence failure:", dbErr);
+      return NextResponse.json(
+        {
+          error: "Database authentication service unavailable. Please try again shortly.",
+          code: "AUTH_PERSISTENCE_FAILED",
+        },
+        { status: 503 }
+      );
+    }
+
+    const finalUid = dbUser.uid;
+    const finalEmail = dbUser.email;
+    const finalName = dbUser.name || resolvedName;
+    const finalVerified = Boolean(dbUser.emailVerified);
+
+    const clientTier: ClientProfileRecord["tier"] =
+      dbUser.tier === "Enterprise" || dbUser.tier === "Growth" || dbUser.tier === "Starter"
+        ? dbUser.tier
+        : "Standard";
+
+    const clientStatus: ClientProfileRecord["status"] =
+      dbUser.status === "Disabled" || dbUser.status === "Under Review"
+        ? dbUser.status
+        : "Active";
 
     try {
       await createProfileOnSignup({
-        uid,
-        email: cleanEmail,
-        name: resolvedName,
+        uid: finalUid,
+        email: finalEmail,
+        name: finalName,
         acceptedTerms: true,
         acceptedPrivacy: true,
         ipAddress: clientIp(req),
@@ -113,17 +143,17 @@ export async function POST(req: Request) {
 
       const { ClientsStore } = await import("@/lib/services/clientsStore");
       ClientsStore.upsertClient({
-        id: uid,
-        uid,
-        name: resolvedName,
-        email: cleanEmail,
-        company: "",
-        tier: "Standard",
-        status: "Active",
-        emailVerified: true,
-        joinedDate: new Date().toISOString(),
+        id: finalUid,
+        uid: finalUid,
+        name: finalName,
+        email: finalEmail,
+        company: dbUser.company || "",
+        tier: clientTier,
+        status: clientStatus,
+        emailVerified: finalVerified,
+        joinedDate: dbUser.createdAt ? dbUser.createdAt.toISOString() : new Date().toISOString(),
         lastActive: new Date().toISOString(),
-        driveFolderId: "",
+        driveFolderId: dbUser.driveFolderId || "",
         adminNotes: [],
       });
     } catch (err) {
@@ -131,17 +161,17 @@ export async function POST(req: Request) {
     }
 
     const { cookie, maxAge } = await createSessionCookie(
-      { uid, email: cleanEmail, name: resolvedName, role: "client", emailVerified: true },
+      { uid: finalUid, email: finalEmail, name: finalName, role: "client", emailVerified: finalVerified },
       { rememberMe }
     );
 
     const response = ok({
       user: {
-        uid,
-        email: cleanEmail,
-        name: resolvedName,
+        uid: finalUid,
+        email: finalEmail,
+        name: finalName,
         role: "client",
-        emailVerified: true,
+        emailVerified: finalVerified,
       },
       returnTo: safeReturnTo(body.returnTo, "/dashboard"),
     });
