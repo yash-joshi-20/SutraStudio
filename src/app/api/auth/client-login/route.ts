@@ -63,7 +63,7 @@ export async function POST(req: Request) {
       uid = decoded.uid;
       cleanEmail = (decoded.email || "").toLowerCase();
       displayName = decoded.name || displayName;
-      photoURL = (decoded.picture as string) || (typeof (decoded as Record<string, unknown>).photoURL === "string" ? ((decoded as Record<string, unknown>).photoURL as string) : null);
+      photoURL = decoded.picture || null;
       emailVerified = Boolean(decoded.emailVerified ?? decoded.email_verified ?? true);
     } else if (email) {
       if (isAdminAllowedEmail(email)) {
