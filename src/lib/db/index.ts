@@ -227,6 +227,30 @@ function createCollection(collectionName: string): DbCollectionRef {
                   ref: docRef,
                 };
               }
+            } else if (collectionName === "inquiries") {
+              const inq = await prisma.inquiry.findUnique({ where: { id: docId } });
+              if (inq) {
+                return {
+                  id: inq.id,
+                  exists: true,
+                  data: () => ({ ...inq }),
+                  ref: docRef,
+                };
+              }
+            } else if (collectionName === "notifications") {
+              const notif = await prisma.notification.findUnique({ where: { id: docId } });
+              if (notif) {
+                return {
+                  id: notif.id,
+                  exists: true,
+                  data: () => ({
+                    ...notif,
+                    userId: notif.userUid,
+                    actionUrl: notif.link,
+                  }),
+                  ref: docRef,
+                };
+              }
             }
 
             // KeyValue fallback store
@@ -466,6 +490,45 @@ function createCollection(collectionName: string): DbCollectionRef {
               return;
             }
 
+            if (collectionName === "inquiries") {
+              const inqData = {
+                name: String(data.name || "Anonymous Client").trim(),
+                email: String(data.email || "").trim().toLowerCase(),
+                phone: data.phone ? String(data.phone).trim() : null,
+                service: data.service ? String(data.service).trim() : null,
+                message: String(data.message || "").trim(),
+                status: data.status || "new",
+              };
+              await prisma.inquiry.upsert({
+                where: { id: docId },
+                update: inqData,
+                create: { id: docId, ...inqData },
+              });
+              return;
+            }
+
+            if (collectionName === "notifications") {
+              let userUid = data.userId || data.userUid || null;
+              if (userUid) {
+                const userExists = await prisma.user.findFirst({ where: { uid: userUid } });
+                if (!userExists) userUid = null;
+              }
+              const notifData = {
+                userUid,
+                title: String(data.title || "Notification").trim(),
+                message: String(data.message || "").trim(),
+                type: data.type || "system",
+                read: Boolean(data.read ?? false),
+                link: data.actionUrl || data.link || null,
+              };
+              await prisma.notification.upsert({
+                where: { id: docId },
+                update: notifData,
+                create: { id: docId, ...notifData },
+              });
+              return;
+            }
+
             const current = options?.merge ? (await this.get()).data() : {};
             const merged = { ...current, ...data };
             await prisma.keyValue.upsert({
@@ -492,6 +555,12 @@ function createCollection(collectionName: string): DbCollectionRef {
             }
             if (collectionName === "users" || collectionName === "clients") {
               await prisma.user.deleteMany({ where: { OR: [{ id: docId }, { uid: docId }] } });
+            }
+            if (collectionName === "inquiries") {
+              await prisma.inquiry.deleteMany({ where: { id: docId } });
+            }
+            if (collectionName === "notifications") {
+              await prisma.notification.deleteMany({ where: { id: docId } });
             }
             await prisma.keyValue.deleteMany({ where: { key } });
           } catch (err) {
@@ -624,6 +693,46 @@ function createCollection(collectionName: string): DbCollectionRef {
               ref: this.doc(p.id),
             };
           });
+          return {
+            empty: docs.length === 0,
+            size: docs.length,
+            docs,
+            forEach(fn: (doc: any) => void) {
+              docs.forEach(fn);
+            },
+          };
+        }
+
+        if (collectionName === "inquiries") {
+          const inquiries = await prisma.inquiry.findMany({ take: 200, orderBy: { createdAt: "desc" } });
+          const docs = inquiries.map((i: any) => ({
+            id: i.id,
+            exists: true,
+            data: () => ({ ...i }),
+            ref: this.doc(i.id),
+          }));
+          return {
+            empty: docs.length === 0,
+            size: docs.length,
+            docs,
+            forEach(fn: (doc: any) => void) {
+              docs.forEach(fn);
+            },
+          };
+        }
+
+        if (collectionName === "notifications") {
+          const notifications = await prisma.notification.findMany({ take: 200, orderBy: { createdAt: "desc" } });
+          const docs = notifications.map((n: any) => ({
+            id: n.id,
+            exists: true,
+            data: () => ({
+              ...n,
+              userId: n.userUid,
+              actionUrl: n.link,
+            }),
+            ref: this.doc(n.id),
+          }));
           return {
             empty: docs.length === 0,
             size: docs.length,
