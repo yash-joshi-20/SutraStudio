@@ -5010,7 +5010,7 @@ export function AdminDashboardClient({ initialTab: propInitialTab }: { initialTa
                           <span>Synthesized Deliverables ({n8nWorkflowModal.deliverables.length})</span>
                         </h4>
                         <span className="text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 font-semibold">
-                          Vaulted in '02 Drafts'
+                          Vaulted in &apos;02 Drafts&apos;
                         </span>
                       </div>
 

@@ -1,3 +1,4 @@
+import { DISPLAY_FIXED_PRICE_ITEMS } from "./displayPricing";
 /**
  * SUTRA STUDIO — Canonical Service Catalog & Single Source of Truth
  *
@@ -2070,7 +2071,7 @@ export function findServiceBySlug(slugOrId: string): ServiceDefinition | undefin
 
   // Fallback to display pricing fixed-price catalogue items (e.g. Logo Concept ₹999, 10-15s Reel ₹999)
   try {
-    const { DISPLAY_FIXED_PRICE_ITEMS } = require("./displayPricing");
+    // DISPLAY_FIXED_PRICE_ITEMS imported at top of file
     const displayMatch = DISPLAY_FIXED_PRICE_ITEMS?.find(
       (it: any) =>
         it.id.toLowerCase() === normalized ||

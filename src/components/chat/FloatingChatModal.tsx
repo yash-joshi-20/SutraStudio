@@ -256,9 +256,7 @@ export function FloatingChatModal() {
   const [isOpen, setIsOpen] = useState(false);
 
   // Never render the public client concierge widget on admin CRM routes
-  if (pathname?.startsWith("/admin")) {
-    return null;
-  }
+  // Route hiding handled before return
 
   useEffect(() => {
     const handleOpen = () => setIsOpen(true);
@@ -551,11 +549,8 @@ export function FloatingChatModal() {
     }
   }, [messages, isOpen, isLoading]);
 
-  if (pathname === "/login" || pathname === "/admin/login" || pathname?.startsWith("/admin/login")) {
-    return null;
-  }
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Route hiding handled before return
+const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 

@@ -94,23 +94,23 @@ export interface IntegrationStatus {
 
 export const INTEGRATION_DEFINITIONS: IntegrationDefinition[] = [
   {
-    id: "neon-postgres",
-    name: "Neon Serverless PostgreSQL",
+    id: "prisma-postgres",
+    name: "Prisma Postgres (Database)",
     group: "Core Platform",
     description: "Serverless PostgreSQL database powering persistent users, orders, payments, notifications, and key-value state.",
     features: ["Users Database", "Orders & Billing", "Notifications", "Dynamic CMS Key-Value Store", "Auto-Scaling"],
     priority: "CRITICAL",
-    whereToGet: "https://console.neon.tech → Project Settings → Connection Details",
+    whereToGet: "https://console.prisma.io → Sutra Studio Project → Database Connection Details",
     requirements: [
-      { key: "DATABASE_URL", label: "Neon Connection String (Pooler)", whereToGet: "Neon Console Dashboard" },
-      { key: "DIRECT_URL", label: "Neon Direct Connection String", whereToGet: "Neon Console Dashboard" },
+      { key: "DATABASE_URL", label: "Prisma Postgres Pooled Endpoint", whereToGet: "Prisma Console Dashboard" },
+      { key: "DIRECT_URL", label: "Prisma Postgres Direct Endpoint", whereToGet: "Prisma Console Dashboard" },
     ],
     ready: isNeonDatabaseConfigured,
     manualSteps: [
-      "Open https://console.neon.tech and create a project 'sutra-studio'.",
+      "Open https://console.prisma.io and navigate to your database project.",
       "Copy the pooled connection string into DATABASE_URL in .env.local.",
       "Copy the direct connection string into DIRECT_URL in .env.local.",
-      "Run 'npx prisma db push' to apply the latest PostgreSQL schema.",
+      "Run 'npx prisma migrate dev' or apply the schema migrations.",
     ],
   },
   {
