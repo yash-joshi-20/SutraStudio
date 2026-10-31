@@ -496,8 +496,12 @@ export class CreativeJobStore {
   }
 }
 
-// Seed with demonstration master job if memory cache is empty
-if (MEMORY_JOB_CACHE.size === 0) {
+// Seed with demonstration master job only in development and not during build
+if (
+  MEMORY_JOB_CACHE.size === 0 &&
+  process.env.NODE_ENV === "development" &&
+  process.env.NEXT_PHASE !== "phase-production-build"
+) {
   void CreativeJobStore.createJob({
     brandId: "brand-sutra-flagship",
     clientUid: "admin-sutra-master",
@@ -508,5 +512,7 @@ if (MEMORY_JOB_CACHE.size === 0) {
       keyMessage: "Deliver bespoke digital experiences in 48 hours without burning out.",
       tone: "luxury_atelier",
     },
+  }).catch(() => {
+    // Ignore non-fatal seeding failures
   });
 }
