@@ -124,13 +124,19 @@ main, section, header, footer, nav, article {
 .text-gold-gradient {
   background: linear-gradient(135deg, #E2B872 0%, #D4A35A 45%, #9B6834 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
 .text-dark-gold {
   background: linear-gradient(135deg, #D4A35A 0%, #8A5A2B 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
 .bg-gold-gradient {
@@ -379,7 +385,7 @@ textarea:focus-visible {
 }
 
 /* ---------------------------------------------------------------
-   SUTRA STUDIO BESPOKE THEME ARROW CURSOR
+   SUTRA STUDIO CLEAN OS CURSOR PRESERVATION
    Custom charcoal & warm gold pointer arrow for desktop devices.
    --------------------------------------------------------------- */
 @media (hover: hover) and (pointer: fine) {
@@ -393,7 +399,7 @@ textarea:focus-visible {
   html.sutra-custom-cursor input[type="submit"],
   html.sutra-custom-cursor input[type="button"],
   html.sutra-custom-cursor summary {
-    cursor: none !important;
+    /* native OS pointer preserved */
   }
 
   /* Text inputs keep native text I-beam */

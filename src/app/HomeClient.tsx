@@ -71,7 +71,7 @@ function renderHeroHeadline(title?: string) {
     const remainder = raw.slice("Tradition".length);
     return (
       <>
-        <span className="text-gold-gradient font-bold">Tradition</span>
+        <span className="text-gold-gradient font-bold inline-block">Tradition</span>
         {remainder}
       </>
     );
@@ -140,7 +140,7 @@ export default function HomePage() {
                   </div>
 
                   {/* Main Display Headline */}
-                  <h1 className="hero-heading font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold leading-[1.06] tracking-tight text-[#0F172A]">
+                  <h1 className="hero-heading font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-semibold leading-[1.12] sm:leading-[1.1] tracking-tight text-[#0F172A] [text-wrap:balance]">
                     {renderHeroHeadline(heroData?.title)}
                   </h1>
 

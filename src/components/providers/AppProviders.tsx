@@ -8,7 +8,7 @@ import { OfflineBanner } from "@/components/sync/OfflineBanner";
 
 import { RouteProgressIndicator } from "@/components/motion/RouteProgressIndicator";
 import { CmsThemeProvider } from "@/components/providers/CmsThemeProvider";
-import { CustomCursor } from "@/components/ui/CustomCursor";
+// CustomCursor removed to preserve native OS pointer precision
 import { ScrollToTopArrow } from "@/components/ui/ScrollToTopArrow";
 import { Suspense } from "react";
 
@@ -33,7 +33,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
           <Suspense fallback={null}>
             <RouteProgressIndicator />
           </Suspense>
-          <CustomCursor />
+          {/* Native OS pointer active */}
           {children}
           <FloatingChatModal />
           <Suspense fallback={null}>

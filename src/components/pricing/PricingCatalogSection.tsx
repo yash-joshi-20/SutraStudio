@@ -80,12 +80,12 @@ export function PricingCatalogSection({
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFDF9] border border-[#EADFCB] shadow-xs">
           <span className="text-[#D4A35A] text-xs">◆</span>
           <span className="text-[10px] md:text-xs font-semibold tracking-[0.22em] text-[#5C3A1E] uppercase">
-            {isHomePage ? "TRANSPARENT STUDIO INVESTMENT" : "CANONICAL STUDIO PRICING"}
+            {isHomePage ? "FEATURED STUDIO PACKAGES" : "CANONICAL STUDIO PRICING"}
           </span>
         </div>
 
         {isHomePage ? (
-          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-semibold text-[#0F172A] leading-[1.1]">
+          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-semibold text-[#0F172A] leading-[1.12] [text-wrap:balance]">
             Transparent Investment:{" "}
             <span className="text-gold-gradient">Choose the Right Plan for Your Goals</span>
           </h2>
@@ -101,7 +101,8 @@ export function PricingCatalogSection({
         </p>
 
         {/* Primary Catalog Navigation Switcher */}
-        <div className="pt-4 flex flex-col items-center justify-center w-full">
+        {!isHomePage && (
+          <div className="pt-4 flex flex-col items-center justify-center w-full">
           {/* Mobile View: Custom Dropdown Menu (Guaranteed Zero Squishing / Overflow) */}
           <div className="w-full md:hidden max-w-xs mx-auto">
             <CustomDropdown
@@ -186,12 +187,13 @@ export function PricingCatalogSection({
             </div>
           </div>
         </div>
+        )}
       </div>
 
       {/* =========================================================================
           SECTION A: 30-DAY MONTHLY RETAINER PACKAGES
           ========================================================================= */}
-      {activeTab === "monthly" && (
+      {(isHomePage || activeTab === "monthly") && (
         <div className="w-full space-y-10">
           <div className="text-center max-w-2xl mx-auto space-y-2">
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#D4A35A]">
@@ -330,7 +332,7 @@ export function PricingCatalogSection({
       {/* =========================================================================
           SECTION B: INDIVIDUAL STANDALONE SERVICES
           ========================================================================= */}
-      {activeTab === "services" && (
+      {!isHomePage && activeTab === "services" && (
         <div className="w-full space-y-8">
           <div className="text-center max-w-3xl mx-auto space-y-3">
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#D4A35A]">
@@ -471,7 +473,7 @@ export function PricingCatalogSection({
       {/* =========================================================================
           SECTION C: CURATED BUNDLES & ESSENTIAL DELIVERABLE PACKS
           ========================================================================= */}
-      {activeTab === "packs" && (
+      {!isHomePage && activeTab === "packs" && (
         <div className="w-full space-y-12">
           {/* Subsection 1: Curated Multi-Service Bundles */}
           <div className="space-y-8">
@@ -663,6 +665,46 @@ export function PricingCatalogSection({
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* =========================================================================
+          HOMEPAGE FEATURED PACKAGES: VIEW ALL PACKAGES CTA
+          ========================================================================= */}
+      {isHomePage && (
+        <div className="max-w-5xl mx-auto w-full pt-4">
+          <div className="rounded-3xl bg-[#FFFDF9] border border-[#EADFCB] p-6 sm:p-8 md:p-10 shadow-warm text-center space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EADFCB] text-xs font-semibold text-[#5C3A1E]">
+              <Sparkles className="w-3.5 h-3.5 text-[#D4A35A]" />
+              <span>Looking for Single Solutions or Custom Deliverables?</span>
+            </div>
+            <h4 className="font-serif text-2xl sm:text-3xl font-semibold text-[#0F172A] [text-wrap:balance]">
+              Explore Complete Studio Packages &amp; Pricing
+            </h4>
+            <p className="text-xs sm:text-sm text-[#64748B] max-w-2xl mx-auto leading-relaxed font-sans">
+              From single image and video packs to full architectural 3D spatial models and bespoke software development — compare all studio tiers and fixed rates upfront with zero hidden fees.
+            </p>
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+              <Link href="/pricing" className="w-full sm:w-auto">
+                <Button
+                  variant="primary"
+                  size="lg"
+                  withArrow
+                  className="w-full sm:w-auto shadow-warm justify-center text-sm font-semibold whitespace-nowrap"
+                >
+                  View All Packages
+                </Button>
+              </Link>
+              <Link href="/pricing#single-service-pricing" className="w-full sm:w-auto">
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  className="w-full sm:w-auto justify-center text-sm font-semibold whitespace-nowrap"
+                >
+                  Browse Single Services
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
