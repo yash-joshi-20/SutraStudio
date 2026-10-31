@@ -27,12 +27,13 @@
     "get-drive-token": "npx tsx scripts/get-drive-refresh-token.ts",
     "capture-assets": "npx tsx scripts/capture-live-assets.ts",
     "contract:emit": "prisma contract emit",
-    "postinstall": "npx --yes prisma contract emit || true"
+    "postinstall": "node scripts/prisma-cli.mjs contract emit || true"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
     "@neondatabase/serverless": "^1.2.0",
     "@prisma/adapter-neon": "^6.19.3",
+    "@prisma/adapter-pg": "^7.10.1",
     "@prisma/cli-engine": "^0.9.0",
     "@prisma/client": "^6.19.3",
     "@prisma/composer": "0.35.0",
@@ -40,10 +41,12 @@
     "@prisma/orm-postgres": "^8.0.0-rc.21",
     "@types/three": "^0.186.0",
     "clsx": "^2.1.1",
+    "dotenv": "^18.0.9",
     "framer-motion": "^13.4.6",
     "gsap": "^3.15.0",
     "lucide-react": "^1.49.0",
     "next": "16.3.8",
+    "pg": "^8.23.1",
     "prisma": "^8.0.0-rc.28",
     "qrcode.react": "^4.2.0",
     "react": "19.2.8",
@@ -51,6 +54,7 @@
     "server-only": "^0.0.1",
     "sharp": "^0.35.5",
     "tailwind-merge": "^3.7.0",
+    "temporal-polyfill": "^1.0.6",
     "three": "^0.186.1"
   },
   "devDependencies": {
@@ -63,13 +67,18 @@
     "eslint-config-next": "16.3.8",
     "playwright": "^1.63.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "tsx": "^4.19.2",
+    "@types/pg": "^8.11.11"
   },
   "engines": {
     "node": ">=20.9.0"
   },
   "overrides": {
     "react": "$react",
-    "react-dom": "$react-dom"
+    "react-dom": "$react-dom",
+    "@prisma/composer-prisma-cloud": {
+      "@prisma/orm-postgres": "$@prisma/orm-postgres"
+    }
   }
 }
