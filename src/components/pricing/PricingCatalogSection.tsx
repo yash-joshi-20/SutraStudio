@@ -309,7 +309,7 @@ export function PricingCatalogSection({
                 </div>
 
                 <div className="mt-8 pt-6 border-t border-[#EADFCB]/60 flex flex-col gap-4">
-                  <Link href={`/orders?package=${tier.id}&cycle=monthly`} className="block w-full">
+                  <Link href={`/new-order?package=${tier.id}&cycle=monthly`} className="block w-full">
                     <Button
                       variant={tier.popular ? "primary" : "secondary"}
                       size="md"
@@ -447,7 +447,7 @@ export function PricingCatalogSection({
                 </div>
 
                 <div className="pt-6 mt-4 border-t border-[#EADFCB]/60 flex flex-col gap-4">
-                  <Link href={`/orders?service=${service.slug}`} className="block w-full">
+                  <Link href={`/new-order?service=${service.slug}`} className="block w-full">
                     <Button
                       variant="primary"
                       size="sm"
@@ -545,7 +545,7 @@ export function PricingCatalogSection({
                   </div>
 
                   <div className="pt-5 mt-4 border-t border-[#EADFCB]/60 flex flex-col gap-3">
-                    <Link href={`/orders?package=${pkg.id}`} className="block w-full">
+                    <Link href={`/new-order?package=${pkg.id}`} className="block w-full">
                       <Button
                         variant={pkg.popular ? "primary" : "secondary"}
                         size="sm"
@@ -649,7 +649,7 @@ export function PricingCatalogSection({
                   </div>
 
                   <div className="pt-5 mt-4 border-t border-[#EADFCB]/60 flex flex-col gap-4">
-                    <Link href={`/orders?package=${pkg.id}`} className="block w-full">
+                    <Link href={`/new-order?package=${pkg.id}`} className="block w-full">
                       <Button
                         variant="secondary"
                         size="sm"

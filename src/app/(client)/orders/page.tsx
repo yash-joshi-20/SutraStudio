@@ -181,7 +181,41 @@ import {
 } from "@/lib/services/catalogData";
 import { useConfirm } from "@/hooks/useConfirm";
 
-const FALLBACK_SERVICES: CatalogService[] = SEED_CATALOG_SERVICES;
+import { CANONICAL_SERVICES } from "@/config/services";
+
+const CANONICAL_FALLBACK_SERVICES: CatalogService[] = CANONICAL_SERVICES.map((s, idx) => ({
+  id: s.id,
+  name: s.name,
+  slug: s.slug,
+  category: (s.category === "Development" ? "Development" : s.category === "Design" ? "Design" : s.category === "Marketing" ? "Marketing" : s.category === "Automation" ? "Automation" : "Creative") as CatalogService["category"],
+  tagline: s.tagline || s.name,
+  shortDescription: s.description || s.name,
+  startingPrice: s.numericPrice || 999,
+  priceDisplay: s.priceDisplay || `₹${(s.numericPrice || 999).toLocaleString("en-IN")}`,
+  currency: "INR" as const,
+  icon: s.icon || "layers",
+  active: s.active !== false,
+  sortIndex: idx + 1,
+  estimatedDeliveryDays: s.turnaround?.includes("24") ? 1 : 3,
+  revisionsIncluded: 2,
+  workflowStages: ["Briefing", "Production", "Quality Verification", "Delivery"],
+  briefSchema: [],
+  requiredAssets: [],
+  deliverables: s.deliverables || [],
+  badge: s.badge || "Verified",
+  thumbnail: s.thumbnail || "/images/services/image-creation.webp",
+  mediaType: (s.category === "Video" ? "video" : s.category === "3D & Spatial" ? "3d" : "image") as CatalogService["mediaType"],
+  mediaFormat: "Digital 4K UHD",
+  turnaround: s.turnaround || "48-72h",
+  pipelineEngine: "Sutra Studio Atelier",
+  updatedAt: "2026-10-31T00:00:00.000Z",
+}));
+
+// Canonical studio services primary; legacy seed catalog entries preserved for backward compatibility
+const FALLBACK_SERVICES: CatalogService[] = [
+  ...CANONICAL_FALLBACK_SERVICES,
+  ...SEED_CATALOG_SERVICES.filter((seed) => !CANONICAL_SERVICES.some((c) => c.id === seed.id || c.slug === seed.id)),
+];
 const FALLBACK_PLANS: CatalogPlan[] = SEED_CATALOG_PLANS;
 
 export default function OrdersPage() {

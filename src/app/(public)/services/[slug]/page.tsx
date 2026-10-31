@@ -91,7 +91,7 @@ export default async function ServiceDetailPage({
   const spec = getServiceDetailSpec(service);
   const entry = findServiceCatalogEntry(requested);
   const group = findServiceGroupBySlug(service.slug);
-  const orderHref = service.ctaHref || `/orders?service=${service.slug}`;
+  const orderHref = `/new-order?service=${service.slug}`;
 
   /**
    * The eight main services render a price-free experience (scope, samples,
